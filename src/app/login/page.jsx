@@ -50,7 +50,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Demo credentials */}
+          {/* Demo credentials
           <div style={{ marginTop:24, background:'#FAFAF8', border:'1px solid #EAE6DE', borderRadius:12, padding:16 }}>
             <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'#C4B49A', marginBottom:10 }}>Demo Access</div>
             {[['Admin','admin@goldencrescent.ae'],['POC','poc@goldencrescent.ae'],['Finance','finance@goldencrescent.ae'],['Driver','mohammed@goldencrescent.ae']].map(([role, em]) => (
@@ -60,7 +60,7 @@ export default function LoginPage() {
               </button>
             ))}
             <div style={{ fontSize:11, color:'#C4B49A', marginTop:6, borderTop:'1px solid #EAE6DE', paddingTop:8 }}>Password: <span style={{ color:'#6B5D4A', fontFamily:'monospace' }}>gcd2024</span></div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
