@@ -120,7 +120,7 @@ export default function DriverPortal() {
       {/* Header */}
       <div style={{ background:'#FFF', borderBottom:'1px solid #EAE6DE', padding:'14px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{ width:34,height:34,borderRadius:9,background:'linear-gradient(135deg,#B8860B,#D4A017)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16 }}>🌙</div>
+          <img src="/logo.webp" alt="GCD" style={{ width:36,height:36,borderRadius:9,objectFit:'contain',background:'#fff',padding:2 }}/>
           <div>
             <div style={{ fontWeight:800,fontSize:14,color:'#1A1612' }}>Golden Crescent</div>
             <div style={{ fontSize:10,color:'#B8860B',fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase' }}>DA Portal</div>
