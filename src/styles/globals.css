@@ -889,3 +889,115 @@ input[type='range']::-moz-range-thumb {
   .show-mobile-only { display: block; }
   .hide-on-mobile   { display: none !important; }
 }
+
+/* ── Mobile table fixes ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Stack toolbar buttons */
+  .toolbar-row {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .toolbar-row .search-wrap {
+    width: 100% !important;
+    flex: unset !important;
+    order: -1;
+  }
+
+  /* Payroll cards on mobile */
+  .payroll-row {
+    flex-direction: column !important;
+  }
+
+  /* Stat summary chips — scroll row on mobile */
+  .stat-chips {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .stat-chips::-webkit-scrollbar { display: none; }
+  .stat-chip { flex-shrink: 0; }
+
+  /* POC tabs scroll */
+  .poc-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .poc-tabs::-webkit-scrollbar { display: none; }
+
+  /* Finance payroll header */
+  .payroll-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .payroll-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .payroll-actions .btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  /* Employee detail panel full screen */
+  .emp-detail-panel {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    z-index: 150;
+    border-radius: 0 !important;
+    overflow-y: auto;
+    animation: slideInBottom 0.3s ease !important;
+  }
+
+  /* Filter buttons scroll */
+  .filter-row {
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    flex-wrap: nowrap !important;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-btn { flex-shrink: 0; }
+
+  /* Chart responsive */
+  .recharts-wrapper { font-size: 10px !important; }
+
+  /* Modal full width on mobile */
+  .modal { width: 100% !important; max-width: 100% !important; border-radius: 20px 20px 0 0 !important; }
+  .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+
+  /* Compliance cards */
+  .compliance-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .compliance-grid-4 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Summary stat boxes scroll on mobile */
+  .summary-boxes {
+    display: flex !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+  }
+  .summary-boxes::-webkit-scrollbar { display: none; }
+  .summary-box { flex-shrink: 0 !important; min-width: 120px !important; }
+
+  /* Vehicle grid */
+  .vehicle-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* POC fleet grid */
+  .fleet-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
