@@ -1,8 +1,8 @@
 'use client'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { empApi } from '@/lib/api'
 import { differenceInDays, parseISO } from 'date-fns'
-import { AlertTriangle, CheckCircle, Clock, Upload, X, ExternalLink, Trash2, Plus, Search, Eye, FileText, RefreshCw } from 'lucide-react'
+import { AlertTriangle, X, ExternalLink, Trash2, Plus, Search, RefreshCw, ChevronRight } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
