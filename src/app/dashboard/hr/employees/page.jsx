@@ -432,10 +432,10 @@ export default function EmployeesPage() {
         {/* Stats row */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
           {[
-            { l:'Total',    v:total,    c:'#1A1612', bg:'#FAFAF8', bc:'#EAE6DE',  icon:'👥' },
-            { l:'Active',   v:active,   c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0',  icon:'✅' },
-            { l:'On Leave', v:onLeave,  c:'#B45309', bg:'#FFFBEB', bc:'#FCD34D',  icon:'🏖' },
-            { l:'Alerts',   v:alerts,   c:'#C0392B', bg:'#FEF2F2', bc:'#FCA5A5',  icon:'⚠️' },
+            { l:'Total',    v:total,    c:'#1A1612', bg:'#FAFAF8', bc:'#EAE6DE',},
+            { l:'Active',   v:active,   c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0',},
+            { l:'On Leave', v:onLeave,  c:'#B45309', bg:'#FFFBEB', bc:'#FCD34D',},
+            { l:'Alerts',   v:alerts,   c:'#C0392B', bg:'#FEF2F2', bc:'#FCA5A5',},
           ].map((s,i) => (
             <div key={s.l} className="stat-card" style={{ padding:'14px 12px', animationDelay:`${i*0.07}s`, textAlign:'center', background:s.bg, border:`1px solid ${s.bc}` }}>
               <div style={{ fontSize:20, marginBottom:6 }}>{s.icon}</div>
