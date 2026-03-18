@@ -50,12 +50,11 @@ function KPICard({ icon:Icon, label, value, sub, color, trend, loading, delay=0 
         )}
       </div>
       {loading ? (
-        <div className="skeleton" style={{ width:80, height:28, borderRadius:8, marginBottom:6 }}/>
+        <div className="skeleton" style={{ width:70, height:24, borderRadius:6, marginBottom:6 }}/>
       ) : (
-        <div style={{ fontWeight:800, fontSize:22, color:'#1A1612', letterSpacing:'-0.03em', lineHeight:1, marginBottom:6 }}>{value}</div>
+        <div style={{ fontWeight:800, fontSize:18, color:'#1A1612', letterSpacing:'-0.02em', lineHeight:1, marginBottom:6 }}>{value}</div>
       )}
       <div style={{ fontSize:12, fontWeight:700, color:'#6B5D4A' }}>{label}</div>
-      {sub && <div style={{ fontSize:11, color:'#A89880', marginTop:3 }}>{sub}</div>}
     </div>
   )
 }
