@@ -8,7 +8,7 @@ import {
 import {
   TrendingUp, Users, Package, DollarSign, Plus, X, Clock,
   ShieldCheck, Wallet, AlertTriangle, CheckCircle, Calendar,
-  ChevronRight, ArrowUp, ArrowDown, Activity, Truck, FileText, UserMinus
+  ChevronRight, ArrowUp, ArrowDown, Activity, Truck, FileText, UserMinus, Smartphone
 } from 'lucide-react'
 
 const API  = process.env.NEXT_PUBLIC_API_URL
@@ -52,7 +52,7 @@ function KPICard({ icon:Icon, label, value, sub, color, trend, loading, delay=0 
       {loading ? (
         <div className="skeleton" style={{ width:80, height:28, borderRadius:8, marginBottom:6 }}/>
       ) : (
-        <div style={{ fontWeight:900, fontSize:28, color:'#1A1612', letterSpacing:'-0.04em', lineHeight:1, marginBottom:6 }}>{value}</div>
+        <div style={{ fontWeight:800, fontSize:22, color:'#1A1612', letterSpacing:'-0.03em', lineHeight:1, marginBottom:6 }}>{value}</div>
       )}
       <div style={{ fontSize:12, fontWeight:700, color:'#6B5D4A' }}>{label}</div>
       {sub && <div style={{ fontSize:11, color:'#A89880', marginTop:3 }}>{sub}</div>}
@@ -73,7 +73,7 @@ function SHead({ title, sub }) {
 // ══════════════════════════════════════════════════════════════
 // MANAGER DASHBOARD
 // ══════════════════════════════════════════════════════════════
-function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave }) {
+function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, simStats, simByStation }) {
   const kpis = [
     { icon:Users,      label:'Active DAs',         value: summary ? String(summary.employees?.active||0)                                        : '—', color:'#B8860B', sub:'delivery associates',     trend:null },
     { icon:Package,    label:"Today's Deliveries",  value: summary ? String(summary.today_deliveries||0)                                         : '—', color:'#1D6FA4', sub:'across all stations',     trend:null, live:true },
@@ -107,7 +107,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave }) {
         <div style={{ position:'absolute', right:80, bottom:-60, width:140, height:140, borderRadius:'50%', background:'rgba(184,134,11,0.06)' }}/>
         <div style={{ position:'relative' }}>
           <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:6 }}>Manager Overview</div>
-          <div style={{ fontWeight:900, fontSize:22, letterSpacing:'-0.03em', marginBottom:4 }}>Golden Crescent Dashboard</div>
+          <div style={{ fontWeight:800, fontSize:17, letterSpacing:'-0.02em', marginBottom:4 }}>Golden Crescent Dashboard</div>
           <div style={{ fontSize:13, color:'rgba(255,255,255,0.5)' }}>Real-time operational intelligence across all stations</div>
           <div style={{ display:'flex', gap:16, marginTop:16, flexWrap:'wrap' }}>
             {[
@@ -127,7 +127,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave }) {
       {/* KPI grid */}
       <div>
         <SHead title="Key Metrics" sub="Live operational data"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:12 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:10 }}>
           {kpis.map((k, i) => <KPICard key={k.label} {...k} loading={loading} delay={i*0.06}/>)}
         </div>
       </div>
@@ -283,6 +283,55 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave }) {
           })}
         </div>
       </div>
+
+      {/* SIM Cards overview */}
+      {simStats && (
+        <div className="card">
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexWrap:'wrap', gap:10 }}>
+            <SHead title="SIM Card Inventory" sub="Fleet communication overview"/>
+            <a href="/dashboard/poc" style={{ fontSize:12, fontWeight:600, color:'#B8860B', textDecoration:'none', display:'flex', alignItems:'center', gap:4 }}>
+              Manage SIMs <ChevronRight size={13}/>
+            </a>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))', gap:10, marginBottom:16 }}>
+            {[
+              { l:'Total SIMs',  v:simStats.total||0,     c:'#1A1612', bg:'#FAFAF8', bc:'#EAE6DE' },
+              { l:'Assigned',    v:simStats.assigned||0,  c:'#B8860B', bg:'#FDF6E3', bc:'#F0D78C' },
+              { l:'Available',   v:simStats.available||0, c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0' },
+              { l:'Inactive',    v:simStats.inactive||0,  c:'#A89880', bg:'#F5F4F1', bc:'#EAE6DE' },
+              { l:'Monthly Cost',v:`AED ${Number(simStats.monthly_cost||0).toLocaleString()}`, c:'#7C3AED', bg:'#F5F3FF', bc:'#DDD6FE' },
+            ].map(s => (
+              <div key={s.l} style={{ textAlign:'center', padding:'12px 8px', borderRadius:12, background:s.bg, border:`1px solid ${s.bc}` }}>
+                <div style={{ fontWeight:900, fontSize:18, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>
+                <div style={{ fontSize:10, color:s.c, fontWeight:600, marginTop:3, opacity:0.8 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+          {simByStation.length > 0 && (
+            <div>
+              <div style={{ fontSize:11, fontWeight:700, color:'#A89880', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>By Station</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {simByStation.map(s => {
+                  const pct = s.total > 0 ? Math.round(s.assigned/s.total*100) : 0
+                  const sc  = { DDB7:'#B8860B', DDB6:'#1D6FA4', DSH6:'#2E7D52', DXD3:'#7C3AED' }[s.station_code] || '#B8860B'
+                  return (
+                    <div key={s.station_code}>
+                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                        <span style={{ fontSize:12, fontWeight:700, color:sc }}>{s.station_code}</span>
+                        <span style={{ fontSize:12, color:'#6B5D4A' }}>{s.assigned}/{s.total} assigned</span>
+                      </div>
+                      <div style={{ height:7, background:'#F0EDE6', borderRadius:10, overflow:'hidden' }}>
+                        <div style={{ height:'100%', width:`${pct}%`, background:sc, borderRadius:10, transition:'width 1s ease' }}/>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
     </div>
   )
 }
@@ -496,23 +545,28 @@ function POCDashboard({ summary, loading }) {
 // MAIN PAGE
 // ══════════════════════════════════════════════════════════════
 export default function AnalyticsPage() {
-  const [summary,  setSummary]  = useState(null)
-  const [chart,    setChart]    = useState([])
-  const [leaves,   setLeaves]   = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [userRole, setUserRole] = useState(null)
+  const [summary,  setSummary]    = useState(null)
+  const [chart,    setChart]      = useState([])
+  const [leaves,   setLeaves]     = useState([])
+  const [loading,  setLoading]    = useState(true)
+  const [userRole, setUserRole]   = useState(null)
+  const [simStats, setSimStats]   = useState(null)
+  const [simByStation, setSimByStation] = useState([])
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
       const user = JSON.parse(localStorage.getItem('gcd_user')||'{}')
       setUserRole(user.role)
-      const [sum, ch] = await Promise.all([
+      const [sum, ch, simStats] = await Promise.all([
         analyticsApi.summary(),
-        fetch(`${API}/api/analytics/deliveries-chart?months=6`, { headers:hdr() }).then(r=>r.json()).catch(()=>({ chart:[] }))
+        fetch(`${API}/api/analytics/deliveries-chart?months=6`, { headers:hdr() }).then(r=>r.json()).catch(()=>({ chart:[] })),
+        fetch(`${API}/api/sims/stats`, { headers:hdr() }).then(r=>r.json()).catch(()=>({ stats:null }))
       ])
       setSummary(sum)
       setChart(ch.chart || [])
+      setSimStats(simStats.stats || null)
+      setSimByStation(simStats.by_station || [])
 
       // Load pending leaves for roles that approve
       if (['manager','admin','hr','general_manager'].includes(user.role)) {
@@ -532,8 +586,8 @@ export default function AnalyticsPage() {
   }
 
   const dashboards = {
-    admin:           <ManagerDashboard   summary={summary} chart={chart} loading={loading} leaves={leaves} onApproveLeave={handleApproveLeave}/>,
-    manager:         <ManagerDashboard   summary={summary} chart={chart} loading={loading} leaves={leaves} onApproveLeave={handleApproveLeave}/>,
+    admin:           <ManagerDashboard   summary={summary} chart={chart} loading={loading} leaves={leaves} onApproveLeave={handleApproveLeave} simStats={simStats} simByStation={simByStation}/>,
+    manager:         <ManagerDashboard   summary={summary} chart={chart} loading={loading} leaves={leaves} onApproveLeave={handleApproveLeave} simStats={simStats} simByStation={simByStation}/>,
     general_manager: <GMDashboard        summary={summary} chart={chart} loading={loading} leaves={leaves} onApproveLeave={handleApproveLeave}/>,
     hr:              <HRDashboard        summary={summary} loading={loading} leaves={leaves} onApproveLeave={handleApproveLeave}/>,
     accountant:      <AccountantDashboard summary={summary} loading={loading}/>,

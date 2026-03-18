@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/lib/auth'
-import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock } from 'lucide-react'
+import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 const CYCLES  = ['A','B','C','Beset','MR','FM','Rescue']
@@ -377,6 +377,195 @@ function DeliveryModal({ date, station, existing, onSave, onClose }) {
   )
 }
 
+
+// ── SIM Modal ─────────────────────────────────────────────────
+function SimModal({ sim, emps, station, onSave, onClose }) {
+  const isEdit = !!sim
+  const [form, setForm] = useState({
+    sim_number: sim?.sim_number||'',
+    phone_number: sim?.phone_number||'',
+    carrier: sim?.carrier||'Du',
+    status: sim?.status||'available',
+    emp_id: sim?.emp_id||'',
+    notes: sim?.notes||'',
+    monthly_cost: sim?.monthly_cost||'',
+  })
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState(null)
+  const set = (k,v) => setForm(p=>({...p,[k]:v}))
+
+  function handleEmpChange(v) {
+    set('emp_id', v)
+    set('status', v ? 'assigned' : 'available')
+  }
+
+  async function handleSave() {
+    if (!form.sim_number) return setErr('SIM number required')
+    setSaving(true); setErr(null)
+    try {
+      const body = { ...form, station_code: station, monthly_cost: parseFloat(form.monthly_cost)||0 }
+      const url    = isEdit ? `${API}/api/sims/${sim.id}` : `${API}/api/sims`
+      const method = isEdit ? 'PUT' : 'POST'
+      const res    = await fetch(url, { method, headers:hdr(), body:JSON.stringify(body) })
+      const data   = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      onSave()
+    } catch(e) { setErr(e.message) } finally { setSaving(false) }
+  }
+
+  const STATUSES = [
+    {v:'available',l:'Available',c:'#2E7D52'},{v:'assigned',l:'Assigned',c:'#B8860B'},
+    {v:'inactive', l:'Inactive', c:'#A89880'},{v:'damaged', l:'Damaged', c:'#C0392B'},
+  ]
+
+  return (
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{maxWidth:440}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
+          <div>
+            <h3 style={{fontWeight:900,fontSize:16,color:'#1A1612'}}>{isEdit?'Edit':'Add'} SIM Card</h3>
+            <p style={{fontSize:11.5,color:'#A89880',marginTop:2}}>{station} Station</p>
+          </div>
+          <button onClick={onClose} style={{width:30,height:30,borderRadius:9,background:'#F5F4F1',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><X size={14}/></button>
+        </div>
+        {err && <div style={{background:'#FEF2F2',border:'1px solid #FCA5A5',borderRadius:9,padding:'9px 12px',fontSize:12.5,color:'#C0392B',marginBottom:12}}>{err}</div>}
+        <div style={{display:'flex',flexDirection:'column',gap:13}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            <div><label className="input-label">SIM Number *</label>
+              <input className="input" value={form.sim_number} onChange={e=>set('sim_number',e.target.value)} placeholder="SIM ID" autoComplete="off"/></div>
+            <div><label className="input-label">Phone Number</label>
+              <input className="input" value={form.phone_number} onChange={e=>set('phone_number',e.target.value)} placeholder="+971 5X XXX XXXX"/></div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            <div><label className="input-label">Carrier</label>
+              <select className="input" value={form.carrier} onChange={e=>set('carrier',e.target.value)}>
+                {['Du','Etisalat (e&)','Virgin Mobile','Other'].map(ca=><option key={ca}>{ca}</option>)}
+              </select></div>
+            <div><label className="input-label">Monthly Cost (AED)</label>
+              <input className="input" type="number" value={form.monthly_cost} onChange={e=>set('monthly_cost',e.target.value)} placeholder="0"/></div>
+          </div>
+          <div><label className="input-label">Status</label>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:7}}>
+              {STATUSES.map(s=>(
+                <button key={s.v} onClick={()=>set('status',s.v)} type="button"
+                  style={{padding:'9px 4px',borderRadius:10,border:`2px solid ${form.status===s.v?s.c:'#EAE6DE'}`,background:form.status===s.v?`${s.c}12`:'#FAFAF8',cursor:'pointer',textAlign:'center',transition:'all 0.18s',fontFamily:'Poppins,sans-serif'}}>
+                  <div style={{fontSize:10.5,fontWeight:700,color:form.status===s.v?s.c:'#A89880'}}>{s.l}</div>
+                </button>
+              ))}
+            </div></div>
+          <div><label className="input-label">Assign to DA (optional)</label>
+            <DriverSearch employees={emps} value={form.emp_id} onChange={handleEmpChange} placeholder="— Unassigned —"/></div>
+          <div><label className="input-label">Notes</label>
+            <input className="input" value={form.notes} onChange={e=>set('notes',e.target.value)} placeholder="Any notes…"/></div>
+        </div>
+        <div style={{display:'flex',gap:10,marginTop:18}}>
+          <button onClick={onClose} className="btn btn-secondary" style={{flex:1,justifyContent:'center'}}>Cancel</button>
+          <button onClick={handleSave} disabled={saving} className="btn btn-primary" style={{flex:2,justifyContent:'center'}}>{saving?'Saving…':isEdit?'Save':'Add SIM'}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── SIM Section ───────────────────────────────────────────────
+function SimSection({ sims, emps, station, onRefresh }) {
+  const [modal,  setModal]  = useState(null)
+  const [search, setSearch] = useState('')
+
+  const SC = {
+    available:{c:'#2E7D52',bg:'#ECFDF5',bc:'#A7F3D0',l:'Available'},
+    assigned: {c:'#B8860B',bg:'#FDF6E3',bc:'#F0D78C',l:'Assigned'},
+    inactive: {c:'#A89880',bg:'#F5F4F1',bc:'#EAE6DE',l:'Inactive'},
+    damaged:  {c:'#C0392B',bg:'#FEF2F2',bc:'#FCA5A5',l:'Damaged'},
+  }
+
+  const filtered = sims.filter(s =>
+    !search || s.sim_number?.toLowerCase().includes(search.toLowerCase()) ||
+    s.phone_number?.toLowerCase().includes(search.toLowerCase()) ||
+    s.emp_name?.toLowerCase().includes(search.toLowerCase())
+  )
+
+  async function handleDelete(id) {
+    if (!confirm('Delete this SIM?')) return
+    await fetch(`${API}/api/sims/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } })
+    onRefresh()
+  }
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:12}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
+        {[
+          {l:'Total', v:sims.length,                               c:'#1A1612',bg:'#FAFAF8',bc:'#EAE6DE'},
+          {l:'In Use', v:sims.filter(s=>s.status==='assigned').length, c:'#B8860B',bg:'#FDF6E3',bc:'#F0D78C'},
+          {l:'Free',   v:sims.filter(s=>s.status==='available').length,c:'#2E7D52',bg:'#ECFDF5',bc:'#A7F3D0'},
+        ].map(s=>(
+          <div key={s.l} style={{textAlign:'center',padding:'12px 8px',borderRadius:12,background:s.bg,border:`1px solid ${s.bc}`}}>
+            <div style={{fontWeight:900,fontSize:22,color:s.c,letterSpacing:'-0.03em'}}>{s.v}</div>
+            <div style={{fontSize:10.5,color:s.c,fontWeight:600,marginTop:3}}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:'flex',gap:8}}>
+        <div style={{flex:1,position:'relative'}}>
+          <Search size={13} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#C4B49A',pointerEvents:'none'}}/>
+          <input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search SIM, phone, DA…" style={{paddingLeft:34,borderRadius:20}}/>
+        </div>
+        <button className="btn btn-primary" onClick={()=>setModal({type:'add'})} style={{borderRadius:20,padding:'9px 16px'}}>
+          <Plus size={14}/> Add SIM
+        </button>
+      </div>
+
+      {filtered.length===0 ? (
+        <div style={{textAlign:'center',padding:'40px',color:'#A89880'}}>
+          <Smartphone size={36} style={{margin:'0 auto 10px',display:'block',opacity:0.2}}/>
+          <div style={{fontWeight:600,color:'#6B5D4A'}}>{search?`No results for "${search}"`:'No SIM cards yet — add one above'}</div>
+        </div>
+      ) : filtered.map((sim,i)=>{
+        const sc = SC[sim.status]||SC.available
+        return (
+          <div key={sim.id} style={{background:'#FFF',border:`1.5px solid ${sc.bc}`,borderRadius:14,padding:'13px 15px',animation:`slideUp 0.3s ${i*0.04}s ease both`}}>
+            <div style={{display:'flex',alignItems:'center',gap:11}}>
+              <div style={{width:42,height:42,borderRadius:12,background:sc.bg,border:`1px solid ${sc.bc}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Smartphone size={18} color={sc.c}/>
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:700,fontSize:13,color:'#1A1612',fontFamily:'monospace'}}>{sim.phone_number||sim.sim_number}</div>
+                <div style={{fontSize:11,color:'#A89880',marginTop:2,display:'flex',gap:5,flexWrap:'wrap'}}>
+                  <span>{sim.carrier}</span>
+                  {sim.phone_number&&<><span>·</span><span style={{fontFamily:'monospace',fontSize:10}}>{sim.sim_number}</span></>}
+                  {sim.monthly_cost>0&&<><span>·</span><span style={{color:'#7C3AED',fontWeight:600}}>AED {sim.monthly_cost}/mo</span></>}
+                </div>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:6,flexShrink:0}}>
+                <span style={{fontSize:11,fontWeight:700,color:sc.c,background:sc.bg,border:`1px solid ${sc.bc}`,borderRadius:20,padding:'2px 10px'}}>{sc.l}</span>
+                <div style={{display:'flex',gap:5}}>
+                  <button onClick={()=>setModal({type:'edit',sim})} style={{padding:'4px 10px',borderRadius:7,background:'#F5F4F1',border:'none',cursor:'pointer',fontSize:11,color:'#6B5D4A',fontWeight:600,fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:4}}><Pencil size={11}/> Edit</button>
+                  <button onClick={()=>handleDelete(sim.id)} style={{padding:'4px 8px',borderRadius:7,background:'#FEF2F2',border:'none',cursor:'pointer',color:'#C0392B',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif'}}><Trash2 size={11}/></button>
+                </div>
+              </div>
+            </div>
+            {sim.emp_id && (
+              <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid #F5F4F1',display:'flex',alignItems:'center',gap:8}}>
+                <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)',border:'1px solid #F0D78C',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:900,color:'#B8860B',flexShrink:0}}>
+                  {sim.emp_name?.slice(0,2).toUpperCase()}
+                </div>
+                <div>
+                  <div style={{fontSize:12,fontWeight:700,color:'#1A1612'}}>{sim.emp_name}</div>
+                  <div style={{fontSize:10.5,color:'#A89880'}}>Assigned {sim.assigned_at?.slice(0,10)||'—'}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })}
+
+      {modal?.type==='add'  && <SimModal emps={emps} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);onRefresh()}}/>}
+      {modal?.type==='edit' && <SimModal sim={modal.sim} emps={emps} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);onRefresh()}}/>}
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────
 export default function POCPage() {
   const { user }  = useAuth()
@@ -390,6 +579,7 @@ export default function POCPage() {
   const [anns,    setAnns]    = useState([])
   const [leaves,  setLeaves]  = useState([])
   const [delivs,  setDelivs]  = useState([])
+  const [sims,    setSims]    = useState([])
   const [loading, setLoading] = useState(true)
   const [modal,   setModal]   = useState(null)
   const [search,  setSearch]  = useState('')
@@ -398,7 +588,7 @@ export default function POCPage() {
     setLoading(true)
     try {
       const h = { headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
-      const [a,e,an,lv,v,asgn,d] = await Promise.all([
+      const [a,e,an,lv,v,asgn,d,s] = await Promise.all([
         fetch(`${API}/api/attendance?date=${date}`,h).then(r=>r.json()),
         fetch(`${API}/api/employees?station_code=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/poc/announcements`,h).then(r=>r.json()),
@@ -406,10 +596,11 @@ export default function POCPage() {
         fetch(`${API}/api/vehicles?station_code=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/vehicles/assignments?date=${date}&station_code=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/deliveries?station=${station}`,h).then(r=>r.json()),
+        fetch(`${API}/api/sims?station_code=${station}`,h).then(r=>r.json()),
       ])
       setAtt(a.attendance||[]);setEmps(e.employees||[]);setAnns(an.announcements||[])
       setLeaves(lv.leaves||[]);setVehs(v.vehicles||[]);setAsgns(asgn.assignments||[])
-      setDelivs(d.deliveries||[])
+      setDelivs(d.deliveries||[]);setSims(s.sims||[])
     } catch(e){console.error(e)} finally{setLoading(false)}
   },[date,station])
 
@@ -453,11 +644,12 @@ export default function POCPage() {
   const filtEmp  = emps.filter(e=>!search||e.name.toLowerCase().includes(search.toLowerCase())||e.id.toLowerCase().includes(search.toLowerCase()))
 
   const TABS = [
-    {id:'attendance',label:'Attendance',icon:Users,    count:present},
-    {id:'fleet',     label:'Fleet',     icon:Truck,    count:active},
-    {id:'deliveries',label:'Deliveries',icon:Package,  count:null},
-    {id:'leaves',    label:'Leaves',    icon:Calendar, count:pending||null},
-    {id:'notices',   label:'Notices',   icon:Bell,     count:anns.length||null},
+    {id:'attendance',label:'Attendance',icon:Users,       count:present},
+    {id:'fleet',     label:'Fleet',     icon:Truck,       count:active},
+    {id:'deliveries',label:'Deliveries',icon:Package,     count:null},
+    {id:'sims',      label:'SIM Cards', icon:Smartphone,  count:null},
+    {id:'leaves',    label:'Leaves',    icon:Calendar,    count:pending||null},
+    {id:'notices',   label:'Notices',   icon:Bell,        count:anns.length||null},
   ]
 
   return (
@@ -690,7 +882,13 @@ export default function POCPage() {
         </div>
       )}
 
-      {/* ── NOTICES ── */}
+
+      {/* ── SIM CARDS ── */}
+      {!loading && tab==='sims' && (
+        <SimSection sims={sims} emps={emps} station={station} onRefresh={load}/>
+      )}
+
+      {/* ── NOTICES ── */
       {!loading && tab==='notices' && (
         <div style={{display:'flex',flexDirection:'column',gap:10}}>
           <div style={{display:'flex',justifyContent:'flex-end'}}>
