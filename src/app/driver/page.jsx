@@ -140,7 +140,7 @@ export default function DriverPortal() {
             </div>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight:700,fontSize:17,color:'#1A1612',letterSpacing:'-0.02em' }}>{user.name}</div>
-              <div style={{ fontSize:12,color:'#6B5D4A',marginTop:2 }}>{profile?.role} · {profile?.station_code||'DDB7'}</div>
+              <div style={{ fontSize:12,color:'#6B5D4A',marginTop:2 }}>{profile?.role} · {profile?.station_code||'DDB1'}</div>
             </div>
             {todayAtt ? (
               <span className={`badge ${todayAtt.status==='present'?'badge-success':'badge-warning'}`} style={{ fontSize:11 }}>

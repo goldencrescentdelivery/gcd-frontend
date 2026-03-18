@@ -13,7 +13,7 @@ import {
 
 const API  = process.env.NEXT_PUBLIC_API_URL
 const GOLD = '#B8860B'
-const STATION_COLORS = { DDB7:'#B8860B', DDB6:'#1D6FA4', DSH6:'#2E7D52', DXD3:'#7C3AED' }
+const STATION_COLORS = { DDB1:'#B8860B', DXE6:'#1D6FA4', DDB1:'#2E7D52', DXE6:'#7C3AED' }
 const CHART_COLORS   = ['#B8860B','#1D6FA4','#2E7D52','#7C3AED','#C0392B','#B45309']
 
 function hdr() { return { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
@@ -82,7 +82,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
     { icon:Calendar,   label:'Pending Leaves',       value: summary ? String(summary.pending_leaves||0)                                           : '—', color:'#B45309', sub:'awaiting approval',       trend:null },
   ]
 
-  const deliveryData = chart.length > 0 ? chart : [{ month:'No data', DDB7:0, DDB6:0, DSH6:0, DXD3:0 }]
+  const deliveryData = chart.length > 0 ? chart : [{ month:'No data', DDB1:0, DXE6:0, DDB1:0, DXE6:0 }]
 
   // Station breakdown for pie
   const stationData = Object.entries(STATION_COLORS).map(([s, c]) => ({
@@ -94,7 +94,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
   // Attendance trend
   const attData = deliveryData.map(d => ({
     month: d.month,
-    Total: (d.DDB7||0) + (d.DDB6||0) + (d.DSH6||0) + (d.DXD3||0)
+    Total: (d.DDB1||0) + (d.DXE6||0) + (d.DDB1||0) + (d.DXE6||0)
   }))
 
   return (
@@ -126,7 +126,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
       {/* KPI grid */}
       <div>
         <SHead title="Key Metrics" sub="Live operational data"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:10 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
           {kpis.map((k, i) => <KPICard key={k.label} {...k} loading={loading} delay={i*0.06}/>)}
         </div>
       </div>
@@ -258,7 +258,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
       {/* Quick links */}
       <div className="card">
         <SHead title="Quick Actions"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:10 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
           {[
             { l:'All Employees',  href:'/dashboard/hr/employees',      icon:Users,       c:'#B8860B' },
             { l:'Payroll',        href:'/dashboard/finance/payroll',    icon:Wallet,      c:'#1D6FA4' },
@@ -312,7 +312,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
               <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                 {simByStation.map(s => {
                   const pct = s.total > 0 ? Math.round(s.assigned/s.total*100) : 0
-                  const sc  = { DDB7:'#B8860B', DDB6:'#1D6FA4', DSH6:'#2E7D52', DXD3:'#7C3AED' }[s.station_code] || '#B8860B'
+                  const sc  = { DDB1:'#B8860B', DXE6:'#1D6FA4', DDB1:'#2E7D52', DXE6:'#7C3AED' }[s.station_code] || '#B8860B'
                   return (
                     <div key={s.station_code}>
                       <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>

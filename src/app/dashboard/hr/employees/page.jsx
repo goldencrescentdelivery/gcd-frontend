@@ -2,12 +2,12 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { empApi } from '@/lib/api'
 import { useSocket } from '@/lib/socket'
-import { Search, Plus, X, Pencil, Trash2, ChevronRight, Shield, Phone, User, Building2, AlertCircle, CheckCircle2, Briefcase, CreditCard, Calendar, Users } from 'lucide-react'
+import { Search, Plus, X, Pencil, Trash2, ChevronRight, Shield, Phone, User, Building2, AlertCircle, CheckCircle2, Briefcase, CreditCard, Calendar, Users, Receipt, ExternalLink } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
 
-const STATIONS = ['All','DDB7','DDB6','DSH6','DXD3']
-const STATION_COLORS = { DDB7:'#B8860B', DDB6:'#1D6FA4', DSH6:'#2E7D52', DXD3:'#7C3AED' }
-const STATION_BG     = { DDB7:'#FDF6E3', DDB6:'#EFF6FF', DSH6:'#ECFDF5', DXD3:'#F5F3FF' }
+const STATIONS = ['All','DDB1','DXE6','DDB1','DXE6']
+const STATION_COLORS = { DDB1:'#B8860B', DXE6:'#1D6FA4', DDB1:'#2E7D52', DXE6:'#7C3AED' }
+const STATION_BG     = { DDB1:'#FDF6E3', DXE6:'#EFF6FF', DDB1:'#ECFDF5', DXE6:'#F5F3FF' }
 const STATUS_CFG = {
   active:   { l:'Active',   c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0', dot:'#22C55E' },
   on_leave: { l:'On Leave', c:'#B45309', bg:'#FFFBEB', bc:'#FCD34D', dot:'#F59E0B' },
@@ -19,7 +19,7 @@ const EMPTY = {
   id:'', name:'', role:'Driver', dept:'Operations', status:'active',
   salary:'', joined:'', phone:'', work_number:'', nationality:'', zone:'',
   visa_expiry:'', license_expiry:'', avatar:'',
-  station_code:'DDB7', hourly_rate:'3.85',
+  station_code:'DDB1', hourly_rate:'3.85',
   iloe_expiry:'', annual_leave_start:'',
   amazon_id:'', emirates_id:'', annual_leave_balance:30,
   project_type:'pulser', per_shipment_rate:'0.5', performance_bonus:'100',
@@ -187,7 +187,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
               {sel('Role *', 'role', ['Driver','HR Manager','Finance Mgr','Accountant','Dispatcher','General Manager','Admin','POC','Other'])}
               {sel('Department *', 'dept', ['Operations','HR','Finance','Admin','Other'])}
-              {sel('Station', 'station_code', ['DDB7','DDB6','DSH6','DXD3'])}
+              {sel('Station', 'station_code', ['DDB1','DXE6','DDB1','DXE6'])}
               {sel('Status', 'status', [{v:'active',l:'Active'},{v:'on_leave',l:'On Leave'},{v:'inactive',l:'Inactive'}])}
               <div style={{ gridColumn:'span 2' }}>
                 <div style={{ background:'#F8F7FF', border:'1px solid #DDD6FE', borderRadius:12, padding:'14px 16px' }}>
@@ -274,7 +274,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
           <div style={{ fontSize:12, color:'#6B5D4A', marginBottom:10 }}>{emp.role}</div>
           <div style={{ display:'flex', gap:6, justifyContent:'center', flexWrap:'wrap' }}>
             <span style={{ fontSize:11, fontWeight:700, color:s.c, background:s.bg, border:`1px solid ${s.bc}`, borderRadius:20, padding:'3px 10px' }}>{s.l}</span>
-            <span style={{ fontSize:11, fontWeight:700, color:sc, background:'#FFF', border:`1px solid ${sc}40`, borderRadius:20, padding:'3px 10px' }}>{emp.station_code||'DDB7'}</span>
+            <span style={{ fontSize:11, fontWeight:700, color:sc, background:'#FFF', border:`1px solid ${sc}40`, borderRadius:20, padding:'3px 10px' }}>{emp.station_code||'DDB1'}</span>
             {emp.project_type && <span style={{ fontSize:11, fontWeight:700, color:'#7C3AED', background:'#F5F3FF', border:'1px solid #DDD6FE', borderRadius:20, padding:'3px 10px' }}>{emp.project_type.toUpperCase()}</span>}
           </div>
         </div>
@@ -323,7 +323,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
           })}
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8 }}>
           <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center', borderRadius:12 }}>
             <Pencil size={13}/> Edit
           </button>
@@ -331,6 +331,12 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
             <Trash2 size={13}/> Delete
           </button>
         </div>
+        <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`}
+          style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:12, background:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', border:'1px solid #BFDBFE', color:'#1D6FA4', fontWeight:600, fontSize:12, textDecoration:'none', transition:'background 0.15s' }}
+          onMouseEnter={e=>e.currentTarget.style.background='linear-gradient(135deg,#DBEAFE,#BFDBFE)'}
+          onMouseLeave={e=>e.currentTarget.style.background='linear-gradient(135deg,#EFF6FF,#DBEAFE)'}>
+          <Receipt size={13}/> View Expenses <ExternalLink size={11}/>
+        </a>
       </div>
     </div>
   )
@@ -364,7 +370,7 @@ function EmpCard({ emp, onClick, onEdit, onDelete, index }) {
           </div>
         </div>
         <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4, flexShrink:0 }}>
-          <span style={{ fontSize:11, fontWeight:800, color:sc, background:STATION_BG[emp.station_code]||'#FDF6E3', border:`1px solid ${sc}30`, borderRadius:8, padding:'2px 9px' }}>{emp.station_code||'DDB7'}</span>
+          <span style={{ fontSize:11, fontWeight:800, color:sc, background:STATION_BG[emp.station_code]||'#FDF6E3', border:`1px solid ${sc}30`, borderRadius:8, padding:'2px 9px' }}>{emp.station_code||'DDB1'}</span>
           {emp.project_type && <span style={{ fontSize:10, fontWeight:600, color:'#7C3AED', background:'#F5F3FF', borderRadius:6, padding:'1px 7px' }}>{emp.project_type.toUpperCase()}</span>}
         </div>
       </div>

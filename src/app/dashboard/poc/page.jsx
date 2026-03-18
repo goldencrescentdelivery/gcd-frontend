@@ -143,20 +143,20 @@ function AttModal({ employees, station, editRecord, onSave, onClose }) {
   const [saving, setSaving] = useState(false)
   const [err,    setErr]    = useState(null)
 
-  const isDDB6 = station === 'DDB6'
+  const isDXE6 = station === 'DXE6'
   const selEmp = employees.find(e=>e.id===empId)
   const rate   = parseFloat(selEmp?.hourly_rate||3.85)
   const regHrs = cycles.filter(c=>c!=='Rescue').reduce((s,c)=>s+(CYCLE_H[c]||0),0)
   const resHrs = cycles.includes('Rescue') ? (parseFloat(rescue)||0) : 0
   const total  = regHrs + resHrs
-  const est    = isDDB6 ? (wType==='helper'?90:115) : total>0 ? (total*rate).toFixed(2) : null
+  const est    = isDXE6 ? (wType==='helper'?90:115) : total>0 ? (total*rate).toFixed(2) : null
 
   async function handleSave() {
     if (!empId) return setErr('Select a driver')
-    if (!isDDB6 && status==='present' && cycles.length===0) return setErr('Select at least one cycle')
+    if (!isDXE6 && status==='present' && cycles.length===0) return setErr('Select at least one cycle')
     setErr(null); setSaving(true)
     try {
-      const body = { emp_id:empId, status, note, ...(isDDB6?{pay_type:'daily',worker_type:wType}:{cycles,rescue_hours:rescue||null}) }
+      const body = { emp_id:empId, status, note, ...(isDXE6?{pay_type:'daily',worker_type:wType}:{cycles,rescue_hours:rescue||null}) }
       const url    = isEdit ? `${API}/api/attendance/${editRecord.id}` : `${API}/api/attendance`
       const method = isEdit ? 'PUT' : 'POST'
       const res    = await fetch(url, { method, headers:hdr(), body:JSON.stringify(body) })
@@ -204,7 +204,7 @@ function AttModal({ employees, station, editRecord, onSave, onClose }) {
             </div>
           </div>
 
-          {status==='present' && isDDB6 && (
+          {status==='present' && isDXE6 && (
             <div>
               <label className="input-label">Worker Type</label>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
@@ -219,7 +219,7 @@ function AttModal({ employees, station, editRecord, onSave, onClose }) {
             </div>
           )}
 
-          {status==='present' && !isDDB6 && (
+          {status==='present' && !isDXE6 && (
             <CycleSelector selected={cycles} onChange={setCycles} rescueHours={rescue} onRescueHours={setRescue}/>
           )}
 
@@ -227,7 +227,7 @@ function AttModal({ employees, station, editRecord, onSave, onClose }) {
             <div style={{ background:'linear-gradient(135deg,#ECFDF5,#F0FDF4)', border:'1px solid #A7F3D0', borderRadius:12, padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div>
                 <div style={{ fontSize:11, color:'#2E7D52', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Estimated Earnings</div>
-                <div style={{ fontSize:11, color:'#A89880', marginTop:1 }}>{isDDB6?'Daily rate':`${total}h × AED ${rate}/hr`}</div>
+                <div style={{ fontSize:11, color:'#A89880', marginTop:1 }}>{isDXE6?'Daily rate':`${total}h × AED ${rate}/hr`}</div>
               </div>
               <div style={{ fontSize:22, fontWeight:900, color:'#2E7D52', letterSpacing:'-0.03em' }}>AED {est}</div>
             </div>
@@ -569,7 +569,7 @@ function SimSection({ sims, emps, station, onRefresh }) {
 // ── Main ──────────────────────────────────────────────────────
 export default function POCPage() {
   const { user }  = useAuth()
-  const station   = user?.station_code || 'DDB7'
+  const station   = user?.station_code || 'DDB1'
   const [tab,     setTab]     = useState('attendance')
   const [date,    setDate]    = useState(new Date().toISOString().slice(0,10))
   const [att,     setAtt]     = useState([])
