@@ -1,14 +1,11 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
-import { Plus, X, Pencil, Trash2 } from 'lucide-react'
+import { Plus, X, Pencil, Trash2, Eye, EyeOff, RefreshCw } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
-const ROLES = ['admin','manager','general_manager','hr','accountant','poc','driver']
+const ROLES = ['driver','poc','finance','manager','admin']
 const STATIONS = ['DDB7','DDB6','DSH6','DXD3']
-const ROLE_COLORS = {
-  admin:'#7C3AED', manager:'#1D6FA4', general_manager:'#0E7490',
-  hr:'#2E7D52', accountant:'#B45309', poc:'#B8860B', driver:'#6B5D4A'
-}
+const ROLE_COLORS = { admin:'#7C3AED', manager:'#1D6FA4', finance:'#2E7D52', poc:'#B8860B', driver:'#6B5D4A' }
 
 function hdr() {
   return { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` }
@@ -72,7 +69,7 @@ function UserModal({ user, onSave, onClose }) {
           <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10 }}>
             <div><label className="input-label">Role *</label>
               <select className="input" value={role} onChange={e=>setRole(e.target.value)}>
-                {ROLES.map(r=><option key={r} value={r}>{r.replace('_',' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>)}
+                {ROLES.map(r=><option key={r} value={r}>{r.charAt(0).toUpperCase()+r.slice(1)}</option>)}
               </select></div>
             <div><label className="input-label">Status</label>
               <select className="input" value={status} onChange={e=>setStatus(e.target.value)}>
@@ -100,6 +97,7 @@ export default function UsersPage() {
   const [users,   setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
   const [modal,   setModal]   = useState(null)
+  const [showPw,  setShowPw]  = useState({})
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -127,10 +125,8 @@ export default function UsersPage() {
     load()
   }
 
-  const grouped = users.reduce((acc, u) => {
-    const r = u.role || 'driver'
-    if (!acc[r]) acc[r] = []
-    acc[r].push(u)
+  const grouped = ROLES.reduce((acc, r) => {
+    acc[r] = users.filter(u => u.role === r)
     return acc
   }, {})
 
@@ -151,7 +147,7 @@ export default function UsersPage() {
             </div>
             <table className="data-table">
               <thead><tr>
-                <th>Name</th><th>Email</th>
+                <th>Name</th><th>Email</th><th>Password</th>
                 <th>Employee ID</th><th>Station</th><th>Status</th><th></th>
               </tr></thead>
               <tbody>
@@ -159,6 +155,16 @@ export default function UsersPage() {
                   <tr key={u.id}>
                     <td style={{ fontWeight:600,color:'#1A1612' }}>{u.name}</td>
                     <td style={{ fontFamily:'monospace',fontSize:12,color:'#6B5D4A' }}>{u.email}</td>
+                    <td>
+                      <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+                        <span style={{ fontFamily:'monospace',fontSize:12,color:'#1A1612',letterSpacing: showPw[u.id]?'normal':'0.15em' }}>
+                          {showPw[u.id] ? (u.plain_password||'—') : '••••••••'}
+                        </span>
+                        <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setShowPw(p=>({...p,[u.id]:!p[u.id]}))}>
+                          {showPw[u.id]?<EyeOff size={12}/>:<Eye size={12}/>}
+                        </button>
+                      </div>
+                    </td>
                     <td style={{ fontFamily:'monospace',fontSize:12,color:'#A89880' }}>{u.emp_id||'—'}</td>
                     <td>
                       {u.station_code

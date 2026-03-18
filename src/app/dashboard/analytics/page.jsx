@@ -126,7 +126,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
       {/* KPI grid */}
       <div>
         <SHead title="Key Metrics" sub="Live operational data"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:10 }}>
           {kpis.map((k, i) => <KPICard key={k.label} {...k} loading={loading} delay={i*0.06}/>)}
         </div>
       </div>
@@ -258,7 +258,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
       {/* Quick links */}
       <div className="card">
         <SHead title="Quick Actions"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:10 }}>
           {[
             { l:'All Employees',  href:'/dashboard/hr/employees',      icon:Users,       c:'#B8860B' },
             { l:'Payroll',        href:'/dashboard/finance/payroll',    icon:Wallet,      c:'#1D6FA4' },

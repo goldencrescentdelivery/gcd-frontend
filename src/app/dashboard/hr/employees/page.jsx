@@ -1,11 +1,11 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
-import { empApi, pocApi } from '@/lib/api'
+import { empApi } from '@/lib/api'
 import { useSocket } from '@/lib/socket'
 import { Search, Plus, X, Pencil, Trash2, ChevronRight, Shield, Phone, User, Building2, AlertCircle, CheckCircle2, Briefcase, CreditCard, Calendar, Users } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
 
-// Fallback colors for stations — extended dynamically as new stations are added
+const STATIONS = ['All','DDB7','DDB6','DSH6','DXD3']
 const STATION_COLORS = { DDB7:'#B8860B', DDB6:'#1D6FA4', DSH6:'#2E7D52', DXD3:'#7C3AED' }
 const STATION_BG     = { DDB7:'#FDF6E3', DDB6:'#EFF6FF', DSH6:'#ECFDF5', DXD3:'#F5F3FF' }
 const STATUS_CFG = {
@@ -37,8 +37,23 @@ function expiryInfo(ds) {
   } catch { return null }
 }
 
+function calcNetSalary(emp) {
+  const base = Number(emp.salary||0)
+  const hrs  = Number(emp.total_hours || 0)
+  const rate = Number(emp.hourly_rate || 3.85)
+  const perf = Number(emp.performance_bonus || 100)
+  const shipments = Number(emp.total_shipments || 0)
+  const perShip   = Number(emp.per_shipment_rate || 0.5)
+
+  if (emp.project_type === 'cret') {
+    return base + shipments * perShip
+  }
+  // Pulser (default)
+  return base + hrs * rate + perf
+}
+
 // ── Modal ─────────────────────────────────────────────────────
-function EmpModal({ emp, onSave, onClose, mode, stationOptions = ['DDB7','DDB6','DSH6','DXD3'] }) {
+function EmpModal({ emp, onSave, onClose, mode }) {
   const [form, setForm] = useState(() => emp ? {
     ...emp,
     salary:               emp.salary||'',
@@ -172,7 +187,7 @@ function EmpModal({ emp, onSave, onClose, mode, stationOptions = ['DDB7','DDB6',
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
               {sel('Role *', 'role', ['Driver','HR Manager','Finance Mgr','Accountant','Dispatcher','General Manager','Admin','POC','Other'])}
               {sel('Department *', 'dept', ['Operations','HR','Finance','Admin','Other'])}
-              {sel('Station', 'station_code', stationOptions)}
+              {sel('Station', 'station_code', ['DDB7','DDB6','DSH6','DXD3'])}
               {sel('Status', 'status', [{v:'active',l:'Active'},{v:'on_leave',l:'On Leave'},{v:'inactive',l:'Inactive'}])}
               <div style={{ gridColumn:'span 2' }}>
                 <div style={{ background:'#F8F7FF', border:'1px solid #DDD6FE', borderRadius:12, padding:'14px 16px' }}>
@@ -378,14 +393,6 @@ export default function EmployeesPage() {
   const [station,   setStation]   = useState('All')
   const [selected,  setSelected]  = useState(null)
   const [modal,     setModal]     = useState(null)
-  const [stations,  setStations]  = useState(['All'])
-
-  useEffect(() => {
-    pocApi.stations().then(data => {
-      const codes = (data.stations || []).filter(s => s.active).map(s => s.name)
-      setStations(['All', ...codes])
-    }).catch(() => setStations(['All','DDB7','DDB6','DSH6','DXD3']))
-  }, [])
 
   const load = useCallback(async () => {
     try {
@@ -459,7 +466,7 @@ export default function EmployeesPage() {
             {search && <button onClick={()=>setSearch('')} style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#A89880', padding:0, display:'flex' }}><X size={13}/></button>}
           </div>
           <div style={{ display:'flex', gap:6, overflowX:'auto', scrollbarWidth:'none', flexShrink:0 }}>
-            {stations.map(s => {
+            {STATIONS.map(s => {
               const color = STATION_COLORS[s]||'#6B5D4A'
               const isOn  = station === s
               return (
@@ -503,7 +510,7 @@ export default function EmployeesPage() {
         </div>
       )}
 
-      {modal && <EmpModal mode={modal.mode} emp={modal.emp} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}} stationOptions={stations.filter(s=>s!=='All')}/>}
+      {modal && <EmpModal mode={modal.mode} emp={modal.emp} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
     </div>
   )
 }

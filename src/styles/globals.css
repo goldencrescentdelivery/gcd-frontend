@@ -806,7 +806,6 @@ input[type='range']::-moz-range-thumb {
   .stat-grid-3 { grid-template-columns: repeat(2,1fr) !important; }
   .chart-row   { grid-template-columns: 1fr !important; }
   .two-col     { grid-template-columns: 1fr !important; }
-  .kpi-grid    { grid-template-columns: repeat(3,1fr) !important; }
 }
 
 /* Mobile */
@@ -815,7 +814,6 @@ input[type='range']::-moz-range-thumb {
   .stat-grid-3 { grid-template-columns: 1fr 1fr !important; }
   .chart-row   { grid-template-columns: 1fr !important; }
   .two-col     { grid-template-columns: 1fr !important; }
-  .kpi-grid    { grid-template-columns: repeat(2,1fr) !important; }
   .hide-mobile { display: none !important; }
   .show-mobile { display: block !important; }
 
