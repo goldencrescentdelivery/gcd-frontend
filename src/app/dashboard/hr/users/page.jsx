@@ -62,7 +62,7 @@ function UserModal({ user, onSave, onClose }) {
             <button onClick={onClose} style={{ width:30, height:30, borderRadius:9, background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
           </div>
           {/* Role selector */}
-          <div style={{ display:'flex', gap:6, overflowX:'auto', scrollbarWidth:'none', paddingBottom:2 }}>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', paddingBottom:2 }}>
             {ALL_ROLES.map(r => {
               const cfg = ROLE_CFG[r]
               return (
@@ -116,8 +116,11 @@ function UserModal({ user, onSave, onClose }) {
 
           <div style={{ display:'grid', gridTemplateColumns: role==='poc' ? '1fr 1fr 1fr' : '1fr 1fr', gap:12 }}>
             <div>
-              <label style={{ display:'block', fontSize:11, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color:'#A89880', marginBottom:5 }}>Role</label>
-              <div style={{ padding:'9px 12px', borderRadius:10, background:rc.bg, border:`1.5px solid ${rc.bc}`, fontSize:13, fontWeight:700, color:rc.c }}>{rc.label}</div>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color:'#A89880', marginBottom:5 }}>Selected Role</label>
+              <div style={{ padding:'9px 12px', borderRadius:10, background:rc.bg, border:`1.5px solid ${rc.bc}`, fontSize:13, fontWeight:700, color:rc.c, display:'flex', alignItems:'center', gap:6 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:rc.c }}/>
+                {rc.label}
+              </div>
             </div>
             <div>
               <label style={{ display:'block', fontSize:11, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color:'#A89880', marginBottom:5 }}>Status</label>
