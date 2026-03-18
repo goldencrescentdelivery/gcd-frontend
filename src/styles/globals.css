@@ -1002,3 +1002,43 @@ input[type='range']::-moz-range-thumb {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ── Mobile/Desktop visibility helpers ───────────────────────── */
+.mobile-only-block  { display: block; }
+.desktop-only-block { display: none !important; }
+
+@media (min-width: 641px) {
+  .mobile-only-block  { display: none !important; }
+  .desktop-only-block { display: grid !important; }
+}
+
+/* ── Analytics mobile fixes ──────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Welcome banner */
+  .analytics-banner {
+    padding: 16px 14px !important;
+  }
+  .analytics-banner h1 {
+    font-size: 16px !important;
+  }
+  /* Charts full width */
+  .chart-row {
+    grid-template-columns: 1fr !important;
+  }
+  /* Approval cards stack */
+  .approval-card {
+    flex-direction: column !important;
+  }
+  /* Quick actions full grid */
+  .quick-actions-grid {
+    grid-template-columns: repeat(2,1fr) !important;
+  }
+  /* Two-col on mobile = 1 col */
+  .two-col {
+    grid-template-columns: 1fr !important;
+  }
+  /* SIM stats */
+  .sim-stats-grid {
+    grid-template-columns: repeat(3,1fr) !important;
+  }
+}

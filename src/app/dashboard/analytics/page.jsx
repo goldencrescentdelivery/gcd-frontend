@@ -34,13 +34,13 @@ const ChartTip = ({ active, payload, label }) => {
 }
 
 // ── KPI Card ──────────────────────────────────────────────────
-function KPICard({ icon:Icon, label, value, sub, color, trend, loading, delay=0 }) {
+function KPICard({ icon:Icon, label, value, color, trend, loading, delay=0 }) {
   return (
-    <div className="stat-card" style={{ animationDelay:`${delay}s`, position:'relative', overflow:'hidden' }}>
-      <div style={{ position:'absolute', right:-16, bottom:-16, width:80, height:80, borderRadius:'50%', background:`${color}08` }}/>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
-        <div style={{ width:44, height:44, borderRadius:13, background:`${color}12`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <Icon size={20} color={color}/>
+    <div className="stat-card" style={{ animationDelay:`${delay}s`, position:'relative', overflow:'hidden', minWidth:0 }}>
+      <div style={{ position:'absolute', right:-12, bottom:-12, width:70, height:70, borderRadius:'50%', background:`${color}08` }}/>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
+        <div style={{ width:38, height:38, borderRadius:11, background:`${color}12`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          <Icon size={18} color={color}/>
         </div>
         {trend != null && (
           <div style={{ display:'flex', alignItems:'center', gap:3, fontSize:11, fontWeight:700, color: trend >= 0 ? '#2E7D52' : '#C0392B' }}>
@@ -50,11 +50,49 @@ function KPICard({ icon:Icon, label, value, sub, color, trend, loading, delay=0 
         )}
       </div>
       {loading ? (
-        <div className="skeleton" style={{ width:70, height:24, borderRadius:6, marginBottom:6 }}/>
+        <div className="skeleton" style={{ width:60, height:22, borderRadius:6, marginBottom:5 }}/>
       ) : (
-        <div style={{ fontWeight:800, fontSize:18, color:'#1A1612', letterSpacing:'-0.02em', lineHeight:1, marginBottom:6 }}>{value}</div>
+        <div style={{ fontWeight:800, fontSize:16, color:'#1A1612', letterSpacing:'-0.02em', lineHeight:1, marginBottom:5, wordBreak:'break-word' }}>{value}</div>
       )}
-      <div style={{ fontSize:12, fontWeight:700, color:'#6B5D4A' }}>{label}</div>
+      <div style={{ fontSize:11, fontWeight:700, color:'#6B5D4A', lineHeight:1.3 }}>{label}</div>
+    </div>
+  )
+}
+
+// ── Swipeable KPI Slider for mobile ──────────────────────────
+function KPISlider({ kpis, loading }) {
+  const ref = React.useRef(null)
+  const [idx, setIdx] = React.useState(0)
+  function onScroll() {
+    if (!ref.current) return
+    const w = ref.current.firstChild?.offsetWidth || 150
+    setIdx(Math.round(ref.current.scrollLeft / (w + 10)))
+  }
+  function goTo(i) {
+    if (!ref.current) return
+    const w = ref.current.firstChild?.offsetWidth || 150
+    ref.current.scrollTo({ left: i * (w + 10), behavior:'smooth' })
+  }
+  return (
+    <div>
+      <div ref={ref} onScroll={onScroll}
+        style={{ display:'flex', gap:10, overflowX:'auto', scrollSnapType:'x mandatory', WebkitOverflowScrolling:'touch', scrollbarWidth:'none', paddingBottom:4 }}>
+        <style>{`.kpi-slider::-webkit-scrollbar{display:none}`}</style>
+        {kpis.map((k, i) => {
+          const Icon = k.icon
+          return (
+            <div key={k.label} style={{ minWidth:'calc(50% - 5px)', maxWidth:'calc(50% - 5px)', scrollSnapAlign:'start', flexShrink:0 }}>
+              <KPICard {...k} loading={loading} delay={i*0.06}/>
+            </div>
+          )
+        })}
+      </div>
+      {/* Dots */}
+      <div style={{ display:'flex', justifyContent:'center', gap:5, marginTop:8 }}>
+        {kpis.map((_,i) => (
+          <button key={i} onClick={()=>goTo(i)} style={{ width:i===idx?18:6, height:6, borderRadius:3, background:i===idx?'#B8860B':'#EAE6DE', border:'none', cursor:'pointer', padding:0, transition:'width 0.3s, background 0.3s' }}/>
+        ))}
+      </div>
     </div>
   )
 }
@@ -108,7 +146,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
           <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:6 }}>Manager Overview</div>
           <div style={{ fontWeight:800, fontSize:17, letterSpacing:'-0.02em', marginBottom:4 }}>Golden Crescent Dashboard</div>
           <div style={{ fontSize:13, color:'rgba(255,255,255,0.5)' }}>Real-time operational intelligence across all stations</div>
-          <div style={{ display:'flex', gap:16, marginTop:16, flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:8, marginTop:14, flexWrap:'wrap', overflowX:'auto', scrollbarWidth:'none' }}>
             {[
               { l:'Total Staff', v:summary?.employees?.c||0 },
               { l:'Stations',    v:4 },
@@ -123,16 +161,21 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
         </div>
       </div>
 
-      {/* KPI grid */}
+      {/* KPI grid — slider on mobile, grid on desktop */}
       <div>
         <SHead title="Key Metrics" sub="Live operational data"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
+        {/* Mobile slider */}
+        <div className="mobile-only-block">
+          <KPISlider kpis={kpis} loading={loading}/>
+        </div>
+        {/* Desktop grid */}
+        <div className="desktop-only-block" style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
           {kpis.map((k, i) => <KPICard key={k.label} {...k} loading={loading} delay={i*0.06}/>)}
         </div>
       </div>
 
       {/* Delivery chart */}
-      <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:16 }} className="two-col">
+      <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:16 }} className="two-col chart-row">
         <div className="card">
           <SHead title="Monthly Deliveries by Station" sub="Last 6 months"/>
           <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:14 }}>
@@ -183,7 +226,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
       </div>
 
       {/* Attendance + Payroll row */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }} className="two-col">
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="two-col">
         <div className="card">
           <SHead title="Today's Attendance" sub="All stations"/>
           {[
@@ -240,7 +283,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
           <SHead title="Pending Your Approval" sub="Leave requests approved by HR — awaiting final sign-off"/>
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {leaves.slice(0,5).map(l => (
-              <div key={l.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'#FAFAF8', borderRadius:12, border:'1px solid #EAE6DE', flexWrap:'wrap' }}>
+              <div key={l.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', background:'#FAFAF8', borderRadius:12, border:'1px solid #EAE6DE', flexWrap:'wrap' }} className="approval-card">
                 <div style={{ flex:1, minWidth:180 }}>
                   <div style={{ fontWeight:700, fontSize:13, color:'#1A1612' }}>{l.name}</div>
                   <div style={{ fontSize:11, color:'#A89880', marginTop:2 }}>{l.type} · {l.from_date} → {l.to_date} · {l.days} days</div>
@@ -350,7 +393,7 @@ function GMDashboard({ summary, chart, loading, leaves, onApproveLeave }) {
         ].map((k,i) => <KPICard key={k.label} {...k} loading={loading} delay={i*0.07}/>)}
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }} className="two-col">
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="two-col">
         <div className="card">
           <SHead title="Attendance Today"/>
           {[
@@ -387,7 +430,7 @@ function GMDashboard({ summary, chart, loading, leaves, onApproveLeave }) {
           <SHead title="Leave Requests to Action" sub="POC approved — awaiting HR/GM decision"/>
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {leaves.map(l => (
-              <div key={l.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'#FAFAF8', borderRadius:12, border:'1px solid #EAE6DE', flexWrap:'wrap' }}>
+              <div key={l.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', background:'#FAFAF8', borderRadius:12, border:'1px solid #EAE6DE', flexWrap:'wrap' }} className="approval-card">
                 <div style={{ flex:1, minWidth:180 }}>
                   <div style={{ fontWeight:700, fontSize:13, color:'#1A1612' }}>{l.name}</div>
                   <div style={{ fontSize:11, color:'#A89880', marginTop:2 }}>{l.type} · {l.from_date} → {l.to_date} · {l.days} days</div>
@@ -465,7 +508,7 @@ function HRDashboard({ summary, loading, leaves, onApproveLeave }) {
           <SHead title="Leave Requests to Action" sub="POC approved — awaiting HR decision"/>
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {leaves.map(l => (
-              <div key={l.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'#FAFAF8', borderRadius:12, border:'1px solid #EAE6DE', flexWrap:'wrap' }}>
+              <div key={l.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', background:'#FAFAF8', borderRadius:12, border:'1px solid #EAE6DE', flexWrap:'wrap' }} className="approval-card">
                 <div style={{ flex:1, minWidth:180 }}>
                   <div style={{ fontWeight:700, fontSize:13, color:'#1A1612' }}>{l.name}</div>
                   <div style={{ fontSize:11, color:'#A89880', marginTop:2 }}>{l.type} · {l.from_date} → {l.to_date} · {l.days} days</div>
