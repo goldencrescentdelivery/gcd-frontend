@@ -1,52 +1,71 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { leaveApi, empApi } from '@/lib/api'
-import { useSocket } from '@/lib/socket'
-import { Check, X, Clock, Plus } from 'lucide-react'
+import { Check, X, Clock, Plus, Calendar, ChevronRight, AlertCircle } from 'lucide-react'
 
-const S = { approved:{l:'Approved',c:'badge-success'}, pending:{l:'Pending',c:'badge-warning'}, rejected:{l:'Rejected',c:'badge-danger'} }
-const TC = { Annual:'#B8860B', Sick:'#1D6FA4', Emergency:'#C0392B', Unpaid:'#6B5D4A', Other:'#A89880' }
+const TYPE_COLORS = { Annual:'#B8860B', Sick:'#1D6FA4', Emergency:'#C0392B', Unpaid:'#6B5D4A', Other:'#A89880' }
+const API = process.env.NEXT_PUBLIC_API_URL
+function hdr() { return { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
+
+function StageChip({ label, status }) {
+  const cfg = {
+    approved: { c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0' },
+    rejected: { c:'#C0392B', bg:'#FEF2F2', bc:'#FCA5A5' },
+    pending:  { c:'#1D6FA4', bg:'#EFF6FF', bc:'#BFDBFE' },
+    waiting:  { c:'#A89880', bg:'#F5F4F1', bc:'#EAE6DE' },
+  }[status] || { c:'#A89880', bg:'#F5F4F1', bc:'#EAE6DE' }
+  return (
+    <div style={{ textAlign:'center', padding:'5px 10px', borderRadius:8, background:cfg.bg, border:`1px solid ${cfg.bc}` }}>
+      <div style={{ fontSize:9.5, color:cfg.c, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em' }}>{label}</div>
+      <div style={{ fontSize:11, color:cfg.c, fontWeight:800, marginTop:1 }}>{status}</div>
+    </div>
+  )
+}
 
 function NewLeaveModal({ employees, onSave, onClose }) {
   const [form, setForm] = useState({ emp_id:'', type:'Annual', from_date:'', to_date:'', reason:'' })
   const [saving, setSaving] = useState(false)
   const set = (k,v) => setForm(p=>({...p,[k]:v}))
-  const days = form.from_date && form.to_date ? Math.max(1,Math.round((new Date(form.to_date)-new Date(form.from_date))/(86400000))+1) : 0
+  const days = form.from_date && form.to_date ? Math.max(1,Math.round((new Date(form.to_date)-new Date(form.from_date))/86400000)+1) : 0
+
   async function handleSave() {
     if (!form.emp_id||!form.from_date||!form.to_date) return
     setSaving(true)
     try { await leaveApi.create({...form,days}); onSave() }
     catch(e) { alert(e.message) } finally { setSaving(false) }
   }
+
   return (
     <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal" style={{maxWidth:420}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
-          <h3 style={{fontWeight:700,fontSize:16,color:'#1A1612'}}>New Leave Request</h3>
+      <div className="modal" style={{ maxWidth:420 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+          <h3 style={{ fontWeight:800, fontSize:16, color:'#1A1612' }}>New Leave Request</h3>
           <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={17}/></button>
         </div>
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div><label className="input-label">Employee *</label>
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <div>
+            <label className="input-label">Employee *</label>
             <select className="input" value={form.emp_id} onChange={e=>set('emp_id',e.target.value)}>
-              <option value="">Select…</option>
-              {employees.map(e=><option key={e.id} value={e.id}>{e.name}</option>)}
+              <option value="">Select employee…</option>
+              {employees.map(e=><option key={e.id} value={e.id}>{e.name} ({e.id})</option>)}
             </select>
           </div>
-          <div><label className="input-label">Leave Type</label>
+          <div>
+            <label className="input-label">Leave Type</label>
             <select className="input" value={form.type} onChange={e=>set('type',e.target.value)}>
               {['Annual','Sick','Emergency','Unpaid','Other'].map(t=><option key={t}>{t}</option>)}
             </select>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
             <div><label className="input-label">From *</label><input className="input" type="date" value={form.from_date} onChange={e=>set('from_date',e.target.value)}/></div>
             <div><label className="input-label">To *</label><input className="input" type="date" value={form.to_date} onChange={e=>set('to_date',e.target.value)}/></div>
           </div>
-          {days>0 && <div style={{background:'#FDF6E3',border:'1px solid #F0D78C',borderRadius:9,padding:'8px 12px',fontSize:13,color:'#B8860B',fontWeight:600}}>{days} day{days>1?'s':''}</div>}
-          <div><label className="input-label">Reason</label><input className="input" value={form.reason} onChange={e=>set('reason',e.target.value)} placeholder="Reason for leave"/></div>
+          {days>0 && <div style={{ background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:9, padding:'8px 12px', fontSize:13, color:'#B8860B', fontWeight:700 }}>{days} day{days>1?'s':''}</div>}
+          <div><label className="input-label">Reason</label><input className="input" value={form.reason} onChange={e=>set('reason',e.target.value)}/></div>
         </div>
-        <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:18}}>
+        <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:18 }}>
           <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving||!form.emp_id||!form.from_date||!form.to_date}>{saving?'Saving…':'Submit Request'}</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving||!form.emp_id||!form.from_date||!form.to_date}>{saving?'Saving…':'Submit'}</button>
         </div>
       </div>
     </div>
@@ -57,78 +76,132 @@ export default function LeavesPage() {
   const [leaves,    setLeaves]    = useState([])
   const [employees, setEmployees] = useState([])
   const [loading,   setLoading]   = useState(true)
-  const [filter,    setFilter]    = useState('All')
+  const [stage,     setStage]     = useState('pending')
   const [modal,     setModal]     = useState(false)
+  const [userRole,  setUserRole]  = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [lv, emps] = await Promise.all([leaveApi.list(), empApi.list()])
-      setLeaves(lv.leaves); setEmployees(emps.employees)
+      const user = JSON.parse(localStorage.getItem('gcd_user')||'{}')
+      setUserRole(user.role)
+      const [lv, emps] = await Promise.all([
+        fetch(`${API}/api/leaves?stage=${stage}`, { headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }).then(r=>r.json()),
+        empApi.list()
+      ])
+      setLeaves(lv.leaves||[])
+      setEmployees(emps.employees||[])
     } catch(e) { console.error(e) } finally { setLoading(false) }
-  }, [])
+  }, [stage])
 
   useEffect(() => { load() }, [load])
-  useSocket({
-    'leave:created': l => setLeaves(p=>[l,...p]),
-    'leave:updated': l => setLeaves(p=>p.map(x=>x.id===l.id?{...x,...l}:x)),
-  })
 
-  async function setStatus(id, status) {
-    try { const d = await leaveApi.setStatus(id,status); setLeaves(p=>p.map(x=>x.id===d.leave.id?{...x,...d.leave}:x)) }
-    catch(e) { alert(e.message) }
+  async function action(id, status, endpoint) {
+    await fetch(`${API}/api/leaves/${id}/${endpoint}`, { method:'PATCH', headers:hdr(), body:JSON.stringify({ status }) })
+    load()
   }
 
-  const pending  = leaves.filter(l=>l.status==='pending').length
-  const filtered = filter==='All' ? leaves : leaves.filter(l=>l.status===filter.toLowerCase())
+  const pendingCount = leaves.filter(l => {
+    if (userRole==='manager'||userRole==='admin') return l.hr_status==='approved' && l.mgr_status==='pending'
+    return l.poc_status==='approved' && l.hr_status==='pending'
+  }).length
+
+  const STAGES = [
+    { v:'pending', l:'Action Required', count:pendingCount },
+    { v:'all',     l:'All Leaves',      count:null },
+  ]
 
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:16,animation:'slideUp 0.35s ease'}}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-        <div className="tabs">
-          {['All','Pending','Approved','Rejected'].map(f=>(
-            <button key={f} className={`tab${filter===f?' active':''}`} onClick={()=>setFilter(f)}>
-              {f}{f==='Pending'&&pending>0?` (${pending})`:''}</button>
+    <div style={{ display:'flex', flexDirection:'column', gap:16, animation:'slideUp 0.35s ease' }}>
+
+      {/* Workflow banner */}
+      <div style={{ background:'linear-gradient(135deg,#F8F7FF,#F0EFFF)', border:'1px solid #DDD6FE', borderRadius:14, padding:'14px 18px' }}>
+        <div style={{ fontWeight:700, fontSize:13, color:'#7C3AED', marginBottom:6, display:'flex', alignItems:'center', gap:6 }}><AlertCircle size={14}/> Leave Approval Workflow</div>
+        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+          {['DA applies','POC reviews','HR / GM approves','Manager final sign-off','Done'].map((s,i,arr) => (
+            <React.Fragment key={s}>
+              <span style={{ fontSize:11.5, fontWeight:600, color:'#7C3AED', background:'rgba(124,58,237,0.08)', padding:'3px 10px', borderRadius:20 }}>{s}</span>
+              {i<arr.length-1 && <ChevronRight size={13} color="#A89880"/>}
+            </React.Fragment>
           ))}
         </div>
-        <button className="btn btn-primary btn-sm" onClick={()=>setModal(true)}><Plus size={13}/> New Request</button>
       </div>
 
-      {loading ? <div style={{padding:40,textAlign:'center',color:'#A89880'}}>Loading…</div> : (
-        <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          {filtered.map((leave,i)=>{
-            const emp = employees.find(e=>e.id===leave.emp_id)
-            const tc  = TC[leave.type]||'#A89880'
-            return (
-              <div key={leave.id} className="card" style={{padding:'14px 18px',animation:`slideUp 0.3s ${i*0.04}s ease both`}}>
-                <div style={{display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
-                  <div style={{width:40,height:40,borderRadius:10,background:'#FDF6E3',border:'1px solid #F0D78C',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>{emp?.avatar||leave.avatar||'👤'}</div>
-                  <div style={{flex:1,minWidth:150}}>
-                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
-                      <span style={{fontWeight:700,color:'#1A1612',fontSize:14}}>{emp?.name||leave.name}</span>
-                      <span style={{fontSize:11,padding:'2px 8px',borderRadius:6,background:`${tc}18`,color:tc,fontWeight:600,border:`1px solid ${tc}40`}}>{leave.type}</span>
-                      <span className={`badge ${S[leave.status]?.c}`}>{S[leave.status]?.l}</span>
+      {/* Controls */}
+      <div style={{ display:'flex', gap:10, flexWrap:'wrap', alignItems:'center' }}>
+        <div style={{ display:'flex', gap:6, flex:1 }}>
+          {STAGES.map(s => (
+            <button key={s.v} onClick={()=>setStage(s.v)}
+              style={{ padding:'8px 16px', borderRadius:20, border:`1.5px solid ${stage===s.v?'#B8860B':'#EAE6DE'}`, background:stage===s.v?'#FDF6E3':'#FFF', color:stage===s.v?'#B8860B':'#A89880', fontWeight:stage===s.v?700:500, fontSize:12.5, cursor:'pointer', transition:'all 0.18s', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:6 }}>
+              {s.l}
+              {s.count!=null && s.count>0 && <span style={{ background:'#B8860B', color:'white', borderRadius:20, padding:'1px 7px', fontSize:10, fontWeight:700 }}>{s.count}</span>}
+            </button>
+          ))}
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={()=>setModal(true)} style={{ borderRadius:20 }}>
+          <Plus size={13}/> New Request
+        </button>
+      </div>
+
+      {/* Leaves */}
+      {loading ? (
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {[1,2,3].map(i=><div key={i} className="skeleton" style={{ height:100, borderRadius:14 }}/>)}
+        </div>
+      ) : leaves.length===0 ? (
+        <div style={{ textAlign:'center', padding:'50px 20px', color:'#A89880' }}>
+          <Calendar size={40} style={{ margin:'0 auto 12px', display:'block', opacity:0.2 }}/>
+          <div style={{ fontWeight:600, color:'#6B5D4A' }}>{stage==='pending'?'No leaves awaiting your action':'No leave records found'}</div>
+        </div>
+      ) : (
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {leaves.map((l,i) => (
+            <div key={l.id} style={{ background:'#FFF', border:'1px solid #EAE6DE', borderRadius:16, overflow:'hidden', animation:`slideUp 0.3s ${i*0.04}s ease both` }}>
+              <div style={{ padding:'14px 16px' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:8, marginBottom:10 }}>
+                  <div>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+                      <span style={{ fontWeight:700, fontSize:14, color:'#1A1612' }}>{l.name}</span>
+                      <span style={{ fontSize:11, fontWeight:700, color:TYPE_COLORS[l.type]||'#6B5D4A', background:`${TYPE_COLORS[l.type]||'#6B5D4A'}15`, padding:'2px 9px', borderRadius:6 }}>{l.type}</span>
+                      {l.station_code && <span style={{ fontSize:10.5, fontWeight:700, color:'#B8860B', background:'#FDF6E3', borderRadius:5, padding:'1px 6px' }}>{l.station_code}</span>}
                     </div>
-                    <div style={{fontSize:12,color:'#A89880'}}>
-                      <span style={{fontFamily:'monospace'}}>{leave.from_date}</span> → <span style={{fontFamily:'monospace'}}>{leave.to_date}</span>
-                      &nbsp;·&nbsp;<strong style={{color:'#6B5D4A'}}>{leave.days}d</strong>
-                      {leave.reason && <>&nbsp;·&nbsp;{leave.reason}</>}
+                    <div style={{ fontSize:12, color:'#A89880', display:'flex', alignItems:'center', gap:5 }}>
+                      <Calendar size={11}/> {l.from_date} → {l.to_date} · <strong style={{ color:'#6B5D4A' }}>{l.days} days</strong>
                     </div>
+                    {l.reason && <div style={{ fontSize:12, color:'#6B5D4A', marginTop:4 }}>{l.reason}</div>}
                   </div>
-                  {leave.status==='pending' && (
-                    <div style={{display:'flex',gap:8,flexShrink:0}}>
-                      <button className="btn btn-success btn-sm" onClick={()=>setStatus(leave.id,'approved')}><Check size={12}/> Approve</button>
-                      <button className="btn btn-danger  btn-sm" onClick={()=>setStatus(leave.id,'rejected')}><X size={12}/> Reject</button>
-                    </div>
-                  )}
+                  {/* Stage pipeline */}
+                  <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                    <StageChip label="POC" status={l.poc_status}/>
+                    <StageChip label="HR/GM" status={l.hr_status==='approved'?'approved':l.hr_status==='rejected'?'rejected':l.gm_status==='approved'?'approved':l.hr_status}/>
+                    <StageChip label="Manager" status={l.mgr_status||'waiting'}/>
+                  </div>
                 </div>
               </div>
-            )
-          })}
-          {filtered.length===0&&<div className="empty-state"><Clock size={28}/><p>No {filter.toLowerCase()!=='all'?filter.toLowerCase():''} requests</p></div>}
+
+              {/* Action bar — HR/GM action */}
+              {(userRole==='hr'||userRole==='general_manager') && l.poc_status==='approved' && l.hr_status==='pending' && (
+                <div style={{ background:'linear-gradient(135deg,#EFF6FF,#F0F9FF)', borderTop:'1px solid #BFDBFE', padding:'10px 16px', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+                  <span style={{ fontSize:12, color:'#1D6FA4', fontWeight:600, flex:1 }}>POC approved — your action needed</span>
+                  <button onClick={()=>action(l.id,'approved','hr')} style={{ padding:'7px 18px', borderRadius:20, background:'linear-gradient(135deg,#2E7D52,#22C55E)', border:'none', color:'white', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Approve</button>
+                  <button onClick={()=>action(l.id,'rejected','hr')} style={{ padding:'7px 18px', borderRadius:20, background:'#FEF2F2', border:'1px solid #FCA5A5', color:'#C0392B', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Reject</button>
+                </div>
+              )}
+
+              {/* Action bar — Manager final */}
+              {(userRole==='manager'||userRole==='admin') && l.hr_status==='approved' && (l.mgr_status==='pending'||!l.mgr_status) && (
+                <div style={{ background:'linear-gradient(135deg,#FDF6E3,#FFFBEB)', borderTop:'1px solid #F0D78C', padding:'10px 16px', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+                  <span style={{ fontSize:12, color:'#B8860B', fontWeight:700, flex:1 }}>HR approved — final sign-off required</span>
+                  <button onClick={()=>action(l.id,'approved','manager')} style={{ padding:'7px 18px', borderRadius:20, background:'linear-gradient(135deg,#B8860B,#D4A017)', border:'none', color:'white', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Final Approve</button>
+                  <button onClick={()=>action(l.id,'rejected','manager')} style={{ padding:'7px 18px', borderRadius:20, background:'#FEF2F2', border:'1px solid #FCA5A5', color:'#C0392B', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Reject</button>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
-      {modal && <NewLeaveModal employees={employees} onClose={()=>setModal(false)} onSave={()=>{setModal(false);load()}}/>}
+
+      {modal && <NewLeaveModal employees={employees} onSave={()=>{setModal(false);load()}} onClose={()=>setModal(false)}/>}
     </div>
   )
 }

@@ -5,7 +5,7 @@
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { overflow-x:hidden; height:100%; scroll-behavior:smooth; }
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Poppins', -apple-system, sans-serif;
   background: #F8F7F4;
   color: #1A1612;
   -webkit-font-smoothing: antialiased;
@@ -13,6 +13,7 @@ body {
   height: 100%;
 }
 #__next { height:100%; }
+* { font-family: 'Poppins', -apple-system, sans-serif !important; }
 button { font-family:inherit; cursor:pointer; border:none; background:none; }
 a { text-decoration:none; color:inherit; }
 input, select, textarea { font-family:inherit; }
@@ -396,7 +397,7 @@ input, select, textarea { font-family:inherit; }
   padding: 10px 14px;
   color: var(--text);
   font-size: 13px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Poppins', -apple-system, sans-serif;
   outline: none;
   transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
   -webkit-appearance: none;
