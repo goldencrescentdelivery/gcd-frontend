@@ -888,7 +888,7 @@ export default function POCPage() {
         <SimSection sims={sims} emps={emps} station={station} onRefresh={load}/>
       )}
 
-      {/* ── NOTICES ── */
+      {/* ── NOTICES ── */}
       {!loading && tab==='notices' && (
         <div style={{display:'flex',flexDirection:'column',gap:10}}>
           <div style={{display:'flex',justifyContent:'flex-end'}}>
