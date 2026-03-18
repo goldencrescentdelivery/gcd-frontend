@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { empApi } from '@/lib/api'
 import { useSocket } from '@/lib/socket'
-import { Search, Plus, X, Pencil, Trash2, ChevronRight, Shield, Phone, User, Building2, AlertCircle, CheckCircle2, Briefcase, CreditCard } from 'lucide-react'
+import { Search, Plus, X, Pencil, Trash2, ChevronRight, Shield, Phone, User, Building2, AlertCircle, CheckCircle2, Briefcase, CreditCard, Calendar, Users } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
 
 const STATIONS = ['All','DDB7','DDB6','DSH6','DXD3']
