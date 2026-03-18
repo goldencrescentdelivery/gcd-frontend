@@ -36,50 +36,25 @@ const ChartTip = ({ active, payload, label }) => {
 // ── KPI Card ──────────────────────────────────────────────────
 function KPICard({ icon:Icon, label, value, sub, color, trend, loading, delay=0 }) {
   return (
-    <div style={{
-      animationDelay:`${delay}s`, animation:'slideUp 0.45s ease both',
-      position:'relative', overflow:'hidden',
-      background:'#FFF',
-      border:'1px solid #EAE6DE',
-      borderRadius:16,
-      padding:'20px 18px 18px',
-      display:'flex', flexDirection:'column', gap:0,
-      boxShadow:'0 1px 4px rgba(0,0,0,0.04)',
-      transition:'box-shadow 0.2s, transform 0.2s',
-    }}
-      onMouseEnter={e=>{e.currentTarget.style.boxShadow=`0 6px 24px ${color}18`;e.currentTarget.style.transform='translateY(-2px)'}}
-      onMouseLeave={e=>{e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.04)';e.currentTarget.style.transform='none'}}
-    >
-      {/* Color bar top */}
-      <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,${color},${color}88)`, borderRadius:'16px 16px 0 0' }}/>
-      {/* Ghost icon */}
-      <div style={{ position:'absolute', right:-8, bottom:-8, opacity:0.06 }}>
-        <Icon size={72} color={color}/>
-      </div>
-
-      {/* Icon badge */}
-      <div style={{ width:40, height:40, borderRadius:12, background:`${color}14`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:14 }}>
-        <Icon size={19} color={color}/>
-      </div>
-
-      {/* Value */}
-      {loading ? (
-        <div className="skeleton" style={{ width:80, height:28, borderRadius:8, marginBottom:8 }}/>
-      ) : (
-        <div style={{ fontWeight:900, fontSize:22, color:'#1A1612', letterSpacing:'-0.04em', lineHeight:1, marginBottom:6 }}>{value}</div>
-      )}
-
-      {/* Label */}
-      <div style={{ fontSize:12, fontWeight:700, color:'#6B5D4A', marginBottom: sub ? 4 : 0 }}>{label}</div>
-      {sub && <div style={{ fontSize:11, color:'#A89880', fontWeight:500 }}>{sub}</div>}
-
-      {/* Trend badge */}
-      {trend != null && (
-        <div style={{ marginTop:10, display:'inline-flex', alignItems:'center', gap:3, fontSize:11, fontWeight:700, color: trend >= 0 ? '#2E7D52' : '#C0392B', background: trend >= 0 ? '#ECFDF5' : '#FEF2F2', borderRadius:20, padding:'2px 8px', alignSelf:'flex-start' }}>
-          {trend >= 0 ? <ArrowUp size={11}/> : <ArrowDown size={11}/>}
-          {Math.abs(trend)}%
+    <div className="stat-card" style={{ animationDelay:`${delay}s`, position:'relative', overflow:'hidden' }}>
+      <div style={{ position:'absolute', right:-16, bottom:-16, width:80, height:80, borderRadius:'50%', background:`${color}08` }}/>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
+        <div style={{ width:44, height:44, borderRadius:13, background:`${color}12`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <Icon size={20} color={color}/>
         </div>
+        {trend != null && (
+          <div style={{ display:'flex', alignItems:'center', gap:3, fontSize:11, fontWeight:700, color: trend >= 0 ? '#2E7D52' : '#C0392B' }}>
+            {trend >= 0 ? <ArrowUp size={12}/> : <ArrowDown size={12}/>}
+            {Math.abs(trend)}%
+          </div>
+        )}
+      </div>
+      {loading ? (
+        <div className="skeleton" style={{ width:70, height:24, borderRadius:6, marginBottom:6 }}/>
+      ) : (
+        <div style={{ fontWeight:800, fontSize:18, color:'#1A1612', letterSpacing:'-0.02em', lineHeight:1, marginBottom:6 }}>{value}</div>
       )}
+      <div style={{ fontSize:12, fontWeight:700, color:'#6B5D4A' }}>{label}</div>
     </div>
   )
 }
@@ -99,12 +74,12 @@ function SHead({ title, sub }) {
 // ══════════════════════════════════════════════════════════════
 function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, simStats, simByStation }) {
   const kpis = [
-    { icon:Users,         label:'Active DAs',        value: summary ? String(summary.employees?.active||0)                            : '—', color:'#B8860B', sub:'Delivery associates' },
-    { icon:Package,       label:"Today's Deliveries",value: summary ? String(summary.today_deliveries||0)                             : '—', color:'#1D6FA4', sub:'Across all stations' },
-    { icon:Activity,      label:'Present Today',     value: summary ? String(summary.attendance?.present||0)                          : '—', color:'#2E7D52', sub:'Checked in this shift' },
-    { icon:Wallet,        label:'Net Payroll',        value: summary ? `AED ${Number(summary.payroll?.base_total||0).toLocaleString()}`: '—', color:'#7C3AED', sub:'Base salaries this month' },
-    { icon:AlertTriangle, label:'Compliance Alerts', value: summary ? String(summary.compliance?.expired||0)                          : '—', color:'#C0392B', sub:'Expired policies' },
-    { icon:Calendar,      label:'Pending Leaves',    value: summary ? String(summary.pending_leaves||0)                               : '—', color:'#B45309', sub:'Awaiting approval' },
+    { icon:Users,      label:'Active DAs',         value: summary ? String(summary.employees?.active||0)                                        : '—', color:'#B8860B', sub:'delivery associates',     trend:null },
+    { icon:Package,    label:"Today's Deliveries",  value: summary ? String(summary.today_deliveries||0)                                         : '—', color:'#1D6FA4', sub:'across all stations',     trend:null, live:true },
+    { icon:Activity,   label:'Present Today',        value: summary ? String(summary.attendance?.present||0)                                      : '—', color:'#2E7D52', sub:'checked in',              trend:null, live:true },
+    { icon:Wallet,     label:'Net Payroll',          value: summary ? `AED ${Number(summary.payroll?.base_total||0).toLocaleString()}`             : '—', color:'#7C3AED', sub:'base this month',         trend:null },
+    { icon:AlertTriangle,label:'Compliance Alerts', value: summary ? String(summary.compliance?.expired||0)                                       : '—', color:'#C0392B', sub:'expired policies',        trend:null },
+    { icon:Calendar,   label:'Pending Leaves',       value: summary ? String(summary.pending_leaves||0)                                           : '—', color:'#B45309', sub:'awaiting approval',       trend:null },
   ]
 
   const deliveryData = chart.length > 0 ? chart : [{ month:'No data', DDB7:0, DDB6:0, DSH6:0, DXD3:0 }]
@@ -151,7 +126,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
       {/* KPI grid */}
       <div>
         <SHead title="Key Metrics" sub="Live operational data"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:12 }} className="kpi-grid">
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
           {kpis.map((k, i) => <KPICard key={k.label} {...k} loading={loading} delay={i*0.06}/>)}
         </div>
       </div>
@@ -283,7 +258,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
       {/* Quick links */}
       <div className="card">
         <SHead title="Quick Actions"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:10 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
           {[
             { l:'All Employees',  href:'/dashboard/hr/employees',      icon:Users,       c:'#B8860B' },
             { l:'Payroll',        href:'/dashboard/finance/payroll',    icon:Wallet,      c:'#1D6FA4' },
