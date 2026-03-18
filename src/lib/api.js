@@ -112,18 +112,18 @@ export const analyticsApi = {
 
 // ── Deliveries ────────────────────────────────────────────────
 export const deliveriesApi = {
-  list:    (p={}) => get('/deliveries', p),
-  log:     (data) => post('/deliveries', data),
-  chart:   (months=6) => get('/analytics/deliveries-chart', {months}),
+  list:    (p={}) => api.get(`/api/deliveries?${new URLSearchParams(p)}`),
+  log:     (data) => api.post('/api/deliveries', data),
+  chart:   (months=6) => api.get(`/api/analytics/deliveries-chart?months=${months}`),
 }
 
 // ── Backup ────────────────────────────────────────────────────
 export const backupApi = {
-  stats:    ()   => get('/backup/stats'),
-  history:  ()   => get('/backup/history'),
+  stats:    ()   => api.get('/api/backup/stats'),
+  history:  ()   => api.get('/api/backup/history'),
   download: async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('gcd_token') : null
-    const res   = await fetch(`${API}/api/backup/download`, {
+    const res   = await fetch(`${BASE}/api/backup/download`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     if (!res.ok) throw new Error('Backup failed')

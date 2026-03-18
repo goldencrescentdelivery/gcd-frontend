@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import Sidebar from '@/components/layout/Sidebar'
 import Topbar from '@/components/layout/Topbar'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import Link from 'next/link'
 import { BarChart3, Users, DollarSign, ShieldCheck, Radio, LogOut } from 'lucide-react'
 
@@ -48,7 +49,7 @@ export default function DashboardLayout({ children }) {
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}/>
       <div className="main-area">
         <Topbar onMenuClick={() => setMobileOpen(o => !o)}/>
-        <main className="page-content">{children}</main>
+        <main className="page-content"><ErrorBoundary>{children}</ErrorBoundary></main>
       </div>
       <nav className="mobile-bottomnav">
         {visibleNav.map(item => {
