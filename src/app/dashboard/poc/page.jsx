@@ -430,8 +430,18 @@ export default function POCPage() {
     load()
   }
   async function assignVehicle(vId,eId) {
-    await fetch(`${API}/api/vehicles/assignments`,{method:'POST',headers:hdr(),body:JSON.stringify({vehicle_id:vId,emp_id:eId||null,date,station_code:station})})
-    load()
+    try {
+      const res = await fetch(`${API}/api/vehicles/assignments`,{
+        method:'POST', headers:hdr(),
+        body:JSON.stringify({vehicle_id:vId, emp_id:eId||null, date, station_code:station})
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        alert(d.error || 'Failed to assign vehicle')
+        return
+      }
+      load()
+    } catch(e) { alert('Failed to assign vehicle') }
   }
 
   const present  = att.filter(a=>a.status==='present').length

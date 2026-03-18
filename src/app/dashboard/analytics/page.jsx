@@ -8,7 +8,7 @@ import {
 import {
   TrendingUp, Users, Package, DollarSign, Plus, X, Clock,
   ShieldCheck, Wallet, AlertTriangle, CheckCircle, Calendar,
-  ChevronRight, ArrowUp, ArrowDown, Activity, Truck, FileText
+  ChevronRight, ArrowUp, ArrowDown, Activity, Truck, FileText, UserMinus
 } from 'lucide-react'
 
 const API  = process.env.NEXT_PUBLIC_API_URL
@@ -189,7 +189,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave }) {
           <SHead title="Today's Attendance" sub="All stations"/>
           {[
             { l:'Present',      v:summary?.attendance?.present||0,  c:'#2E7D52', bg:'#ECFDF5', icon:CheckCircle },
-            { l:'Absent',       v:summary?.attendance?.absent||0,   c:'#C0392B', bg:'#FEF2F2', icon:X },
+            { l:'Absent',       v:summary?.attendance?.absent||0,   c:'#C0392B', bg:'#FEF2F2', icon:UserMinus },
             { l:'On Leave',     v:summary?.pending_leaves||0,       c:'#B45309', bg:'#FFFBEB', icon:Calendar },
           ].map(s => {
             const Icon = s.icon
@@ -367,7 +367,7 @@ function AccountantDashboard({ summary, loading }) {
       <div style={{ background:'linear-gradient(135deg,#1A1612,#2C2318)', borderRadius:20, padding:'24px 20px', color:'white', position:'relative', overflow:'hidden' }}>
         <div style={{ position:'absolute', right:-20, top:-20, width:130, height:130, borderRadius:'50%', background:'rgba(184,134,11,0.15)' }}/>
         <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:8 }}>Net Payroll This Month</div>
-        <div style={{ fontWeight:900, fontSize:34, color:'#D4A017', letterSpacing:'-0.04em' }}>AED {loading?'—':net.toLocaleString()}</div>
+        <div style={{ fontWeight:900, fontSize:22, color:'#D4A017', letterSpacing:'-0.04em' }}>AED {loading?'—':net.toLocaleString()}</div>
         <div style={{ fontSize:12, color:'rgba(255,255,255,0.35)', marginTop:4 }}>Base + Bonuses − Deductions</div>
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:12 }}>
@@ -463,7 +463,7 @@ function POCDashboard({ summary, loading }) {
         {[
           { icon:Package,  label:'Deliveries Today', value:summary?String(summary.today_deliveries||0):'—', color:'#B8860B' },
           { icon:Users,    label:'Present',           value:summary?String(summary.attendance?.present||0):'—', color:'#2E7D52' },
-          { icon:X,        label:'Absent',            value:summary?String(summary.attendance?.absent||0):'—',  color:'#C0392B' },
+          { icon:UserMinus, label:'Absent',            value:summary?String(summary.attendance?.absent||0):'—',  color:'#C0392B' },
           { icon:Calendar, label:'Pending Leaves',    value:summary?String(summary.pending_leaves||0):'—',      color:'#B45309' },
         ].map((k,i) => <KPICard key={k.label} {...k} loading={loading} delay={i*0.07}/>)}
       </div>
