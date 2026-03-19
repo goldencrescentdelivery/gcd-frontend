@@ -146,16 +146,6 @@ function DocModal({ emp, employees, editDoc, onSave, onClose }) {
           </div>
 
           {/* How to share guide */}
-          <div style={{ background:'#F8F7FF', border:'1px solid #DDD6FE', borderRadius:12, padding:'12px 14px' }}>
-            <div style={{ fontSize:11, fontWeight:700, color:'#7C3AED', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
-              📖 How to get Google Drive link
-            </div>
-            {['1. Upload document to Google Drive', '2. Right-click the file → Share', '3. Set access to "Anyone with the link"', '4. Click "Copy link" and paste above'].map((s,i)=>(
-              <div key={i} style={{ fontSize:11, color:'#6B5D4A', marginBottom:3, display:'flex', gap:6 }}>
-                <span style={{ color:'#7C3AED', fontWeight:700, flexShrink:0 }}>{i+1}.</span> {s.slice(3)}
-              </div>
-            ))}
-          </div>
 
           <div style={{ display:'flex', gap:10, marginTop:4 }}>
             <button onClick={onClose} className="btn btn-secondary" style={{ flex:1, justifyContent:'center', borderRadius:10 }}>Cancel</button>
