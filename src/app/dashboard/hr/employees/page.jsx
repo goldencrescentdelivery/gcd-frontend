@@ -5,6 +5,7 @@ import { useSocket } from '@/lib/socket'
 import { Search, Plus, X, Pencil, Trash2, ChevronRight, Shield, Phone, User, Building2, AlertCircle, CheckCircle2, Briefcase, CreditCard, Calendar, Users, Receipt, ExternalLink } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
 
+const API = process.env.NEXT_PUBLIC_API_URL
 const STATIONS = ['All','DDB1','DXE6']
 const STATION_COLORS = { DDB1:'#B8860B', DXE6:'#1D6FA4' }
 const STATION_BG     = { DDB1:'#FDF6E3', DXE6:'#EFF6FF' }
@@ -255,6 +256,22 @@ function EmpModal({ emp, onSave, onClose, mode }) {
 
 // ── Detail Drawer ─────────────────────────────────────────────
 function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
+  const [leaves,      setLeaves]      = useState([])
+  const [leavesLoad,  setLeavesLoad]  = useState(true)
+  const [leaveTab,    setLeaveTab]    = useState('info')
+
+  useEffect(() => {
+    setLeavesLoad(true)
+    fetch(`${API}/api/leaves?emp_id=${emp.id}&stage=all`, {
+      headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` }
+    })
+      .then(r=>r.json())
+      .then(d=>setLeaves(d.leaves||[]))
+      .catch(()=>setLeaves([]))
+      .finally(()=>setLeavesLoad(false))
+  }, [emp.id])
+
+
   const s  = STATUS_CFG[emp.status] || STATUS_CFG.inactive
   const sc = STATION_COLORS[emp.station_code] || '#B8860B'
   const sb = STATION_BG[emp.station_code]     || '#FDF6E3'
@@ -323,20 +340,96 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
           })}
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8 }}>
-          <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center', borderRadius:12 }}>
-            <Pencil size={13}/> Edit
-          </button>
-          <button onClick={onDelete} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:12, background:'#FEF2F2', border:'1px solid #FCA5A5', color:'#C0392B', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-            <Trash2 size={13}/> Delete
-          </button>
+        {/* Tabs */}
+        <div style={{ display:'flex', gap:4, marginBottom:12, borderBottom:'2px solid #EAE6DE', paddingBottom:0 }}>
+          {[{id:'info',l:'Profile'},{id:'leaves',l:`Leaves${leaves.length>0?` (${leaves.length})`:''}`}].map(t=>(
+            <button key={t.id} onClick={()=>setLeaveTab(t.id)}
+              style={{ padding:'7px 14px', fontSize:12, fontWeight:leaveTab===t.id?700:500, color:leaveTab===t.id?'#B8860B':'#A89880', background:'none', border:'none', cursor:'pointer', borderBottom:`2px solid ${leaveTab===t.id?'#B8860B':'transparent'}`, marginBottom:-2, transition:'all 0.2s', fontFamily:'Poppins,sans-serif' }}>
+              {t.l}
+            </button>
+          ))}
         </div>
-        <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`}
-          style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:12, background:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', border:'1px solid #BFDBFE', color:'#1D6FA4', fontWeight:600, fontSize:12, textDecoration:'none', transition:'background 0.15s' }}
-          onMouseEnter={e=>e.currentTarget.style.background='linear-gradient(135deg,#DBEAFE,#BFDBFE)'}
-          onMouseLeave={e=>e.currentTarget.style.background='linear-gradient(135deg,#EFF6FF,#DBEAFE)'}>
-          <Receipt size={13}/> View Expenses <ExternalLink size={11}/>
-        </a>
+
+        {leaveTab==='info' && (
+          <>
+            {/* Doc expiry */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:7, margin:'0 0 14px' }}>
+              {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].map(([l,d])=>{
+                const info = expiryInfo(d)
+                return (
+                  <div key={l} style={{ textAlign:'center', padding:'9px 5px', borderRadius:11, background:info?.bg||'#FAFAF8', border:`1px solid ${info?info.color+'30':'#EAE6DE'}` }}>
+                    <div style={{ fontSize:10, fontWeight:700, color:info?.color||'#C4B49A', marginBottom:2 }}>{l}</div>
+                    <div style={{ fontSize:10, color:info?.color||'#A89880', fontWeight:600 }}>{info?.label||'N/A'}</div>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8 }}>
+              <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center', borderRadius:12 }}>
+                <Pencil size={13}/> Edit
+              </button>
+              <button onClick={onDelete} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:12, background:'#FEF2F2', border:'1px solid #FCA5A5', color:'#C0392B', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                <Trash2 size={13}/> Delete
+              </button>
+            </div>
+            <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`}
+              style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:12, background:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', border:'1px solid #BFDBFE', color:'#1D6FA4', fontWeight:600, fontSize:12, textDecoration:'none' }}>
+              <Receipt size={13}/> View Expenses <ExternalLink size={11}/>
+            </a>
+          </>
+        )}
+
+        {leaveTab==='leaves' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {/* Summary stats */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6, marginBottom:4 }}>
+              {[
+                { l:'Total',    v:leaves.length,                                   c:'#1A1612', bg:'#FAFAF8' },
+                { l:'Approved', v:leaves.filter(l=>l.status==='approved').length,  c:'#2E7D52', bg:'#ECFDF5' },
+                { l:'Pending',  v:leaves.filter(l=>l.status==='pending').length,   c:'#B45309', bg:'#FFFBEB' },
+              ].map(s=>(
+                <div key={s.l} style={{ textAlign:'center', padding:'8px 4px', borderRadius:10, background:s.bg }}>
+                  <div style={{ fontWeight:900, fontSize:18, color:s.c }}>{s.v}</div>
+                  <div style={{ fontSize:9.5, color:s.c, fontWeight:600, marginTop:2, opacity:0.8 }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+
+            {leavesLoad ? (
+              <div style={{ padding:'20px', textAlign:'center', color:'#A89880', fontSize:12 }}>Loading…</div>
+            ) : leaves.length===0 ? (
+              <div style={{ padding:'20px', textAlign:'center', color:'#A89880', fontSize:12 }}>
+                <Calendar size={28} style={{ margin:'0 auto 8px', display:'block', opacity:0.2 }}/>
+                No leave records
+              </div>
+            ) : (
+              leaves.map((lv,i) => {
+                const TYPE_C = { Annual:'#B8860B', Sick:'#1D6FA4', Emergency:'#C0392B', Unpaid:'#6B5D4A', Other:'#A89880' }
+                const STATUS_C = { approved:'#2E7D52', pending:'#B45309', rejected:'#C0392B' }
+                const STATUS_BG = { approved:'#ECFDF5', pending:'#FFFBEB', rejected:'#FEF2F2' }
+                const tc = TYPE_C[lv.type] || '#A89880'
+                const sc = STATUS_C[lv.status] || '#A89880'
+                const sbg = STATUS_BG[lv.status] || '#F5F4F1'
+                return (
+                  <div key={lv.id} style={{ background:'#FAFAF8', border:'1px solid #EAE6DE', borderRadius:11, padding:'10px 12px', animation:`slideUp 0.3s ${i*0.04}s ease both` }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
+                      <span style={{ fontSize:11.5, fontWeight:700, color:tc, background:`${tc}12`, border:`1px solid ${tc}25`, borderRadius:6, padding:'2px 8px' }}>{lv.type}</span>
+                      <span style={{ fontSize:10.5, fontWeight:700, color:sc, background:sbg, borderRadius:20, padding:'2px 8px' }}>{lv.status}</span>
+                    </div>
+                    <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#1A1612', fontWeight:600, marginBottom:3 }}>
+                      <Calendar size={11} color="#C4B49A"/>
+                      {lv.from_date?.slice(0,10)} → {lv.to_date?.slice(0,10)}
+                    </div>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <span style={{ fontSize:11, color:'#A89880' }}>{lv.days} day{lv.days!==1?'s':''}</span>
+                      {lv.reason && <span style={{ fontSize:10.5, color:'#6B5D4A', maxWidth:120, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{lv.reason}</span>}
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
