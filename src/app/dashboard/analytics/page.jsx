@@ -187,16 +187,23 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
         </div>
       </div>
 
-      {/* KPI Slider — always slider on all screen sizes */}
+      {/* KPI — slider on mobile, full 6-col grid on desktop */}
       <div>
         <SHead title="Key Metrics" sub="Live operational data"/>
-        <HorizScroller gap={10}>
-          {kpis.map((k,i) => (
-            <div key={k.label} style={{ minWidth:'calc(50% - 5px)' }}>
-              <KPICard {...k} loading={loading} delay={i*0.06}/>
-            </div>
-          ))}
-        </HorizScroller>
+        {/* Mobile slider */}
+        <div className="mobile-only-block">
+          <HorizScroller gap={10}>
+            {kpis.map((k,i) => (
+              <div key={k.label} style={{ minWidth:'calc(50% - 5px)' }}>
+                <KPICard {...k} loading={loading} delay={i*0.06}/>
+              </div>
+            ))}
+          </HorizScroller>
+        </div>
+        {/* Desktop full-width grid */}
+        <div className="desktop-only-block" style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:12 }}>
+          {kpis.map((k,i) => <KPICard key={k.label} {...k} loading={loading} delay={i*0.06}/>)}
+        </div>
       </div>
 
       {/* Delivery chart — full width on mobile */}
