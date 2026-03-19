@@ -600,9 +600,8 @@ export default function POCPage() {
         fetch(`${API}/api/sims?station_code=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/handovers/current?station_code=${station}`,h).then(r=>r.json()),
       ])
-      // Strict: only DAs assigned to this station
-      const allEmps = e.employees||[]
-      setEmps(allEmps.filter(emp => emp.station_code === station))
+      // Backend enforces station for POC role — use all returned employees
+      setEmps(e.employees||[])
       setAnns(an.announcements||[])
       setAtt(a.attendance||[])
       setLeaves(lv.leaves||[]);setVehs(v.vehicles||[]);setAsgns(asgn.assignments||[])
