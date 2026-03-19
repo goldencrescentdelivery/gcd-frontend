@@ -341,10 +341,11 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
         </div>
       )}
 
-      {/* Quick Actions — horizontal scroll */}
+      {/* Quick Actions — grid on desktop, scroll on mobile */}
       <div className="card">
         <SHead title="Quick Actions"/>
-        <div style={{ display:'flex', gap:10, overflowX:'auto', scrollbarWidth:'none', paddingBottom:4 }}>
+        {/* Desktop grid */}
+        <div className="desktop-only-block" style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
           {[
             { l:'Employees',  href:'/dashboard/hr/employees',     icon:Users,       c:'#B8860B' },
             { l:'Payroll',    href:'/dashboard/finance/payroll',   icon:Wallet,      c:'#1D6FA4' },
@@ -356,11 +357,35 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
             const Icon = item.icon
             return (
               <a key={item.l} href={item.href}
-                style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:7, padding:'14px 12px', borderRadius:13, background:`${item.c}08`, border:`1px solid ${item.c}20`, textDecoration:'none', flexShrink:0, minWidth:80, transition:'all 0.2s' }}>
+                style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'16px 10px', borderRadius:13, background:`${item.c}08`, border:`1px solid ${item.c}20`, textDecoration:'none', transition:'all 0.2s' }}
+                onMouseEnter={e=>{e.currentTarget.style.background=`${item.c}15`;e.currentTarget.style.transform='translateY(-2px)'}}
+                onMouseLeave={e=>{e.currentTarget.style.background=`${item.c}08`;e.currentTarget.style.transform='none'}}>
+                <div style={{ width:40, height:40, borderRadius:12, background:`${item.c}15`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <Icon size={18} color={item.c}/>
+                </div>
+                <span style={{ fontSize:11.5, fontWeight:700, color:item.c, textAlign:'center' }}>{item.l}</span>
+              </a>
+            )
+          })}
+        </div>
+        {/* Mobile scroll */}
+        <div className="mobile-only-block" style={{ display:'flex', gap:10, overflowX:'auto', scrollbarWidth:'none', paddingBottom:4 }}>
+          {[
+            { l:'Employees',  href:'/dashboard/hr/employees',     icon:Users,       c:'#B8860B' },
+            { l:'Payroll',    href:'/dashboard/finance/payroll',   icon:Wallet,      c:'#1D6FA4' },
+            { l:'Leaves',     href:'/dashboard/hr/leaves',         icon:Calendar,    c:'#2E7D52' },
+            { l:'Attendance', href:'/dashboard/hr/attendance',     icon:Clock,       c:'#7C3AED' },
+            { l:'Compliance', href:'/dashboard/hr/compliance',     icon:ShieldCheck, c:'#C0392B' },
+            { l:'POC Station',href:'/dashboard/poc',               icon:Truck,       c:'#B45309' },
+          ].map(item => {
+            const Icon = item.icon
+            return (
+              <a key={item.l} href={item.href}
+                style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:7, padding:'14px 12px', borderRadius:13, background:`${item.c}08`, border:`1px solid ${item.c}20`, textDecoration:'none', flexShrink:0, minWidth:75 }}>
                 <div style={{ width:38, height:38, borderRadius:11, background:`${item.c}15`, display:'flex', alignItems:'center', justifyContent:'center' }}>
                   <Icon size={17} color={item.c}/>
                 </div>
-                <span style={{ fontSize:11, fontWeight:700, color:item.c, textAlign:'center', lineHeight:1.3 }}>{item.l}</span>
+                <span style={{ fontSize:10.5, fontWeight:700, color:item.c, textAlign:'center', lineHeight:1.3 }}>{item.l}</span>
               </a>
             )
           })}
@@ -376,20 +401,38 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
               Manage <ChevronRight size={13}/>
             </a>
           </div>
-          <HorizScroller gap={8}>
+          {/* Desktop grid */}
+          <div className="desktop-only-block" style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:10 }}>
             {[
-              { l:'Total',       v:simStats.total||0,     c:'#1A1612', bg:'#FAFAF8', bc:'#EAE6DE' },
-              { l:'Assigned',    v:simStats.assigned||0,  c:'#B8860B', bg:'#FDF6E3', bc:'#F0D78C' },
-              { l:'Available',   v:simStats.available||0, c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0' },
-              { l:'Inactive',    v:simStats.inactive||0,  c:'#A89880', bg:'#F5F4F1', bc:'#EAE6DE' },
-              { l:'AED/month',   v:Number(simStats.monthly_cost||0).toLocaleString(), c:'#7C3AED', bg:'#F5F3FF', bc:'#DDD6FE' },
+              { l:'Total SIMs',   v:simStats.total||0,     c:'#1A1612', bg:'#FAFAF8', bc:'#EAE6DE' },
+              { l:'Assigned',     v:simStats.assigned||0,  c:'#B8860B', bg:'#FDF6E3', bc:'#F0D78C' },
+              { l:'Available',    v:simStats.available||0, c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0' },
+              { l:'Inactive',     v:simStats.inactive||0,  c:'#A89880', bg:'#F5F4F1', bc:'#EAE6DE' },
+              { l:'Monthly Cost', v:`AED ${Number(simStats.monthly_cost||0).toLocaleString()}`, c:'#7C3AED', bg:'#F5F3FF', bc:'#DDD6FE' },
             ].map(s => (
-              <div key={s.l} style={{ minWidth:80, textAlign:'center', padding:'12px 10px', borderRadius:12, background:s.bg, border:`1px solid ${s.bc}` }}>
-                <div style={{ fontWeight:900, fontSize:18, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>
-                <div style={{ fontSize:9.5, color:s.c, fontWeight:600, marginTop:3 }}>{s.l}</div>
+              <div key={s.l} style={{ textAlign:'center', padding:'14px 10px', borderRadius:12, background:s.bg, border:`1px solid ${s.bc}` }}>
+                <div style={{ fontWeight:900, fontSize:20, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>
+                <div style={{ fontSize:10, color:s.c, fontWeight:600, marginTop:4, opacity:0.85 }}>{s.l}</div>
               </div>
             ))}
-          </HorizScroller>
+          </div>
+          {/* Mobile scroll */}
+          <div className="mobile-only-block">
+            <HorizScroller gap={8}>
+              {[
+                { l:'Total',      v:simStats.total||0,     c:'#1A1612', bg:'#FAFAF8', bc:'#EAE6DE' },
+                { l:'Assigned',   v:simStats.assigned||0,  c:'#B8860B', bg:'#FDF6E3', bc:'#F0D78C' },
+                { l:'Available',  v:simStats.available||0, c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0' },
+                { l:'Inactive',   v:simStats.inactive||0,  c:'#A89880', bg:'#F5F4F1', bc:'#EAE6DE' },
+                { l:'AED/month',  v:Number(simStats.monthly_cost||0).toLocaleString(), c:'#7C3AED', bg:'#F5F3FF', bc:'#DDD6FE' },
+              ].map(s => (
+                <div key={s.l} style={{ minWidth:80, textAlign:'center', padding:'12px 10px', borderRadius:12, background:s.bg, border:`1px solid ${s.bc}` }}>
+                  <div style={{ fontWeight:900, fontSize:18, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>
+                  <div style={{ fontSize:9.5, color:s.c, fontWeight:600, marginTop:3 }}>{s.l}</div>
+                </div>
+              ))}
+            </HorizScroller>
+          </div>
           {simByStation.length > 0 && (
             <div style={{ marginTop:14 }}>
               <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.1em', textTransform:'uppercase', color:'#A89880', marginBottom:10 }}>By Station</div>
