@@ -1,4 +1,5 @@
 'use client'
+import HandoverModal from '@/components/HandoverModal'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
@@ -70,6 +71,9 @@ export default function DriverPortal() {
   const [loading,       setLoading]       = useState(true)
   const [tab,           setTab]           = useState('payroll')
   const [leaveModal,    setLeaveModal]    = useState(false)
+  const [handoverModal, setHandoverModal] = useState(false)
+  const [myHandovers,   setMyHandovers]   = useState([])
+  const [myVehicle,     setMyVehicle]     = useState(null)
 
   useEffect(() => {
     if (!user) { router.replace('/login'); return }
@@ -94,6 +98,13 @@ export default function DriverPortal() {
         setAnnouncements(ann.announcements)
         setTodayAtt(att.attendance?.[0]||null)
         setMyLeaves(lv.leaves||[])
+        // Load handovers
+        try {
+          const hv = await fetch(`${base}/api/handovers`, { headers: hdr }).then(r=>r.json())
+          setMyHandovers(hv.handovers||[])
+          const current = hv.handovers?.find(h=>h.type==='received' && !hv.handovers?.find(h2=>h2.vehicle_id===h.vehicle_id && h2.type==='returned' && new Date(h2.submitted_at)>new Date(h.submitted_at)))
+          setMyVehicle(current||null)
+        } catch(e) {}
         setProfile(emp.employee||null)
       } catch(e) { console.error(e) } finally { setLoading(false) }
     }
@@ -306,6 +317,69 @@ export default function DriverPortal() {
           </div>
         )}
 
+        {/* Vehicle Handover */}
+        {tab==='vehicle' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {/* Current vehicle status */}
+            <div style={{ background: myVehicle ? 'linear-gradient(135deg,#ECFDF5,#F0FFF8)' : 'linear-gradient(135deg,#FAFAF8,#F5F4F1)', border:`1px solid ${myVehicle?'#A7F3D0':'#EAE6DE'}`, borderRadius:16, padding:'16px' }}>
+              <div style={{ fontWeight:700, fontSize:13, color:myVehicle?'#2E7D52':'#A89880', marginBottom:8 }}>
+                {myVehicle ? '🚗 Currently Assigned Vehicle' : 'No vehicle currently assigned'}
+              </div>
+              {myVehicle ? (
+                <>
+                  <div style={{ fontWeight:900, fontSize:22, color:'#1A1612', letterSpacing:'-0.03em', marginBottom:4 }}>{myVehicle.vehicle_plate}</div>
+                  <div style={{ fontSize:12, color:'#6B5D4A' }}>{[myVehicle.make,myVehicle.model].filter(Boolean).join(' ')}</div>
+                  <div style={{ fontSize:11, color:'#A89880', marginTop:4 }}>Received: {new Date(myVehicle.submitted_at).toLocaleString('en-AE',{dateStyle:'medium',timeStyle:'short'})}</div>
+                  <button onClick={()=>setHandoverModal({type:'returned',vehicle:myVehicle})}
+                    style={{ marginTop:12, width:'100%', padding:'10px', borderRadius:12, background:'linear-gradient(135deg,#FEF2F2,#FFE4E4)', border:'1.5px solid #FCA5A5', color:'#C0392B', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                    Return This Vehicle
+                  </button>
+                </>
+              ) : (
+                <div style={{ fontSize:12, color:'#A89880', marginTop:4 }}>Submit a handover record when you receive a vehicle from the station</div>
+              )}
+            </div>
+
+            <button onClick={()=>setHandoverModal({type:'received',vehicle:null})} className="btn btn-primary" style={{ width:'100%', justifyContent:'center', borderRadius:12, padding:'12px' }}>
+              + New Vehicle Handover
+            </button>
+
+            {/* Handover history */}
+            {myHandovers.length>0 && (
+              <>
+                <div style={{ fontWeight:700, fontSize:13, color:'#1A1612' }}>Handover History</div>
+                {myHandovers.map((h,i)=>(
+                  <div key={h.id} style={{ background:'#FFF', border:'1px solid #EAE6DE', borderRadius:14, padding:'14px', animation:`slideUp 0.3s ${i*0.04}s ease both` }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+                      <div>
+                        <div style={{ fontWeight:700, fontSize:14, color:'#1A1612' }}>{h.vehicle_plate}</div>
+                        <div style={{ fontSize:11, color:'#A89880', marginTop:2 }}>{[h.make,h.model].filter(Boolean).join(' ')}</div>
+                      </div>
+                      <span style={{ fontSize:11, fontWeight:700, color:h.type==='received'?'#2E7D52':'#B8860B', background:h.type==='received'?'#ECFDF5':'#FDF6E3', border:`1px solid ${h.type==='received'?'#A7F3D0':'#F0D78C'}`, borderRadius:20, padding:'3px 10px' }}>
+                        {h.type==='received'?'Received':'Returned'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize:11.5, color:'#6B5D4A', marginBottom:6 }}>
+                      {new Date(h.submitted_at).toLocaleString('en-AE',{dateStyle:'medium',timeStyle:'short'})}
+                    </div>
+                    {h.condition_note && <div style={{ fontSize:11.5, color:'#A89880', marginBottom:6 }}>{h.condition_note}</div>}
+                    {/* Photos grid */}
+                    {[h.photo_1,h.photo_2,h.photo_3,h.photo_4].filter(Boolean).length>0 && (
+                      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6, marginTop:8 }}>
+                        {[h.photo_1,h.photo_2,h.photo_3,h.photo_4].filter(Boolean).map((url,pi)=>(
+                          <a key={pi} href={url} target="_blank" rel="noopener noreferrer">
+                            <img src={url} alt={`Photo ${pi+1}`} style={{ width:'100%', aspectRatio:'1', objectFit:'cover', borderRadius:8, border:'1px solid #EAE6DE' }}/>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+
         {/* Notices */}
         {tab==='notices' && (
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
@@ -321,6 +395,7 @@ export default function DriverPortal() {
         )}
       </div>
 
+      {handoverModal && <HandoverModal modal={handoverModal} user={user} onClose={()=>setHandoverModal(false)} onSave={()=>{setHandoverModal(false);fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/handovers`,{headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}}).then(r=>r.json()).then(d=>{setMyHandovers(d.handovers||[])})}}/>}
       {leaveModal && <LeaveModal onClose={()=>setLeaveModal(false)} onSave={()=>{setLeaveModal(false);leaveApi.list({emp_id:user.emp_id}).then(d=>setMyLeaves(d.leaves)).catch(()=>{})}}/>}
     </div>
   )

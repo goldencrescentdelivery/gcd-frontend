@@ -580,6 +580,7 @@ export default function POCPage() {
   const [leaves,  setLeaves]  = useState([])
   const [delivs,  setDelivs]  = useState([])
   const [sims,    setSims]    = useState([])
+  const [currentHandovers, setCurrentHandovers] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal,   setModal]   = useState(null)
   const [search,  setSearch]  = useState('')
@@ -597,10 +598,11 @@ export default function POCPage() {
         fetch(`${API}/api/vehicles/assignments?date=${date}&station_code=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/deliveries?station=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/sims?station_code=${station}`,h).then(r=>r.json()),
+        fetch(`${API}/api/handovers/current?station_code=${station}`,h).then(r=>r.json()),
       ])
       setAtt(a.attendance||[]);setEmps(e.employees||[]);setAnns(an.announcements||[])
       setLeaves(lv.leaves||[]);setVehs(v.vehicles||[]);setAsgns(asgn.assignments||[])
-      setDelivs(d.deliveries||[]);setSims(s.sims||[])
+      setDelivs(d.deliveries||[]);setSims(s.sims||[]);setCurrentHandovers((hv.current)||[])
     } catch(e){console.error(e)} finally{setLoading(false)}
   },[date,station])
 
