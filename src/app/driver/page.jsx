@@ -21,7 +21,7 @@ function LeaveModal({ onClose, onSave }) {
     if (!form.from_date||!form.to_date) return alert('Please fill in dates')
     setSaving(true)
     try { await leaveApi.create({...form, days}); onSave() }
-    catch(e) { alert(e.message) } finally { setSaving(false) }
+    catch(e) { alert(e.message || 'Failed to submit leave. Make sure your account is linked to an employee ID.') } finally { setSaving(false) }
   }
 
   return (
@@ -88,7 +88,7 @@ export default function DriverPortal() {
           pocApi.announcements(),
           attApi.list({ date: today }),
           fetch(`${base}/api/leaves?emp_id=${user.emp_id}`, { headers: hdr }).then(r=>r.json()),
-          fetch(`${base}/api/employees/${user.emp_id}`, { headers: hdr }).then(r=>r.json()),
+          fetch(`${base}/api/employees/${user.emp_id}`, { headers: hdr }).then(r=>r.ok?r.json():{employee:null}),
         ])
         setPayroll(pr.payroll)
         setAnnouncements(ann.announcements)
