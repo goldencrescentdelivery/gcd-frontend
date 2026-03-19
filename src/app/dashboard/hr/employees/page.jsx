@@ -5,9 +5,9 @@ import { useSocket } from '@/lib/socket'
 import { Search, Plus, X, Pencil, Trash2, ChevronRight, Shield, Phone, User, Building2, AlertCircle, CheckCircle2, Briefcase, CreditCard, Calendar, Users, Receipt, ExternalLink } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
 
-const STATIONS = ['All','DDB1','DXE6','DDB1','DXE6']
-const STATION_COLORS = { DDB1:'#B8860B', DXE6:'#1D6FA4', DDB1:'#2E7D52', DXE6:'#7C3AED' }
-const STATION_BG     = { DDB1:'#FDF6E3', DXE6:'#EFF6FF', DDB1:'#ECFDF5', DXE6:'#F5F3FF' }
+const STATIONS = ['All','DDB1','DXE6']
+const STATION_COLORS = { DDB1:'#B8860B', DXE6:'#1D6FA4' }
+const STATION_BG     = { DDB1:'#FDF6E3', DXE6:'#EFF6FF' }
 const STATUS_CFG = {
   active:   { l:'Active',   c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0', dot:'#22C55E' },
   on_leave: { l:'On Leave', c:'#B45309', bg:'#FFFBEB', bc:'#FCD34D', dot:'#F59E0B' },
@@ -187,7 +187,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
               {sel('Role *', 'role', ['Driver','HR Manager','Finance Mgr','Accountant','Dispatcher','General Manager','Admin','POC','Other'])}
               {sel('Department *', 'dept', ['Operations','HR','Finance','Admin','Other'])}
-              {sel('Station', 'station_code', ['DDB1','DXE6','DDB1','DXE6'])}
+              {sel('Station', 'station_code', ['DDB1','DXE6'])}
               {sel('Status', 'status', [{v:'active',l:'Active'},{v:'on_leave',l:'On Leave'},{v:'inactive',l:'Inactive'}])}
               <div style={{ gridColumn:'span 2' }}>
                 <div style={{ background:'#F8F7FF', border:'1px solid #DDD6FE', borderRadius:12, padding:'14px 16px' }}>

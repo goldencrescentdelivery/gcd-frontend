@@ -13,7 +13,7 @@ import {
 
 const API  = process.env.NEXT_PUBLIC_API_URL
 const GOLD = '#B8860B'
-const STATION_COLORS = { DDB1:'#B8860B', DXE6:'#1D6FA4', DDB1:'#2E7D52', DXE6:'#7C3AED' }
+const STATION_COLORS = { DDB1:'#B8860B', DXE6:'#1D6FA4' }
 const CHART_COLORS   = ['#B8860B','#1D6FA4','#2E7D52','#7C3AED','#C0392B','#B45309']
 
 function hdr() { return { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }

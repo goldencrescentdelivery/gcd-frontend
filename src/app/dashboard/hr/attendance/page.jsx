@@ -12,7 +12,7 @@ const STATUS_BADGE = {
   leave:    'badge-warning',
   half_day: 'badge-gold',
 }
-const STATIONS = ['All','DDB1','DXE6','DDB1','DXE6']
+const STATIONS = ['All','DDB1','DXE6']
 
 function LogModal({ employees, onSave, onClose }) {
   const [form, setForm] = useState({
