@@ -600,10 +600,9 @@ export default function POCPage() {
         fetch(`${API}/api/sims?station_code=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/handovers/current?station_code=${station}`,h).then(r=>r.json()),
       ])
+      // Strict: only DAs assigned to this station
       const allEmps = e.employees||[]
-      // Show station employees first, fallback to all if empty
-      const stationEmps = allEmps.filter(emp=>emp.station_code===station)
-      setEmps(stationEmps.length>0 ? stationEmps : allEmps)
+      setEmps(allEmps.filter(emp => emp.station_code === station))
       setAnns(an.announcements||[])
       setAtt(a.attendance||[])
       setLeaves(lv.leaves||[]);setVehs(v.vehicles||[]);setAsgns(asgn.assignments||[])
