@@ -14,7 +14,6 @@ const STATUS_CFG = {
   on_leave: { l:'On Leave', c:'#B45309', bg:'#FFFBEB', bc:'#FCD34D', dot:'#F59E0B' },
   inactive: { l:'Inactive', c:'#6B5D4A', bg:'#F5F4F1', bc:'#EAE6DE', dot:'#A89880' },
 }
-const API = process.env.NEXT_PUBLIC_API_URL
 
 const EMPTY = {
   id:'', name:'', role:'Driver', dept:'Operations', status:'active',
