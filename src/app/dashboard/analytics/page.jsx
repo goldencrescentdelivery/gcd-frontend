@@ -110,143 +110,179 @@ function SHead({ title, sub }) {
 // ══════════════════════════════════════════════════════════════
 // MANAGER DASHBOARD
 // ══════════════════════════════════════════════════════════════
+function HorizScroller({ children, gap=10 }) {
+  const ref = React.useRef(null)
+  const [idx, setIdx] = React.useState(0)
+  const [total, setTotal] = React.useState(0)
+
+  React.useEffect(() => {
+    if (ref.current) setTotal(ref.current.children.length)
+  }, [children])
+
+  function onScroll() {
+    if (!ref.current) return
+    const w = ref.current.firstChild?.offsetWidth || 150
+    setIdx(Math.round(ref.current.scrollLeft / (w + gap)))
+  }
+  function goTo(i) {
+    if (!ref.current) return
+    const w = ref.current.firstChild?.offsetWidth || 150
+    ref.current.scrollTo({ left: i * (w + gap), behavior:'smooth' })
+  }
+  return (
+    <div>
+      <div ref={ref} onScroll={onScroll}
+        style={{ display:'flex', gap, overflowX:'auto', scrollSnapType:'x mandatory', WebkitOverflowScrolling:'touch', scrollbarWidth:'none', paddingBottom:2 }}>
+        <style>{`div::-webkit-scrollbar{display:none!important}`}</style>
+        {React.Children.map(children, child =>
+          React.cloneElement(child, { style:{ ...child.props.style, scrollSnapAlign:'start', flexShrink:0 } })
+        )}
+      </div>
+      {total > 1 && (
+        <div style={{ display:'flex', justifyContent:'center', gap:5, marginTop:8 }}>
+          {Array.from({length:total}).map((_,i) => (
+            <button key={i} onClick={()=>goTo(i)} style={{ width:i===idx?18:6, height:6, borderRadius:3, background:i===idx?'#B8860B':'#EAE6DE', border:'none', cursor:'pointer', padding:0, transition:'width 0.3s' }}/>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, simStats, simByStation }) {
   const kpis = [
-    { icon:Users,      label:'Active DAs',         value: summary ? String(summary.employees?.active||0)                                        : '—', color:'#B8860B', sub:'delivery associates',     trend:null },
-    { icon:Package,    label:"Today's Deliveries",  value: summary ? String(summary.today_deliveries||0)                                         : '—', color:'#1D6FA4', sub:'across all stations',     trend:null, live:true },
-    { icon:Activity,   label:'Present Today',        value: summary ? String(summary.attendance?.present||0)                                      : '—', color:'#2E7D52', sub:'checked in',              trend:null, live:true },
-    { icon:Wallet,     label:'Net Payroll',          value: summary ? `AED ${Number(summary.payroll?.base_total||0).toLocaleString()}`             : '—', color:'#7C3AED', sub:'base this month',         trend:null },
-    { icon:AlertTriangle,label:'Compliance Alerts', value: summary ? String(summary.compliance?.expired||0)                                       : '—', color:'#C0392B', sub:'expired policies',        trend:null },
-    { icon:Calendar,   label:'Pending Leaves',       value: summary ? String(summary.pending_leaves||0)                                           : '—', color:'#B45309', sub:'awaiting approval',       trend:null },
+    { icon:Users,        label:'Active DAs',          value: summary ? String(summary.employees?.active||0) : '—', color:'#B8860B' },
+    { icon:Package,      label:'Today\'s Deliveries',  value: summary ? String(summary.today_deliveries||0) : '—', color:'#1D6FA4' },
+    { icon:Activity,     label:'Present Today',         value: summary ? String(summary.attendance?.present||0) : '—', color:'#2E7D52' },
+    { icon:Wallet,       label:'Net Payroll',           value: summary ? `AED ${Number(summary.payroll?.base_total||0).toLocaleString()}` : '—', color:'#7C3AED' },
+    { icon:AlertTriangle,label:'Compliance Alerts',    value: summary ? String(summary.compliance?.expired||0) : '—', color:'#C0392B' },
+    { icon:Calendar,     label:'Pending Leaves',        value: summary ? String(summary.pending_leaves||0) : '—', color:'#B45309' },
   ]
 
-  const deliveryData = chart.length > 0 ? chart : [{ month:'No data', DDB1:0, DXE6:0, DDB1:0, DXE6:0 }]
-
-  // Station breakdown for pie
-  const stationData = Object.entries(STATION_COLORS).map(([s, c]) => ({
-    name: s,
-    value: deliveryData.reduce((acc, m) => acc + (m[s]||0), 0),
-    color: c,
+  const deliveryData = chart.length > 0 ? chart : [{ month:'No data', DDB1:0, DXE6:0 }]
+  const stationData  = Object.entries({ DDB1:'#B8860B', DXE6:'#1D6FA4' }).map(([s,c]) => ({
+    name:s, value:deliveryData.reduce((a,m)=>a+(m[s]||0),0), color:c
   })).filter(s => s.value > 0)
 
-  // Attendance trend
-  const attData = deliveryData.map(d => ({
-    month: d.month,
-    Total: (d.DDB1||0) + (d.DXE6||0) + (d.DDB1||0) + (d.DXE6||0)
-  }))
-
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
 
       {/* Welcome banner */}
-      <div style={{ background:'linear-gradient(135deg,#1A1612 0%,#2C1F0A 60%,#1A1612 100%)', borderRadius:20, padding:'24px 24px', color:'white', position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute', right:-30, top:-30, width:200, height:200, borderRadius:'50%', background:'rgba(184,134,11,0.1)' }}/>
-        <div style={{ position:'absolute', right:80, bottom:-60, width:140, height:140, borderRadius:'50%', background:'rgba(184,134,11,0.06)' }}/>
-        <div style={{ position:'relative' }}>
-          <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:6 }}>Manager Overview</div>
-          <div style={{ fontWeight:800, fontSize:17, letterSpacing:'-0.02em', marginBottom:4 }}>Golden Crescent Dashboard</div>
-          <div style={{ fontSize:13, color:'rgba(255,255,255,0.5)' }}>Real-time operational intelligence across all stations</div>
-          <div style={{ display:'flex', gap:8, marginTop:14, flexWrap:'wrap', overflowX:'auto', scrollbarWidth:'none' }}>
-            {[
-              { l:'Total Staff', v:summary?.employees?.c||0 },
-              { l:'Stations',    v:4 },
-              { l:'This Month',  v:new Date().toLocaleString('en-AE',{month:'long'}) },
-            ].map(s => (
-              <div key={s.l} style={{ background:'rgba(255,255,255,0.08)', borderRadius:10, padding:'8px 16px', backdropFilter:'blur(10px)' }}>
-                <div style={{ fontWeight:800, fontSize:16, color:'#D4A017' }}>{s.v}</div>
-                <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', marginTop:1 }}>{s.l}</div>
-              </div>
-            ))}
-          </div>
+      <div style={{ background:'linear-gradient(135deg,#1A1612 0%,#2C1F0A 60%,#1A1612 100%)', borderRadius:18, padding:'18px 16px', color:'white', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', right:-20, top:-20, width:160, height:160, borderRadius:'50%', background:'rgba(184,134,11,0.1)' }}/>
+        <div style={{ fontSize:10, color:'rgba(255,255,255,0.5)', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:5 }}>Manager Overview</div>
+        <div style={{ fontWeight:800, fontSize:16, letterSpacing:'-0.02em', marginBottom:3 }}>Golden Crescent Dashboard</div>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:12 }}>Real-time operational intelligence</div>
+        <div style={{ display:'flex', gap:8, overflowX:'auto', scrollbarWidth:'none' }}>
+          {[
+            { l:'Total Staff', v:summary?.employees?.c||0 },
+            { l:'Stations',    v:4 },
+            { l:'This Month',  v:new Date().toLocaleString('en-AE',{month:'short'}) },
+          ].map(s => (
+            <div key={s.l} style={{ background:'rgba(255,255,255,0.1)', borderRadius:10, padding:'8px 12px', backdropFilter:'blur(10px)', flexShrink:0 }}>
+              <div style={{ fontWeight:800, fontSize:14, color:'#D4A017' }}>{s.v}</div>
+              <div style={{ fontSize:9.5, color:'rgba(255,255,255,0.45)', marginTop:1 }}>{s.l}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* KPI grid — slider on mobile, grid on desktop */}
+      {/* KPI Slider — always slider on all screen sizes */}
       <div>
         <SHead title="Key Metrics" sub="Live operational data"/>
-        {/* Mobile slider */}
-        <div className="mobile-only-block">
-          <KPISlider kpis={kpis} loading={loading}/>
-        </div>
-        {/* Desktop grid */}
-        <div className="desktop-only-block" style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
-          {kpis.map((k, i) => <KPICard key={k.label} {...k} loading={loading} delay={i*0.06}/>)}
-        </div>
+        <HorizScroller gap={10}>
+          {kpis.map((k,i) => (
+            <div key={k.label} style={{ minWidth:'calc(50% - 5px)' }}>
+              <KPICard {...k} loading={loading} delay={i*0.06}/>
+            </div>
+          ))}
+        </HorizScroller>
       </div>
 
-      {/* Delivery chart */}
-      <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:16 }} className="two-col chart-row">
-        <div className="card">
-          <SHead title="Monthly Deliveries by Station" sub="Last 6 months"/>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:14 }}>
-            {Object.entries(STATION_COLORS).map(([s,c]) => (
-              <span key={s} style={{ fontSize:11, fontWeight:700, color:c, background:`${c}12`, border:`1px solid ${c}25`, borderRadius:6, padding:'2px 9px' }}>{s}</span>
-            ))}
-          </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={deliveryData} barSize={10}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE6"/>
-              <XAxis dataKey="month" stroke="#C4B49A" fontSize={10}/>
-              <YAxis stroke="#C4B49A" fontSize={10}/>
-              <Tooltip content={<ChartTip/>}/>
-              {Object.entries(STATION_COLORS).map(([s,c],i) => (
-                <Bar key={s} dataKey={s} name={s} stackId="a" fill={c} radius={i===3?[4,4,0,0]:[0,0,0,0]}/>
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
+      {/* Delivery chart — full width on mobile */}
+      <div className="card">
+        <SHead title="Monthly Deliveries" sub="Last 6 months by station"/>
+        <div style={{ display:'flex', gap:6, marginBottom:12, flexWrap:'wrap' }}>
+          {Object.entries({ DDB1:'#B8860B', DXE6:'#1D6FA4' }).map(([s,c])=>(
+            <span key={s} style={{ fontSize:11, fontWeight:700, color:c, background:`${c}12`, border:`1px solid ${c}25`, borderRadius:6, padding:'2px 9px' }}>{s}</span>
+          ))}
         </div>
-        <div className="card">
-          <SHead title="Station Split" sub="Total deliveries"/>
-          {stationData.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={160}>
-                <PieChart>
-                  <Pie data={stationData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value">
-                    {stationData.map((s,i) => <Cell key={s.name} fill={s.color}/>)}
-                  </Pie>
-                  <Tooltip content={<ChartTip/>}/>
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                {stationData.map(s => (
-                  <div key={s.name} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                      <div style={{ width:10, height:10, borderRadius:3, background:s.color }}/>
-                      <span style={{ fontSize:12, fontWeight:600, color:'#1A1612' }}>{s.name}</span>
-                    </div>
-                    <span style={{ fontSize:12, fontWeight:700, color:s.color }}>{s.value.toLocaleString()}</span>
-                  </div>
-                ))}
+        <ResponsiveContainer width="100%" height={180}>
+          <BarChart data={deliveryData} barSize={10}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#F0EDE6"/>
+            <XAxis dataKey="month" stroke="#C4B49A" fontSize={10}/>
+            <YAxis stroke="#C4B49A" fontSize={10}/>
+            <Tooltip content={<ChartTip/>}/>
+            <Bar dataKey="DDB1" name="DDB1" fill="#B8860B" radius={[4,4,0,0]}/>
+            <Bar dataKey="DXE6" name="DXE6" fill="#1D6FA4" radius={[4,4,0,0]}/>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Attendance + Payroll — slider on mobile */}
+      <div className="mobile-only-block">
+        <HorizScroller gap={12}>
+          <div style={{ minWidth:'calc(100% - 0px)' }} className="card">
+            <SHead title="Attendance Today"/>
+            {[
+              { l:'Present', v:summary?.attendance?.present||0, c:'#2E7D52', bg:'#ECFDF5', icon:CheckCircle },
+              { l:'Absent',  v:summary?.attendance?.absent||0,  c:'#C0392B', bg:'#FEF2F2', icon:UserMinus },
+              { l:'On Leave',v:summary?.pending_leaves||0,      c:'#B45309', bg:'#FFFBEB', icon:Calendar },
+            ].map(s=>{ const Icon=s.icon; return (
+              <div key={s.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:s.bg, borderRadius:11, marginBottom:8 }}>
+                <div style={{ width:32, height:32, borderRadius:9, background:`${s.c}20`, display:'flex', alignItems:'center', justifyContent:'center' }}><Icon size={15} color={s.c}/></div>
+                <span style={{ flex:1, fontSize:13, color:'#1A1612', fontWeight:500 }}>{s.l}</span>
+                <span style={{ fontWeight:900, fontSize:22, color:s.c }}>{s.v}</span>
               </div>
-            </>
-          ) : (
-            <div style={{ textAlign:'center', padding:'40px 0', color:'#A89880', fontSize:13 }}>No delivery data</div>
-          )}
-        </div>
+            )})}
+          </div>
+          <div style={{ minWidth:'calc(100% - 0px)' }} className="card">
+            <SHead title="Payroll This Month"/>
+            {[
+              { l:'Base Salaries', v:Number(summary?.payroll?.base_total||0),  c:'#1A1612' },
+              { l:'Bonuses',       v:Number(summary?.payroll?.bonus_total||0), c:'#2E7D52' },
+              { l:'Deductions',    v:Number(summary?.payroll?.ded_total||0),   c:'#C0392B' },
+            ].map(s => {
+              const total = Number(summary?.payroll?.base_total||0)+Number(summary?.payroll?.bonus_total||0)
+              const pct   = total>0 ? Math.min(100,Math.round(s.v/total*100)) : 0
+              return (
+                <div key={s.l} style={{ marginBottom:12 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                    <span style={{ fontSize:12, color:'#6B5D4A', fontWeight:500 }}>{s.l}</span>
+                    <span style={{ fontSize:12, fontWeight:800, color:s.c }}>AED {s.v.toLocaleString()}</span>
+                  </div>
+                  <div style={{ height:6, background:'#F0EDE6', borderRadius:10, overflow:'hidden' }}>
+                    <div style={{ height:'100%', width:`${pct}%`, background:s.c, borderRadius:10, transition:'width 1s ease' }}/>
+                  </div>
+                </div>
+              )
+            })}
+            <div style={{ borderTop:'1px solid #F5F4F1', paddingTop:12, display:'flex', justifyContent:'space-between' }}>
+              <span style={{ fontSize:13, fontWeight:700, color:'#1A1612' }}>Net Total</span>
+              <span style={{ fontWeight:900, fontSize:16, color:'#B8860B' }}>
+                AED {(Number(summary?.payroll?.base_total||0)+Number(summary?.payroll?.bonus_total||0)-Number(summary?.payroll?.ded_total||0)).toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </HorizScroller>
       </div>
 
-      {/* Attendance + Payroll row */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="two-col">
+      {/* Attendance + Payroll — side by side on desktop */}
+      <div className="desktop-only-block" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
         <div className="card">
           <SHead title="Today's Attendance" sub="All stations"/>
           {[
-            { l:'Present',      v:summary?.attendance?.present||0,  c:'#2E7D52', bg:'#ECFDF5', icon:CheckCircle },
-            { l:'Absent',       v:summary?.attendance?.absent||0,   c:'#C0392B', bg:'#FEF2F2', icon:UserMinus },
-            { l:'On Leave',     v:summary?.pending_leaves||0,       c:'#B45309', bg:'#FFFBEB', icon:Calendar },
-          ].map(s => {
-            const Icon = s.icon
-            return (
-              <div key={s.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:s.bg, borderRadius:11, marginBottom:8 }}>
-                <div style={{ width:32, height:32, borderRadius:9, background:`${s.c}20`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <Icon size={15} color={s.c}/>
-                </div>
-                <span style={{ flex:1, fontSize:13, color:'#1A1612', fontWeight:500 }}>{s.l}</span>
-                <span style={{ fontWeight:900, fontSize:22, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</span>
-              </div>
-            )
-          })}
+            { l:'Present', v:summary?.attendance?.present||0, c:'#2E7D52', bg:'#ECFDF5', icon:CheckCircle },
+            { l:'Absent',  v:summary?.attendance?.absent||0,  c:'#C0392B', bg:'#FEF2F2', icon:UserMinus },
+            { l:'On Leave',v:summary?.pending_leaves||0,      c:'#B45309', bg:'#FFFBEB', icon:Calendar },
+          ].map(s=>{ const Icon=s.icon; return (
+            <div key={s.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:s.bg, borderRadius:11, marginBottom:8 }}>
+              <div style={{ width:32, height:32, borderRadius:9, background:`${s.c}20`, display:'flex', alignItems:'center', justifyContent:'center' }}><Icon size={15} color={s.c}/></div>
+              <span style={{ flex:1, fontSize:13, color:'#1A1612', fontWeight:500 }}>{s.l}</span>
+              <span style={{ fontWeight:900, fontSize:22, color:s.c }}>{s.v}</span>
+            </div>
+          )})}
         </div>
-
         <div className="card">
           <SHead title="Payroll This Month" sub="Breakdown"/>
           {[
@@ -254,8 +290,8 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
             { l:'Bonuses Added', v:Number(summary?.payroll?.bonus_total||0), c:'#2E7D52' },
             { l:'Deductions',    v:Number(summary?.payroll?.ded_total||0),   c:'#C0392B' },
           ].map(s => {
-            const total = Number(summary?.payroll?.base_total||0) + Number(summary?.payroll?.bonus_total||0)
-            const pct   = total > 0 ? Math.min(100, Math.round(s.v/total*100)) : 0
+            const total = Number(summary?.payroll?.base_total||0)+Number(summary?.payroll?.bonus_total||0)
+            const pct   = total>0 ? Math.min(100,Math.round(s.v/total*100)) : 0
             return (
               <div key={s.l} style={{ marginBottom:12 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
@@ -280,17 +316,17 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
       {/* Pending approvals */}
       {leaves?.length > 0 && (
         <div className="card">
-          <SHead title="Pending Your Approval" sub="Leave requests approved by HR — awaiting final sign-off"/>
+          <SHead title="Pending Your Approval" sub="HR approved — needs final sign-off"/>
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {leaves.slice(0,5).map(l => (
-              <div key={l.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', background:'#FAFAF8', borderRadius:12, border:'1px solid #EAE6DE', flexWrap:'wrap' }} className="approval-card">
-                <div style={{ flex:1, minWidth:180 }}>
+              <div key={l.id} style={{ background:'#FAFAF8', borderRadius:12, border:'1px solid #EAE6DE', overflow:'hidden' }}>
+                <div style={{ padding:'12px 14px' }}>
                   <div style={{ fontWeight:700, fontSize:13, color:'#1A1612' }}>{l.name}</div>
                   <div style={{ fontSize:11, color:'#A89880', marginTop:2 }}>{l.type} · {l.from_date} → {l.to_date} · {l.days} days</div>
                 </div>
-                <div style={{ display:'flex', gap:7 }}>
-                  <button onClick={() => onApproveLeave(l.id,'approved')} style={{ padding:'7px 16px', borderRadius:20, background:'linear-gradient(135deg,#2E7D52,#22C55E)', border:'none', color:'white', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Approve</button>
-                  <button onClick={() => onApproveLeave(l.id,'rejected')} style={{ padding:'7px 16px', borderRadius:20, background:'#FEF2F2', border:'1px solid #FCA5A5', color:'#C0392B', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Reject</button>
+                <div style={{ display:'flex', gap:8, padding:'8px 12px', background:'#F5F4F1', borderTop:'1px solid #EAE6DE' }}>
+                  <button onClick={() => onApproveLeave(l.id,'approved')} style={{ flex:1, padding:'8px', borderRadius:20, background:'linear-gradient(135deg,#2E7D52,#22C55E)', border:'none', color:'white', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Approve</button>
+                  <button onClick={() => onApproveLeave(l.id,'rejected')} style={{ flex:1, padding:'8px', borderRadius:20, background:'#FEF2F2', border:'1px solid #FCA5A5', color:'#C0392B', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Reject</button>
                 </div>
               </div>
             ))}
@@ -298,82 +334,77 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
         </div>
       )}
 
-      {/* Quick links */}
+      {/* Quick Actions — horizontal scroll */}
       <div className="card">
         <SHead title="Quick Actions"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
+        <div style={{ display:'flex', gap:10, overflowX:'auto', scrollbarWidth:'none', paddingBottom:4 }}>
           {[
-            { l:'All Employees',  href:'/dashboard/hr/employees',      icon:Users,       c:'#B8860B' },
-            { l:'Payroll',        href:'/dashboard/finance/payroll',    icon:Wallet,      c:'#1D6FA4' },
-            { l:'Leaves',         href:'/dashboard/hr/leaves',          icon:Calendar,    c:'#2E7D52' },
-            { l:'Attendance',     href:'/dashboard/hr/attendance',      icon:Clock,       c:'#7C3AED' },
-            { l:'Compliance',     href:'/dashboard/hr/compliance',      icon:ShieldCheck, c:'#C0392B' },
-            { l:'POC Station',    href:'/dashboard/poc',                icon:Truck,       c:'#B45309' },
+            { l:'Employees',  href:'/dashboard/hr/employees',     icon:Users,       c:'#B8860B' },
+            { l:'Payroll',    href:'/dashboard/finance/payroll',   icon:Wallet,      c:'#1D6FA4' },
+            { l:'Leaves',     href:'/dashboard/hr/leaves',         icon:Calendar,    c:'#2E7D52' },
+            { l:'Attendance', href:'/dashboard/hr/attendance',     icon:Clock,       c:'#7C3AED' },
+            { l:'Compliance', href:'/dashboard/hr/compliance',     icon:ShieldCheck, c:'#C0392B' },
+            { l:'POC Station',href:'/dashboard/poc',               icon:Truck,       c:'#B45309' },
           ].map(item => {
             const Icon = item.icon
             return (
               <a key={item.l} href={item.href}
-                style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'16px 10px', borderRadius:13, background:`${item.c}08`, border:`1px solid ${item.c}20`, textDecoration:'none', transition:'all 0.2s' }}
-                onMouseEnter={e => { e.currentTarget.style.background=`${item.c}15`; e.currentTarget.style.transform='translateY(-2px)' }}
-                onMouseLeave={e => { e.currentTarget.style.background=`${item.c}08`; e.currentTarget.style.transform='none' }}>
-                <div style={{ width:40, height:40, borderRadius:12, background:`${item.c}15`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <Icon size={18} color={item.c}/>
+                style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:7, padding:'14px 12px', borderRadius:13, background:`${item.c}08`, border:`1px solid ${item.c}20`, textDecoration:'none', flexShrink:0, minWidth:80, transition:'all 0.2s' }}>
+                <div style={{ width:38, height:38, borderRadius:11, background:`${item.c}15`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <Icon size={17} color={item.c}/>
                 </div>
-                <span style={{ fontSize:11.5, fontWeight:700, color:item.c, textAlign:'center' }}>{item.l}</span>
+                <span style={{ fontSize:11, fontWeight:700, color:item.c, textAlign:'center', lineHeight:1.3 }}>{item.l}</span>
               </a>
             )
           })}
         </div>
       </div>
 
-      {/* SIM Cards overview */}
+      {/* SIM Cards */}
       {simStats && (
         <div className="card">
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexWrap:'wrap', gap:10 }}>
-            <SHead title="SIM Card Inventory" sub="Fleet communication overview"/>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+            <SHead title="SIM Card Inventory" sub="Fleet communication"/>
             <a href="/dashboard/poc" style={{ fontSize:12, fontWeight:600, color:'#B8860B', textDecoration:'none', display:'flex', alignItems:'center', gap:4 }}>
-              Manage SIMs <ChevronRight size={13}/>
+              Manage <ChevronRight size={13}/>
             </a>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))', gap:10, marginBottom:16 }}>
+          <HorizScroller gap={8}>
             {[
-              { l:'Total SIMs',  v:simStats.total||0,     c:'#1A1612', bg:'#FAFAF8', bc:'#EAE6DE' },
+              { l:'Total',       v:simStats.total||0,     c:'#1A1612', bg:'#FAFAF8', bc:'#EAE6DE' },
               { l:'Assigned',    v:simStats.assigned||0,  c:'#B8860B', bg:'#FDF6E3', bc:'#F0D78C' },
               { l:'Available',   v:simStats.available||0, c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0' },
               { l:'Inactive',    v:simStats.inactive||0,  c:'#A89880', bg:'#F5F4F1', bc:'#EAE6DE' },
-              { l:'Monthly Cost',v:`AED ${Number(simStats.monthly_cost||0).toLocaleString()}`, c:'#7C3AED', bg:'#F5F3FF', bc:'#DDD6FE' },
+              { l:'AED/month',   v:Number(simStats.monthly_cost||0).toLocaleString(), c:'#7C3AED', bg:'#F5F3FF', bc:'#DDD6FE' },
             ].map(s => (
-              <div key={s.l} style={{ textAlign:'center', padding:'12px 8px', borderRadius:12, background:s.bg, border:`1px solid ${s.bc}` }}>
+              <div key={s.l} style={{ minWidth:80, textAlign:'center', padding:'12px 10px', borderRadius:12, background:s.bg, border:`1px solid ${s.bc}` }}>
                 <div style={{ fontWeight:900, fontSize:18, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>
-                <div style={{ fontSize:10, color:s.c, fontWeight:600, marginTop:3, opacity:0.8 }}>{s.l}</div>
+                <div style={{ fontSize:9.5, color:s.c, fontWeight:600, marginTop:3 }}>{s.l}</div>
               </div>
             ))}
-          </div>
+          </HorizScroller>
           {simByStation.length > 0 && (
-            <div>
-              <div style={{ fontSize:11, fontWeight:700, color:'#A89880', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>By Station</div>
-              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                {simByStation.map(s => {
-                  const pct = s.total > 0 ? Math.round(s.assigned/s.total*100) : 0
-                  const sc  = { DDB1:'#B8860B', DXE6:'#1D6FA4', DDB1:'#2E7D52', DXE6:'#7C3AED' }[s.station_code] || '#B8860B'
-                  return (
-                    <div key={s.station_code}>
-                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                        <span style={{ fontSize:12, fontWeight:700, color:sc }}>{s.station_code}</span>
-                        <span style={{ fontSize:12, color:'#6B5D4A' }}>{s.assigned}/{s.total} assigned</span>
-                      </div>
-                      <div style={{ height:7, background:'#F0EDE6', borderRadius:10, overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${pct}%`, background:sc, borderRadius:10, transition:'width 1s ease' }}/>
-                      </div>
+            <div style={{ marginTop:14 }}>
+              <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.1em', textTransform:'uppercase', color:'#A89880', marginBottom:10 }}>By Station</div>
+              {simByStation.map(s => {
+                const pct = s.total>0 ? Math.round(s.assigned/s.total*100) : 0
+                const sc  = { DDB1:'#B8860B', DXE6:'#1D6FA4' }[s.station_code] || '#B8860B'
+                return (
+                  <div key={s.station_code} style={{ marginBottom:10 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                      <span style={{ fontSize:12, fontWeight:700, color:sc }}>{s.station_code}</span>
+                      <span style={{ fontSize:12, color:'#6B5D4A' }}>{s.assigned}/{s.total} assigned</span>
                     </div>
-                  )
-                })}
-              </div>
+                    <div style={{ height:7, background:'#F0EDE6', borderRadius:10, overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:`${pct}%`, background:sc, borderRadius:10, transition:'width 1s ease' }}/>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
       )}
-
     </div>
   )
 }
