@@ -655,7 +655,7 @@ export default function EmployeesPage() {
       {selected && (
         <div style={{ width:280, flexShrink:0, animation:'slideLeft 0.3s cubic-bezier(0.16,1,0.3,1)' }} className="emp-detail-panel">
           <div style={{ position:'sticky', top:0 }}>
-            <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={currentUser?.role}/>
+            <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}/>
           </div>
         </div>
       )}
