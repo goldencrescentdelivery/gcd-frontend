@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, Camera, Upload, Check, Car, Fuel, FileText, User } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
@@ -53,12 +53,12 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
   const [done,       setDone]       = useState(false)
 
   // Load vehicles for "received" type
-  useState(() => {
+  useEffect(() => {
     if (!isReturn) {
       fetch(`${API}/api/vehicles`, { headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } })
         .then(r=>r.json()).then(d=>setVehicles(d.vehicles||[])).catch(()=>{})
     }
-  })
+  }, [isReturn])
 
   function setPhoto(i, file) { setPhotos(p => { const n=[...p]; n[i]=file; return n }) }
   function removePhoto(i)    { setPhotos(p => { const n=[...p]; n[i]=null; return n }) }

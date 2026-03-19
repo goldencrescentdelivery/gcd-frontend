@@ -591,7 +591,7 @@ export default function POCPage() {
       const h = { headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
       const [a,e,an,lv,v,asgn,d,s] = await Promise.all([
         fetch(`${API}/api/attendance?date=${date}`,h).then(r=>r.json()),
-        fetch(`${API}/api/employees?station_code=${station}`,h).then(r=>r.json()),
+        fetch(`${API}/api/employees?station_code=${station}&status=active`,h).then(r=>r.json()),
         fetch(`${API}/api/poc/announcements`,h).then(r=>r.json()),
         fetch(`${API}/api/leaves`,h).then(r=>r.json()),
         fetch(`${API}/api/vehicles?station_code=${station}`,h).then(r=>r.json()),
