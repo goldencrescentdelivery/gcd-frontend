@@ -1,7 +1,6 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
 import { empApi } from '@/lib/api'
-import { useAuth } from '@/lib/auth'
 import { useSocket } from '@/lib/socket'
 import { Search, Plus, X, Pencil, Trash2, ChevronRight, Shield, Phone, User, Building2, AlertCircle, CheckCircle2, Briefcase, CreditCard, Calendar, Users, Receipt, ExternalLink } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
@@ -254,8 +253,61 @@ function EmpModal({ emp, onSave, onClose, mode }) {
   )
 }
 
+
+// ── Work Number Editor ────────────────────────────────────────
+function WorkNumberEditor({ emp, onSaved, userRole }) {
+  const [editing, setEditing] = useState(false)
+  const [value,   setValue]   = useState(emp.work_number||'')
+  const [saving,  setSaving]  = useState(false)
+
+  const canEdit = ['admin','manager','general_manager','hr','poc'].includes(userRole)
+  if (!canEdit) return null
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      await fetch(`${API}/api/employees/${emp.id}`, {
+        method:'PUT',
+        headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` },
+        body: JSON.stringify({ ...emp, work_number: value })
+      })
+      setEditing(false); onSaved?.()
+    } catch(e) { console.error(e) } finally { setSaving(false) }
+  }
+
+  return (
+    <div style={{ background:'#F5F4F1', borderRadius:11, padding:'10px 12px', marginBottom:10 }}>
+      <div style={{ fontSize:10, fontWeight:700, color:'#A89880', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Work Number</div>
+      {editing ? (
+        <div style={{ display:'flex', gap:6 }}>
+          <input value={value} onChange={e=>setValue(e.target.value)} autoFocus placeholder="Enter work number"
+            style={{ flex:1, padding:'7px 10px', borderRadius:8, border:'1.5px solid #B8860B', fontSize:13, fontWeight:600, fontFamily:'Poppins,sans-serif', outline:'none' }}/>
+          <button onClick={handleSave} disabled={saving}
+            style={{ padding:'7px 12px', borderRadius:8, background:'#B8860B', color:'white', border:'none', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+            {saving?'…':'Save'}
+          </button>
+          <button onClick={()=>{setEditing(false);setValue(emp.work_number||'')}}
+            style={{ padding:'7px 10px', borderRadius:8, background:'#EAE6DE', color:'#6B5D4A', border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', fontSize:13 }}>
+            ✕
+          </button>
+        </div>
+      ) : (
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <span style={{ fontSize:13, fontWeight:700, color:emp.work_number?'#1A1612':'#C4B49A', fontFamily:emp.work_number?'monospace':'inherit' }}>
+            {emp.work_number||'Not assigned'}
+          </span>
+          <button onClick={()=>setEditing(true)}
+            style={{ padding:'4px 10px', borderRadius:7, background:'#EAE6DE', border:'none', color:'#6B5D4A', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:4 }}>
+            <Pencil size={10}/> {emp.work_number?'Edit':'Assign'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Detail Drawer ─────────────────────────────────────────────
-function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh }) {
+function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole }) {
   const [leaves,      setLeaves]      = useState([])
   const [leavesLoad,  setLeavesLoad]  = useState(true)
   const [leaveTab,    setLeaveTab]    = useState('info')
@@ -353,7 +405,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh }) {
             </div>
 
             {/* Work Number inline edit */}
-            <WorkNumberEditor emp={emp} onSaved={onRefresh}/>
+            <WorkNumberEditor emp={emp} onSaved={onRefresh} userRole={userRole}/>
 
             {/* View Expenses — above edit/delete */}
             <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`}
@@ -480,12 +532,17 @@ function EmpCard({ emp, onClick, onEdit, onDelete, index }) {
 
 // ── Main ──────────────────────────────────────────────────────
 export default function EmployeesPage() {
-  const [employees, setEmployees] = useState([])
+    const [employees, setEmployees] = useState([])
   const [loading,   setLoading]   = useState(true)
   const [search,    setSearch]    = useState('')
   const [station,   setStation]   = useState('All')
   const [selected,  setSelected]  = useState(null)
   const [modal,     setModal]     = useState(null)
+
+  const [userRole, setUserRole] = useState(null)
+  useEffect(() => {
+    try { const t = localStorage.getItem('gcd_token'); if(t) { const p=JSON.parse(atob(t.split('.')[1])); setUserRole(p.role) } } catch(e){}
+  }, [])
 
   const load = useCallback(async () => {
     try {
@@ -598,7 +655,7 @@ export default function EmployeesPage() {
       {selected && (
         <div style={{ width:280, flexShrink:0, animation:'slideLeft 0.3s cubic-bezier(0.16,1,0.3,1)' }} className="emp-detail-panel">
           <div style={{ position:'sticky', top:0 }}>
-            <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)}/>
+            <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={currentUser?.role}/>
           </div>
         </div>
       )}
