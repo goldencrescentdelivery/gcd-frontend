@@ -591,7 +591,7 @@ export default function POCPage() {
       const h = { headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
       const [a,e,an,lv,v,asgn,d,s] = await Promise.all([
         fetch(`${API}/api/attendance?date=${date}`,h).then(r=>r.json()),
-        fetch(`${API}/api/employees?station_code=${station}&status=active`,h).then(r=>r.json()),
+        fetch(`${API}/api/employees`,h).then(r=>r.json()),  // fetch all, filter client-side
         fetch(`${API}/api/poc/announcements`,h).then(r=>r.json()),
         fetch(`${API}/api/leaves`,h).then(r=>r.json()),
         fetch(`${API}/api/vehicles?station_code=${station}`,h).then(r=>r.json()),
@@ -600,7 +600,12 @@ export default function POCPage() {
         fetch(`${API}/api/sims?station_code=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/handovers/current?station_code=${station}`,h).then(r=>r.json()),
       ])
-      setAtt(a.attendance||[]);setEmps(e.employees||[]);setAnns(an.announcements||[])
+      const allEmps = e.employees||[]
+      // Show station employees first, fallback to all if empty
+      const stationEmps = allEmps.filter(emp=>emp.station_code===station)
+      setEmps(stationEmps.length>0 ? stationEmps : allEmps)
+      setAnns(an.announcements||[])
+      setAtt(a.attendance||[])
       setLeaves(lv.leaves||[]);setVehs(v.vehicles||[]);setAsgns(asgn.assignments||[])
       setDelivs(d.deliveries||[]);setSims(s.sims||[]);setCurrentHandovers((hv.current)||[])
     } catch(e){console.error(e)} finally{setLoading(false)}
