@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
 import { empApi } from '@/lib/api'
+import { useAuth } from '@/lib/auth'
 import { useSocket } from '@/lib/socket'
 import { Search, Plus, X, Pencil, Trash2, ChevronRight, Shield, Phone, User, Building2, AlertCircle, CheckCircle2, Briefcase, CreditCard, Calendar, Users, Receipt, ExternalLink } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
@@ -254,7 +255,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
 }
 
 // ── Detail Drawer ─────────────────────────────────────────────
-function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
+function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh }) {
   const [leaves,      setLeaves]      = useState([])
   const [leavesLoad,  setLeavesLoad]  = useState(true)
   const [leaveTab,    setLeaveTab]    = useState('info')
@@ -326,19 +327,6 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
           </div>
         </div>
 
-        {/* Doc expiry */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:7, margin:'8px 0 14px' }}>
-          {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].map(([l,d])=>{
-            const info = expiryInfo(d)
-            return (
-              <div key={l} style={{ textAlign:'center', padding:'9px 5px', borderRadius:11, background:info?.bg||'#FAFAF8', border:`1px solid ${info?info.color+'30':'#EAE6DE'}` }}>
-                <div style={{ fontSize:10, fontWeight:700, color:info?.color||'#C4B49A', marginBottom:2 }}>{l}</div>
-                <div style={{ fontSize:10, color:info?.color||'#A89880', fontWeight:600 }}>{info?.label||'N/A'}</div>
-              </div>
-            )
-          })}
-        </div>
-
         {/* Tabs */}
         <div style={{ display:'flex', gap:4, marginBottom:12, borderBottom:'2px solid #EAE6DE', paddingBottom:0 }}>
           {[{id:'info',l:'Profile'},{id:'leaves',l:`Leaves${leaves.length>0?` (${leaves.length})`:''}`}].map(t=>(
@@ -351,7 +339,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
 
         {leaveTab==='info' && (
           <>
-            {/* Doc expiry */}
+            {/* Doc expiry - single instance */}
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:7, margin:'0 0 14px' }}>
               {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].map(([l,d])=>{
                 const info = expiryInfo(d)
@@ -363,7 +351,18 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
                 )
               })}
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8 }}>
+
+            {/* Work Number inline edit */}
+            <WorkNumberEditor emp={emp} onSaved={onRefresh}/>
+
+            {/* View Expenses — above edit/delete */}
+            <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`}
+              style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:12, background:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', border:'1px solid #BFDBFE', color:'#1D6FA4', fontWeight:600, fontSize:12, textDecoration:'none', marginBottom:8 }}>
+              <Receipt size={13}/> View Expenses <ExternalLink size={11}/>
+            </a>
+
+            {/* Edit / Delete at very bottom */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
               <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center', borderRadius:12 }}>
                 <Pencil size={13}/> Edit
               </button>
@@ -371,10 +370,6 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
                 <Trash2 size={13}/> Delete
               </button>
             </div>
-            <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`}
-              style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:12, background:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', border:'1px solid #BFDBFE', color:'#1D6FA4', fontWeight:600, fontSize:12, textDecoration:'none' }}>
-              <Receipt size={13}/> View Expenses <ExternalLink size={11}/>
-            </a>
           </>
         )}
 

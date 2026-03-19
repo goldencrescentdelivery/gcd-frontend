@@ -566,6 +566,45 @@ function SimSection({ sims, emps, station, onRefresh }) {
   )
 }
 
+
+// ── Work Number Modal (POC) ───────────────────────────────────
+function WorkNumModal({ emp, station, onSave, onClose }) {
+  const [value, setValue] = useState(emp.work_number||'')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      await fetch(`${API}/api/employees/${emp.id}`, {
+        method:'PUT',
+        headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` },
+        body: JSON.stringify({ ...emp, work_number: value })
+      })
+      onSave()
+    } catch(e) { alert('Failed to update') } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{ maxWidth:340 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+          <div>
+            <h3 style={{ fontWeight:800, fontSize:16, color:'#1A1612' }}>Assign Work Number</h3>
+            <p style={{ fontSize:12, color:'#A89880', marginTop:2 }}>{emp.name}</p>
+          </div>
+          <button onClick={onClose} style={{ width:28, height:28, borderRadius:8, background:'#F5F4F1', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={13}/></button>
+        </div>
+        <label className="input-label">Work / Contact Number</label>
+        <input className="input" value={value} onChange={e=>setValue(e.target.value)} placeholder="e.g. 971501234567" autoFocus/>
+        <div style={{ display:'flex', gap:10, marginTop:16 }}>
+          <button onClick={onClose} className="btn btn-secondary" style={{ flex:1, justifyContent:'center' }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving} className="btn btn-primary" style={{ flex:2, justifyContent:'center' }}>{saving?'Saving…':'Save'}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────
 export default function POCPage() {
   const { user }  = useAuth()
@@ -920,6 +959,7 @@ export default function POCPage() {
       )}
 
       {/* Modals */}
+      {modal?.type==='work-num'&&<WorkNumModal emp={modal.emp} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/> }
       {modal==='att'&&<AttModal employees={emps} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal?.type==='att-edit'&&<AttModal employees={emps} station={station} editRecord={modal.record} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal==='ann-add'&&<AnnModal onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
