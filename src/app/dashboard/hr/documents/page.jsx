@@ -78,7 +78,7 @@ function DocModal({ emp, employees, editDoc, onSave, onClose }) {
             <button onClick={onClose} style={{ width:30, height:30, borderRadius:9, background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
           </div>
           {/* Doc type selector */}
-          <div style={{ display:'flex', gap:6, overflowX:'auto', scrollbarWidth:'none', paddingBottom:12 }}>
+          <div className="doc-type-pills" style={{ display:'flex', gap:6, overflowX:'auto', scrollbarWidth:'none', WebkitOverflowScrolling:'touch', paddingBottom:8, cursor:'grab', userSelect:'none' }} onMouseDown={e=>{const el=e.currentTarget;el.isDragging=true;el.startX=e.pageX-el.offsetLeft;el.scrollLeft=el.scrollLeft}} onMouseMove={e=>{const el=e.currentTarget;if(!el.isDragging)return;e.preventDefault();el.scrollLeft=el.scrollLeft-(e.pageX-el.offsetLeft-el.startX);el.startX=e.pageX-el.offsetLeft}} onMouseUp={e=>e.currentTarget.isDragging=false} onMouseLeave={e=>e.currentTarget.isDragging=false}>
             {DOC_TYPES.map(t=>(
               <button key={t.v} onClick={()=>setDocType(t.v)} type="button"
                 style={{ padding:'8px 12px', borderRadius:20, border:`2px solid ${docType===t.v?t.c:'#EAE6DE'}`, background:docType===t.v?t.bg:'#FFF', cursor:'pointer', whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:5, transition:'all 0.18s', flexShrink:0 }}>
@@ -129,9 +129,7 @@ function DocModal({ emp, employees, editDoc, onSave, onClose }) {
                 </a>
               )}
             </div>
-            <div style={{ fontSize:11, color:'#A89880', marginTop:6, lineHeight:1.5 }}>
-              📁 Upload the file to your <strong>Google Drive</strong> → right-click → <strong>"Share"</strong> → <strong>"Copy link"</strong> → paste here
-            </div>
+            
           </div>
 
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
