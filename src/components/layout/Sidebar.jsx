@@ -7,12 +7,12 @@ import { NAV, GOLD } from '@/lib/data'
 import {
   BarChart3, Users, DollarSign, UserCircle, Clock, CalendarOff,
   FileText, Wallet, Receipt, ChevronDown, LogOut, Menu, X,
-  ShieldCheck, Radio, HardDrive, KeyRound, ChevronLeft, ChevronRight,
+  ShieldCheck, Radio, HardDrive, KeyRound, ChevronLeft, ChevronRight, Settings, Trophy, AlertTriangle,
 } from 'lucide-react'
 
-const ICONS = {
+const ICONS = { Settings,
   BarChart3, Users, DollarSign, UserCircle, Clock, CalendarOff,
-  FileText, Wallet, Receipt, ShieldCheck, Radio, HardDrive, KeyRound,
+  FileText, Wallet, Receipt, ShieldCheck, Radio, HardDrive, KeyRound, Trophy, AlertTriangle,
 }
 
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
@@ -42,12 +42,20 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
         <div className="sidebar-logo">
           <div style={{ display:'flex', alignItems:'center', justifyContent: collapsed?'center':'space-between', gap:10 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, overflow:'hidden' }}>
-              <div style={{
-                width:36, height:36, borderRadius:10, flexShrink:0,
-                background:'linear-gradient(135deg,#B8860B,#D4A017)',
-                display:'flex', alignItems:'center', justifyContent:'center',
-                fontSize:18, boxShadow:'0 4px 12px rgba(184,134,11,0.35)',
-              }}>🌙</div>
+              <img
+                src="/logo.webp"
+                alt="GCD Logo"
+                style={{
+                  width: collapsed ? 36 : 40,
+                  height: collapsed ? 36 : 40,
+                  borderRadius: 10,
+                  objectFit: 'contain',
+                  flexShrink: 0,
+                  background: '#fff',
+                  padding: 2,
+                  transition: 'width 0.3s ease, height 0.3s ease',
+                }}
+              />
               {!collapsed && (
                 <div style={{ animation:'slideRight 0.2s ease' }}>
                   <div style={{ fontWeight:800, fontSize:14, color:'#1A1612', letterSpacing:'-0.02em', lineHeight:1.2 }}>Golden Crescent</div>
