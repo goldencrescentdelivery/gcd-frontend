@@ -1042,3 +1042,13 @@ input[type='range']::-moz-range-thumb {
     grid-template-columns: repeat(3,1fr) !important;
   }
 }
+
+/* ── Analytics glass responsive ─────────────────────────────── */
+.two-col-glass {
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 640px) {
+  .two-col-glass {
+    grid-template-columns: 1fr !important;
+  }
+}

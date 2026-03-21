@@ -70,11 +70,15 @@ const GLASS_CSS = `
   }
 
   /* Mobile/desktop toggle */
-  .mob { display:none; }
+  .mob  { display:none !important; }
   .desk { display:grid; }
   @media(max-width:640px){
-    .mob  { display:block; }
+    .mob  { display:flex !important; }
     .desk { display:none !important; }
+    /* Quick action scroll row */
+    .mob.qa-scroll { flex-direction:row; overflow-x:auto; }
+    /* KPI swiper wrapper */
+    .mob.kpi-wrap  { display:block !important; }
   }
 `
 
@@ -237,7 +241,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
       </div>
 
       {/* ── CHARTS ROW ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:14 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:14, minWidth:0 }}>
 
         {/* Delivery Chart — full width */}
         <div className="glass fade-up" style={{ borderRadius:20, padding:'20px' }}>
@@ -253,7 +257,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
               </div>
             }
           />
-          <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="99%" height={180}>
             <BarChart data={delivData} barSize={8} barGap={3}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false}/>
               <XAxis dataKey="month" stroke="#C4B49A" fontSize={10} tickLine={false} axisLine={false}/>
@@ -266,7 +270,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
         </div>
 
         {/* Attendance + Payroll side by side on desktop */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="two-col-glass">
+        <div style={{ display:'grid', gap:14, minWidth:0 }} className="two-col-glass">
           {/* Attendance */}
           <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
             <SH title="Attendance Today"/>
@@ -334,7 +338,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
 
         {/* Station split donut + SIM inline */}
         {(stationData.length > 0 || simStats) && (
-          <div style={{ display:'grid', gridTemplateColumns:simStats?'1fr 1fr':'1fr', gap:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:simStats?'repeat(auto-fill,minmax(240px,1fr))':'1fr', gap:14, minWidth:0 }}>
             {/* Donut */}
             {stationData.length > 0 && (
               <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
@@ -456,7 +460,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
             })}
           </div>
           {/* Mobile scroll */}
-          <div className="mob" style={{ display:'flex', gap:10, overflowX:'auto', scrollbarWidth:'none', paddingBottom:2 }}>
+          <div className="mob no-scroll" style={{ gap:10, overflowX:'auto', paddingBottom:2 }}>
             {[
               { l:'Employees',  href:'/dashboard/hr/employees',    icon:Users,       c:'#F59E0B' },
               { l:'Payroll',    href:'/dashboard/finance/payroll', icon:Wallet,      c:'#38BDF8' },
@@ -493,7 +497,7 @@ function SimpleKPIGrid({ kpis, loading }) {
       <div className="desk" style={{ gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:10 }}>
         {kpis.map((k,i) => <KPI key={k.label} {...k} loading={loading} delay={i*0.05}/>)}
       </div>
-      <div className="mob" style={{ marginTop:0 }}>
+      <div className="mob kpi-wrap" style={{ marginTop:0 }}>
         <Swiper items={kpis} peek="calc(50% - 15px)" render={(k,i) => <KPI {...k} loading={loading} delay={i*0.05}/>}/>
       </div>
     </>
@@ -609,7 +613,7 @@ export default function AnalyticsPage() {
         .two-col-glass { grid-template-columns: 1fr 1fr; }
         @media(max-width:640px) { .two-col-glass { grid-template-columns: 1fr; } }
       `}</style>
-      <div style={{ display:'flex', flexDirection:'column', gap:0, animation:'fadeUp 0.4s ease both' }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:0, animation:'fadeUp 0.4s ease both', minWidth:0, overflow:'hidden' }}>
         {/* Page header */}
         <div style={{ marginBottom:18, display:'flex', alignItems:'flex-end', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
           <div>
