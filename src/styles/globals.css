@@ -4,14 +4,7 @@
 /* ── Reset ───────────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { overflow-x:hidden; height:100%; scroll-behavior:smooth; }
-body {
-  font-family: 'Poppins', -apple-system, sans-serif;
-  background: #F8F7F4;
-  color: #1A1612;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  height: 100%;
-}
+
 #__next { height:100%; }
 * { font-family: 'Poppins', -apple-system, sans-serif !important; }
 button { font-family:inherit; cursor:pointer; border:none; background:none; }
@@ -135,6 +128,10 @@ input, select, textarea { font-family:inherit; }
 
 /* ── Topbar ──────────────────────────────────────────────────── */
 .topbar {
+  background: rgba(255,255,255,0.75) !important;
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid rgba(255,255,255,0.6) !important;
   height: 62px;
   min-height: 62px;
   background: var(--card);
@@ -162,6 +159,7 @@ input, select, textarea { font-family:inherit; }
   overflow-x: hidden;
   padding: 24px;
   animation: fadeIn 0.3s ease;
+  background: transparent;
 }
 
 /* ── Nav items ───────────────────────────────────────────────── */
@@ -221,7 +219,11 @@ input, select, textarea { font-family:inherit; }
 
 /* ── Cards ───────────────────────────────────────────────────── */
 .card {
-  background: var(--card);
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.7) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.8);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 20px;
@@ -236,7 +238,11 @@ input, select, textarea { font-family:inherit; }
 
 /* Stat card with shimmer on hover */
 .stat-card {
-  background: var(--card);
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.7);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.8);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 20px;
@@ -391,6 +397,10 @@ input, select, textarea { font-family:inherit; }
 /* ── Inputs ──────────────────────────────────────────────────── */
 .input {
   width: 100%;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.6) !important;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -554,7 +564,10 @@ input[type='range']::-moz-range-thumb {
   animation: fadeIn 0.2s ease;
 }
 .modal {
-  background: var(--card);
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.8);
   border: 1px solid rgba(234,230,222,0.8);
   border-radius: var(--radius-xl);
   padding: 28px;
@@ -801,7 +814,11 @@ input[type='range']::-moz-range-thumb {
   .sidebar.mobile-open { transform: translateX(0); }
   .sidebar-overlay { display: block; }
   .page-content { padding: 20px 18px; }
-  .topbar { padding: 0 18px; }
+  .topbar {
+  background: rgba(255,255,255,0.75) !important;
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid rgba(255,255,255,0.6) !important; padding: 0 18px; }
   .stat-grid-4 { grid-template-columns: repeat(2,1fr) !important; }
   .stat-grid-3 { grid-template-columns: repeat(2,1fr) !important; }
   .chart-row   { grid-template-columns: 1fr !important; }
@@ -818,7 +835,11 @@ input[type='range']::-moz-range-thumb {
   .show-mobile { display: block !important; }
 
   .page-content { padding: 14px 12px 90px; }
-  .topbar { height: 56px; min-height: 56px; padding: 0 14px; }
+  .topbar {
+  background: rgba(255,255,255,0.75) !important;
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid rgba(255,255,255,0.6) !important; height: 56px; min-height: 56px; padding: 0 14px; }
 
   .mobile-bottomnav { display: flex; justify-content: space-around; align-items: center; }
 
@@ -1068,4 +1089,113 @@ input[type='range']::-moz-range-thumb {
   .two-col {
     grid-template-columns: 1fr !important;
   }
+}
+
+
+/* ══ LIQUID GLASS SYSTEM ════════════════════════════════════════ */
+
+/* Page background gradient */
+body {
+  background: linear-gradient(135deg, #F5EDD8 0%, #EDE4D0 30%, #E8DFC8 60%, #F0E8D5 100%) !important;
+  background-attachment: fixed !important;
+  min-height: 100vh;
+}
+
+/* Sidebar glass */
+.sidebar {
+  background: rgba(255,252,245,0.78) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border-right: 1px solid rgba(255,255,255,0.65) !important;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.06) !important;
+}
+
+/* Topbar glass */
+.topbar {
+  background: rgba(255,252,245,0.75) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.65) !important;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.05) !important;
+}
+
+/* Cards glass */
+.card {
+  background: rgba(255,255,255,0.58) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  border: 1px solid rgba(255,255,255,0.72) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.85) !important;
+}
+
+/* Stat cards glass */
+.stat-card {
+  background: rgba(255,255,255,0.58) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  border: 1px solid rgba(255,255,255,0.72) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.85) !important;
+}
+
+/* Modal glass */
+.modal {
+  background: rgba(255,253,248,0.90) !important;
+  backdrop-filter: blur(32px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
+  border: 1px solid rgba(255,255,255,0.8) !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  background: rgba(30,20,5,0.35) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* Inputs glass */
+.input {
+  background: rgba(255,255,255,0.65) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255,255,255,0.6) !important;
+}
+.input:focus {
+  background: rgba(255,255,255,0.85) !important;
+  border-color: rgba(184,134,11,0.5) !important;
+}
+
+/* Bottom nav glass */
+.mobile-bottomnav {
+  background: rgba(255,252,245,0.85) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border-top: 1px solid rgba(255,255,255,0.7) !important;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08) !important;
+}
+
+/* Tabs glass */
+.tabs {
+  background: rgba(255,255,255,0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255,255,255,0.6) !important;
+}
+
+/* Page content transparent */
+.page-content {
+  background: transparent !important;
+}
+
+/* Table header glass */
+.data-table thead th {
+  background: rgba(255,255,255,0.45) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Buttons secondary glass */
+.btn-secondary {
+  background: rgba(255,255,255,0.65) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255,255,255,0.7) !important;
 }

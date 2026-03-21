@@ -24,12 +24,11 @@ const GLASS_CSS = `
     --gold: #B8860B;
     --gold-lt: #D4A017;
     --blue: #38BDF8;
-    --surface: rgba(255,255,255,0.65);
+    --surface: rgba(255,255,255,0.62);
     --surface-hover: rgba(255,255,255,0.82);
-    --border-glass: rgba(255,255,255,0.55);
-    --shadow-glass: 0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
-    --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
-    --bg-page: #F0ECE4;
+    --border-glass: rgba(255,255,255,0.7);
+    --shadow-glass: 0 4px 32px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.9);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.10);
   }
 
   /* Liquid glass base */
@@ -617,7 +616,7 @@ export default function AnalyticsPage() {
         .two-col-glass { grid-template-columns: 1fr 1fr; }
         @media(max-width:640px) { .two-col-glass { grid-template-columns: 1fr; } }
       `}</style>
-      <div style={{ display:'flex', flexDirection:'column', gap:0, animation:'fadeUp 0.4s ease both', minWidth:0, maxWidth:'100%', width:'100%', overflow:'hidden' }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:0, animation:'fadeUp 0.4s ease both', minWidth:0, maxWidth:'100%', width:'100%' }}>
         {/* Page header */}
         <div style={{ marginBottom:18, display:'flex', alignItems:'flex-end', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
           <div>
