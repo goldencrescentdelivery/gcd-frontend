@@ -1,134 +1,79 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { backupApi } from '@/lib/api'
-import { Download, Database, Clock, Shield, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react'
+import React, { useState } from 'react'
+import { HardDrive, Download, RefreshCw, CheckCircle, AlertCircle, Database } from 'lucide-react'
+
+const API = process.env.NEXT_PUBLIC_API_URL
+function hdr() { return { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
 
 export default function BackupPage() {
-  const [stats,     setStats]     = useState(null)
-  const [history,   setHistory]   = useState([])
-  const [loading,   setLoading]   = useState(true)
-  const [backing,   setBacking]   = useState(false)
-  const [lastDone,  setLastDone]  = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [status,  setStatus]  = useState(null)
 
-  useEffect(() => {
-    Promise.all([backupApi.stats(), backupApi.history()])
-      .then(([s,h]) => { setStats(s); setHistory(h.backups||[]) })
-      .catch(console.error)
-      .finally(()=>setLoading(false))
-  }, [])
-
-  async function handleBackup() {
-    setBacking(true)
+  async function runBackup() {
+    setLoading(true); setStatus(null)
     try {
-      await backupApi.download()
-      setLastDone(new Date())
-      // Refresh history
-      backupApi.history().then(h=>setHistory(h.backups||[])).catch(()=>{})
-    } catch(e) { alert('Backup failed: '+e.message) } finally { setBacking(false) }
+      const res  = await fetch(`${API}/api/backup`, { method:'POST', headers:hdr() })
+      const data = await res.json()
+      if (res.ok) setStatus({ ok:true,  msg: data.message || 'Backup completed successfully' })
+      else        setStatus({ ok:false, msg: data.error   || 'Backup failed' })
+    } catch(e) {
+      setStatus({ ok:false, msg: e.message || 'Server unreachable' })
+    } finally { setLoading(false) }
   }
-
-  const lastBackup  = history[0]
-  const daysSince   = lastBackup ? Math.floor((Date.now()-new Date(lastBackup.created_at))/86400000) : null
-  const backupOK    = daysSince !== null && daysSince <= 7
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20, animation:'slideUp 0.35s ease' }}>
-
-      {/* Header warning or OK */}
-      {daysSince !== null && (
-        <div style={{ background: backupOK?'#ECFDF5':'#FEF2F2', border:`1px solid ${backupOK?'#A7F3D0':'#FCA5A5'}`, borderRadius:14, padding:'16px 20px', display:'flex', gap:14, alignItems:'center' }}>
-          {backupOK ? <CheckCircle size={22} color="#2E7D52"/> : <AlertTriangle size={22} color="#C0392B"/>}
-          <div>
-            <div style={{ fontWeight:700, fontSize:15, color:backupOK?'#2E7D52':'#C0392B', marginBottom:3 }}>
-              {backupOK ? 'Data is protected' : '⚠️ Backup overdue'}
-            </div>
-            <div style={{ fontSize:13, color:'#6B5D4A' }}>
-              Last backup: <strong>{daysSince===0?'Today':`${daysSince} days ago`}</strong> · {new Date(lastBackup.created_at).toLocaleString('en-AE')}
-              {!backupOK && ' — We recommend backing up at least once a week.'}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main backup button */}
-      <div style={{ background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)', border:'1px solid #F0D78C', borderRadius:18, padding:'28px 32px', textAlign:'center' }}>
-        <div style={{ width:64,height:64,borderRadius:18,background:'linear-gradient(135deg,#B8860B,#D4A017)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',boxShadow:'0 8px 24px rgba(184,134,11,0.3)' }}>
-          <Shield size={30} color="#fff"/>
-        </div>
-        <div style={{ fontWeight:800, fontSize:20, color:'#1A1612', marginBottom:8, letterSpacing:'-0.02em' }}>Database Backup</div>
-        <div style={{ fontSize:13.5, color:'#6B5D4A', marginBottom:24, lineHeight:1.6, maxWidth:420, margin:'0 auto 24px' }}>
-          Downloads a complete backup of all employee records, payroll, attendance, leaves, compliance, and delivery data as a JSON file. Store this file in a safe place.
-        </div>
-        <button
-          className="btn btn-primary"
-          style={{ padding:'14px 36px', fontSize:15, fontWeight:700 }}
-          onClick={handleBackup}
-          disabled={backing}
-        >
-          {backing ? <><RefreshCw size={16} style={{ animation:'spin 1s linear infinite', marginRight:8 }}/> Creating Backup…</> : <><Download size={16} style={{ marginRight:8 }}/> Download Full Backup</>}
-        </button>
-        {lastDone && <div style={{ fontSize:12, color:'#2E7D52', marginTop:14, fontWeight:600 }}>✓ Backup downloaded at {lastDone.toLocaleTimeString('en-AE')}</div>}
+      <div>
+        <h1 style={{ fontWeight:900, fontSize:22, color:'#1A1612', letterSpacing:'-0.03em', margin:0 }}>Backup</h1>
+        <p style={{ fontSize:12, color:'#A89880', marginTop:4 }}>Database backup and data export</p>
       </div>
 
-      {/* Database stats */}
-      {stats && (
-        <div className="card">
-          <div style={{ fontWeight:700, fontSize:15, color:'#1A1612', marginBottom:16, display:'flex', alignItems:'center', gap:8 }}>
-            <Database size={17} color="#B8860B"/> Database Contents
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:10 }}>
-            {stats.tables?.map(t=>(
-              <div key={t.table} style={{ background:'#FAFAF8', border:'1px solid #EAE6DE', borderRadius:10, padding:'12px 14px' }}>
-                <div style={{ fontWeight:800, fontSize:22, color:'#1A1612', letterSpacing:'-0.03em' }}>{t.rows.toLocaleString()}</div>
-                <div style={{ fontSize:11.5, color:'#A89880', marginTop:3, textTransform:'capitalize' }}>{t.table.replace(/_/g,' ')}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop:14, padding:'10px 14px', background:'#F0FDF4', border:'1px solid #A7F3D0', borderRadius:10, fontSize:13, color:'#2E7D52', fontWeight:500 }}>
-            Total: <strong>{stats.total_rows?.toLocaleString()}</strong> rows across <strong>{stats.tables?.length}</strong> tables
-          </div>
+      {/* Main backup card */}
+      <div className="card" style={{ padding:'28px 24px', textAlign:'center' }}>
+        <div style={{ width:72, height:72, borderRadius:20, background:'linear-gradient(135deg,#FDF6E3,#FEF9F0)', border:'2px solid #F0D78C', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 18px' }}>
+          <HardDrive size={32} color="#B8860B"/>
         </div>
-      )}
+        <h2 style={{ fontWeight:800, fontSize:18, color:'#1A1612', marginBottom:8 }}>Database Backup</h2>
+        <p style={{ fontSize:13, color:'#A89880', marginBottom:24, lineHeight:1.6 }}>
+          Creates a full snapshot of all operational data including employees, attendance, payroll, leaves, vehicles, and documents.
+        </p>
 
-      {/* Backup history */}
-      <div className="card">
-        <div style={{ fontWeight:700, fontSize:15, color:'#1A1612', marginBottom:16, display:'flex', alignItems:'center', gap:8 }}>
-          <Clock size={17} color="#B8860B"/> Backup History
-        </div>
-        {history.length===0 ? (
-          <div style={{ textAlign:'center', padding:30, color:'#A89880', fontSize:13 }}>No backups yet — run your first backup above</div>
-        ) : (
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            {history.map((b,i)=>(
-              <div key={b.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 14px', background:'#FAFAF8', borderRadius:10, border:'1px solid #EAE6DE' }}>
-                <div>
-                  <div style={{ fontSize:13, fontWeight:600, color:'#1A1612' }}>{new Date(b.created_at).toLocaleString('en-AE')}</div>
-                  <div style={{ fontSize:11.5, color:'#A89880', marginTop:2 }}>
-                    {b.rows?.toLocaleString()} rows · {b.size_bytes ? `${(b.size_bytes/1024).toFixed(0)} KB` : '—'} · by {b.triggered_by_name||'system'}
-                  </div>
-                </div>
-                <span className="badge badge-success" style={{ fontSize:10 }}>Complete</span>
-              </div>
-            ))}
+        {status && (
+          <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', borderRadius:12, background:status.ok?'#ECFDF5':'#FEF2F2', border:`1px solid ${status.ok?'#A7F3D0':'#FCA5A5'}`, marginBottom:20, textAlign:'left' }}>
+            {status.ok ? <CheckCircle size={18} color="#2E7D52"/> : <AlertCircle size={18} color="#C0392B"/>}
+            <span style={{ fontSize:13, fontWeight:600, color:status.ok?'#2E7D52':'#C0392B' }}>{status.msg}</span>
           </div>
         )}
+
+        <button onClick={runBackup} disabled={loading}
+          style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 28px', borderRadius:24, background:loading?'#A89880':'linear-gradient(135deg,#B8860B,#D4A017)', color:'white', fontWeight:700, fontSize:14, border:'none', cursor:loading?'not-allowed':'pointer', fontFamily:'Poppins,sans-serif', transition:'all 0.2s', boxShadow:loading?'none':'0 4px 16px rgba(184,134,11,0.35)' }}>
+          {loading ? <><RefreshCw size={16} style={{ animation:'spin 1s linear infinite' }}/> Running…</> : <><Download size={16}/> Run Backup</>}
+        </button>
       </div>
 
-      {/* Recommendations */}
-      <div className="card" style={{ background:'#FFFBEB', border:'1px solid #FCD34D' }}>
-        <div style={{ fontWeight:700, fontSize:14, color:'#B45309', marginBottom:12 }}>📋 Backup Recommendations</div>
+      {/* Info cards */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))', gap:12 }}>
         {[
-          'Run a backup every week — especially before payroll processing',
-          'Store backup files in Google Drive or email them to yourself',
-          'Keep at least 3 months of backup files before deleting old ones',
-          'After any major data entry (new employees, payroll), run a backup',
-          'Neon.tech also keeps automatic 7-day point-in-time restore as a safety net',
-        ].map((tip,i)=>(
-          <div key={i} style={{ display:'flex', gap:10, marginBottom:8, fontSize:13, color:'#92400E' }}>
-            <span style={{ fontWeight:700, flexShrink:0 }}>{i+1}.</span>
-            <span>{tip}</span>
-          </div>
-        ))}
+          { icon:Database, title:'What's backed up', items:['Employees & users','Attendance records','Payroll & deductions','Leave requests','Vehicle data','SIM cards','Documents'] },
+          { icon:CheckCircle, title:'Backup includes', items:['All active records','Historical data','Relationships intact','Timestamps preserved'] },
+        ].map((s,i) => {
+          const Icon = s.icon
+          return (
+            <div key={i} className="card" style={{ padding:'18px' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+                <Icon size={16} color="#B8860B"/>
+                <span style={{ fontWeight:700, fontSize:13, color:'#1A1612' }}>{s.title}</span>
+              </div>
+              <ul style={{ listStyle:'none', padding:0, margin:0 }}>
+                {s.items.map(item => (
+                  <li key={item} style={{ fontSize:12, color:'#6B5D4A', padding:'3px 0', display:'flex', alignItems:'center', gap:6 }}>
+                    <div style={{ width:5, height:5, borderRadius:'50%', background:'#B8860B', flexShrink:0 }}/>{item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
