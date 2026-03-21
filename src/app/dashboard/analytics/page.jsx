@@ -70,11 +70,19 @@ const GLASS_CSS = `
   }
 
   /* Mobile/desktop toggle */
-  .mob { display:none; }
+  .mob  { display:none !important; }
   .desk { display:grid; }
   @media(max-width:640px){
-    .mob  { display:block; }
+    .mob  { display:flex !important; }
     .desk { display:none !important; }
+    .mob.kpi-wrap { display:block !important; }
+    /* CRITICAL: prevent horizontal overflow */
+    * { max-width:100%; box-sizing:border-box; }
+    .glass { min-width:0 !important; max-width:100% !important; }
+    /* Charts */
+    .recharts-wrapper, .recharts-surface { max-width:100% !important; }
+    /* Grids stack on mobile */
+    [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
   }
 `
 
@@ -210,7 +218,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
           <div style={{ fontWeight:900, fontSize:20, color:'white', letterSpacing:'-0.03em', marginBottom:2 }}>Golden Crescent</div>
           <div style={{ fontWeight:400, fontSize:13, color:'rgba(255,255,255,0.45)', marginBottom:18 }}>Real-time intelligence across all stations</div>
 
-          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap', minWidth:0 }}>
             {[
               { l:'Staff', v:summary?.employees?.c||0, c:'#F59E0B' },
               { l:'Stations', v:2, c:'#38BDF8' },
@@ -226,7 +234,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
       </div>
 
       {/* ── KPI GRID (desktop) / SWIPE (mobile) ── */}
-      <div>
+      <div style={{ minWidth:0, overflow:'hidden' }}>
         <SH title="Key Metrics" sub="Live operational data"/>
         <div className="desk" style={{ gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
           {kpis.map((k,i) => <KPI key={k.label} {...k} loading={loading} delay={i*0.05}/>)}
@@ -237,10 +245,10 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
       </div>
 
       {/* ── CHARTS ROW ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:14 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:14, minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
 
         {/* Delivery Chart — full width */}
-        <div className="glass fade-up" style={{ borderRadius:20, padding:'20px' }}>
+        <div className="glass fade-up" style={{ borderRadius:20, padding:'20px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
           <SH title="Monthly Deliveries" sub="Last 6 months by station"
             right={
               <div style={{ display:'flex', gap:8 }}>
@@ -253,7 +261,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
               </div>
             }
           />
-          <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="99%" height={180}>
             <BarChart data={delivData} barSize={8} barGap={3}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false}/>
               <XAxis dataKey="month" stroke="#C4B49A" fontSize={10} tickLine={false} axisLine={false}/>
@@ -266,9 +274,9 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
         </div>
 
         {/* Attendance + Payroll side by side on desktop */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="two-col-glass">
+        <div className="two-col-glass" style={{ display:'grid', gap:14, minWidth:0, maxWidth:'100%' }}>
           {/* Attendance */}
-          <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+          <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
             <SH title="Attendance Today"/>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {[
@@ -300,7 +308,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
           </div>
 
           {/* Payroll */}
-          <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+          <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
             <SH title="Payroll This Month"/>
             <div style={{ marginBottom:14 }}>
               {[
@@ -334,10 +342,10 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
 
         {/* Station split donut + SIM inline */}
         {(stationData.length > 0 || simStats) && (
-          <div style={{ display:'grid', gridTemplateColumns:simStats?'1fr 1fr':'1fr', gap:14 }}>
+          <div className="two-col-glass" style={{ display:'grid', gap:14, minWidth:0, maxWidth:'100%' }}>
             {/* Donut */}
             {stationData.length > 0 && (
-              <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+              <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
                 <SH title="Station Split" sub="Total deliveries"/>
                 <div style={{ display:'flex', alignItems:'center', gap:16 }}>
                   <div style={{ position:'relative', flexShrink:0 }}>
@@ -370,11 +378,11 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
 
             {/* SIM Inventory */}
             {simStats && (
-              <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+              <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
                 <SH title="SIM Inventory" sub="Fleet communication"
                   right={<a href="/dashboard/poc" style={{ fontSize:11.5, fontWeight:600, color:'#B8860B', textDecoration:'none', display:'flex', alignItems:'center', gap:3 }}>Manage <ChevronRight size={12}/></a>}
                 />
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:12 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:12, minWidth:0 }}>
                   {[
                     { l:'Total',     v:simStats.total||0,     c:'#1A1612' },
                     { l:'Assigned',  v:simStats.assigned||0,  c:'#F59E0B' },
@@ -409,7 +417,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
 
         {/* Pending Approvals */}
         {leaves?.length > 0 && (
-          <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+          <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
             <SH title="Pending Approvals" sub="Awaiting your final sign-off"/>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {leaves.slice(0,5).map(l => (
@@ -429,7 +437,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
         )}
 
         {/* Quick Actions */}
-        <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+        <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
           <SH title="Quick Actions"/>
           {/* Desktop 6-col */}
           <div className="desk" style={{ gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
@@ -456,7 +464,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
             })}
           </div>
           {/* Mobile scroll */}
-          <div className="mob" style={{ display:'flex', gap:10, overflowX:'auto', scrollbarWidth:'none', paddingBottom:2 }}>
+          <div className="mob no-scroll" style={{ gap:10, overflowX:'auto', paddingBottom:2 }}>
             {[
               { l:'Employees',  href:'/dashboard/hr/employees',    icon:Users,       c:'#F59E0B' },
               { l:'Payroll',    href:'/dashboard/finance/payroll', icon:Wallet,      c:'#38BDF8' },
@@ -493,7 +501,7 @@ function SimpleKPIGrid({ kpis, loading }) {
       <div className="desk" style={{ gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:10 }}>
         {kpis.map((k,i) => <KPI key={k.label} {...k} loading={loading} delay={i*0.05}/>)}
       </div>
-      <div className="mob" style={{ marginTop:0 }}>
+      <div className="mob kpi-wrap" style={{ marginTop:0 }}>
         <Swiper items={kpis} peek="calc(50% - 15px)" render={(k,i) => <KPI {...k} loading={loading} delay={i*0.05}/>}/>
       </div>
     </>
@@ -609,7 +617,7 @@ export default function AnalyticsPage() {
         .two-col-glass { grid-template-columns: 1fr 1fr; }
         @media(max-width:640px) { .two-col-glass { grid-template-columns: 1fr; } }
       `}</style>
-      <div style={{ display:'flex', flexDirection:'column', gap:0, animation:'fadeUp 0.4s ease both' }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:0, animation:'fadeUp 0.4s ease both', minWidth:0, maxWidth:'100%', width:'100%', overflow:'hidden' }}>
         {/* Page header */}
         <div style={{ marginBottom:18, display:'flex', alignItems:'flex-end', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
           <div>

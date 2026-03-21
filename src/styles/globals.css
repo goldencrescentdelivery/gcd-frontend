@@ -1052,3 +1052,20 @@ input[type='range']::-moz-range-thumb {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ── Strong mobile overflow prevention ──────────────────────── */
+@media (max-width: 640px) {
+  .page-content {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+  .page-content > * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* Force all grids to single column on mobile */
+  .two-col-glass,
+  .two-col {
+    grid-template-columns: 1fr !important;
+  }
+}
