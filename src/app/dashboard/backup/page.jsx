@@ -54,7 +54,7 @@ export default function BackupPage() {
       {/* Info cards */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))', gap:12 }}>
         {[
-          { icon:Database, title:'What's backed up', items:['Employees & users','Attendance records','Payroll & deductions','Leave requests','Vehicle data','SIM cards','Documents'] },
+          { icon:Database, title:'What is backed up', items:['Employees & users','Attendance records','Payroll & deductions','Leave requests','Vehicle data','SIM cards','Documents'] },
           { icon:CheckCircle, title:'Backup includes', items:['All active records','Historical data','Relationships intact','Timestamps preserved'] },
         ].map((s,i) => {
           const Icon = s.icon
