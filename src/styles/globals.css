@@ -1199,3 +1199,14 @@ body {
   backdrop-filter: blur(8px) !important;
   border: 1px solid rgba(255,255,255,0.7) !important;
 }
+
+/* Three column grid responsive */
+.three-col-glass {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 900px) {
+  .three-col-glass { grid-template-columns: 1fr 1fr !important; }
+}
+@media (max-width: 640px) {
+  .three-col-glass { grid-template-columns: 1fr !important; }
+}
