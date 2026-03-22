@@ -3,12 +3,12 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { analyticsApi } from '@/lib/api'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  AreaChart, Area, PieChart, Pie, Cell
+  AreaChart, Area, PieChart, Pie, Cell, RadialBarChart, RadialBar
 } from 'recharts'
 import {
   Users, Package, Activity, Wallet, AlertTriangle, Calendar,
   ChevronRight, ArrowUp, ArrowDown, Truck, ShieldCheck, Clock,
-  UserMinus, CheckCircle, Smartphone, TrendingUp, Zap
+  UserMinus, CheckCircle, Smartphone, TrendingUp, Zap, Receipt
 } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
@@ -184,7 +184,7 @@ function SH({ title, sub, right }) {
 /* ─────────────────────────────────────────────
    MANAGER DASHBOARD
 ───────────────────────────────────────────── */
-function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, simStats, simByStation }) {
+function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, simStats, simByStation, expenses }) {
   const kpis = [
     { icon:Users,         label:'Active DAs',       value:summary?String(summary.employees?.active||0):'—',                                              color:'#F59E0B' },
     { icon:Package,       label:'Today Deliveries', value:summary?String(summary.today_deliveries||0):'—',                                               color:'#38BDF8' },
@@ -532,15 +532,99 @@ function HRDashboard({ summary, loading }) {
   return <SimpleKPIGrid kpis={kpis} loading={loading}/>
 }
 
-function AccountantDashboard({ summary, loading }) {
+const EXPENSE_CATS = [
+  { v:'ABN Parking',c:'#F59E0B',e:'🅿️' },{ v:'Advances',c:'#10B981',e:'💵' },
+  { v:'Air Tickets',c:'#3B82F6',e:'✈️' },{ v:'ENOC',c:'#EF4444',e:'⛽' },
+  { v:'Health Insurance',c:'#8B5CF6',e:'🏥' },{ v:'Idfy',c:'#EC4899',e:'🔍' },
+  { v:'Mobile Expenses',c:'#06B6D4',e:'📱' },{ v:'Office Expenses',c:'#84CC16',e:'🏢' },
+  { v:'RTA Top-up',c:'#F97316',e:'🚌' },{ v:'Vehicle Expenses',c:'#6366F1',e:'🚗' },
+  { v:'Vehicle Rent',c:'#0EA5E9',e:'🔑' },{ v:'Visa Expenses',c:'#D97706',e:'📋' },
+  { v:'Miscellaneous Expenses',c:'#94A3B8',e:'📦' },
+]
+
+function AccountantDashboard({ summary, loading, expenses }) {
   const net = Number(summary?.payroll?.base_total||0)+Number(summary?.payroll?.bonus_total||0)-Number(summary?.payroll?.ded_total||0)
+  const totalExp = expenses.reduce((s,e)=>s+Number(e.amount||0),0)
+
   const kpis = [
     { icon:Wallet,       label:'Base Salaries', value:`AED ${fmt(summary?.payroll?.base_total)}`, color:'#F59E0B' },
     { icon:TrendingUp,   label:'Bonuses',        value:`AED ${fmt(summary?.payroll?.bonus_total)}`,color:'#34D399' },
     { icon:AlertTriangle,label:'Deductions',     value:`AED ${fmt(summary?.payroll?.ded_total)}`,  color:'#F87171' },
     { icon:Wallet,       label:'Net Payroll',    value:`AED ${fmt(net)}`,                          color:'#A78BFA' },
+    { icon:Receipt,      label:'Total Expenses', value:`AED ${fmt(totalExp)}`,                     color:'#F59E0B' },
   ]
-  return <SimpleKPIGrid kpis={kpis} loading={loading}/>
+
+  const byCat = EXPENSE_CATS.map(cat => ({
+    name: cat.v, short: cat.e + ' ' + cat.v.split(' ')[0],
+    value: expenses.filter(e=>e.category===cat.v).reduce((s,e)=>s+Number(e.amount||0),0),
+    color: cat.c,
+  })).filter(c=>c.value>0).sort((a,b)=>b.value-a.value)
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+      <SimpleKPIGrid kpis={kpis} loading={loading}/>
+
+      {byCat.length > 0 && (
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="two-col-glass">
+          {/* Pie */}
+          <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', backdropFilter:'blur(20px)', border:'1px solid rgba(255,255,255,0.7)' }}>
+            <div style={{ fontWeight:800, fontSize:14, color:'#1A1612', marginBottom:2 }}>Expense Breakdown</div>
+            <div style={{ fontSize:11.5, color:'#A89880', marginBottom:14 }}>By category this month</div>
+            <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+              <PieChart width={130} height={130}>
+                <Pie data={byCat} cx={60} cy={60} innerRadius={35} outerRadius={58} paddingAngle={3} dataKey="value">
+                  {byCat.map((c,i) => <Cell key={c.name} fill={c.color}/>)}
+                </Pie>
+                <Tooltip content={<GlassTip/>}/>
+              </PieChart>
+              <div style={{ flex:1, display:'flex', flexDirection:'column', gap:5 }}>
+                {byCat.slice(0,5).map(c => (
+                  <div key={c.name} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:5, minWidth:0 }}>
+                      <div style={{ width:8, height:8, borderRadius:2, background:c.color, flexShrink:0 }}/>
+                      <span style={{ fontSize:10.5, color:'#6B5D4A', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.short}</span>
+                    </div>
+                    <span style={{ fontSize:10.5, fontWeight:700, color:c.color, flexShrink:0 }}>AED {fmt(c.value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bar */}
+          <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', backdropFilter:'blur(20px)', border:'1px solid rgba(255,255,255,0.7)' }}>
+            <div style={{ fontWeight:800, fontSize:14, color:'#1A1612', marginBottom:2 }}>Top Categories</div>
+            <div style={{ fontSize:11.5, color:'#A89880', marginBottom:14 }}>Highest spending</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {byCat.slice(0,5).map(c => {
+                const pct = byCat[0]?.value > 0 ? Math.round(c.value/byCat[0].value*100) : 0
+                return (
+                  <div key={c.name}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                      <span style={{ fontSize:11, color:'#6B5D4A', fontWeight:500 }}>{c.short}</span>
+                      <span style={{ fontSize:11, fontWeight:700, color:c.color }}>AED {fmt(c.value)}</span>
+                    </div>
+                    <div style={{ height:5, background:'rgba(0,0,0,0.06)', borderRadius:10, overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:`${pct}%`, background:c.color, borderRadius:10, transition:'width 1.2s ease' }}/>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="glass fade-up" style={{ borderRadius:20, padding:'16px', backdropFilter:'blur(20px)', border:'1px solid rgba(255,255,255,0.7)', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
+        <div style={{ fontWeight:700, fontSize:14, color:'#1A1612' }}>
+          View detailed expense records
+        </div>
+        <a href="/dashboard/finance/expenses" style={{ padding:'8px 18px', borderRadius:20, background:'linear-gradient(135deg,#B8860B,#D4A017)', color:'white', fontWeight:700, fontSize:12, textDecoration:'none', display:'flex', alignItems:'center', gap:6 }}>
+          Open Expenses →
+        </a>
+      </div>
+    </div>
+  )
 }
 
 function POCDashboard({ summary, chart, loading }) {
@@ -564,6 +648,7 @@ export default function AnalyticsPage() {
   const [userRole,     setUserRole]     = useState(null)
   const [simStats,     setSimStats]     = useState(null)
   const [simByStation, setSimByStation] = useState([])
+  const [expenses,     setExpenses]     = useState([])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -572,15 +657,17 @@ export default function AnalyticsPage() {
       if (token) {
         try { const p=JSON.parse(atob(token.split('.')[1])); setUserRole(p.role) } catch(e){}
       }
-      const [sum, ch, simD] = await Promise.all([
+      const [sum, ch, simD, expD] = await Promise.all([
         analyticsApi.summary(),
         fetch(`${API}/api/analytics/deliveries-chart?months=6`, { headers:hdr() }).then(r=>r.json()).catch(()=>({ chart:[] })),
         fetch(`${API}/api/sims/stats`, { headers:hdr() }).then(r=>r.json()).catch(()=>({ stats:null })),
+        fetch(`${API}/api/expenses?month=${new Date().toISOString().slice(0,7)}`, { headers:hdr() }).then(r=>r.json()).catch(()=>({ expenses:[] })),
       ])
       setSummary(sum)
       setChart(ch.chart || [])
       setSimStats(simD.stats || null)
       setSimByStation(simD.by_station || [])
+      setExpenses(expD.expenses || [])
 
       // Load pending leaves for manager/admin
       const role = userRole || (token ? JSON.parse(atob(token.split('.')[1])).role : null)
@@ -601,11 +688,11 @@ export default function AnalyticsPage() {
   const role = userRole
 
   const dashboards = {
-    manager:         <ManagerDashboard   summary={summary} chart={chart} loading={loading} leaves={leaves} onApproveLeave={handleApproveLeave} simStats={simStats} simByStation={simByStation}/>,
-    admin:           <ManagerDashboard   summary={summary} chart={chart} loading={loading} leaves={leaves} onApproveLeave={handleApproveLeave} simStats={simStats} simByStation={simByStation}/>,
+    manager:         <ManagerDashboard   summary={summary} chart={chart} loading={loading} leaves={leaves} onApproveLeave={handleApproveLeave} simStats={simStats} simByStation={simByStation} expenses={expenses}/>,
+    admin:           <ManagerDashboard   summary={summary} chart={chart} loading={loading} leaves={leaves} onApproveLeave={handleApproveLeave} simStats={simStats} simByStation={simByStation} expenses={expenses}/>,
     general_manager: <GMDashboard        summary={summary} chart={chart} loading={loading}/>,
     hr:              <HRDashboard        summary={summary} loading={loading}/>,
-    accountant:      <AccountantDashboard summary={summary} loading={loading}/>,
+    accountant:      <AccountantDashboard summary={summary} loading={loading} expenses={expenses}/>,
     poc:             <POCDashboard       summary={summary} chart={chart} loading={loading}/>,
   }
 
