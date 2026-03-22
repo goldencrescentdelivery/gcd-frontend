@@ -72,7 +72,7 @@ function generatePayslip(slip, month) {
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:'Poppins',Arial,sans-serif;background:#F5EDD8;padding:24px;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;}
+  body{font-family:'Poppins',Arial,sans-serif;background:#F5EDD8;padding:16px;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;}
   .slip{background:white;width:100%;max-width:680px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.15);}
   
   /* Header */
@@ -80,7 +80,7 @@ function generatePayslip(slip, month) {
   .header::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(212,160,23,0.2) 0%,transparent 70%);}
   .header::after{content:'';position:absolute;left:-20px;bottom:-30px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,0.12) 0%,transparent 70%);}
   .header-grid{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;position:relative;}
-  .logo-box{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,#B8860B,#D4A017);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:white;letter-spacing:0.05em;box-shadow:0 4px 16px rgba(184,134,11,0.4);}
+  .logo-box{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#B8860B,#D4A017);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:white;letter-spacing:0.05em;box-shadow:0 4px 16px rgba(184,134,11,0.4);}
   .company-name{font-weight:900;font-size:16px;color:white;letter-spacing:-0.02em;margin-bottom:4px;}
   .company-sub{font-size:10.5px;color:rgba(255,255,255,0.45);line-height:1.6;}
   .slip-badge{text-align:right;}
@@ -119,7 +119,16 @@ function generatePayslip(slip, month) {
   .footer-note{text-align:center;padding:10px 32px 16px;font-size:9.5px;color:#C4B49A;}
   .made-with{text-align:center;font-size:9px;color:#D4C4A8;padding-bottom:12px;}
 
-  @media print{body{background:white;padding:0;}  .slip{box-shadow:none;border-radius:0;}}
+  @media print{
+    body{background:white !important;padding:0 !important;margin:0;}
+    .slip{box-shadow:none !important;border-radius:0 !important;width:100% !important;max-width:100% !important;}
+    .header{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;background:linear-gradient(135deg,#0F0C07 0%,#1E1608 50%,#2C1F0A 100%) !important;}
+    .net-row{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;background:linear-gradient(135deg,#0F0C07,#2C1F0A) !important;}
+    .info-band{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+    *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+  }
+  /* Force color printing */
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 </style>
 </head>
 <body>
@@ -190,7 +199,7 @@ function generatePayslip(slip, month) {
   <div class="footer-note">This is a computer-generated salary slip. Golden Crescent Delivery Services LLC — ${month} — v${APP_VERSION}</div>
   <div class="made-with">Made with ❤️ by Waleed</div>
 </div>
-<script>setTimeout(()=>window.print(),300)</script>
+<script>document.fonts.ready.then(()=>setTimeout(()=>window.print(),500))</script>
 </body>
 </html>`
 
