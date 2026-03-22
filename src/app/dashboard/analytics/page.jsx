@@ -186,42 +186,61 @@ function SH({ title, sub, right }) {
 ───────────────────────────────────────────── */
 function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, simStats, simByStation, expenses }) {
   const kpis = [
-    { icon:Users,         label:'Active DAs',       value:summary?String(summary.employees?.active||0):'—',                                              color:'#F59E0B' },
-    { icon:Package,       label:'Today Deliveries', value:summary?String(summary.today_deliveries||0):'—',                                               color:'#38BDF8' },
-    { icon:Activity,      label:'Present Today',    value:summary?String(summary.attendance?.present||0):'—',                                            color:'#34D399' },
-    { icon:Wallet,        label:'Net Payroll',       value:summary?`AED ${fmt(summary.payroll?.base_total)}`:'—',                                        color:'#A78BFA' },
-    { icon:AlertTriangle, label:'Compliance',        value:summary?String(summary.compliance?.expired||0):'—',                                           color:'#F87171' },
-    { icon:Calendar,      label:'Pending Leaves',   value:summary?String(summary.pending_leaves||0):'—',                                                 color:'#FB923C' },
+    { icon:Users,         label:'Active DAs',       value:summary?String(summary.employees?.active||0):'—', color:'#F59E0B' },
+    { icon:Package,       label:'Today Deliveries', value:summary?String(summary.today_deliveries||0):'—',  color:'#38BDF8' },
+    { icon:Activity,      label:'Present Today',    value:summary?String(summary.attendance?.present||0):'—', color:'#34D399' },
+    { icon:Wallet,        label:'Net Payroll',       value:summary?`AED ${fmt(summary.payroll?.base_total)}`:'—', color:'#A78BFA' },
+    { icon:AlertTriangle, label:'Compliance',        value:summary?String(summary.compliance?.expired||0):'—', color:'#F87171' },
+    { icon:Calendar,      label:'Pending Leaves',   value:summary?String(summary.pending_leaves||0):'—',    color:'#FB923C' },
   ]
 
   const delivData = chart.length ? chart : [{ month:'—', DDB1:0, DXE6:0 }]
-  const stationData = Object.entries(SC).map(([s,c]) => ({
-    name:s, value:delivData.reduce((a,m)=>a+(m[s]||0),0), color:c
+  const stationData = Object.entries(SC).map(([s,col]) => ({
+    name:s, value:delivData.reduce((a,m)=>a+(m[s]||0),0), color:col
   })).filter(s=>s.value>0)
-
   const totalDeliveries = stationData.reduce((a,s)=>a+s.value,0)
+
+  // Expense analytics
+  const ECATS = [
+    {v:'ABN Parking',c:'#F59E0B'},{v:'Advances',c:'#10B981'},{v:'Air Tickets',c:'#3B82F6'},
+    {v:'ENOC',c:'#EF4444'},{v:'Health Insurance',c:'#8B5CF6'},{v:'Idfy',c:'#EC4899'},
+    {v:'Mobile Expenses',c:'#06B6D4'},{v:'Office Expenses',c:'#84CC16'},{v:'Petty Cash',c:'#F97316'},
+    {v:'RTA Top-up',c:'#0EA5E9'},{v:'Vehicle Expenses',c:'#6366F1'},{v:'Vehicle Rent',c:'#7C3AED'},
+    {v:'Visa Expenses',c:'#D97706'},{v:'Miscellaneous Expenses',c:'#94A3B8'},
+  ]
+  const totalExp  = (expenses||[]).reduce((s,e)=>s+Number(e.amount||0), 0)
+  const pendingExp= (expenses||[]).filter(e=>e.status==='pending').length
+  const byCat = ECATS.map(cat=>({
+    name:cat.v, short:cat.v.split(' ')[0],
+    value:(expenses||[]).filter(e=>e.category===cat.v).reduce((s,e)=>s+Number(e.amount||0),0),
+    color:cat.c,
+  })).filter(c=>c.value>0).sort((a,b)=>b.value-a.value)
+
+  // Top spenders by employee
+  const byEmp = [...new Set((expenses||[]).map(e=>e.emp_id))].map(id=>{
+    const name = (expenses||[]).find(e=>e.emp_id===id)?.emp_name || id
+    const total= (expenses||[]).filter(e=>e.emp_id===id).reduce((s,e)=>s+Number(e.amount||0),0)
+    return { id, name, total }
+  }).sort((a,b)=>b.total-a.total).slice(0,5)
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
 
-      {/* ── HERO BANNER ── */}
+      {/* ── HERO ── */}
       <div style={{ borderRadius:22, overflow:'hidden', position:'relative', background:'linear-gradient(140deg,#0F0C07 0%,#1E1608 40%,#2C1F0A 70%,#1A1209 100%)', padding:'24px 22px 20px' }}>
-        {/* Orb effects */}
-        <div style={{ position:'absolute', right:-40, top:-40, width:220, height:220, borderRadius:'50%', background:'radial-gradient(circle, rgba(212,160,23,0.18) 0%, transparent 70%)', pointerEvents:'none' }}/>
-        <div style={{ position:'absolute', left:-20, bottom:-30, width:160, height:160, borderRadius:'50%', background:'radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 70%)', pointerEvents:'none' }}/>
-        {/* Grid pattern */}
-        <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize:'32px 32px', pointerEvents:'none' }}/>
-
+        <div style={{ position:'absolute', right:-40, top:-40, width:220, height:220, borderRadius:'50%', background:'radial-gradient(circle, rgba(212,160,23,0.18) 0%, transparent 70%)', pointerEvents:'none'}}/>
+        <div style={{ position:'absolute', left:-20, bottom:-30, width:160, height:160, borderRadius:'50%', background:'radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 70%)', pointerEvents:'none'}}/>
+        <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize:'32px 32px', pointerEvents:'none'}}/>
         <div style={{ position:'relative' }}>
           <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:6 }}>Operations Control</div>
-          <div style={{ fontWeight:900, fontSize:20, color:'white', letterSpacing:'-0.03em', marginBottom:2 }}>Golden Crescent</div>
-          <div style={{ fontWeight:400, fontSize:13, color:'rgba(255,255,255,0.45)', marginBottom:18 }}>Real-time intelligence across all stations</div>
-
-          <div style={{ display:'flex', gap:8, flexWrap:'wrap', minWidth:0 }}>
+          <div style={{ fontWeight:900, fontSize:20, color:'white', letterSpacing:'-0.03em', marginBottom:2 }}>Golden Crescent Dashboard</div>
+          <div style={{ fontWeight:400, fontSize:13, color:'rgba(255,255,255,0.45)', marginBottom:18 }}>Real-time intelligence · {new Date().toLocaleDateString('en-AE',{weekday:'long',day:'numeric',month:'long'})}</div>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
             {[
-              { l:'Staff', v:summary?.employees?.c||0, c:'#F59E0B' },
-              { l:'Stations', v:2, c:'#38BDF8' },
-              { l:new Date().toLocaleString('en-AE',{month:'short',year:'numeric'}), v:'Live', c:'#34D399' },
+              { l:'Staff',    v:summary?.employees?.c||0,    c:'#F59E0B' },
+              { l:'Stations', v:2,                            c:'#38BDF8' },
+              { l:'Expenses', v:`AED ${fmt(totalExp)}`,      c:'#34D399' },
+              { l:'Pending',  v:`${pendingExp} exp`,          c:'#FB923C' },
             ].map(s => (
               <div key={s.l} style={{ background:'rgba(255,255,255,0.08)', backdropFilter:'blur(12px)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'9px 14px', flexShrink:0 }}>
                 <div style={{ fontWeight:800, fontSize:16, color:s.c }}>{s.v}</div>
@@ -232,8 +251,8 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
         </div>
       </div>
 
-      {/* ── KPI GRID (desktop) / SWIPE (mobile) ── */}
-      <div style={{ minWidth:0, overflow:'hidden' }}>
+      {/* ── KPI GRID ── */}
+      <div>
         <SH title="Key Metrics" sub="Live operational data"/>
         <div className="desk" style={{ gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
           {kpis.map((k,i) => <KPI key={k.label} {...k} loading={loading} delay={i*0.05}/>)}
@@ -243,269 +262,343 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
         </div>
       </div>
 
-      {/* ── CHARTS ROW ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:14, minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
+      {/* ── EXPENSES SECTION ── */}
+      <div>
+        <SH title="Expenses This Month" sub={`AED ${fmt(totalExp)} total · ${pendingExp} pending approval`}
+          right={<a href="/dashboard/finance/expenses" style={{ fontSize:12, fontWeight:600, color:'#B8860B', textDecoration:'none', display:'flex', alignItems:'center', gap:3 }}>Manage <ChevronRight size={12}/></a>}
+        />
 
-        {/* Delivery Chart — full width */}
-        <div className="glass fade-up" style={{ borderRadius:20, padding:'20px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
-          <SH title="Monthly Deliveries" sub="Last 6 months by station"
-            right={
-              <div style={{ display:'flex', gap:8 }}>
-                {Object.entries(SC).map(([s,c]) => (
-                  <div key={s} style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, color:c }}>
-                    <div style={{ width:10, height:10, borderRadius:3, background:c }}/>
-                    {s}
+        {/* Expense KPIs */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))', gap:10, marginBottom:14 }}>
+          {[
+            { l:'Total Spent',   v:`AED ${fmt(totalExp)}`,                                           c:'#1A1612', bg:'rgba(255,255,255,0.65)' },
+            { l:'Approved',      v:`AED ${fmt((expenses||[]).filter(e=>e.status==='approved').reduce((s,e)=>s+Number(e.amount||0),0))}`, c:'#10B981', bg:'rgba(16,185,129,0.1)' },
+            { l:'Pending',       v:pendingExp,                                                       c:'#F59E0B', bg:'rgba(245,158,11,0.1)' },
+            { l:'Categories',    v:byCat.length,                                                     c:'#A78BFA', bg:'rgba(167,139,250,0.1)' },
+          ].map(s => (
+            <div key={s.l} style={{ textAlign:'center', padding:'12px 8px', borderRadius:13, background:s.bg, border:'1px solid rgba(255,255,255,0.65)', backdropFilter:'blur(12px)' }}>
+              <div style={{ fontWeight:900, fontSize:18, color:s.c, letterSpacing:'-0.02em' }}>{s.v}</div>
+              <div style={{ fontSize:10, color:s.c, fontWeight:600, marginTop:3, opacity:0.8 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+
+        {byCat.length > 0 ? (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }} className="three-col-glass">
+
+            {/* Pie by category */}
+            <div className="glass fade-up" style={{ borderRadius:18, padding:'16px', overflow:'hidden' }}>
+              <div style={{ fontWeight:700, fontSize:13, color:'#1A1612', marginBottom:12 }}>By Category</div>
+              <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }}>
+                <PieChart width={140} height={130}>
+                  <Pie data={byCat} cx={65} cy={60} innerRadius={34} outerRadius={58} paddingAngle={3} dataKey="value">
+                    {byCat.map((cc,i)=><Cell key={cc.name} fill={cc.color}/>)}
+                  </Pie>
+                  <Tooltip content={<GlassTip/>}/>
+                </PieChart>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                {byCat.slice(0,4).map(cc=>(
+                  <div key={cc.name} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:5, minWidth:0 }}>
+                      <div style={{ width:7,height:7,borderRadius:2,background:cc.color,flexShrink:0 }}/>
+                      <span style={{ fontSize:10.5,color:'#6B5D4A',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{cc.name}</span>
+                    </div>
+                    <span style={{ fontSize:10.5,fontWeight:700,color:cc.color,flexShrink:0 }}>AED {fmt(cc.value)}</span>
                   </div>
                 ))}
               </div>
-            }
-          />
-          <ResponsiveContainer width="99%" height={180}>
-            <BarChart data={delivData} barSize={8} barGap={3}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false}/>
-              <XAxis dataKey="month" stroke="#C4B49A" fontSize={10} tickLine={false} axisLine={false}/>
-              <YAxis stroke="#C4B49A" fontSize={10} tickLine={false} axisLine={false}/>
-              <Tooltip content={<GlassTip/>} cursor={{ fill:'rgba(0,0,0,0.04)' }}/>
-              <Bar dataKey="DDB1" name="DDB1" fill="#F59E0B" radius={[4,4,0,0]}/>
-              <Bar dataKey="DXE6" name="DXE6" fill="#38BDF8" radius={[4,4,0,0]}/>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Attendance + Payroll side by side on desktop */}
-        <div className="two-col-glass" style={{ display:'grid', gap:14, minWidth:0, maxWidth:'100%' }}>
-          {/* Attendance */}
-          <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
-            <SH title="Attendance Today"/>
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              {[
-                { l:'Present',  v:summary?.attendance?.present||0,  c:'#34D399', bg:'rgba(52,211,153,0.1)',  icon:CheckCircle },
-                { l:'Absent',   v:summary?.attendance?.absent||0,   c:'#F87171', bg:'rgba(248,113,113,0.1)', icon:UserMinus },
-                { l:'On Leave', v:summary?.pending_leaves||0,        c:'#FB923C', bg:'rgba(251,146,60,0.1)',  icon:Calendar },
-              ].map(s => {
-                const Icon = s.icon
-                const total = (summary?.attendance?.present||0) + (summary?.attendance?.absent||0)
-                const pct   = total > 0 ? Math.round((s.v/total)*100) : 0
-                return (
-                  <div key={s.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:s.bg, borderRadius:13, border:`1px solid ${s.c}22` }}>
-                    <div style={{ width:32, height:32, borderRadius:9, background:`${s.c}20`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      <Icon size={15} color={s.c}/>
-                    </div>
-                    <div style={{ flex:1 }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                        <span style={{ fontSize:12, color:'#4B3C2A', fontWeight:600 }}>{s.l}</span>
-                        <span style={{ fontWeight:900, fontSize:18, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</span>
-                      </div>
-                      <div style={{ height:4, background:'rgba(0,0,0,0.06)', borderRadius:10, overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${pct}%`, background:s.c, borderRadius:10, transition:'width 1.2s ease' }}/>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
             </div>
-          </div>
 
-          {/* Payroll */}
-          <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
-            <SH title="Payroll This Month"/>
-            <div style={{ marginBottom:14 }}>
-              {[
-                { l:'Base Salaries', v:Number(summary?.payroll?.base_total||0),  c:'#1A1612' },
-                { l:'Bonuses',       v:Number(summary?.payroll?.bonus_total||0), c:'#34D399' },
-                { l:'Deductions',    v:Number(summary?.payroll?.ded_total||0),   c:'#F87171' },
-              ].map(s => {
-                const total = Number(summary?.payroll?.base_total||0) + Number(summary?.payroll?.bonus_total||0)
-                const pct   = total > 0 ? Math.min(100, Math.round((s.v/total)*100)) : 0
-                return (
-                  <div key={s.l} style={{ marginBottom:12 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                      <span style={{ fontSize:11.5, color:'#7B6A57', fontWeight:500 }}>{s.l}</span>
-                      <span style={{ fontSize:12, fontWeight:700, color:s.c }}>AED {fmt(s.v)}</span>
-                    </div>
-                    <div style={{ height:5, background:'rgba(0,0,0,0.06)', borderRadius:10, overflow:'hidden' }}>
-                      <div style={{ height:'100%', width:`${pct}%`, background:s.c, borderRadius:10, transition:'width 1.2s ease' }}/>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-            <div style={{ background:'linear-gradient(135deg,rgba(184,134,11,0.1),rgba(212,160,23,0.06))', borderRadius:12, padding:'12px 14px', display:'flex', justifyContent:'space-between', alignItems:'center', border:'1px solid rgba(184,134,11,0.15)' }}>
-              <span style={{ fontSize:12.5, fontWeight:700, color:'#5C4A1E' }}>Net Total</span>
-              <span style={{ fontWeight:900, fontSize:18, color:'#B8860B', letterSpacing:'-0.03em' }}>
-                AED {fmt(Number(summary?.payroll?.base_total||0)+Number(summary?.payroll?.bonus_total||0)-Number(summary?.payroll?.ded_total||0))}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Station split donut + SIM inline */}
-        {(stationData.length > 0 || simStats) && (
-          <div className="two-col-glass" style={{ display:'grid', gap:14, minWidth:0, maxWidth:'100%' }}>
-            {/* Donut */}
-            {stationData.length > 0 && (
-              <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
-                <SH title="Station Split" sub="Total deliveries"/>
-                <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-                  <div style={{ position:'relative', flexShrink:0 }}>
-                    <PieChart width={120} height={120}>
-                      <Pie data={stationData} cx={55} cy={55} innerRadius={36} outerRadius={54} paddingAngle={4} dataKey="value">
-                        {stationData.map((s,i) => <Cell key={s.name} fill={s.color}/>)}
-                      </Pie>
-                    </PieChart>
-                    <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column' }}>
-                      <div style={{ fontWeight:900, fontSize:18, color:'#1A1612', letterSpacing:'-0.03em' }}>{fmt(totalDeliveries)}</div>
-                      <div style={{ fontSize:9, color:'#A89880', fontWeight:600 }}>TOTAL</div>
-                    </div>
-                  </div>
-                  <div style={{ flex:1 }}>
-                    {stationData.map(s => (
-                      <div key={s.name} style={{ marginBottom:10 }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                          <span style={{ fontSize:12, fontWeight:700, color:s.color }}>{s.name}</span>
-                          <span style={{ fontSize:12, fontWeight:700, color:'#1A1612' }}>{fmt(s.value)}</span>
-                        </div>
-                        <div style={{ height:5, background:'rgba(0,0,0,0.06)', borderRadius:10, overflow:'hidden' }}>
-                          <div style={{ height:'100%', width:`${totalDeliveries>0?Math.round(s.value/totalDeliveries*100):0}%`, background:s.color, borderRadius:10, transition:'width 1.2s ease' }}/>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SIM Inventory */}
-            {simStats && (
-              <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
-                <SH title="SIM Inventory" sub="Fleet communication"
-                  right={<a href="/dashboard/poc" style={{ fontSize:11.5, fontWeight:600, color:'#B8860B', textDecoration:'none', display:'flex', alignItems:'center', gap:3 }}>Manage <ChevronRight size={12}/></a>}
-                />
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:12, minWidth:0 }}>
-                  {[
-                    { l:'Total',     v:simStats.total||0,     c:'#1A1612' },
-                    { l:'Assigned',  v:simStats.assigned||0,  c:'#F59E0B' },
-                    { l:'Available', v:simStats.available||0, c:'#34D399' },
-                    { l:'Cost/mo',   v:`AED ${fmt(simStats.monthly_cost)}`, c:'#A78BFA' },
-                  ].map(s => (
-                    <div key={s.l} style={{ textAlign:'center', padding:'10px 6px', borderRadius:12, background:'rgba(0,0,0,0.04)', border:'1px solid rgba(0,0,0,0.06)' }}>
-                      <div style={{ fontWeight:900, fontSize:18, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>
-                      <div style={{ fontSize:10, color:'#8B7355', fontWeight:600, marginTop:2 }}>{s.l}</div>
-                    </div>
-                  ))}
-                </div>
-                {simByStation.length > 0 && simByStation.map(s => {
-                  const pct = s.total>0 ? Math.round(s.assigned/s.total*100) : 0
-                  const c   = SC[s.station_code]||'#F59E0B'
+            {/* Top categories bar */}
+            <div className="glass fade-up" style={{ borderRadius:18, padding:'16px' }}>
+              <div style={{ fontWeight:700, fontSize:13, color:'#1A1612', marginBottom:12 }}>Top Categories</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+                {byCat.slice(0,5).map(cc=>{
+                  const pct=byCat[0]?.value>0?Math.round(cc.value/byCat[0].value*100):0
                   return (
-                    <div key={s.station_code} style={{ marginBottom:8 }}>
+                    <div key={cc.name}>
                       <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                        <span style={{ fontSize:11.5, fontWeight:700, color:c }}>{s.station_code}</span>
-                        <span style={{ fontSize:11, color:'#8B7355' }}>{s.assigned}/{s.total}</span>
+                        <span style={{ fontSize:11,color:'#6B5D4A',fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'60%' }}>{cc.name}</span>
+                        <span style={{ fontSize:11,fontWeight:700,color:cc.color,flexShrink:0 }}>AED {fmt(cc.value)}</span>
                       </div>
-                      <div style={{ height:5, background:'rgba(0,0,0,0.06)', borderRadius:10, overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${pct}%`, background:c, borderRadius:10, transition:'width 1.2s ease' }}/>
+                      <div style={{ height:5,background:'rgba(0,0,0,0.06)',borderRadius:10,overflow:'hidden' }}>
+                        <div style={{ height:'100%',width:`${pct}%`,background:cc.color,borderRadius:10,transition:'width 1.2s ease' }}/>
                       </div>
                     </div>
                   )
                 })}
               </div>
-            )}
+            </div>
+
+            {/* Top employee spenders */}
+            <div className="glass fade-up" style={{ borderRadius:18, padding:'16px' }}>
+              <div style={{ fontWeight:700, fontSize:13, color:'#1A1612', marginBottom:12, display:'flex', alignItems:'center', gap:6 }}>
+                <Users size={13} color="#B8860B"/> Top Spenders
+              </div>
+              {byEmp.length===0 ? (
+                <div style={{ fontSize:12, color:'#A89880', textAlign:'center', padding:20 }}>No data</div>
+              ) : (
+                <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+                  {byEmp.map((e,i)=>{
+                    const COLORS=['#F59E0B','#6366F1','#10B981','#EF4444','#06B6D4']
+                    const col=COLORS[i]||'#94A3B8'
+                    const pct=byEmp[0]?.total>0?Math.round(e.total/byEmp[0].total*100):0
+                    return (
+                      <div key={e.id}>
+                        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                          <span style={{ fontSize:11,color:'#6B5D4A',fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'60%' }}>{e.name}</span>
+                          <span style={{ fontSize:11,fontWeight:700,color:col,flexShrink:0 }}>AED {fmt(e.total)}</span>
+                        </div>
+                        <div style={{ height:5,background:'rgba(0,0,0,0.06)',borderRadius:10,overflow:'hidden' }}>
+                          <div style={{ height:'100%',width:`${pct}%`,background:col,borderRadius:10,transition:'width 1.2s ease' }}/>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="glass fade-up" style={{ borderRadius:18, padding:'30px', textAlign:'center' }}>
+            <div style={{ fontSize:12, color:'#A89880' }}>No expense data for this month</div>
+            <a href="/dashboard/finance/expenses" style={{ display:'inline-block', marginTop:10, padding:'7px 18px', borderRadius:20, background:'#FDF6E3', color:'#B8860B', fontWeight:700, fontSize:12, textDecoration:'none' }}>+ Add Expenses</a>
           </div>
         )}
+      </div>
 
-        {/* Pending Approvals */}
-        {leaves?.length > 0 && (
-          <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
-            <SH title="Pending Approvals" sub="Awaiting your final sign-off"/>
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              {leaves.slice(0,5).map(l => (
-                <div key={l.id} style={{ background:'rgba(0,0,0,0.03)', borderRadius:13, border:'1px solid rgba(0,0,0,0.06)', overflow:'hidden' }}>
-                  <div style={{ padding:'10px 14px' }}>
-                    <div style={{ fontWeight:700, fontSize:13, color:'#1A1612' }}>{l.name}</div>
-                    <div style={{ fontSize:11, color:'#A89880', marginTop:2 }}>{l.type} · {l.from_date} → {l.to_date} · {l.days} days</div>
-                  </div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1, background:'rgba(0,0,0,0.05)' }}>
-                    <button onClick={() => onApproveLeave(l.id,'approved')} style={{ padding:'9px', background:'rgba(52,211,153,0.15)', border:'none', color:'#059669', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif', backdropFilter:'blur(8px)' }}>✓ Approve</button>
-                    <button onClick={() => onApproveLeave(l.id,'rejected')} style={{ padding:'9px', background:'rgba(248,113,113,0.15)', border:'none', color:'#DC2626', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif', backdropFilter:'blur(8px)' }}>✕ Reject</button>
-                  </div>
+      {/* ── DELIVERY CHART ── */}
+      <div className="glass fade-up" style={{ borderRadius:20, padding:'20px', overflow:'hidden' }}>
+        <SH title="Monthly Deliveries" sub="Last 6 months by station"
+          right={
+            <div style={{ display:'flex', gap:8 }}>
+              {Object.entries(SC).map(([s,col]) => (
+                <div key={s} style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, color:col }}>
+                  <div style={{ width:10, height:10, borderRadius:3, background:col }}/>{s}
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          }
+        />
+        <ResponsiveContainer width="99%" height={180}>
+          <BarChart data={delivData} barSize={8} barGap={3}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false}/>
+            <XAxis dataKey="month" stroke="#C4B49A" fontSize={10} tickLine={false} axisLine={false}/>
+            <YAxis stroke="#C4B49A" fontSize={10} tickLine={false} axisLine={false}/>
+            <Tooltip content={<GlassTip/>} cursor={{ fill:'rgba(0,0,0,0.04)' }}/>
+            <Bar dataKey="DDB1" name="DDB1" fill="#F59E0B" radius={[4,4,0,0]}/>
+            <Bar dataKey="DXE6" name="DXE6" fill="#38BDF8" radius={[4,4,0,0]}/>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
-        {/* Quick Actions */}
-        <div className="glass fade-up" style={{ borderRadius:20, padding:'18px', minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
-          <SH title="Quick Actions"/>
-          {/* Desktop 6-col */}
-          <div className="desk" style={{ gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
+      {/* ── ATTENDANCE + PAYROLL ── */}
+      <div style={{ display:'grid', gap:14 }} className="two-col-glass">
+        <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+          <SH title="Attendance Today"/>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {[
-              { l:'Employees',  href:'/dashboard/hr/employees',    icon:Users,       c:'#F59E0B' },
-              { l:'Payroll',    href:'/dashboard/finance/payroll', icon:Wallet,      c:'#38BDF8' },
-              { l:'Roster',     href:'/dashboard/roster',          icon:Calendar,    c:'#34D399' },
-              { l:'Performance',href:'/dashboard/performance',     icon:TrendingUp,  c:'#A78BFA' },
-              { l:'Damage',     href:'/dashboard/damage',          icon:AlertTriangle,c:'#F87171'},
-              { l:'Advances',   href:'/dashboard/advances',        icon:Zap,         c:'#FB923C' },
-            ].map(item => {
-              const Icon = item.icon
+              { l:'Present',  v:summary?.attendance?.present||0,  c:'#34D399', bg:'rgba(52,211,153,0.1)',  icon:CheckCircle },
+              { l:'Absent',   v:summary?.attendance?.absent||0,   c:'#F87171', bg:'rgba(248,113,113,0.1)', icon:UserMinus },
+              { l:'On Leave', v:summary?.pending_leaves||0,        c:'#FB923C', bg:'rgba(251,146,60,0.1)',  icon:Calendar },
+            ].map(s => {
+              const Icon = s.icon
+              const total = (summary?.attendance?.present||0)+(summary?.attendance?.absent||0)
+              const pct   = total>0?Math.round(s.v/total*100):0
               return (
-                <a key={item.l} href={item.href}
-                  style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'14px 8px', borderRadius:14, background:`${item.c}10`, border:`1px solid ${item.c}22`, textDecoration:'none', transition:'all 0.2s' }}
-                  onMouseEnter={e=>{e.currentTarget.style.background=`${item.c}20`;e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 8px 24px ${item.c}30`}}
-                  onMouseLeave={e=>{e.currentTarget.style.background=`${item.c}10`;e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='none'}}>
-                  <div style={{ width:40, height:40, borderRadius:12, background:`${item.c}18`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                    <Icon size={18} color={item.c}/>
+                <div key={s.l} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:s.bg, borderRadius:13, border:`1px solid ${s.c}22` }}>
+                  <div style={{ width:32,height:32,borderRadius:9,background:`${s.c}20`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                    <Icon size={15} color={s.c}/>
                   </div>
-                  <span style={{ fontSize:11, fontWeight:700, color:item.c, textAlign:'center' }}>{item.l}</span>
-                </a>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:'flex',justifyContent:'space-between',marginBottom:4 }}>
+                      <span style={{ fontSize:12,color:'#4B3C2A',fontWeight:600 }}>{s.l}</span>
+                      <span style={{ fontWeight:900,fontSize:18,color:s.c,letterSpacing:'-0.03em' }}>{s.v}</span>
+                    </div>
+                    <div style={{ height:4,background:'rgba(0,0,0,0.06)',borderRadius:10,overflow:'hidden' }}>
+                      <div style={{ height:'100%',width:`${pct}%`,background:s.c,borderRadius:10,transition:'width 1.2s ease' }}/>
+                    </div>
+                  </div>
+                </div>
               )
             })}
           </div>
-          {/* Mobile scroll */}
-          <div className="mob no-scroll" style={{ gap:10, overflowX:'auto', paddingBottom:2 }}>
-            {[
-              { l:'Employees',  href:'/dashboard/hr/employees',    icon:Users,       c:'#F59E0B' },
-              { l:'Payroll',    href:'/dashboard/finance/payroll', icon:Wallet,      c:'#38BDF8' },
-              { l:'Roster',     href:'/dashboard/roster',          icon:Calendar,    c:'#34D399' },
-              { l:'Performance',href:'/dashboard/performance',     icon:TrendingUp,  c:'#A78BFA' },
-              { l:'Damage',     href:'/dashboard/damage',          icon:AlertTriangle,c:'#F87171'},
-              { l:'Advances',   href:'/dashboard/advances',        icon:Zap,         c:'#FB923C' },
-            ].map(item => {
-              const Icon = item.icon
-              return (
-                <a key={item.l} href={item.href}
-                  style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:7, padding:'12px 14px', borderRadius:13, background:`${item.c}10`, border:`1px solid ${item.c}22`, textDecoration:'none', flexShrink:0 }}>
-                  <div style={{ width:36, height:36, borderRadius:11, background:`${item.c}18`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                    <Icon size={16} color={item.c}/>
-                  </div>
-                  <span style={{ fontSize:10.5, fontWeight:700, color:item.c, textAlign:'center', whiteSpace:'nowrap' }}>{item.l}</span>
-                </a>
-              )
-            })}
+        </div>
+
+        <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+          <SH title="Payroll This Month"/>
+          {[
+            { l:'Base Salaries', v:Number(summary?.payroll?.base_total||0),  c:'#1A1612' },
+            { l:'Bonuses',       v:Number(summary?.payroll?.bonus_total||0), c:'#34D399' },
+            { l:'Deductions',    v:Number(summary?.payroll?.ded_total||0),   c:'#F87171' },
+          ].map(s => {
+            const total=Number(summary?.payroll?.base_total||0)+Number(summary?.payroll?.bonus_total||0)
+            const pct=total>0?Math.min(100,Math.round(s.v/total*100)):0
+            return (
+              <div key={s.l} style={{ marginBottom:12 }}>
+                <div style={{ display:'flex',justifyContent:'space-between',marginBottom:5 }}>
+                  <span style={{ fontSize:11.5,color:'#7B6A57',fontWeight:500 }}>{s.l}</span>
+                  <span style={{ fontSize:12,fontWeight:700,color:s.c }}>AED {fmt(s.v)}</span>
+                </div>
+                <div style={{ height:5,background:'rgba(0,0,0,0.06)',borderRadius:10,overflow:'hidden' }}>
+                  <div style={{ height:'100%',width:`${pct}%`,background:s.c,borderRadius:10,transition:'width 1.2s ease' }}/>
+                </div>
+              </div>
+            )
+          })}
+          <div style={{ background:'rgba(184,134,11,0.08)',borderRadius:12,padding:'12px 14px',display:'flex',justifyContent:'space-between',alignItems:'center',border:'1px solid rgba(184,134,11,0.15)',marginTop:4 }}>
+            <span style={{ fontSize:12.5,fontWeight:700,color:'#5C4A1E' }}>Net Total</span>
+            <span style={{ fontWeight:900,fontSize:18,color:'#B8860B',letterSpacing:'-0.03em' }}>
+              AED {fmt(Number(summary?.payroll?.base_total||0)+Number(summary?.payroll?.bonus_total||0)-Number(summary?.payroll?.ded_total||0))}
+            </span>
           </div>
+        </div>
+      </div>
+
+      {/* ── STATION SPLIT + SIM ── */}
+      {(stationData.length>0 || simStats) && (
+        <div style={{ display:'grid', gridTemplateColumns:simStats?'1fr 1fr':'1fr', gap:14 }} className="two-col-glass">
+          {stationData.length>0 && (
+            <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+              <SH title="Station Split" sub="Total deliveries"/>
+              <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+                <div style={{ position:'relative', flexShrink:0 }}>
+                  <PieChart width={120} height={120}>
+                    <Pie data={stationData} cx={55} cy={55} innerRadius={36} outerRadius={54} paddingAngle={4} dataKey="value">
+                      {stationData.map((s,i)=><Cell key={s.name} fill={s.color}/>)}
+                    </Pie>
+                  </PieChart>
+                  <div style={{ position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column' }}>
+                    <div style={{ fontWeight:900,fontSize:16,color:'#1A1612',letterSpacing:'-0.03em' }}>{fmt(totalDeliveries)}</div>
+                    <div style={{ fontSize:9,color:'#A89880',fontWeight:600 }}>TOTAL</div>
+                  </div>
+                </div>
+                <div style={{ flex:1 }}>
+                  {stationData.map(s=>(
+                    <div key={s.name} style={{ marginBottom:10 }}>
+                      <div style={{ display:'flex',justifyContent:'space-between',marginBottom:4 }}>
+                        <span style={{ fontSize:12,fontWeight:700,color:s.color }}>{s.name}</span>
+                        <span style={{ fontSize:12,fontWeight:700,color:'#1A1612' }}>{fmt(s.value)}</span>
+                      </div>
+                      <div style={{ height:5,background:'rgba(0,0,0,0.06)',borderRadius:10,overflow:'hidden' }}>
+                        <div style={{ height:'100%',width:`${totalDeliveries>0?Math.round(s.value/totalDeliveries*100):0}%`,background:s.color,borderRadius:10,transition:'width 1.2s ease' }}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {simStats && (
+            <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+              <SH title="SIM Inventory" sub="Fleet communication"
+                right={<a href="/dashboard/poc" style={{ fontSize:11.5,fontWeight:600,color:'#B8860B',textDecoration:'none',display:'flex',alignItems:'center',gap:3 }}>Manage <ChevronRight size={12}/></a>}
+              />
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:12 }}>
+                {[
+                  {l:'Total',v:simStats.total||0,c:'#1A1612'},{l:'Assigned',v:simStats.assigned||0,c:'#F59E0B'},
+                  {l:'Available',v:simStats.available||0,c:'#34D399'},{l:'Cost/mo',v:`AED ${fmt(simStats.monthly_cost)}`,c:'#A78BFA'},
+                ].map(s=>(
+                  <div key={s.l} style={{ textAlign:'center',padding:'10px 6px',borderRadius:12,background:'rgba(0,0,0,0.04)',border:'1px solid rgba(0,0,0,0.06)' }}>
+                    <div style={{ fontWeight:900,fontSize:16,color:s.c,letterSpacing:'-0.03em' }}>{s.v}</div>
+                    <div style={{ fontSize:10,color:'#8B7355',fontWeight:600,marginTop:2 }}>{s.l}</div>
+                  </div>
+                ))}
+              </div>
+              {simByStation.map(s=>{
+                const pct=s.total>0?Math.round(s.assigned/s.total*100):0
+                const col=SC[s.station_code]||'#F59E0B'
+                return (
+                  <div key={s.station_code} style={{ marginBottom:8 }}>
+                    <div style={{ display:'flex',justifyContent:'space-between',marginBottom:4 }}>
+                      <span style={{ fontSize:11.5,fontWeight:700,color:col }}>{s.station_code}</span>
+                      <span style={{ fontSize:11,color:'#8B7355' }}>{s.assigned}/{s.total}</span>
+                    </div>
+                    <div style={{ height:5,background:'rgba(0,0,0,0.06)',borderRadius:10,overflow:'hidden' }}>
+                      <div style={{ height:'100%',width:`${pct}%`,background:col,borderRadius:10,transition:'width 1.2s ease' }}/>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── PENDING LEAVES ── */}
+      {leaves?.length>0 && (
+        <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+          <SH title="Pending Approvals" sub="HR approved — needs final sign-off"/>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {leaves.slice(0,5).map(l=>(
+              <div key={l.id} style={{ background:'rgba(0,0,0,0.03)',borderRadius:13,border:'1px solid rgba(0,0,0,0.06)',overflow:'hidden' }}>
+                <div style={{ padding:'10px 14px' }}>
+                  <div style={{ fontWeight:700,fontSize:13,color:'#1A1612' }}>{l.name}</div>
+                  <div style={{ fontSize:11,color:'#A89880',marginTop:2 }}>{l.type} · {l.from_date} → {l.to_date} · {l.days} days</div>
+                </div>
+                <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:1,background:'rgba(0,0,0,0.05)' }}>
+                  <button onClick={()=>onApproveLeave(l.id,'approved')} style={{ padding:'9px',background:'rgba(52,211,153,0.15)',border:'none',color:'#059669',fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>✓ Approve</button>
+                  <button onClick={()=>onApproveLeave(l.id,'rejected')} style={{ padding:'9px',background:'rgba(248,113,113,0.15)',border:'none',color:'#DC2626',fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>✕ Reject</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── QUICK ACTIONS ── */}
+      <div className="glass fade-up" style={{ borderRadius:20, padding:'18px' }}>
+        <SH title="Quick Actions"/>
+        <div className="desk" style={{ gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
+          {[
+            {l:'Employees',   href:'/dashboard/hr/employees',     icon:Users,          c:'#F59E0B'},
+            {l:'Payroll',     href:'/dashboard/finance/payroll',   icon:Wallet,         c:'#38BDF8'},
+            {l:'Expenses',    href:'/dashboard/finance/expenses',  icon:Receipt,        c:'#34D399'},
+            {l:'Performance', href:'/dashboard/performance',       icon:TrendingUp,     c:'#A78BFA'},
+            {l:'Damage',      href:'/dashboard/damage',            icon:AlertTriangle,  c:'#F87171'},
+            {l:'Advances',    href:'/dashboard/advances',          icon:Zap,            c:'#FB923C'},
+          ].map(item=>{
+            const Icon=item.icon
+            return (
+              <a key={item.l} href={item.href}
+                style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:8,padding:'14px 8px',borderRadius:14,background:`${item.c}10`,border:`1px solid ${item.c}22`,textDecoration:'none',transition:'all 0.2s' }}
+                onMouseEnter={e=>{e.currentTarget.style.background=`${item.c}20`;e.currentTarget.style.transform='translateY(-2px)'}}
+                onMouseLeave={e=>{e.currentTarget.style.background=`${item.c}10`;e.currentTarget.style.transform='none'}}>
+                <div style={{ width:40,height:40,borderRadius:12,background:`${item.c}18`,display:'flex',alignItems:'center',justifyContent:'center' }}>
+                  <Icon size={18} color={item.c}/>
+                </div>
+                <span style={{ fontSize:11,fontWeight:700,color:item.c,textAlign:'center' }}>{item.l}</span>
+              </a>
+            )
+          })}
+        </div>
+        <div className="mob" style={{ display:'flex',gap:10,overflowX:'auto',scrollbarWidth:'none',paddingBottom:2 }}>
+          {[
+            {l:'Employees',   href:'/dashboard/hr/employees',     icon:Users,          c:'#F59E0B'},
+            {l:'Payroll',     href:'/dashboard/finance/payroll',   icon:Wallet,         c:'#38BDF8'},
+            {l:'Expenses',    href:'/dashboard/finance/expenses',  icon:Receipt,        c:'#34D399'},
+            {l:'Performance', href:'/dashboard/performance',       icon:TrendingUp,     c:'#A78BFA'},
+            {l:'Damage',      href:'/dashboard/damage',            icon:AlertTriangle,  c:'#F87171'},
+            {l:'Advances',    href:'/dashboard/advances',          icon:Zap,            c:'#FB923C'},
+          ].map(item=>{
+            const Icon=item.icon
+            return (
+              <a key={item.l} href={item.href}
+                style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:7,padding:'12px 14px',borderRadius:13,background:`${item.c}10`,border:`1px solid ${item.c}22`,textDecoration:'none',flexShrink:0 }}>
+                <div style={{ width:36,height:36,borderRadius:11,background:`${item.c}18`,display:'flex',alignItems:'center',justifyContent:'center' }}>
+                  <Icon size={16} color={item.c}/>
+                </div>
+                <span style={{ fontSize:10.5,fontWeight:700,color:item.c,textAlign:'center',whiteSpace:'nowrap' }}>{item.l}</span>
+              </a>
+            )
+          })}
         </div>
       </div>
     </div>
   )
 }
 
-/* ─────────────────────────────────────────────
-   OTHER DASHBOARDS (GM, HR, Accountant, POC)
-   — kept compact, same glass style
-───────────────────────────────────────────── */
-function SimpleKPIGrid({ kpis, loading }) {
-  return (
-    <>
-      <div className="desk" style={{ gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:10 }}>
-        {kpis.map((k,i) => <KPI key={k.label} {...k} loading={loading} delay={i*0.05}/>)}
-      </div>
-      <div className="mob kpi-wrap" style={{ marginTop:0 }}>
-        <Swiper items={kpis} peek="calc(50% - 15px)" render={(k,i) => <KPI {...k} loading={loading} delay={i*0.05}/>}/>
-      </div>
-    </>
-  )
-}
 
 function GMDashboard({ summary, chart, loading }) {
   const kpis = [
