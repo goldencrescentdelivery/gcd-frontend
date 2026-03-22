@@ -637,19 +637,19 @@ const EXPENSE_CATS = [
 
 function AccountantDashboard({ summary, loading, expenses }) {
   const net = Number(summary?.payroll?.base_total||0)+Number(summary?.payroll?.bonus_total||0)-Number(summary?.payroll?.ded_total||0)
-  const totalExp = expenses.reduce((s,e)=>s+Number(e.amount||0),0)
+  const totalExp = (expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0)
 
   const kpis = [
     { icon:Wallet,       label:'Base Salaries', value:`AED ${fmt(summary?.payroll?.base_total)}`, color:'#F59E0B' },
     { icon:TrendingUp,   label:'Bonuses',        value:`AED ${fmt(summary?.payroll?.bonus_total)}`,color:'#34D399' },
     { icon:AlertTriangle,label:'Deductions',     value:`AED ${fmt(summary?.payroll?.ded_total)}`,  color:'#F87171' },
     { icon:Wallet,       label:'Net Payroll',    value:`AED ${fmt(net)}`,                          color:'#A78BFA' },
-    { icon:Receipt,      label:'Total Expenses', value:`AED ${fmt(totalExp)}`,                     color:'#F59E0B' },
+    { icon:Receipt,      label:'Total Expenses', value:loading?'—':`AED ${fmt(totalExp)}`, color:'#F59E0B' },
   ]
 
   const byCat = EXPENSE_CATS.map(cat => ({
     name: cat.v, short: cat.e + ' ' + cat.v.split(' ')[0],
-    value: expenses.filter(e=>e.category===cat.v).reduce((s,e)=>s+Number(e.amount||0),0),
+    value: (expenses||[]).filter(e=>e.category===cat.v).reduce((s,e)=>s+Number(e.amount||0),0),
     color: cat.c,
   })).filter(c=>c.value>0).sort((a,b)=>b.value-a.value)
 
@@ -785,7 +785,7 @@ export default function AnalyticsPage() {
     admin:           <ManagerDashboard   summary={summary} chart={chart} loading={loading} leaves={leaves} onApproveLeave={handleApproveLeave} simStats={simStats} simByStation={simByStation} expenses={expenses}/>,
     general_manager: <GMDashboard        summary={summary} chart={chart} loading={loading}/>,
     hr:              <HRDashboard        summary={summary} loading={loading}/>,
-    accountant:      <AccountantDashboard summary={summary} loading={loading} expenses={expenses}/>,
+    accountant:      <AccountantDashboard summary={summary} loading={loading} expenses={expenses||[]}/>,
     poc:             <POCDashboard       summary={summary} chart={chart} loading={loading}/>,
   }
 
