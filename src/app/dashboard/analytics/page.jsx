@@ -600,6 +600,19 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
 }
 
 
+function SimpleKPIGrid({ kpis, loading }) {
+  return (
+    <>
+      <div className="desk" style={{ gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:10 }}>
+        {kpis.map((k,i) => <KPI key={k.label} {...k} loading={loading} delay={i*0.05}/>)}
+      </div>
+      <div className="mob kpi-wrap">
+        <Swiper items={kpis} peek="calc(50% - 15px)" render={(k,i) => <KPI {...k} loading={loading} delay={i*0.05}/>}/>
+      </div>
+    </>
+  )
+}
+
 function GMDashboard({ summary, chart, loading }) {
   const kpis = [
     { icon:Users,         label:'Total Staff',     value:summary?String(summary.employees?.c||0):'—',               color:'#F59E0B' },
