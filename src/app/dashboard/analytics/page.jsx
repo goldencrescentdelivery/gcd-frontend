@@ -757,31 +757,40 @@ export default function AnalyticsPage() {
   const [expenses,     setExpenses]     = useState([])
 
   const load = useCallback(async () => {
-    setLoading(true)
+    // Read role immediately from token — no async needed
+    let role = null
     try {
       const token = localStorage.getItem('gcd_token')
-      if (token) {
-        try { const p=JSON.parse(atob(token.split('.')[1])); setUserRole(p.role) } catch(e){}
-      }
-      const [sum, ch, simD, expD] = await Promise.all([
-        analyticsApi.summary(),
-        fetch(`${API}/api/analytics/deliveries-chart?months=6`, { headers:hdr() }).then(r=>r.json()).catch(()=>({ chart:[] })),
-        fetch(`${API}/api/sims/stats`, { headers:hdr() }).then(r=>r.json()).catch(()=>({ stats:null })),
-        fetch(`${API}/api/expenses?month=${new Date().toISOString().slice(0,7)}`, { headers:hdr() }).then(r=>r.json()).catch(()=>({ expenses:[] })),
-      ])
-      setSummary(sum)
-      setChart(ch.chart || [])
-      setSimStats(simD.stats || null)
-      setSimByStation(simD.by_station || [])
-      setExpenses(expD.expenses || [])
+      if (token) { role = JSON.parse(atob(token.split('.')[1])).role; setUserRole(role) }
+    } catch(e) {}
 
-      // Load pending leaves for manager/admin
-      const role = userRole || (token ? JSON.parse(atob(token.split('.')[1])).role : null)
-      if (['admin','manager'].includes(role)) {
-        const lv = await fetch(`${API}/api/leaves?stage=pending`, { headers:hdr() }).then(r=>r.json()).catch(()=>({ leaves:[] }))
-        setLeaves(lv.leaves || [])
-      }
-    } catch(e) { console.error(e) } finally { setLoading(false) }
+    setLoading(true)
+
+    // ── PHASE 1: Load summary first — renders the page fast ──
+    try {
+      const sum = await analyticsApi.summary()
+      setSummary(sum)
+      setLoading(false)  // unblock UI immediately after summary
+    } catch(e) { setLoading(false) }
+
+    // ── PHASE 2: Load secondary data in background ──
+    const token = localStorage.getItem('gcd_token')
+    const month = new Date().toISOString().slice(0,7)
+
+    // Fire all background requests simultaneously, update state as each arrives
+    fetch(`${API}/api/analytics/deliveries-chart?months=6`, { headers:hdr() })
+      .then(r=>r.json()).then(d=>setChart(d.chart||[])).catch(()=>{})
+
+    fetch(`${API}/api/expenses?month=${month}`, { headers:hdr() })
+      .then(r=>r.json()).then(d=>setExpenses(d.expenses||[])).catch(()=>{})
+
+    fetch(`${API}/api/sims/stats`, { headers:hdr() })
+      .then(r=>r.json()).then(d=>{ setSimStats(d.stats||null); setSimByStation(d.by_station||[]) }).catch(()=>{})
+
+    if (['admin','manager'].includes(role)) {
+      fetch(`${API}/api/leaves?stage=pending`, { headers:hdr() })
+        .then(r=>r.json()).then(d=>setLeaves(d.leaves||[])).catch(()=>{})
+    }
   }, [])
 
   useEffect(() => { load() }, [load])
