@@ -1,50 +1,105 @@
 'use client'
-import { usePathname } from 'next/navigation'
-import { Bell, Menu } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { Menu, Moon, Sun, LogOut } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
+import { useEffect, useState } from 'react'
 
 const PAGE_TITLES = {
-  '/dashboard/analytics':        'Analytics',
-  '/dashboard/hr/employees':     'Employees',
-  '/dashboard/hr/attendance':    'Attendance',
-  '/dashboard/hr/leaves':        'Leave Requests',
-  '/dashboard/hr/documents':     'Documents & Expiry',
-  '/dashboard/finance/payroll':  'Payroll',
-  '/dashboard/finance/expenses': 'Expenses',
-  '/dashboard/compliance':       'Compliance',
-  '/dashboard/poc':              'POC Station',
-  '/dashboard/backup':           'Backup & Data',
+  '/dashboard/analytics':         'Analytics',
+  '/dashboard/hr/employees':      'Employees',
+  '/dashboard/hr/attendance':     'Attendance',
+  '/dashboard/hr/leaves':         'Leaves',
+  '/dashboard/hr/documents':      'Documents',
+  '/dashboard/hr/compliance':     'Compliance',
+  '/dashboard/hr/users':          'User Accounts',
+  '/dashboard/finance/payroll':   'Payroll',
+  '/dashboard/finance/expenses':  'Expenses',
+  '/dashboard/poc':               'POC Station',
+  '/dashboard/backup':            'Backup',
+  '/dashboard/settings':          'Settings',
+  '/dashboard/performance':       'Performance',
+  '/dashboard/roster':            'Weekly Roster',
+  '/dashboard/damage':            'Damage Reports',
+  '/dashboard/advances':          'Salary Advances',
+}
+
+const ROLE_CFG = {
+  admin:           { l:'Admin',    e:'👑' },
+  manager:         { l:'Manager',  e:'⭐' },
+  general_manager: { l:'GM',       e:'🎯' },
+  hr:              { l:'HR',       e:'👥' },
+  accountant:      { l:'Finance',  e:'💰' },
+  poc:             { l:'POC',      e:'📡' },
+  driver:          { l:'Driver',   e:'🚗' },
 }
 
 export default function Topbar({ onMenuClick }) {
   const pathname = usePathname()
-  const { user } = useAuth()
+  const router   = useRouter()
+  const { user, logout } = useAuth()
+  const [dark, setDark] = useState(false)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('gcd_dark') === 'true'
+    setDark(saved)
+    document.body.classList.toggle('dark', saved)
+  }, [])
+
+  function toggleDark() {
+    const next = !dark
+    setDark(next)
+    localStorage.setItem('gcd_dark', String(next))
+    document.body.classList.toggle('dark', next)
+  }
+
+  function signOut() {
+    try { logout() } catch(e) {}
+    localStorage.removeItem('gcd_token')
+    localStorage.removeItem('gcd_user')
+    router.replace('/login')
+  }
+
   const title = PAGE_TITLES[pathname] || 'Dashboard'
+  const role  = ROLE_CFG[user?.role] || { l: user?.role, e: '👤' }
 
   return (
     <header className="topbar">
-      <button className="btn btn-ghost btn-icon" onClick={onMenuClick} style={{ display:'none', color:'#6B5D4A' }} id="mobile-menu-btn">
-        <Menu size={20} />
+      {/* Menu button — mobile only */}
+      <button onClick={onMenuClick} className="btn btn-ghost btn-icon" id="mobile-menu-btn"
+        style={{ display:'none', color:'var(--text-sub)', flexShrink:0 }}>
+        <Menu size={20}/>
       </button>
       <style>{`@media(max-width:1024px){#mobile-menu-btn{display:flex!important}}`}</style>
 
-      <div style={{ flex:1 }}>
-        <div style={{ fontWeight:700, fontSize:17, color:'#1A1612', letterSpacing:'-0.02em' }}>{title}</div>
-        <div style={{ fontSize:11, color:'#C4B49A', marginTop:1 }}>
-          {new Date().toLocaleDateString('en-AE', { weekday:'long', month:'long', day:'numeric', year:'numeric' })}
+      {/* Title */}
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontWeight:700, fontSize:16, color:'var(--text)', letterSpacing:'-0.01em', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{title}</div>
+        <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>
+          {new Date().toLocaleDateString('en-AE',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
         </div>
       </div>
 
-      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:9, padding:'6px 12px', background:'rgba(255,255,255,0.6)', backdropFilter:'blur(12px)', border:'1px solid rgba(255,255,255,0.7)', borderRadius:10, cursor:'default', boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
-          <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#FDF3DC,#F0D78C)', border:'1px solid #D4A017', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>
-            {user?.role === 'admin' ? '👑' : user?.role === 'finance' ? '💰' : user?.role === 'poc' ? '📻' : '👤'}
+      {/* Right side */}
+      <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+        {/* Dark mode toggle */}
+        <button onClick={toggleDark} className={`dark-toggle ${dark?'on':''}`} title={dark?'Light mode':'Dark mode'} aria-label="Toggle dark mode"/>
+
+        {/* User pill */}
+        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 10px 5px 5px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:20, cursor:'default' }}>
+          <div style={{ width:26, height:26, borderRadius:8, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0 }}>
+            {role.e}
           </div>
           <div className="hide-mobile">
-            <div style={{ fontSize:12, fontWeight:600, color:'#1A1612', lineHeight:1 }}>{user?.name?.split(' ')[0]}</div>
-            <div style={{ fontSize:10, color:'#A89880', textTransform:'capitalize', marginTop:2 }}>{user?.role}</div>
+            <div style={{ fontSize:12, fontWeight:600, color:'var(--text)', lineHeight:1 }}>{user?.name?.split(' ')[0]}</div>
+            <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:1 }}>{role.l}</div>
           </div>
         </div>
+
+        {/* Sign out — always visible */}
+        <button onClick={signOut}
+          style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:20, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap', flexShrink:0 }}>
+          <LogOut size={13}/><span className="hide-mobile">Sign Out</span>
+        </button>
       </div>
     </header>
   )

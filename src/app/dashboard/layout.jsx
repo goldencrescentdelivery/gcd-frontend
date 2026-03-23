@@ -1,27 +1,31 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import Sidebar from '@/components/layout/Sidebar'
 import Topbar from '@/components/layout/Topbar'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { BarChart3, Users, DollarSign, ShieldCheck, Radio } from 'lucide-react'
+import { BarChart3, Users, DollarSign, ShieldCheck, Radio, LogOut } from 'lucide-react'
 
 const BOTTOM_NAV = [
-  { href:'/dashboard/analytics',  icon:BarChart3,   label:'Analytics', roles:['admin','manager','finance'] },
-  { href:'/dashboard/hr',         icon:Users,       label:'HR',        roles:['admin','manager'] },
-  { href:'/dashboard/finance',    icon:DollarSign,  label:'Finance',   roles:['admin','manager','finance'] },
-  { href:'/dashboard/compliance', icon:ShieldCheck, label:'Compliance',roles:['admin','manager','finance'] },
-  { href:'/dashboard/poc',        icon:Radio,       label:'Station',   roles:['admin','manager','poc'] },
+  { href:'/dashboard/analytics', icon:BarChart3,   label:'Analytics', roles:['admin','manager','general_manager','hr','accountant','poc'] },
+  { href:'/dashboard/hr',        icon:Users,        label:'HR',        roles:['admin','manager','general_manager','hr'] },
+  { href:'/dashboard/finance',   icon:DollarSign,   label:'Finance',   roles:['admin','manager','accountant'] },
+  { href:'/dashboard/poc',       icon:Radio,        label:'Station',   roles:['admin','manager','general_manager','poc'] },
 ]
 
 export default function DashboardLayout({ children }) {
-  const { user, loading } = useAuth()
+  const { user, loading, logout } = useAuth()
   const router   = useRouter()
   const pathname = usePathname()
-  const [collapsed,  setCollapsed]  = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [collapsed,  setCollapsed]  = useState(false)
+
+  // Apply saved dark mode on mount
+  useEffect(() => {
+    const dark = localStorage.getItem('gcd_dark') === 'true'
+    document.body.classList.toggle('dark', dark)
+  }, [])
 
   useEffect(() => {
     if (loading) return
@@ -29,38 +33,55 @@ export default function DashboardLayout({ children }) {
     else if (user.role === 'driver') router.replace('/driver')
   }, [user, loading, router])
 
-  // Prevent crash while auth resolves
+  function signOut() {
+    try { logout() } catch(e) {}
+    localStorage.removeItem('gcd_token')
+    localStorage.removeItem('gcd_user')
+    router.replace('/login')
+  }
+
   if (loading) return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#F5EDD8,#EDE4D0,#E8DFC8)' }}>
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg,#F9FAFB)' }}>
       <div style={{ textAlign:'center' }}>
-        <div style={{ width:40, height:40, borderRadius:12, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, margin:'0 auto 10px' }}>🌙</div>
-        <div style={{ fontSize:13, color:'#A89880' }}>Loading…</div>
+        <div style={{ width:36,height:36,borderRadius:'50%',border:'3px solid #E5E7EB',borderTopColor:'#B8860B',animation:'spin 0.7s linear infinite',margin:'0 auto 10px' }}/>
+        <div style={{ fontSize:13,color:'#9CA3AF' }}>Loading…</div>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     </div>
   )
 
-  if (!user || user.role === 'driver') return null
+  if (!user || user.role==='driver') return null
 
   return (
     <div className="dashboard-shell">
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+      {/* Sidebar overlay for mobile */}
+      {mobileOpen && <div className="sidebar-overlay" onClick={()=>setMobileOpen(false)}/>}
+
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}/>
+
       <div className="main-area">
-        <Topbar onMenuClick={() => setMobileOpen(o => !o)} />
+        <Topbar onMenuClick={()=>setMobileOpen(o=>!o)}/>
         <main className="page-content">{children}</main>
       </div>
 
-      {/* Mobile bottom nav */}
+      {/* Mobile bottom nav — includes Sign Out */}
       <nav className="mobile-bottomnav">
-        {BOTTOM_NAV.filter(item => !item.roles || item.roles.includes(user?.role)).map(item => {
+        {BOTTOM_NAV.filter(item=>!item.roles||item.roles.includes(user?.role)).map(item=>{
           const Icon   = item.icon
           const active = pathname.startsWith(item.href)
           return (
-            <Link key={item.href} href={item.href} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'4px 12px', textDecoration:'none', color: active ? '#B8860B' : '#A89880', transition:'color 0.2s' }}>
-              <Icon size={20} />
-              <span style={{ fontSize:10, fontWeight: active ? 600 : 500 }}>{item.label}</span>
+            <Link key={item.href} href={item.href} className={active?'active':''}>
+              <Icon size={19} strokeWidth={active?2.5:1.8}/>
+              <span>{item.label}</span>
             </Link>
           )
         })}
+        {/* Sign Out always in bottom nav on mobile */}
+        <button onClick={signOut}
+          style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'9px 4px 13px',color:'#EF4444',fontSize:10,fontWeight:600,gap:3,background:'none',border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
+          <LogOut size={19} strokeWidth={1.8}/>
+          <span>Sign Out</span>
+        </button>
       </nav>
     </div>
   )
