@@ -11,7 +11,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis
 const API = process.env.NEXT_PUBLIC_API_URL
 
 const CATEGORIES = [
-  { v:'ABN Parking',            c:'#F59E0B', e:'🅿️' },
+  { v:'Parking',            c:'#F59E0B', e:'🅿️' },
   { v:'Advances',               c:'#10B981', e:'💵' },
   { v:'Air Tickets',            c:'#3B82F6', e:'✈️' },
   { v:'ENOC',                   c:'#EF4444', e:'⛽' },
