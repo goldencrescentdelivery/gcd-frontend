@@ -202,7 +202,7 @@ function ManagerDashboard({ summary, chart, loading, leaves, onApproveLeave, sim
 
   // Expense analytics
   const ECATS = [
-    {v:'ABN Parking',c:'#F59E0B'},{v:'Advances',c:'#10B981'},{v:'Air Tickets',c:'#3B82F6'},
+    {v:'Parking',c:'#F59E0B'},{v:'Advances',c:'#10B981'},{v:'Air Tickets',c:'#3B82F6'},
     {v:'ENOC',c:'#EF4444'},{v:'Health Insurance',c:'#8B5CF6'},{v:'Idfy',c:'#EC4899'},
     {v:'Mobile Expenses',c:'#06B6D4'},{v:'Office Expenses',c:'#84CC16'},{v:'Petty Cash',c:'#F97316'},
     {v:'RTA Top-up',c:'#0EA5E9'},{v:'Vehicle Expenses',c:'#6366F1'},{v:'Vehicle Rent',c:'#7C3AED'},
@@ -639,7 +639,7 @@ function HRDashboard({ summary, loading }) {
 }
 
 const EXPENSE_CATS = [
-  { v:'ABN Parking',c:'#F59E0B',e:'🅿️' },{ v:'Advances',c:'#10B981',e:'💵' },
+  { v:'Parking',c:'#F59E0B',e:'🅿️' },{ v:'Advances',c:'#10B981',e:'💵' },
   { v:'Air Tickets',c:'#3B82F6',e:'✈️' },{ v:'ENOC',c:'#EF4444',e:'⛽' },
   { v:'Health Insurance',c:'#8B5CF6',e:'🏥' },{ v:'Idfy',c:'#EC4899',e:'🔍' },
   { v:'Mobile Expenses',c:'#06B6D4',e:'📱' },{ v:'Office Expenses',c:'#84CC16',e:'🏢' },
