@@ -1,321 +1,304 @@
 'use client'
 import HandoverModal from '@/components/HandoverModal'
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { payrollApi, pocApi, attApi, leaveApi } from '@/lib/api'
 import { useSocket } from '@/lib/socket'
 import {
-  LogOut, DollarSign, Calendar, Bell, AlertTriangle, Plus, X,
-  Car, Truck, ChevronRight, ChevronLeft, TrendingUp, Clock,
-  FileText, Shield, Phone, CheckCircle, XCircle, AlertCircle,
-  Wallet, Package, Smartphone
+  LogOut, Calendar, Bell, Plus, X, Car, ChevronRight,
+  TrendingUp, FileText, Shield, CheckCircle, XCircle,
+  Wallet, Package, AlertTriangle, Clock, Home, BarChart2
 } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
+const APP_VERSION = '2.4.0'
 
-const DED_LABELS  = { traffic_fine:'Traffic Fine', iloe_fee:'ILOE Fee', iloe_fine:'ILOE Fine', cash_variance:'Cash Variance', other:'Other' }
-const DED_COLORS  = { traffic_fine:'#C0392B', iloe_fee:'#1D6FA4', iloe_fine:'#C0392B', cash_variance:'#B45309', other:'#6B5D4A' }
-const BON_COLORS  = { performance:'#2E7D52', kpi:'#1D6FA4', other:'#B8860B' }
-const TYPE_COLORS = { Annual:'#B8860B', Sick:'#1D6FA4', Emergency:'#C0392B', Unpaid:'#6B5D4A', Other:'#A89880' }
+const DED_LABELS = { traffic_fine:'Traffic Fine', iloe_fee:'ILOE Fee', iloe_fine:'ILOE Fine', cash_variance:'Cash Variance', other:'Other' }
+const BON_COLORS = { performance:'#10B981', kpi:'#3B82F6', other:'#B8860B' }
+const TYPE_COLORS = { Annual:'#B8860B', Sick:'#3B82F6', Emergency:'#EF4444', Unpaid:'#6B5D4A', Other:'#8B7355' }
+
+const PERF_GRADES = {
+  'Fantastic Plus': { c:'#10B981', bg:'rgba(16,185,129,0.15)', bar:100 },
+  'Fantastic':      { c:'#3B82F6', bg:'rgba(59,130,246,0.15)', bar:88  },
+  'Great':          { c:'#F59E0B', bg:'rgba(245,158,11,0.15)', bar:77  },
+  'Fair':           { c:'#FB923C', bg:'rgba(251,146,60,0.15)', bar:60  },
+  'Poor':           { c:'#EF4444', bg:'rgba(239,68,68,0.15)',  bar:25  },
+}
+
+const METRIC_DEFS = [
+  { key:'dcr',   label:'Delivery Completion Rate', target:'96.7%', unit:'%',   good:v=>v>=96.7,  fair:v=>v>=94 },
+  { key:'dnr',   label:'DNR DPMO',                 target:'<900',  unit:'',    good:v=>v<=900,   fair:v=>v<=1500 },
+  { key:'pod',   label:'Photo on Delivery',        target:'92%',   unit:'%',   good:v=>v>=92,    fair:v=>v>=75 },
+  { key:'rsa',   label:'Route Sequence Adherence', target:'60%',   unit:'%',   good:v=>v>=60,    fair:v=>v>=50 },
+  { key:'phr',   label:'Preference Honor Rate',    target:'90%',   unit:'%',   good:v=>v>=90,    fair:v=>v>=70 },
+  { key:'cdf',   label:'Customer Feedback Defects',target:'<0.3%', unit:'%',   good:v=>v<=0.3,   fair:v=>v<=0.5 },
+  { key:'fico',  label:'FICO Score',               target:'>700',  unit:'',    good:v=>v>=700,   fair:v=>v>=400 },
+  { key:'vsa',   label:'VSA Compliance',           target:'98%',   unit:'%',   good:v=>v>=98,    fair:v=>v>=90 },
+  { key:'mentor',label:'Mentor Adoption',          target:'70%',   unit:'%',   good:v=>v>=70,    fair:v=>v>=30 },
+]
 
 function fmt(n) { return Number(n||0).toLocaleString() }
+function fmtAmt(n) { return `AED ${Number(n||0).toLocaleString()}` }
 
-// ── Horizontal swipe slider ───────────────────────────────────
-function Slider({ items, renderItem, itemWidth='85%', gap=12 }) {
-  const ref = useRef(null)
-  const [idx, setIdx] = useState(0)
-  function onScroll() {
-    if (!ref.current) return
-    const w = ref.current.firstChild?.offsetWidth || 300
-    setIdx(Math.round(ref.current.scrollLeft / (w + gap)))
-  }
-  function goTo(i) {
-    if (!ref.current) return
-    const w = ref.current.firstChild?.offsetWidth || 300
-    ref.current.scrollTo({ left: i*(w+gap), behavior:'smooth' })
-  }
-  if (!items?.length) return null
+function getGrade(score) {
+  if (score >= 92) return 'Fantastic Plus'
+  if (score >= 85) return 'Fantastic'
+  if (score >= 70) return 'Great'
+  if (score >= 50) return 'Fair'
+  return 'Poor'
+}
+
+function MetricBadge({ value, good, fair, unit }) {
+  const c = good(value) ? '#10B981' : fair(value) ? '#F59E0B' : '#EF4444'
+  const bg = good(value) ? 'rgba(16,185,129,0.1)' : fair(value) ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)'
   return (
-    <div>
-      <div ref={ref} onScroll={onScroll}
-        style={{ display:'flex', gap, overflowX:'auto', scrollSnapType:'x mandatory', WebkitOverflowScrolling:'touch', scrollbarWidth:'none', paddingBottom:4 }}>
-        {items.map((item, i) => (
-          <div key={i} style={{ minWidth:itemWidth, maxWidth:itemWidth, scrollSnapAlign:'start', flexShrink:0 }}>
-            {renderItem(item, i)}
-          </div>
-        ))}
-      </div>
-      {items.length > 1 && (
-        <div style={{ display:'flex', justifyContent:'center', gap:5, marginTop:10 }}>
-          {items.map((_,i) => (
-            <button key={i} onClick={()=>goTo(i)} style={{ width:i===idx?18:6, height:6, borderRadius:3, background:i===idx?'#B8860B':'#EAE6DE', border:'none', cursor:'pointer', padding:0, transition:'width 0.3s, background 0.3s' }}/>
-          ))}
-        </div>
-      )}
-    </div>
+    <span style={{ fontSize:11, fontWeight:700, color:c, background:bg, borderRadius:20, padding:'2px 8px' }}>
+      {value}{unit}
+    </span>
   )
 }
 
-// ── Leave Modal ───────────────────────────────────────────────
-function LeaveModal({ onClose, onSave }) {
-  const [form,   setForm]   = useState({ type:'Annual', from_date:'', to_date:'', reason:'' })
+/* ── Apply Leave Modal ── */
+function LeaveModal({ empId, onSave, onClose }) {
+  const [form, setForm] = useState({ type:'Annual', from_date:'', to_date:'', reason:'' })
   const [saving, setSaving] = useState(false)
-  const [err,    setErr]    = useState(null)
   const set = (k,v) => setForm(p=>({...p,[k]:v}))
   const days = form.from_date && form.to_date
     ? Math.max(1, Math.round((new Date(form.to_date)-new Date(form.from_date))/86400000)+1) : 0
 
   async function handleSave() {
-    if (!form.from_date||!form.to_date) return setErr('Please fill in dates')
-    setSaving(true); setErr(null)
-    try { await leaveApi.create({...form, days}); onSave() }
-    catch(e) { setErr(e.message||'Failed to submit') } finally { setSaving(false) }
+    if (!form.from_date||!form.to_date) return alert('Select dates')
+    setSaving(true)
+    try {
+      await leaveApi.create({ ...form, emp_id:empId, days })
+      onSave()
+    } catch(e) { alert(e.message) } finally { setSaving(false) }
   }
 
-  const TYPE_C = { Annual:'#B8860B', Sick:'#1D6FA4', Emergency:'#C0392B', Unpaid:'#6B5D4A', Other:'#A89880' }
-  const tc = TYPE_C[form.type]||'#B8860B'
-
   return (
-    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal" style={{ maxWidth:420, padding:0, overflow:'hidden' }}>
-        <div style={{ padding:'22px 22px 16px', background:`linear-gradient(135deg,${tc}15,#FFF)` }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-            <div>
-              <h3 style={{ fontWeight:900, fontSize:17, color:'#1A1612' }}>Apply for Leave</h3>
-              <p style={{ fontSize:12, color:'#A89880', marginTop:2 }}>Request will go to your POC for approval</p>
-            </div>
-            <button onClick={onClose} style={{ width:30, height:30, borderRadius:9, background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
-          </div>
-          {/* Type pills */}
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-            {['Annual','Sick','Emergency','Unpaid','Other'].map(t => {
-              const c = TYPE_C[t]
-              return (
-                <button key={t} onClick={()=>set('type',t)} type="button"
-                  style={{ padding:'6px 14px', borderRadius:20, border:`2px solid ${form.type===t?c:'#EAE6DE'}`, background:form.type===t?`${c}15`:'#FFF', color:form.type===t?c:'#A89880', fontWeight:form.type===t?700:500, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif', transition:'all 0.18s' }}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(6px)', zIndex:200, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
+      onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{ background:'rgba(255,255,255,0.95)', backdropFilter:'blur(20px)', borderRadius:'24px 24px 0 0', width:'100%', maxWidth:500, padding:'20px 20px 36px', boxShadow:'0 -8px 40px rgba(0,0,0,0.2)' }}>
+        <div style={{ width:40, height:4, borderRadius:2, background:'rgba(0,0,0,0.15)', margin:'0 auto 18px' }}/>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+          <h3 style={{ fontWeight:800, fontSize:16, color:'#1A1612', margin:0 }}>Apply Leave</h3>
+          <button onClick={onClose} style={{ width:30,height:30,borderRadius:9,background:'rgba(0,0,0,0.07)',border:'none',cursor:'pointer',fontSize:18,display:'flex',alignItems:'center',justifyContent:'center' }}>×</button>
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <div>
+            <label style={{ fontSize:10.5,fontWeight:700,color:'#A89880',textTransform:'uppercase',letterSpacing:'0.08em',display:'block',marginBottom:5 }}>Leave Type</label>
+            <div style={{ display:'flex', gap:7, flexWrap:'wrap' }}>
+              {['Annual','Sick','Emergency','Unpaid'].map(t=>(
+                <button key={t} onClick={()=>set('type',t)} style={{ padding:'7px 14px',borderRadius:20,border:`2px solid ${form.type===t?TYPE_COLORS[t]:'rgba(0,0,0,0.1)'}`,background:form.type===t?`${TYPE_COLORS[t]}15`:'rgba(255,255,255,0.8)',color:form.type===t?TYPE_COLORS[t]:'#8B7355',fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
                   {t}
                 </button>
-              )
-            })}
-          </div>
-        </div>
-        <div style={{ padding:'16px 22px 20px', display:'flex', flexDirection:'column', gap:12 }}>
-          {err && <div style={{ background:'#FEF2F2', border:'1px solid #FCA5A5', borderRadius:9, padding:'9px 12px', fontSize:12.5, color:'#C0392B', display:'flex', gap:7, alignItems:'center' }}><AlertCircle size={13}/>{err}</div>}
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-            <div><label className="input-label">From *</label><input className="input" type="date" value={form.from_date} onChange={e=>set('from_date',e.target.value)}/></div>
-            <div><label className="input-label">To *</label><input className="input" type="date" value={form.to_date} onChange={e=>set('to_date',e.target.value)}/></div>
-          </div>
-          {days>0 && (
-            <div style={{ background:`${tc}12`, border:`1px solid ${tc}30`, borderRadius:10, padding:'10px 14px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span style={{ fontSize:13, fontWeight:600, color:tc }}>{form.type} Leave</span>
-              <span style={{ fontWeight:900, fontSize:18, color:tc }}>{days} day{days>1?'s':''}</span>
+              ))}
             </div>
-          )}
-          <div><label className="input-label">Reason (optional)</label>
-            <input className="input" value={form.reason} onChange={e=>set('reason',e.target.value)} placeholder="Brief reason…"/></div>
-          <div style={{ display:'flex', gap:10, marginTop:4 }}>
-            <button onClick={onClose} className="btn btn-secondary" style={{ flex:1, justifyContent:'center' }}>Cancel</button>
-            <button onClick={handleSave} disabled={saving||!form.from_date||!form.to_date}
-              style={{ flex:2, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'11px', borderRadius:10, background:`linear-gradient(135deg,${tc},${tc}cc)`, color:'white', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity:saving?0.7:1 }}>
-              {saving?'Submitting…':'Submit Request'}
-            </button>
           </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            <div>
+              <label style={{ fontSize:10.5,fontWeight:700,color:'#A89880',textTransform:'uppercase',letterSpacing:'0.08em',display:'block',marginBottom:5 }}>From</label>
+              <input type="date" value={form.from_date} onChange={e=>set('from_date',e.target.value)} style={{ width:'100%',padding:'10px 12px',borderRadius:12,border:'1.5px solid rgba(0,0,0,0.1)',background:'rgba(255,255,255,0.8)',fontSize:13,fontFamily:'Poppins,sans-serif',outline:'none',boxSizing:'border-box' }}/>
+            </div>
+            <div>
+              <label style={{ fontSize:10.5,fontWeight:700,color:'#A89880',textTransform:'uppercase',letterSpacing:'0.08em',display:'block',marginBottom:5 }}>To</label>
+              <input type="date" value={form.to_date} onChange={e=>set('to_date',e.target.value)} style={{ width:'100%',padding:'10px 12px',borderRadius:12,border:'1.5px solid rgba(0,0,0,0.1)',background:'rgba(255,255,255,0.8)',fontSize:13,fontFamily:'Poppins,sans-serif',outline:'none',boxSizing:'border-box' }}/>
+            </div>
+          </div>
+          {days>0 && <div style={{ fontSize:12,fontWeight:600,color:'#B8860B',background:'rgba(184,134,11,0.08)',borderRadius:10,padding:'8px 12px',textAlign:'center' }}>{days} day{days>1?'s':''} leave</div>}
+          <div>
+            <label style={{ fontSize:10.5,fontWeight:700,color:'#A89880',textTransform:'uppercase',letterSpacing:'0.08em',display:'block',marginBottom:5 }}>Reason</label>
+            <input value={form.reason} onChange={e=>set('reason',e.target.value)} placeholder="Brief reason…" style={{ width:'100%',padding:'10px 12px',borderRadius:12,border:'1.5px solid rgba(0,0,0,0.1)',background:'rgba(255,255,255,0.8)',fontSize:13,fontFamily:'Poppins,sans-serif',outline:'none',boxSizing:'border-box' }}/>
+          </div>
+          <button onClick={handleSave} disabled={saving} style={{ padding:'13px',borderRadius:14,background:'linear-gradient(135deg,#B8860B,#D4A017)',color:'white',fontWeight:800,fontSize:14,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif',marginTop:4,opacity:saving?0.7:1 }}>
+            {saving ? 'Submitting…' : 'Submit Leave Request'}
+          </button>
         </div>
       </div>
     </div>
   )
 }
 
-// ── Main DA Portal ────────────────────────────────────────────
+/* ── Main Portal ── */
 export default function DriverPortal() {
   const { user, logout } = useAuth()
   const router = useRouter()
+
   const [profile,       setProfile]       = useState(null)
   const [payroll,       setPayroll]       = useState([])
   const [myLeaves,      setMyLeaves]      = useState([])
   const [announcements, setAnnouncements] = useState([])
-  const [todayAtt,      setTodayAtt]      = useState(null)
   const [loading,       setLoading]       = useState(true)
   const [tab,           setTab]           = useState('home')
   const [leaveModal,    setLeaveModal]    = useState(false)
   const [handoverModal, setHandoverModal] = useState(false)
-  const [myHandovers,   setMyHandovers]   = useState([])
   const [myVehicle,     setMyVehicle]     = useState(null)
+  const [myHandovers,   setMyHandovers]   = useState([])
+  const [performance,   setPerformance]   = useState(null)
 
-  async function loadHandovers(token) {
-    try {
-      const hv = await fetch(`${API}/api/handovers`, { headers:{ Authorization:`Bearer ${token}` } }).then(r=>r.json())
-      const list = hv.handovers||[]
-      setMyHandovers(list)
-      const current = list.find(h=>h.type==='received' && !list.find(h2=>h2.vehicle_id===h.vehicle_id && h2.type==='returned' && new Date(h2.submitted_at)>new Date(h.submitted_at)))
-      setMyVehicle(current||null)
-    } catch(e) {}
+  function handleSignOut() {
+    try { logout() } catch(e) {}
+    localStorage.removeItem('gcd_token')
+    localStorage.removeItem('gcd_user')
+    router.replace('/login')
   }
 
   useEffect(() => {
-    if (!user) { router.replace('/login'); return }
-    if (user.role !== 'driver') { router.replace('/dashboard/analytics'); return }
+    if (user === null) { router.replace('/login'); return }
+    if (user && user.role !== 'driver') { router.replace('/dashboard/analytics'); return }
+    if (!user) return
+
     async function load() {
       setLoading(true)
       try {
-        const today = new Date().toISOString().slice(0,10)
         const token = localStorage.getItem('gcd_token')
         const hdr   = { Authorization:`Bearer ${token}` }
-        const [pr, ann, att, lv, emp] = await Promise.all([
-          payrollApi.list({ emp_id: user.emp_id }),
-          pocApi.announcements(),
-          attApi.list({ date: today }),
-          fetch(`${API}/api/leaves?emp_id=${user.emp_id}`, { headers:hdr }).then(r=>r.json()),
-          fetch(`${API}/api/employees/${user.emp_id}`, { headers:hdr }).then(r=>r.ok?r.json():{employee:null}),
+        const today = new Date().toISOString().slice(0,7)
+
+        const [pr, ann, lv, emp, hv, perf] = await Promise.all([
+          fetch(`${API}/api/payroll?month=${today}`, {headers:hdr}).then(r=>r.json()).catch(()=>({payroll:[]})),
+          fetch(`${API}/api/poc/announcements?station_code=${user.station_code}`, {headers:hdr}).then(r=>r.json()).catch(()=>({announcements:[]})),
+          fetch(`${API}/api/leaves`, {headers:hdr}).then(r=>r.json()).catch(()=>({leaves:[]})),
+          fetch(`${API}/api/employees/${user.emp_id}`, {headers:hdr}).then(r=>r.json()).catch(()=>({employee:null})),
+          fetch(`${API}/api/handovers`, {headers:hdr}).then(r=>r.json()).catch(()=>({handovers:[]})),
+          fetch(`${API}/api/performance/${user.emp_id}`, {headers:hdr}).then(r=>r.json()).catch(()=>({history:[]})),
         ])
+
+        const mySlip = (pr.payroll||[]).find(p=>p.id===user.emp_id || p.emp_id===user.emp_id)
         setPayroll(pr.payroll||[])
+        setProfile(mySlip || emp.employee || null)
         setAnnouncements(ann.announcements||[])
-        setTodayAtt(att.attendance?.[0]||null)
         setMyLeaves(lv.leaves||[])
-        setProfile(emp.employee||null)
-        await loadHandovers(token)
+
+        const handoverList = hv.handovers||[]
+        setMyHandovers(handoverList)
+        const current = handoverList.find(h=>h.type==='received' && !handoverList.find(h2=>h2.vehicle_id===h.vehicle_id && h2.type==='returned' && new Date(h2.submitted_at)>new Date(h.submitted_at)))
+        setMyVehicle(current||null)
+        setPerformance(perf.history?.[0]||null)
       } catch(e) { console.error(e) } finally { setLoading(false) }
     }
     load()
   }, [user, router])
 
-  useSocket({
-    'payroll:deduction_added': ({emp_id}) => { if(emp_id===user?.emp_id) payrollApi.list({emp_id:user.emp_id}).then(d=>setPayroll(d.payroll||[])).catch(()=>{}) },
-    'payroll:paid':            (row)      => { if(row.emp_id===user?.emp_id) payrollApi.list({emp_id:user.emp_id}).then(d=>setPayroll(d.payroll||[])).catch(()=>{}) },
-    'attendance:updated':      row        => { if(row.emp_id===user?.emp_id) setTodayAtt(row) },
-    'leave:created':           l          => { if(l.emp_id===user?.emp_id) setMyLeaves(p=>[l,...p]) },
-    'leave:updated':           l          => { if(l.emp_id===user?.emp_id) setMyLeaves(p=>p.map(x=>x.id===l.id?{...x,...l}:x)) },
-  })
+  useSocket({ 'payroll:paid':()=>{}, 'leave:updated':()=>{} })
 
-  if (!user||user.role!=='driver') return null
-
-  if (loading) return (
-    <div style={{ minHeight:'100vh', background:'#F8F7F4', display:'flex', alignItems:'center', justifyContent:'center' }}>
-      <div style={{ textAlign:'center' }}>
-        <img src="/logo.webp" alt="GCD" style={{ width:52, height:52, borderRadius:14, objectFit:'contain', background:'#fff', padding:3, margin:'0 auto 14px', display:'block', boxShadow:'0 4px 16px rgba(184,134,11,0.2)' }}/>
-        <div style={{ fontSize:13, color:'#A89880', fontWeight:500 }}>Loading your portal…</div>
+  if (!user || loading) {
+    return (
+      <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0F0C07,#1E1608)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <div style={{ width:40,height:40,borderRadius:12,border:'3px solid #B8860B',borderTopColor:'transparent',animation:'spin 0.8s linear infinite' }}/>
       </div>
-    </div>
-  )
+    )
+  }
 
-  const ytd         = payroll.filter(p=>p.payroll_status==='paid').reduce((s,p)=>s+Number(p.net_pay||0),0)
-  const pendingLeav = myLeaves.filter(l=>l.status==='pending').length
-  const latestSlip  = payroll[0]
-  const latestNet   = latestSlip ? Number(latestSlip.net_pay||(Number(latestSlip.base_salary)+Number(latestSlip.bonus_total||0)-Number(latestSlip.deduction_total||0))) : 0
+  const mySlip = payroll.find(p=>p.id===user.emp_id||p.emp_id===user.emp_id) || profile
+  const net    = mySlip ? Number(mySlip.net_pay||(Number(mySlip.base_salary)+Number(mySlip.bonus_total||0)-Number(mySlip.deduction_total||0))) : 0
+  const ytd    = payroll.reduce((s,p)=>s+(p.id===user.emp_id||p.emp_id===user.emp_id?Number(p.net_pay||(Number(p.base_salary)+Number(p.bonus_total||0)-Number(p.deduction_total||0))):0), 0)
+  const leaveDays = myLeaves.filter(l=>l.status==='approved').reduce((s,l)=>s+Number(l.days||0), 0)
+
+  const grade     = performance ? getGrade(performance.total_score) : null
+  const gradeConf = grade ? PERF_GRADES[grade] : null
 
   const TABS = [
-    { id:'home',    label:'Home',     icon:Package   },
-    { id:'payroll', label:'Payslips', icon:Wallet    },
-    { id:'leaves',  label:'Leaves',   icon:Calendar  },
-    { id:'vehicle', label:'Vehicle',  icon:Car       },
-    { id:'notices', label:'Notices',  icon:Bell      },
+    { id:'home',        icon:Home,      label:'Home' },
+    { id:'payroll',     icon:Wallet,    label:'Payslips' },
+    { id:'leaves',      icon:Calendar,  label:'Leaves' },
+    { id:'performance', icon:BarChart2, label:'Performance' },
+    { id:'vehicle',     icon:Car,       label:'Vehicle' },
+    { id:'notices',     icon:Bell,      label:'Notices' },
   ]
 
   return (
-    <div style={{ minHeight:'100vh', background:'#F8F7F4', paddingBottom:80 }}>
+    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#F5EDD8 0%,#EDE4D0 50%,#E8DFC8 100%)', fontFamily:'Poppins,sans-serif', paddingBottom:80 }}>
+      <style>{`
+        @keyframes spin { to { transform:rotate(360deg) } }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        .fade-up { animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+        * { box-sizing:border-box; }
+        ::-webkit-scrollbar { display:none; }
+      `}</style>
 
-      {/* ── Dark hero header ── */}
-      <div style={{ background:'linear-gradient(135deg,#1A1612 0%,#2C1F0A 100%)', padding:'0 0 24px', position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute', right:-30, top:-30, width:200, height:200, borderRadius:'50%', background:'rgba(184,134,11,0.1)' }}/>
-        <div style={{ position:'absolute', left:-20, bottom:-40, width:140, height:140, borderRadius:'50%', background:'rgba(184,134,11,0.06)' }}/>
+      {/* ── HERO HEADER ── */}
+      <div style={{ background:'linear-gradient(160deg,#0F0C07 0%,#1A1208 50%,#2C1F0A 100%)', padding:'16px 16px 20px', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', right:-30, top:-30, width:180, height:180, borderRadius:'50%', background:'radial-gradient(circle,rgba(212,160,23,0.18) 0%,transparent 70%)', pointerEvents:'none' }}/>
+        <div style={{ position:'absolute', left:-20, bottom:-20, width:120, height:120, borderRadius:'50%', background:'radial-gradient(circle,rgba(56,189,248,0.1) 0%,transparent 70%)', pointerEvents:'none' }}/>
 
         {/* Top bar */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 20px 20px' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18, position:'relative' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <img src="/logo.webp" alt="GCD" style={{ width:34, height:34, borderRadius:9, objectFit:'contain', background:'#fff', padding:2 }}/>
+            <div style={{ width:36,height:36,borderRadius:10,background:'linear-gradient(135deg,#B8860B,#D4A017)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:900,color:'white' }}>GCD</div>
             <div>
-              <div style={{ fontWeight:800, fontSize:13, color:'white' }}>Golden Crescent</div>
-              <div style={{ fontSize:9.5, color:'rgba(255,255,255,0.45)', fontWeight:600, letterSpacing:'0.1em', textTransform:'uppercase' }}>DA Portal</div>
+              <div style={{ fontWeight:800, fontSize:13, color:'white', letterSpacing:'-0.01em' }}>Golden Crescent</div>
+              <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', marginTop:1 }}>DA PORTAL · v{APP_VERSION}</div>
             </div>
           </div>
-          <button onClick={()=>{logout();router.replace('/login')}}
-            style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:20, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.15)', color:'rgba(255,255,255,0.7)', fontSize:12, fontWeight:500, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+          <button onClick={handleSignOut}
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px', borderRadius:20, background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)', color:'#F87171', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
             <LogOut size={13}/> Sign Out
           </button>
         </div>
 
         {/* Profile */}
-        <div style={{ padding:'0 20px', position:'relative' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:20 }}>
-            <div style={{ width:56, height:56, borderRadius:18, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:900, color:'white', flexShrink:0, boxShadow:'0 4px 16px rgba(184,134,11,0.4)' }}>
-              {user.name?.slice(0,1).toUpperCase()}
-            </div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontWeight:800, fontSize:18, color:'white', letterSpacing:'-0.02em' }}>{user.name}</div>
-              <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:2 }}>
-                {profile?.role||'Driver'} · {profile?.station_code||'—'}
-              </div>
-            </div>
-            {todayAtt ? (
-              <div style={{ textAlign:'right' }}>
-                <div style={{ fontSize:10, color:todayAtt.status==='present'?'#4ADE80':'#FCA5A5', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em' }}>
-                  {todayAtt.status==='present'?'● Present':'● Absent'}
-                </div>
-                {todayAtt.cycle && <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)', marginTop:1 }}>Cycle {todayAtt.cycle}</div>}
-              </div>
-            ) : <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>Not logged</div>}
+        <div style={{ display:'flex', alignItems:'center', gap:14, position:'relative', marginBottom:18 }}>
+          <div style={{ width:56,height:56,borderRadius:16,background:'linear-gradient(135deg,#B8860B,#D4A017)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:900,color:'white',flexShrink:0,boxShadow:'0 4px 16px rgba(184,134,11,0.4)' }}>
+            {user.name?.slice(0,1).toUpperCase()}
           </div>
+          <div>
+            <div style={{ fontWeight:900, fontSize:20, color:'white', letterSpacing:'-0.02em' }}>{user.name}</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:2 }}>
+              Driver · {user.station_code||'—'}
+              {grade && <span style={{ marginLeft:8, color:gradeConf.c, fontWeight:700 }}>· {grade}</span>}
+            </div>
+          </div>
+        </div>
 
-          {/* KPI strip */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
-            {[
-              { l:'This Month',  v:`AED ${fmt(latestNet)}`,  c:'#D4A017'  },
-              { l:'YTD Earned',  v:`AED ${fmt(ytd)}`,        c:'#4ADE80'  },
-              { l:'Leave Days',  v:`${myLeaves.filter(l=>l.status==='approved').reduce((s,l)=>s+Number(l.days||0),0)}d`, c:'#93C5FD' },
-            ].map(s=>(
-              <div key={s.l} style={{ background:'rgba(255,255,255,0.08)', borderRadius:12, padding:'11px 10px', textAlign:'center', backdropFilter:'blur(10px)' }}>
-                <div style={{ fontWeight:800, fontSize:15, color:s.c, letterSpacing:'-0.02em' }}>{s.v}</div>
-                <div style={{ fontSize:9.5, color:'rgba(255,255,255,0.4)', marginTop:3, fontWeight:600 }}>{s.l}</div>
-              </div>
-            ))}
-          </div>
+        {/* Stats chips */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, position:'relative' }}>
+          {[
+            { l:'This Month',  v:fmtAmt(net),      c:'#D4A017' },
+            { l:'YTD Earned',  v:fmtAmt(ytd),      c:'#34D399' },
+            { l:'Leave Days',  v:`${leaveDays}d`,   c:'#38BDF8' },
+          ].map(s=>(
+            <div key={s.l} style={{ background:'rgba(255,255,255,0.08)', backdropFilter:'blur(12px)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:13, padding:'10px 8px', textAlign:'center' }}>
+              <div style={{ fontWeight:900, fontSize:16, color:s.c, letterSpacing:'-0.02em' }}>{s.v}</div>
+              <div style={{ fontSize:9.5, color:'rgba(255,255,255,0.4)', marginTop:2, fontWeight:600 }}>{s.l}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ── Content ── */}
-      <div style={{ maxWidth:540, margin:'0 auto', padding:'16px 14px' }}>
+      {/* ── TAB CONTENT ── */}
+      <div style={{ padding:'16px 14px', maxWidth:600, margin:'0 auto' }}>
 
-        {/* ── HOME TAB ── */}
+        {/* ── HOME ── */}
         {tab==='home' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }} className="fade-up">
 
-            {/* Today card */}
-            {todayAtt && (
-              <div style={{ background:'linear-gradient(135deg,#FDF6E3,#FEF9F0)', border:'1px solid #F0D78C', borderRadius:16, padding:'16px' }}>
-                <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.1em', textTransform:'uppercase', color:'#B8860B', marginBottom:10 }}>Today's Shift</div>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
-                  {[
-                    { l:'Cycle',    v:todayAtt.cycles?.join('+') || todayAtt.cycle || '—' },
-                    { l:'Hours',    v:`${todayAtt.total_hours||todayAtt.cycle_hours||0}h` },
-                    { l:'Earned',   v:`AED ${parseFloat(todayAtt.earnings||0).toFixed(0)}` },
-                  ].map(s=>(
-                    <div key={s.l} style={{ textAlign:'center' }}>
-                      <div style={{ fontWeight:800, fontSize:18, color:'#B8860B', letterSpacing:'-0.02em' }}>{s.v}</div>
-                      <div style={{ fontSize:10, color:'#A89880', fontWeight:600, marginTop:3 }}>{s.l}</div>
-                    </div>
-                  ))}
-                </div>
+            {/* Today status */}
+            <div style={{ background:'rgba(255,255,255,0.65)', backdropFilter:'blur(20px)', border:'1px solid rgba(255,255,255,0.7)', borderRadius:18, padding:'14px 16px' }}>
+              <div style={{ fontSize:10,fontWeight:700,color:'#A89880',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:8 }}>Today</div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div style={{ fontWeight:700, fontSize:14, color:'#1A1612' }}>{new Date().toLocaleDateString('en-AE',{weekday:'long',day:'numeric',month:'long'})}</div>
+                {mySlip && <div style={{ fontSize:13, fontWeight:700, color:'#B8860B' }}>Base AED {fmt(mySlip.base_salary)}</div>}
               </div>
-            )}
+            </div>
 
-            {/* Current vehicle */}
-            {myVehicle && (
-              <div style={{ background:'linear-gradient(135deg,#ECFDF5,#F0FFF8)', border:'1px solid #A7F3D0', borderRadius:16, padding:'16px' }}>
-                <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.1em', textTransform:'uppercase', color:'#2E7D52', marginBottom:8 }}>Current Vehicle</div>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                  <div>
-                    <div style={{ fontWeight:900, fontSize:20, color:'#1A1612', letterSpacing:'-0.03em' }}>{myVehicle.vehicle_plate}</div>
-                    <div style={{ fontSize:12, color:'#6B5D4A', marginTop:2 }}>{[myVehicle.make,myVehicle.model].filter(Boolean).join(' ')}</div>
-                    <div style={{ fontSize:11, color:'#A89880', marginTop:3 }}>Since {new Date(myVehicle.submitted_at).toLocaleString('en-AE',{dateStyle:'short',timeStyle:'short'})}</div>
-                  </div>
-                  <div style={{ width:48, height:48, borderRadius:14, background:'rgba(46,125,82,0.15)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                    <Truck size={22} color="#2E7D52"/>
-                  </div>
-                </div>
-                <button onClick={()=>setHandoverModal({type:'returned',vehicle:myVehicle})}
-                  style={{ marginTop:12, width:'100%', padding:'9px', borderRadius:10, background:'rgba(192,57,43,0.1)', border:'1.5px solid #FCA5A5', color:'#C0392B', fontWeight:700, fontSize:12.5, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+            {/* Vehicle card */}
+            {myVehicle ? (
+              <div style={{ background:'linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.06))', backdropFilter:'blur(20px)', border:'1.5px solid rgba(16,185,129,0.3)', borderRadius:18, padding:'16px' }}>
+                <div style={{ fontSize:10,fontWeight:700,color:'#10B981',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:8 }}>Current Vehicle</div>
+                <div style={{ fontWeight:900, fontSize:20, color:'#1A1612', letterSpacing:'-0.02em', marginBottom:2 }}>{myVehicle.plate}</div>
+                <div style={{ fontSize:12, color:'#6B5D4A', marginBottom:12 }}>{[myVehicle.make,myVehicle.model].filter(Boolean).join(' ')} · Since {new Date(myVehicle.submitted_at).toLocaleDateString('en-AE')}</div>
+                <button onClick={()=>setHandoverModal(true)} style={{ width:'100%',padding:'10px',borderRadius:12,background:'rgba(239,68,68,0.1)',border:'1.5px solid rgba(239,68,68,0.3)',color:'#EF4444',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
                   Return Vehicle
+                </button>
+              </div>
+            ) : (
+              <div style={{ background:'rgba(255,255,255,0.55)', backdropFilter:'blur(20px)', border:'1px solid rgba(255,255,255,0.7)', borderRadius:18, padding:'16px', textAlign:'center' }}>
+                <Car size={28} color="#C4B49A" style={{ margin:'0 auto 8px', display:'block' }}/>
+                <div style={{ fontSize:13, color:'#A89880', marginBottom:10 }}>No vehicle assigned</div>
+                <button onClick={()=>setHandoverModal(true)} style={{ padding:'8px 20px',borderRadius:12,background:'linear-gradient(135deg,#B8860B,#D4A017)',color:'white',fontWeight:700,fontSize:12,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
+                  Log Handover
                 </button>
               </div>
             )}
@@ -323,235 +306,116 @@ export default function DriverPortal() {
             {/* Quick actions */}
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
               {[
-                { l:'Apply Leave', icon:Calendar, c:'#B8860B', bg:'#FDF6E3', bc:'#F0D78C', fn:()=>setLeaveModal(true) },
-                { l:'Log Handover',icon:Car,      c:'#1D6FA4', bg:'#EFF6FF', bc:'#BFDBFE', fn:()=>setHandoverModal({type:'received',vehicle:null}) },
-                { l:'My Payslips', icon:Wallet,   c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0', fn:()=>setTab('payroll') },
-                { l:'Notices',     icon:Bell,     c:'#7C3AED', bg:'#F5F3FF', bc:'#DDD6FE', fn:()=>setTab('notices'), badge:announcements.length },
-              ].map(item => {
-                const Icon = item.icon
+                { l:'Apply Leave',   icon:Calendar,  c:'#F59E0B', action:()=>setLeaveModal(true) },
+                { l:'Log Handover',  icon:Car,       c:'#38BDF8', action:()=>setHandoverModal(true) },
+                { l:'My Payslips',   icon:Wallet,    c:'#10B981', action:()=>setTab('payroll') },
+                { l:'Performance',   icon:BarChart2, c:'#A78BFA', action:()=>setTab('performance') },
+              ].map(a=>{
+                const Icon=a.icon
                 return (
-                  <button key={item.l} onClick={item.fn}
-                    style={{ display:'flex', alignItems:'center', gap:12, padding:'14px', borderRadius:14, background:item.bg, border:`1.5px solid ${item.bc}`, cursor:'pointer', fontFamily:'Poppins,sans-serif', textAlign:'left', position:'relative', transition:'transform 0.15s' }}
+                  <button key={a.l} onClick={a.action}
+                    style={{ display:'flex',alignItems:'center',gap:10,padding:'14px 14px',borderRadius:16,background:`${a.c}10`,border:`1.5px solid ${a.c}25`,cursor:'pointer',fontFamily:'Poppins,sans-serif',textAlign:'left',transition:'transform 0.15s' }}
                     onMouseEnter={e=>e.currentTarget.style.transform='scale(1.02)'}
                     onMouseLeave={e=>e.currentTarget.style.transform='none'}>
-                    <div style={{ width:40, height:40, borderRadius:12, background:`${item.c}20`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      <Icon size={18} color={item.c}/>
+                    <div style={{ width:38,height:38,borderRadius:11,background:`${a.c}18`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                      <Icon size={18} color={a.c}/>
                     </div>
-                    <span style={{ fontWeight:700, fontSize:13, color:item.c }}>{item.l}</span>
-                    {item.badge>0 && <div style={{ position:'absolute', top:10, right:10, width:18, height:18, borderRadius:'50%', background:item.c, color:'white', fontSize:10, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center' }}>{item.badge}</div>}
+                    <span style={{ fontWeight:700, fontSize:13, color:a.c }}>{a.l}</span>
                   </button>
                 )
               })}
             </div>
 
-            {/* Doc expiry alerts */}
-            {profile && [['Visa',profile.visa_expiry],['License',profile.license_expiry],['ILOE',profile.iloe_expiry]].some(([,d])=>{
-              if (!d) return false
-              return Math.round((new Date(d.slice(0,10))-new Date())/86400000) <= 90
-            }) && (
-              <div className="card" style={{ padding:'14px 16px' }}>
-                <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase', color:'#B45309', marginBottom:10 }}>Document Alerts</div>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
-                  {[['Visa',profile.visa_expiry],['License',profile.license_expiry],['ILOE',profile.iloe_expiry]].map(([l,d])=>{
-                    if (!d) return null
-                    const days = Math.round((new Date(d.slice(0,10))-new Date())/86400000)
-                    const c = days<0?'#C0392B':days<=60?'#C0392B':days<=90?'#B45309':'#2E7D52'
-                    const bg= days<=60?'#FEF2F2':days<=90?'#FFFBEB':'#ECFDF5'
-                    return (
-                      <div key={l} style={{ textAlign:'center', padding:'10px 6px', borderRadius:11, background:bg }}>
-                        <div style={{ fontSize:10, color:c, fontWeight:700, marginBottom:3 }}>{l}</div>
-                        <div style={{ fontSize:11, color:c, fontWeight:800 }}>{days<0?'Expired':days<=90?`${days}d`:'Valid'}</div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Latest payslip preview */}
-            {latestSlip && (
-              <div className="card" style={{ padding:0, overflow:'hidden' }}>
-                <div style={{ background:'linear-gradient(135deg,#1A1612,#2C1F0A)', padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <div>
-                    <div style={{ fontSize:10, color:'rgba(255,255,255,0.45)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em' }}>Latest Payslip</div>
-                    <div style={{ fontWeight:700, fontSize:13, color:'white', marginTop:2 }}>{latestSlip.month}</div>
-                  </div>
-                  <div style={{ textAlign:'right' }}>
-                    <div style={{ fontWeight:900, fontSize:20, color:'#D4A017', letterSpacing:'-0.03em' }}>AED {fmt(latestNet)}</div>
-                    <span style={{ fontSize:10, fontWeight:700, color:latestSlip.payroll_status==='paid'?'#4ADE80':'#FCD34D' }}>
-                      {latestSlip.payroll_status==='paid'?'✓ Paid':'Pending'}
-                    </span>
-                  </div>
-                </div>
-                <div style={{ padding:'12px 16px' }}>
-                  {[
-                    { l:'Base Salary', v:`AED ${fmt(latestSlip.base_salary)}`, c:'#1A1612' },
-                    Number(latestSlip.bonus_total)>0 && { l:'Bonuses', v:`+AED ${fmt(latestSlip.bonus_total)}`, c:'#2E7D52' },
-                    Number(latestSlip.deduction_total)>0 && { l:'Deductions', v:`-AED ${fmt(latestSlip.deduction_total)}`, c:'#C0392B' },
-                  ].filter(Boolean).map(s=>(
-                    <div key={s.l} style={{ display:'flex', justifyContent:'space-between', padding:'5px 0', borderBottom:'1px solid #F5F4F1' }}>
-                      <span style={{ fontSize:12.5, color:'#A89880' }}>{s.l}</span>
-                      <span style={{ fontSize:12.5, fontWeight:700, color:s.c }}>{s.v}</span>
-                    </div>
-                  ))}
-                  <button onClick={()=>setTab('payroll')} style={{ width:'100%', marginTop:12, padding:'9px', borderRadius:10, background:'#FAFAF8', border:'1px solid #EAE6DE', color:'#B8860B', fontWeight:700, fontSize:12.5, cursor:'pointer', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
-                    View All Payslips <ChevronRight size={13}/>
-                  </button>
-                </div>
+            {/* Latest notice */}
+            {announcements.length>0 && (
+              <div style={{ background:'rgba(255,255,255,0.65)', backdropFilter:'blur(20px)', border:'1px solid rgba(255,255,255,0.7)', borderRadius:18, padding:'14px 16px' }}>
+                <div style={{ fontSize:10,fontWeight:700,color:'#A89880',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:8 }}>Latest Notice</div>
+                <div style={{ fontWeight:700, fontSize:13, color:'#1A1612', marginBottom:4 }}>{announcements[0].title}</div>
+                <div style={{ fontSize:12, color:'#6B5D4A', lineHeight:1.6 }}>{announcements[0].message?.slice(0,120)}{announcements[0].message?.length>120?'…':''}</div>
               </div>
             )}
           </div>
         )}
 
-        {/* ── PAYSLIPS TAB ── */}
+        {/* ── PAYSLIPS ── */}
         {tab==='payroll' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            {/* YTD summary */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-              <div style={{ background:'linear-gradient(135deg,#FDF6E3,#FEF9F0)', border:'1px solid #F0D78C', borderRadius:14, padding:'14px', textAlign:'center' }}>
-                <div style={{ fontSize:10, color:'#B8860B', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>YTD Earned</div>
-                <div style={{ fontSize:20, fontWeight:900, color:'#B8860B', letterSpacing:'-0.03em' }}>AED {fmt(ytd)}</div>
-              </div>
-              <div style={{ background:'linear-gradient(135deg,#ECFDF5,#F0FFF8)', border:'1px solid #A7F3D0', borderRadius:14, padding:'14px', textAlign:'center' }}>
-                <div style={{ fontSize:10, color:'#2E7D52', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Monthly Base</div>
-                <div style={{ fontSize:20, fontWeight:900, color:'#2E7D52', letterSpacing:'-0.03em' }}>AED {fmt(profile?.salary||0)}</div>
-              </div>
-            </div>
-
-            {payroll.length===0 ? (
-              <div style={{ textAlign:'center', padding:'50px 20px', color:'#A89880' }}>
-                <Wallet size={40} style={{ margin:'0 auto 12px', display:'block', opacity:0.2 }}/>
-                <div style={{ fontWeight:600, color:'#6B5D4A' }}>No payslips yet</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }} className="fade-up">
+            <h2 style={{ fontWeight:800, fontSize:17, color:'#1A1612', margin:0 }}>My Payslips</h2>
+            {!mySlip ? (
+              <div style={{ textAlign:'center', padding:'40px 20px', color:'#A89880' }}>
+                <Wallet size={32} style={{ margin:'0 auto 10px',display:'block',opacity:0.3 }}/>
+                <div>No payroll data yet</div>
               </div>
             ) : (
-              <Slider items={payroll} itemWidth="calc(100% - 0px)" gap={0} renderItem={(slip,i)=>{
-                const net    = Number(slip.net_pay||(Number(slip.base_salary)+Number(slip.bonus_total||0)-Number(slip.deduction_total||0)))
-                const isPaid = slip.payroll_status==='paid'
-                return (
-                  <div style={{ background:'#FFF', border:`1.5px solid ${isPaid?'#A7F3D0':'#EAE6DE'}`, borderRadius:16, overflow:'hidden', margin:'0 2px' }}>
-                    {/* Header */}
-                    <div style={{ background:isPaid?'linear-gradient(135deg,#ECFDF5,#F0FFF8)':'linear-gradient(135deg,#FAFAF8,#F5F4F1)', padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                      <div>
-                        <div style={{ fontWeight:800, fontSize:16, color:'#1A1612' }}>{slip.month}</div>
-                        <div style={{ fontSize:11, color:isPaid?'#2E7D52':'#B45309', fontWeight:700, marginTop:2 }}>{isPaid?'✓ Paid':'⏳ Pending'}</div>
-                      </div>
-                      <div style={{ fontWeight:900, fontSize:24, color:isPaid?'#2E7D52':'#B8860B', letterSpacing:'-0.04em' }}>AED {fmt(net)}</div>
-                    </div>
-                    {/* Breakdown */}
-                    <div style={{ padding:'12px 16px', display:'flex', flexDirection:'column', gap:6 }}>
-                      {[
-                        { l:'Base Salary', v:`AED ${fmt(slip.base_salary)}`, c:'#1A1612' },
-                        Number(slip.bonus_total)>0 && { l:'Bonuses', v:`+AED ${fmt(slip.bonus_total)}`, c:'#2E7D52' },
-                        Number(slip.deduction_total)>0 && { l:'Deductions', v:`-AED ${fmt(slip.deduction_total)}`, c:'#C0392B' },
-                      ].filter(Boolean).map(s=>(
-                        <div key={s.l} style={{ display:'flex', justifyContent:'space-between', padding:'5px 0', borderBottom:'1px solid #F5F4F1' }}>
-                          <span style={{ fontSize:13, color:'#A89880' }}>{s.l}</span>
-                          <span style={{ fontSize:13, fontWeight:700, color:s.c }}>{s.v}</span>
-                        </div>
-                      ))}
-                      {/* Deduction detail */}
-                      {slip.deductions?.length>0 && (
-                        <div style={{ marginTop:8, background:'#FEF7F6', borderRadius:10, border:'1px solid #FCA5A530', padding:'10px 12px' }}>
-                          <div style={{ fontSize:10, fontWeight:800, color:'#C0392B', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>Deduction Details</div>
-                          {slip.deductions.map(d=>(
-                            <div key={d.id} style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                              <div>
-                                <div style={{ fontSize:12, fontWeight:600, color:DED_COLORS[d.type]||'#C0392B' }}>{DED_LABELS[d.type]||d.type}</div>
-                                {d.description && <div style={{ fontSize:10.5, color:'#A89880' }}>{d.description}</div>}
-                              </div>
-                              <span style={{ fontSize:12, fontWeight:700, color:'#C0392B' }}>-AED {fmt(d.amount)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {/* Bonus detail */}
-                      {slip.bonuses?.length>0 && (
-                        <div style={{ marginTop:8, background:'#F0FDF4', borderRadius:10, border:'1px solid #A7F3D030', padding:'10px 12px' }}>
-                          <div style={{ fontSize:10, fontWeight:800, color:'#2E7D52', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>Bonus Details</div>
-                          {slip.bonuses.map(b=>(
-                            <div key={b.id} style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                              <div>
-                                <div style={{ fontSize:12, fontWeight:600, color:BON_COLORS[b.type]||'#2E7D52' }}>{b.type}</div>
-                                {b.description && <div style={{ fontSize:10.5, color:'#A89880' }}>{b.description}</div>}
-                              </div>
-                              <span style={{ fontSize:12, fontWeight:700, color:'#2E7D52' }}>+AED {fmt(b.amount)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+              <>
+                <div style={{ background:'linear-gradient(135deg,#0F0C07,#2C1F0A)', borderRadius:18, padding:'18px' }}>
+                  <div style={{ fontSize:10,color:'rgba(255,255,255,0.4)',fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:4 }}>Net Salary This Month</div>
+                  <div style={{ fontWeight:900, fontSize:28, color:'#D4A017', letterSpacing:'-0.04em' }}>AED {fmt(net)}</div>
+                  <div style={{ fontSize:12, color:mySlip.payroll_status==='paid'?'#34D399':'#FB923C', marginTop:6, fontWeight:600 }}>
+                    {mySlip.payroll_status==='paid'?'✓ Paid':'Pending Payment'}
                   </div>
-                )
-              }}/>
+                </div>
+                {/* Breakdown */}
+                <div style={{ background:'rgba(255,255,255,0.65)', backdropFilter:'blur(20px)', border:'1px solid rgba(255,255,255,0.7)', borderRadius:18, padding:'16px' }}>
+                  {[
+                    { l:'Base Salary',  v:`AED ${fmt(mySlip.base_salary)}`,        c:'#1A1612' },
+                    { l:'Bonuses',      v:`+AED ${fmt(mySlip.bonus_total||0)}`,     c:'#10B981' },
+                    { l:'Deductions',   v:`-AED ${fmt(mySlip.deduction_total||0)}`, c:'#EF4444' },
+                  ].map(r=>(
+                    <div key={r.l} style={{ display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:'1px solid rgba(0,0,0,0.05)' }}>
+                      <span style={{ fontSize:13,color:'#6B5D4A' }}>{r.l}</span>
+                      <span style={{ fontWeight:700,fontSize:13,color:r.c }}>{r.v}</span>
+                    </div>
+                  ))}
+                  {/* Bonuses detail */}
+                  {(mySlip.bonuses||[]).map(b=>(
+                    <div key={b.id} style={{ display:'flex',justifyContent:'space-between',padding:'6px 12px',background:'rgba(16,185,129,0.06)',borderRadius:9,marginTop:6 }}>
+                      <span style={{ fontSize:11.5,color:'#10B981' }}>{b.type} {b.description?`— ${b.description}`:''}</span>
+                      <span style={{ fontWeight:700,fontSize:11.5,color:'#10B981' }}>+AED {fmt(b.amount)}</span>
+                    </div>
+                  ))}
+                  {/* Deductions detail */}
+                  {(mySlip.deductions||[]).map(d=>(
+                    <div key={d.id} style={{ display:'flex',justifyContent:'space-between',padding:'6px 12px',background:'rgba(239,68,68,0.05)',borderRadius:9,marginTop:6 }}>
+                      <span style={{ fontSize:11.5,color:'#EF4444' }}>{DED_LABELS[d.type]||d.type} {d.description?`— ${d.description}`:''}</span>
+                      <span style={{ fontWeight:700,fontSize:11.5,color:'#EF4444' }}>-AED {fmt(d.amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
 
-        {/* ── LEAVES TAB ── */}
+        {/* ── LEAVES ── */}
         {tab==='leaves' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <div>
-                <div style={{ fontWeight:700, fontSize:15, color:'#1A1612' }}>Leave Requests</div>
-                <div style={{ fontSize:12, color:'#A89880', marginTop:2 }}>{pendingLeav>0?`${pendingLeav} pending approval`:''}</div>
-              </div>
-              <button className="btn btn-primary" style={{ borderRadius:20, fontSize:12 }} onClick={()=>setLeaveModal(true)}>
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }} className="fade-up">
+            <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+              <h2 style={{ fontWeight:800, fontSize:17, color:'#1A1612', margin:0 }}>My Leaves</h2>
+              <button onClick={()=>setLeaveModal(true)} style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:20,background:'linear-gradient(135deg,#B8860B,#D4A017)',color:'white',fontWeight:700,fontSize:12,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
                 <Plus size={13}/> Apply
               </button>
             </div>
-
-            {/* Status legend */}
-            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-              {[
-                { l:'Approved', c:'#2E7D52', bg:'#ECFDF5' },
-                { l:'Pending',  c:'#B45309', bg:'#FFFBEB' },
-                { l:'Rejected', c:'#C0392B', bg:'#FEF2F2' },
-              ].map(s=>(
-                <div key={s.l} style={{ fontSize:11, fontWeight:600, color:s.c, background:s.bg, borderRadius:20, padding:'3px 10px' }}>
-                  {myLeaves.filter(l=>l.status===s.l.toLowerCase()).length} {s.l}
-                </div>
-              ))}
-            </div>
-
             {myLeaves.length===0 ? (
-              <div style={{ textAlign:'center', padding:'50px 20px', color:'#A89880' }}>
-                <Calendar size={40} style={{ margin:'0 auto 12px', display:'block', opacity:0.2 }}/>
-                <div style={{ fontWeight:600, color:'#6B5D4A' }}>No leave requests yet</div>
-              </div>
+              <div style={{ textAlign:'center',padding:'40px 20px',color:'#A89880' }}><Calendar size={32} style={{ margin:'0 auto 10px',display:'block',opacity:0.3 }}/><div>No leave requests</div></div>
             ) : myLeaves.map((l,i)=>{
-              const tc = TYPE_COLORS[l.type]||'#A89880'
-              const sc = {approved:'#2E7D52',rejected:'#C0392B',pending:'#B45309'}[l.status]
-              const sbg= {approved:'#ECFDF5',rejected:'#FEF2F2',pending:'#FFFBEB'}[l.status]
+              const tc = TYPE_COLORS[l.type]||'#8B7355'
+              const sc = l.status==='approved'?'#10B981':l.status==='rejected'?'#EF4444':'#F59E0B'
               return (
-                <div key={l.id} style={{ background:'#FFF', border:`1px solid ${sc}30`, borderRadius:14, overflow:'hidden', animation:`slideUp 0.3s ${i*0.04}s ease both` }}>
-                  <div style={{ height:4, background:`linear-gradient(90deg,${tc},${tc}88)` }}/>
-                  <div style={{ padding:'12px 14px' }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-                      <div>
-                        <span style={{ fontWeight:700, fontSize:14, color:tc }}>{l.type}</span>
-                        <span style={{ fontSize:12, color:'#A89880', marginLeft:8 }}>{l.days} day{l.days!==1?'s':''}</span>
-                      </div>
-                      <span style={{ fontSize:11, fontWeight:700, color:sc, background:sbg, borderRadius:20, padding:'3px 10px' }}>{l.status}</span>
-                    </div>
-                    <div style={{ fontSize:12, color:'#6B5D4A', marginTop:5, display:'flex', alignItems:'center', gap:5 }}>
-                      <Calendar size={11}/> {l.from_date} → {l.to_date}
-                    </div>
-                    {l.reason && <div style={{ fontSize:12, color:'#A89880', marginTop:4 }}>{l.reason}</div>}
-                    {/* Approval stages */}
-                    {l.poc_status && (
-                      <div style={{ display:'flex', gap:5, marginTop:8, flexWrap:'wrap' }}>
-                        {[
-                          { l:'POC', s:l.poc_status },
-                          { l:'HR/GM', s:l.hr_status||'waiting' },
-                          { l:'Manager', s:l.mgr_status||'waiting' },
-                        ].map(stage=>(
-                          <div key={stage.l} style={{ fontSize:10, fontWeight:600, padding:'2px 8px', borderRadius:6,
-                            color:stage.s==='approved'?'#2E7D52':stage.s==='rejected'?'#C0392B':stage.s==='pending'?'#1D6FA4':'#A89880',
-                            background:stage.s==='approved'?'#ECFDF5':stage.s==='rejected'?'#FEF2F2':stage.s==='pending'?'#EFF6FF':'#F5F4F1',
-                          }}>{stage.l}: {stage.s}</div>
-                        ))}
-                      </div>
-                    )}
+                <div key={l.id} style={{ background:'rgba(255,255,255,0.65)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,0.7)',borderRadius:16,padding:'14px 16px',animation:`fadeUp 0.3s ${i*0.05}s ease both` }}>
+                  <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8 }}>
+                    <span style={{ fontSize:11,fontWeight:700,color:tc,background:`${tc}12`,borderRadius:20,padding:'3px 10px' }}>{l.type}</span>
+                    <span style={{ fontSize:11,fontWeight:700,color:sc,background:`${sc}10`,borderRadius:20,padding:'3px 10px' }}>{l.status}</span>
+                  </div>
+                  <div style={{ fontSize:13,fontWeight:600,color:'#1A1612',marginBottom:3 }}>{l.from_date} → {l.to_date}</div>
+                  <div style={{ fontSize:11.5,color:'#A89880' }}>{l.days} day{l.days>1?'s':''} · {l.reason}</div>
+                  {/* Approval stages */}
+                  <div style={{ display:'flex',gap:6,marginTop:8,flexWrap:'wrap' }}>
+                    {[{l:'POC',s:l.poc_status},{l:'HR',s:l.hr_status||l.gm_status},{l:'Manager',s:l.mgr_status}].map(st=>(
+                      <span key={st.l} style={{ fontSize:10,fontWeight:700,color:st.s==='approved'?'#10B981':st.s==='rejected'?'#EF4444':'#A89880',background:st.s==='approved'?'rgba(16,185,129,0.1)':st.s==='rejected'?'rgba(239,68,68,0.1)':'rgba(0,0,0,0.05)',borderRadius:20,padding:'2px 8px' }}>
+                        {st.l}: {st.s||'pending'}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )
@@ -559,114 +423,195 @@ export default function DriverPortal() {
           </div>
         )}
 
-        {/* ── VEHICLE TAB ── */}
-        {tab==='vehicle' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            {myVehicle ? (
-              <div style={{ background:'linear-gradient(135deg,#1A1612,#2C1F0A)', borderRadius:18, padding:'20px', color:'white', position:'relative', overflow:'hidden' }}>
-                <div style={{ position:'absolute', right:-20, top:-20, width:120, height:120, borderRadius:'50%', background:'rgba(46,125,82,0.15)' }}/>
-                <div style={{ fontSize:10, color:'rgba(255,255,255,0.45)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:8 }}>Currently With You</div>
-                <div style={{ fontWeight:900, fontSize:28, color:'white', letterSpacing:'-0.03em', marginBottom:4 }}>{myVehicle.vehicle_plate}</div>
-                <div style={{ fontSize:13, color:'rgba(255,255,255,0.5)', marginBottom:4 }}>{[myVehicle.make,myVehicle.model].filter(Boolean).join(' ')}</div>
-                <div style={{ fontSize:11, color:'#4ADE80', fontWeight:600 }}>● Active since {new Date(myVehicle.submitted_at).toLocaleString('en-AE',{dateStyle:'medium',timeStyle:'short'})}</div>
-                <button onClick={()=>setHandoverModal({type:'returned',vehicle:myVehicle})}
-                  style={{ marginTop:16, width:'100%', padding:'12px', borderRadius:12, background:'rgba(192,57,43,0.2)', border:'1.5px solid rgba(239,68,68,0.5)', color:'#FCA5A5', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                  Return This Vehicle
-                </button>
-              </div>
-            ) : (
-              <div style={{ background:'#FAFAF8', border:'1.5px dashed #EAE6DE', borderRadius:16, padding:'24px', textAlign:'center' }}>
-                <Truck size={36} style={{ margin:'0 auto 10px', display:'block', opacity:0.2 }}/>
-                <div style={{ fontWeight:600, color:'#6B5D4A', marginBottom:4 }}>No vehicle assigned</div>
-                <div style={{ fontSize:12, color:'#A89880' }}>Submit a handover when you receive a vehicle</div>
-              </div>
-            )}
+        {/* ── PERFORMANCE ── */}
+        {tab==='performance' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }} className="fade-up">
+            <h2 style={{ fontWeight:800, fontSize:17, color:'#1A1612', margin:0 }}>DSP Performance</h2>
 
-            <button onClick={()=>setHandoverModal({type:'received',vehicle:null})} className="btn btn-primary" style={{ width:'100%', justifyContent:'center', borderRadius:14, padding:'13px', fontSize:14 }}>
-              <Car size={15}/> New Handover Record
-            </button>
-
-            {myHandovers.length>0 && (
+            {/* Overall score */}
+            {performance ? (
               <>
-                <div style={{ fontWeight:700, fontSize:14, color:'#1A1612', marginTop:4 }}>Handover History</div>
-                <Slider items={myHandovers} itemWidth="calc(100% - 4px)" gap={0} renderItem={(h,i)=>(
-                  <div style={{ background:'#FFF', border:'1px solid #EAE6DE', borderRadius:14, overflow:'hidden', margin:'0 2px' }}>
-                    <div style={{ padding:'12px 14px' }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
-                        <div>
-                          <div style={{ fontWeight:800, fontSize:15, color:'#1A1612' }}>{h.vehicle_plate}</div>
-                          <div style={{ fontSize:11, color:'#A89880', marginTop:1 }}>{[h.make,h.model].filter(Boolean).join(' ')}</div>
-                        </div>
-                        <span style={{ fontSize:11, fontWeight:700, color:h.type==='received'?'#2E7D52':'#B8860B', background:h.type==='received'?'#ECFDF5':'#FDF6E3', borderRadius:20, padding:'3px 10px' }}>
-                          {h.type==='received'?'Received':'Returned'}
-                        </span>
+                <div style={{ background:'linear-gradient(135deg,#0F0C07,#2C1F0A)', borderRadius:20, padding:'20px', position:'relative', overflow:'hidden' }}>
+                  <div style={{ position:'absolute',right:-20,top:-20,width:120,height:120,borderRadius:'50%',background:`radial-gradient(circle,${gradeConf.c}30 0%,transparent 70%)`,pointerEvents:'none' }}/>
+                  <div style={{ fontSize:10,color:'rgba(255,255,255,0.4)',fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:4 }}>Weekly Scorecard</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+                    <div style={{ position:'relative', width:80, height:80, flexShrink:0 }}>
+                      <svg width={80} height={80} style={{ transform:'rotate(-90deg)' }}>
+                        <circle cx={40} cy={40} r={32} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={8}/>
+                        <circle cx={40} cy={40} r={32} fill="none" stroke={gradeConf.c} strokeWidth={8}
+                          strokeDasharray={`${(performance.total_score/100)*201} 201`} strokeLinecap="round"/>
+                      </svg>
+                      <div style={{ position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column' }}>
+                        <div style={{ fontWeight:900,fontSize:16,color:'white',letterSpacing:'-0.03em' }}>{Number(performance.total_score).toFixed(0)}</div>
+                        <div style={{ fontSize:8,color:'rgba(255,255,255,0.4)',fontWeight:600 }}>/ 100</div>
                       </div>
-                      <div style={{ fontSize:11.5, color:'#6B5D4A', marginBottom:4 }}>{new Date(h.submitted_at).toLocaleString('en-AE',{dateStyle:'medium',timeStyle:'short'})}</div>
-                      {h.fuel_level && <div style={{ fontSize:11, color:'#A89880' }}>Fuel: {h.fuel_level.replace('_',' ')}</div>}
-                      {h.condition_note && <div style={{ fontSize:11.5, color:'#6B5D4A', marginTop:4, padding:'6px 10px', background:'#FAFAF8', borderRadius:8 }}>{h.condition_note}</div>}
-                      {[h.photo_1,h.photo_2,h.photo_3,h.photo_4].filter(Boolean).length>0 && (
-                        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6, marginTop:10 }}>
-                          {[h.photo_1,h.photo_2,h.photo_3,h.photo_4].filter(Boolean).map((url,pi)=>(
-                            <a key={pi} href={url} target="_blank" rel="noopener noreferrer">
-                              <img src={url} alt="" style={{ width:'100%', aspectRatio:'1', objectFit:'cover', borderRadius:9, border:'1px solid #EAE6DE' }}/>
-                            </a>
-                          ))}
-                        </div>
-                      )}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight:900, fontSize:22, color:gradeConf.c, letterSpacing:'-0.02em' }}>{grade}</div>
+                      <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:3 }}>{performance.month}</div>
                     </div>
                   </div>
-                )}/>
+                </div>
+
+                {/* Score breakdown */}
+                <div style={{ background:'rgba(255,255,255,0.65)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,0.7)',borderRadius:18,padding:'16px' }}>
+                  <div style={{ fontSize:11,fontWeight:700,color:'#A89880',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12 }}>Score Breakdown</div>
+                  {[
+                    {l:'Attendance',  v:performance.attendance_score,  max:20, c:'#10B981'},
+                    {l:'Deliveries',  v:performance.delivery_score,    max:20, c:'#3B82F6'},
+                    {l:'Compliance',  v:performance.compliance_score,  max:20, c:'#A78BFA'},
+                    {l:'Leave Usage', v:performance.leave_score,       max:20, c:'#F59E0B'},
+                    {l:'Conduct',     v:performance.deduction_score,   max:20, c:'#B8860B'},
+                  ].map(s=>(
+                    <div key={s.l} style={{ marginBottom:10 }}>
+                      <div style={{ display:'flex',justifyContent:'space-between',marginBottom:4 }}>
+                        <span style={{ fontSize:12,color:'#6B5D4A',fontWeight:500 }}>{s.l}</span>
+                        <span style={{ fontSize:12,fontWeight:700,color:s.c }}>{Number(s.v).toFixed(0)}/{s.max}</span>
+                      </div>
+                      <div style={{ height:6,background:'rgba(0,0,0,0.07)',borderRadius:10,overflow:'hidden' }}>
+                        <div style={{ height:'100%',width:`${(s.v/s.max)*100}%`,background:s.c,borderRadius:10,transition:'width 1s ease' }}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Amazon DSP Scorecard standards */}
+                <div style={{ background:'rgba(255,255,255,0.65)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,0.7)',borderRadius:18,padding:'16px' }}>
+                  <div style={{ fontSize:11,fontWeight:700,color:'#A89880',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12 }}>Amazon DSP Standards</div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    {[
+                      {l:'Fantastic Plus', range:'92–100', c:'#10B981'},
+                      {l:'Fantastic',      range:'85–91',  c:'#3B82F6'},
+                      {l:'Great',          range:'70–84',  c:'#F59E0B'},
+                      {l:'Fair',           range:'50–69',  c:'#FB923C'},
+                      {l:'Poor',           range:'0–49',   c:'#EF4444'},
+                    ].map(g=>(
+                      <div key={g.l} style={{ display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 10px',borderRadius:10,background:grade===g.l?`${g.c}15`:'transparent',border:grade===g.l?`1px solid ${g.c}30`:'1px solid transparent' }}>
+                        <div style={{ display:'flex',alignItems:'center',gap:7 }}>
+                          <div style={{ width:8,height:8,borderRadius:'50%',background:g.c }}/>
+                          <span style={{ fontSize:12.5,fontWeight:grade===g.l?700:500,color:grade===g.l?g.c:'#6B5D4A' }}>{g.l}</span>
+                          {grade===g.l && <span style={{ fontSize:10,fontWeight:700,color:g.c }}>← You are here</span>}
+                        </div>
+                        <span style={{ fontSize:11,color:'#A89880',fontWeight:600 }}>{g.range}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </>
+            ) : (
+              <div style={{ background:'rgba(255,255,255,0.65)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,0.7)',borderRadius:18,padding:'30px',textAlign:'center' }}>
+                <BarChart2 size={36} color="#C4B49A" style={{ margin:'0 auto 10px',display:'block' }}/>
+                <div style={{ fontSize:13,color:'#A89880' }}>Performance data not yet available</div>
+                <div style={{ fontSize:11.5,color:'#C4B49A',marginTop:4 }}>Ask your manager to compute scores</div>
+              </div>
             )}
+
+            {/* SLS Targets reference */}
+            <div style={{ background:'rgba(255,255,255,0.65)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,0.7)',borderRadius:18,padding:'16px' }}>
+              <div style={{ fontSize:11,fontWeight:700,color:'#A89880',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12 }}>SLS Targets (Amazon)</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+                {[
+                  {l:'Delivery Completion Rate', target:'96.7%', min:'94%'},
+                  {l:'Photo on Delivery',        target:'92%',   min:'75%'},
+                  {l:'Route Sequence Adherence', target:'60%',   min:'50%'},
+                  {l:'Preference Honor Rate',    target:'90%',   min:'70%'},
+                  {l:'FICO Score',               target:'>700',  min:'>400'},
+                  {l:'VSA Compliance',           target:'98%',   min:'90%'},
+                  {l:'Mentor Adoption',          target:'70%',   min:'30%'},
+                ].map(m=>(
+                  <div key={m.l} style={{ display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:11.5,padding:'5px 0',borderBottom:'1px solid rgba(0,0,0,0.04)' }}>
+                    <span style={{ color:'#6B5D4A',fontWeight:500 }}>{m.l}</span>
+                    <div style={{ display:'flex',gap:8 }}>
+                      <span style={{ color:'#10B981',fontWeight:700 }}>{m.target}</span>
+                      <span style={{ color:'#A89880' }}>min {m.min}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Incentives */}
+              <div style={{ marginTop:12,padding:'10px 12px',background:'rgba(184,134,11,0.08)',borderRadius:12,border:'1px solid rgba(184,134,11,0.2)' }}>
+                <div style={{ fontSize:11,fontWeight:700,color:'#B8860B',marginBottom:6 }}>Incentives Per Package</div>
+                <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6,textAlign:'center' }}>
+                  {[{l:'Fantastic+',v:'0.125 AED'},{l:'Fantastic',v:'0.0625 AED'},{l:'Great/Fair',v:'0 AED'}].map(r=>(
+                    <div key={r.l} style={{ padding:'6px 4px',borderRadius:8,background:'rgba(255,255,255,0.6)' }}>
+                      <div style={{ fontSize:9.5,fontWeight:700,color:'#B8860B' }}>{r.l}</div>
+                      <div style={{ fontSize:11,fontWeight:800,color:'#1A1612',marginTop:2 }}>{r.v}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* ── NOTICES TAB ── */}
-        {tab==='notices' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {announcements.length===0 ? (
-              <div style={{ textAlign:'center', padding:'50px 20px', color:'#A89880' }}>
-                <Bell size={40} style={{ margin:'0 auto 12px', display:'block', opacity:0.2 }}/>
-                <div style={{ fontWeight:600, color:'#6B5D4A' }}>No announcements yet</div>
-              </div>
-            ) : announcements.map((ann,i)=>(
-              <div key={ann.id} style={{ background:'#FFF', border:'1px solid #EAE6DE', borderRadius:14, overflow:'hidden', animation:`slideUp 0.3s ${i*0.05}s ease both`, position:'relative' }}>
-                <div style={{ position:'absolute', top:0, left:0, width:4, height:'100%', background:'linear-gradient(180deg,#B8860B,#D4A017)' }}/>
-                <div style={{ padding:'14px 14px 14px 18px' }}>
-                  <div style={{ fontWeight:700, fontSize:14, color:'#1A1612', marginBottom:6 }}>{ann.title}</div>
-                  <div style={{ fontSize:13, color:'#6B5D4A', lineHeight:1.6 }}>{ann.body}</div>
-                  <div style={{ fontSize:10.5, color:'#C4B49A', marginTop:8 }}>{new Date(ann.created_at).toLocaleString('en-AE',{dateStyle:'medium',timeStyle:'short'})}</div>
+        {/* ── VEHICLE ── */}
+        {tab==='vehicle' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }} className="fade-up">
+            <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+              <h2 style={{ fontWeight:800, fontSize:17, color:'#1A1612', margin:0 }}>Vehicle</h2>
+              <button onClick={()=>setHandoverModal(true)} style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:20,background:'linear-gradient(135deg,#B8860B,#D4A017)',color:'white',fontWeight:700,fontSize:12,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
+                <Plus size={13}/> Handover
+              </button>
+            </div>
+            {myHandovers.length===0 ? (
+              <div style={{ textAlign:'center',padding:'40px 20px',color:'#A89880' }}><Car size={32} style={{ margin:'0 auto 10px',display:'block',opacity:0.3 }}/><div>No handovers yet</div></div>
+            ) : myHandovers.map((h,i)=>(
+              <div key={h.id} style={{ background:'rgba(255,255,255,0.65)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,0.7)',borderRadius:16,padding:'14px 16px',animation:`fadeUp 0.3s ${i*0.05}s ease both` }}>
+                <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6 }}>
+                  <span style={{ fontWeight:800,fontSize:15,color:'#1A1612' }}>{h.plate||'Unknown'}</span>
+                  <span style={{ fontSize:11,fontWeight:700,color:h.type==='received'?'#10B981':'#EF4444',background:h.type==='received'?'rgba(16,185,129,0.1)':'rgba(239,68,68,0.1)',borderRadius:20,padding:'2px 9px' }}>{h.type}</span>
                 </div>
+                <div style={{ fontSize:11.5,color:'#6B5D4A' }}>{new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+                {h.fuel_level && <div style={{ fontSize:11,color:'#A89880',marginTop:3 }}>Fuel: {h.fuel_level}%</div>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── NOTICES ── */}
+        {tab==='notices' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }} className="fade-up">
+            <h2 style={{ fontWeight:800, fontSize:17, color:'#1A1612', margin:0 }}>Station Notices</h2>
+            {announcements.length===0 ? (
+              <div style={{ textAlign:'center',padding:'40px 20px',color:'#A89880' }}><Bell size={32} style={{ margin:'0 auto 10px',display:'block',opacity:0.3 }}/><div>No notices yet</div></div>
+            ) : announcements.map((a,i)=>(
+              <div key={a.id} style={{ background:'rgba(255,255,255,0.65)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,0.7)',borderRadius:16,padding:'14px 16px',animation:`fadeUp 0.3s ${i*0.05}s ease both` }}>
+                <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6 }}>
+                  <span style={{ fontWeight:700,fontSize:13.5,color:'#1A1612' }}>{a.title}</span>
+                  <span style={{ fontSize:10,color:'#A89880',flexShrink:0,marginLeft:8 }}>{a.created_at?.slice(0,10)}</span>
+                </div>
+                <div style={{ fontSize:12.5,color:'#6B5D4A',lineHeight:1.6 }}>{a.message}</div>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* ── Bottom nav ── */}
-      <nav style={{ position:'fixed', bottom:0, left:0, right:0, background:'#FFF', borderTop:'1px solid #EAE6DE', display:'flex', padding:'8px 0 10px', boxShadow:'0 -4px 20px rgba(0,0,0,0.06)', zIndex:100 }}>
-        {TABS.map(t => {
-          const Icon = t.icon
+      {/* ── BOTTOM NAV ── */}
+      <nav style={{ position:'fixed', bottom:0, left:0, right:0, background:'rgba(255,252,245,0.92)', backdropFilter:'blur(24px)', borderTop:'1px solid rgba(255,255,255,0.7)', display:'flex', zIndex:100, boxShadow:'0 -4px 20px rgba(0,0,0,0.08)' }}>
+        {TABS.map(t=>{
+          const Icon  = t.icon
           const active = tab === t.id
           return (
             <button key={t.id} onClick={()=>setTab(t.id)}
-              style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3, background:'none', border:'none', cursor:'pointer', color:active?'#B8860B':'#A89880', fontFamily:'Poppins,sans-serif', position:'relative', padding:'4px 0', transition:'color 0.2s' }}>
-              {active && <div style={{ position:'absolute', top:-8, left:'50%', transform:'translateX(-50%)', width:24, height:3, background:'linear-gradient(90deg,#B8860B,#D4A017)', borderRadius:'0 0 3px 3px' }}/>}
-              <Icon size={20} strokeWidth={active?2.5:1.8}/>
-              <span style={{ fontSize:9.5, fontWeight:active?700:500 }}>{t.label}</span>
-              {t.id==='notices' && announcements.length>0 && !active && (
-                <div style={{ position:'absolute', top:2, right:'calc(50% - 16px)', width:7, height:7, borderRadius:'50%', background:'#C0392B' }}/>
-              )}
-              {t.id==='leaves' && pendingLeav>0 && !active && (
-                <div style={{ position:'absolute', top:2, right:'calc(50% - 16px)', width:7, height:7, borderRadius:'50%', background:'#B45309' }}/>
-              )}
+              style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'10px 4px 12px', border:'none', background:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', transition:'all 0.15s' }}>
+              <div style={{ width:32, height:32, borderRadius:10, background:active?'rgba(184,134,11,0.15)':'transparent', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:2, transition:'background 0.2s' }}>
+                <Icon size={18} color={active?'#B8860B':'#A89880'} strokeWidth={active?2.5:1.8}/>
+              </div>
+              <span style={{ fontSize:9.5, fontWeight:active?700:500, color:active?'#B8860B':'#A89880' }}>{t.label}</span>
             </button>
           )
         })}
       </nav>
 
-      {handoverModal && <HandoverModal modal={handoverModal} user={user} onClose={()=>setHandoverModal(false)} onSave={()=>{setHandoverModal(false);loadHandovers(localStorage.getItem('gcd_token'))}}/>}
-      {leaveModal && <LeaveModal onClose={()=>setLeaveModal(false)} onSave={()=>{setLeaveModal(false);leaveApi.list({emp_id:user.emp_id}).then(d=>setMyLeaves(d.leaves||[])).catch(()=>{})}}/>}
+      {/* Modals */}
+      {leaveModal && (
+        <LeaveModal empId={user.emp_id} onClose={()=>setLeaveModal(false)} onSave={()=>{ setLeaveModal(false) }}/>
+      )}
+      {handoverModal && (
+        <HandoverModal stationCode={user.station_code} onClose={()=>setHandoverModal(false)} onSave={()=>{ setHandoverModal(false) }}/>
+      )}
     </div>
   )
 }
