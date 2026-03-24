@@ -152,7 +152,7 @@ function UserModal({ user, onSave, onClose }) {
 }
 
 // ── User Card ─────────────────────────────────────────────────
-function UserCard({ u, onEdit, onDelete, onToggle, showPw, onTogglePw, index }) {
+function UserCard({ u, onEdit, onDelete, onToggle, index }) {
   const rc = ROLE_CFG[u.role] || ROLE_CFG.driver
 
   return (
@@ -198,18 +198,14 @@ function UserCard({ u, onEdit, onDelete, onToggle, showPw, onTogglePw, index }) 
         </div>
       </div>
 
-      {/* Password row */}
+      {/* Password row — no plaintext stored, show edit button */}
       <div style={{ marginTop:10, paddingTop:10, borderTop:'1px solid #F5F4F1', display:'flex', alignItems:'center', gap:8 }}>
         <KeyRound size={12} color="#C4B49A"/>
         <span style={{ fontSize:11, color:'#A89880', flex:1 }}>Password</span>
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          <span style={{ fontFamily:'monospace', fontSize:12, color:'#1A1612', letterSpacing: showPw ? 'normal' : '0.15em' }}>
-            {showPw ? (u.plain_password || '(hidden)') : '••••••••'}
-          </span>
-          <button onClick={()=>onTogglePw(u.id)} style={{ width:26, height:26, borderRadius:8, background:'#F5F4F1', border:'1px solid #EAE6DE', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#A89880' }}>
-            {showPw ? <EyeOff size={12}/> : <Eye size={12}/>}
-          </button>
-        </div>
+        <span style={{ fontFamily:'monospace', fontSize:12, color:'#C4B49A', letterSpacing:'0.12em' }}>••••••••</span>
+        <button onClick={()=>onEdit(u)} style={{ padding:'3px 10px', borderRadius:7, background:'#FDF6E3', border:'1px solid #F0D78C', cursor:'pointer', fontSize:11, color:'#B8860B', fontWeight:600, fontFamily:'Poppins,sans-serif' }}>
+          Change
+        </button>
       </div>
     </div>
   )
@@ -220,7 +216,6 @@ export default function UsersPage() {
   const [users,   setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
   const [modal,   setModal]   = useState(null)
-  const [showPw,  setShowPw]  = useState({})
   const [search,  setSearch]  = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
 
