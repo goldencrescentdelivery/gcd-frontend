@@ -321,8 +321,6 @@ export default function UsersPage() {
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           {filtered.map((u, i) => (
             <UserCard key={u.id} u={u} index={i}
-              showPw={!!showPw[u.id]}
-              onTogglePw={id => setShowPw(p=>({...p,[id]:!p[id]}))}
               onEdit={u => setModal({user:u})}
               onDelete={handleDelete}
               onToggle={toggleStatus}/>
