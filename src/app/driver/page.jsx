@@ -3,7 +3,7 @@ import HandoverModal from '@/components/HandoverModal'
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
-import { payrollApi, pocApi, attApi, leaveApi } from '@/lib/api'
+import { leaveApi } from '@/lib/api'
 import {
   LogOut, Calendar, Bell, Plus, Car, Wallet,
   BarChart2, Home, ChevronRight, Check, X, Clock,
@@ -544,7 +544,7 @@ export default function DriverPortal() {
       </nav>
 
       {leaveModal&&<LeaveModal empId={user.emp_id} onClose={()=>setLeaveModal(false)} onSave={()=>{ setLeaveModal(false); fetch(`${API}/api/leaves`,{headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}}).then(r=>r.json()).then(d=>setLeaves(d.leaves||[])).catch(()=>{}) }}/>}
-      {hvModal&&<HandoverModal stationCode={user.station_code} onClose={()=>setHvModal(false)} onSave={()=>setHvModal(false)}/>}
+      {hvModal&&<HandoverModal modal={{type:'received'}} user={{...user, station_code:user.station_code}} onClose={()=>setHvModal(false)} onSave={()=>setHvModal(false)}/>}
     </div>
   )
 }
