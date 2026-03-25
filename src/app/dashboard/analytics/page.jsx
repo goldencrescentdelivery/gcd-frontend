@@ -543,6 +543,7 @@ function SimpleKPIGrid({ kpis, loading }) {
       <div className="mob kpi-wrap">
         <Swiper items={kpis} peek="calc(50% - 15px)" render={(k,i) => <KPI {...k} loading={loading} delay={i*0.05}/>}/>
       </div>
+    </>
   )
 }
 
