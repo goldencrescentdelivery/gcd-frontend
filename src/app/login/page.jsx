@@ -15,7 +15,7 @@ export default function LoginPage() {
     if (result.ok) {
       if (result.role === 'driver') router.replace('/driver')
       else if (result.role === 'poc') router.replace('/dashboard/poc')
-      else router.replace('/dashboard/analytics')
+      else router.replace('/dashboard/overview')
     }
   }
 
@@ -24,7 +24,7 @@ export default function LoginPage() {
       <div style={{ width:'100%', maxWidth:400, animation:'slideUp 0.4s ease' }}>
         {/* Logo */}
         <div style={{ textAlign:'center', marginBottom:36 }}>
-          <img src="/logo.webp" alt="GCD" style={{ width:80, height:80, borderRadius:18, objectFit:'contain', margin:'0 auto 16px', display:'block', background:'#fff', padding:4, boxShadow:'0 8px 32px rgba(184,134,11,0.2)' }}/>
+          <div style={{ width:64, height:64, borderRadius:18, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, margin:'0 auto 16px', boxShadow:'0 8px 32px rgba(184,134,11,0.3)' }}>🌙</div>
           <div style={{ fontFamily:"'Poppins',sans-serif", fontWeight:800, fontSize:22, color:'#1A1612', marginBottom:4, letterSpacing:'-0.03em' }}>Golden Crescent</div>
           <div style={{ fontSize:11, letterSpacing:'0.18em', textTransform:'uppercase', color:'#B8860B', fontWeight:600 }}>Operations Dashboard</div>
         </div>
@@ -50,6 +50,17 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* Demo credentials */}
+          <div style={{ marginTop:24, background:'#FAFAF8', border:'1px solid #EAE6DE', borderRadius:12, padding:16 }}>
+            <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'#C4B49A', marginBottom:10 }}>Demo Access</div>
+            {[['Admin','admin@goldencrescent.ae'],['POC','poc@goldencrescent.ae'],['Finance','finance@goldencrescent.ae'],['Driver','mohammed@goldencrescent.ae']].map(([role, em]) => (
+              <button key={role} onClick={() => { setEmail(em); setPassword('gcd2024') }} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%', marginBottom:6, cursor:'pointer', background:'none', border:'none', padding:'4px 0' }}>
+                <span style={{ fontSize:12, color:'#6B5D4A', fontWeight:500 }}>{role}</span>
+                <span style={{ fontSize:11, color:'#B8860B', fontFamily:'monospace' }}>{em}</span>
+              </button>
+            ))}
+            <div style={{ fontSize:11, color:'#C4B49A', marginTop:6, borderTop:'1px solid #EAE6DE', paddingTop:8 }}>Password: <span style={{ color:'#6B5D4A', fontFamily:'monospace' }}>gcd2024</span></div>
+          </div>
         </div>
       </div>
     </div>

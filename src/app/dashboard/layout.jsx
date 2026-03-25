@@ -5,10 +5,10 @@ import { useAuth } from '@/lib/auth'
 import Sidebar from '@/components/layout/Sidebar'
 import Topbar from '@/components/layout/Topbar'
 import Link from 'next/link'
-import { BarChart3, Users, DollarSign, ShieldCheck, Radio, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, DollarSign, Radio, LogOut } from 'lucide-react'
 
 const BOTTOM_NAV = [
-  { href:'/dashboard/analytics', icon:BarChart3,   label:'Analytics', roles:['admin','general_manager','hr','accountant','poc'] },
+  { href:'/dashboard/overview',  icon:LayoutDashboard, label:'Overview',  roles:['admin','general_manager','hr','accountant','poc'] },
   { href:'/dashboard/hr',        icon:Users,        label:'HR',        roles:['admin','general_manager','hr'] },
   { href:'/dashboard/finance',   icon:DollarSign,   label:'Finance',   roles:['admin','accountant'] },
   { href:'/dashboard/poc',       icon:Radio,        label:'Station',   roles:['admin','general_manager','poc'] },

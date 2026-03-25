@@ -5,7 +5,8 @@ import { useAuth } from '@/lib/auth'
 import { useEffect, useState } from 'react'
 
 const PAGE_TITLES = {
-  '/dashboard/analytics':         'Analytics',
+  '/dashboard/overview':           'Overview',
+  '/dashboard/analytics':         'Reports',
   '/dashboard/hr/employees':      'Employees',
   '/dashboard/hr/attendance':     'Attendance',
   '/dashboard/hr/leaves':         'Leaves',
