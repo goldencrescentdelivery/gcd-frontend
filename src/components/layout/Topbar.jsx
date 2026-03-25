@@ -1,6 +1,6 @@
 'use client'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, Moon, Sun, LogOut } from 'lucide-react'
+import { Menu, LogOut } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useEffect, useState } from 'react'
 
@@ -37,20 +37,6 @@ export default function Topbar({ onMenuClick }) {
   const pathname = usePathname()
   const router   = useRouter()
   const { user, logout } = useAuth()
-  const [dark, setDark] = useState(false)
-
-  useEffect(() => {
-    const saved = localStorage.getItem('gcd_dark') === 'true'
-    setDark(saved)
-    document.body.classList.toggle('dark', saved)
-  }, [])
-
-  function toggleDark() {
-    const next = !dark
-    setDark(next)
-    localStorage.setItem('gcd_dark', String(next))
-    document.body.classList.toggle('dark', next)
-  }
 
   function signOut() {
     try { logout() } catch(e) {}
@@ -81,9 +67,6 @@ export default function Topbar({ onMenuClick }) {
 
       {/* Right side */}
       <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-        {/* Dark mode toggle */}
-        <button onClick={toggleDark} className={`dark-toggle ${dark?'on':''}`} title={dark?'Light mode':'Dark mode'} aria-label="Toggle dark mode"/>
-
         {/* User pill */}
         <div style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 10px 5px 5px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:20, cursor:'default' }}>
           <div style={{ width:26, height:26, borderRadius:8, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0 }}>

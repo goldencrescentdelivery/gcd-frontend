@@ -4,12 +4,11 @@ import { Plus, X, Pencil, Trash2, Eye, EyeOff, RefreshCw, Search, Shield, User, 
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
-const ALL_ROLES = ['admin','manager','general_manager','hr','accountant','poc','driver']
+const ALL_ROLES = ['admin','general_manager','hr','accountant','poc','driver']
 const STATIONS  = ['DDB1','DXE6']
 
 const ROLE_CFG = {
   admin:           { c:'#7C3AED', bg:'#F5F3FF', bc:'#DDD6FE', label:'Admin' },
-  manager:         { c:'#1D6FA4', bg:'#EFF6FF', bc:'#BFDBFE', label:'Manager' },
   general_manager: { c:'#0F766E', bg:'#F0FDFA', bc:'#99F6E4', label:'General Manager' },
   hr:              { c:'#B45309', bg:'#FFFBEB', bc:'#FCD34D', label:'HR' },
   accountant:      { c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0', label:'Accountant' },

@@ -4,7 +4,6 @@ export const GOLD_LIGHT = '#D4A017'
 // Role display names
 export const ROLE_LABELS = {
   admin:           'Admin',
-  manager:         'Manager',
   general_manager: 'General Manager',
   hr:              'HR',
   accountant:      'Accountant',
@@ -15,31 +14,29 @@ export const ROLE_LABELS = {
 export const NAV = [
   {
     label:'Analytics', href:'/dashboard/analytics', icon:'BarChart3',
-    roles:['admin','manager','general_manager','hr','accountant','poc']
+    roles:['admin','general_manager','hr','accountant','poc']
   },
   {
     label:'HR & Staff', href:'/dashboard/hr', icon:'Users',
-    roles:['admin','manager','general_manager','hr'],
+    roles:['admin','general_manager','hr'],
     children:[
       { label:'Employees',     href:'/dashboard/hr/employees',   icon:'UserCircle' },
       { label:'Attendance',    href:'/dashboard/hr/attendance',  icon:'Clock'      },
       { label:'Leaves',        href:'/dashboard/hr/leaves',      icon:'CalendarOff'},
       { label:'Documents',     href:'/dashboard/hr/documents',   icon:'FileText'   },
       { label:'Compliance',    href:'/dashboard/hr/compliance',  icon:'ShieldCheck'},
-      { label:'User Accounts', href:'/dashboard/hr/users',       icon:'KeyRound',  roles:['admin','manager'] },
-    ]
+      { label:'User Accounts', href:'/dashboard/hr/users',       icon:'KeyRound',  roles:['admin'] }]
   },
   {
     label:'Finance', href:'/dashboard/finance', icon:'DollarSign',
-    roles:['admin','manager','accountant'],
+    roles:['admin','accountant'],
     children:[
       { label:'Payroll',  href:'/dashboard/finance/payroll',  icon:'Wallet'  },
-      { label:'Expenses', href:'/dashboard/finance/expenses', icon:'Receipt' },
-    ]
+      { label:'Expenses', href:'/dashboard/finance/expenses', icon:'Receipt' }]
   },
   {
     label:'POC Station', href:'/dashboard/poc', icon:'Radio',
-    roles:['admin','manager','general_manager','poc']
+    roles:['admin','general_manager','poc']
   },
   {
     label:'Backup', href:'/dashboard/backup', icon:'HardDrive',
@@ -47,6 +44,5 @@ export const NAV = [
   },
   {
     label:'Settings', href:'/dashboard/settings', icon:'Settings',
-    roles:['admin','manager','general_manager','hr','accountant','poc']
-  },
-]
+    roles:['admin','general_manager','hr','accountant','poc']
+  }]
