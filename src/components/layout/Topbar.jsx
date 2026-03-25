@@ -55,7 +55,6 @@ export default function Topbar({ onMenuClick }) {
         style={{ display:'none', color:'var(--text-sub)', flexShrink:0 }}>
         <Menu size={20}/>
       </button>
-      <style>{`@media(max-width:1024px){#mobile-menu-btn{display:flex!important}}`}</style>
 
       {/* Title */}
       <div style={{ flex:1, minWidth:0 }}>

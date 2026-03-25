@@ -39,7 +39,6 @@ export default function DashboardLayout({ children }) {
       <div style={{ textAlign:'center' }}>
         <div style={{ width:36,height:36,borderRadius:'50%',border:'3px solid #E5E7EB',borderTopColor:'#B8860B',animation:'spin 0.7s linear infinite',margin:'0 auto 10px' }}/>
         <div style={{ fontSize:13,color:'#9CA3AF' }}>Loading…</div>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     </div>
   )

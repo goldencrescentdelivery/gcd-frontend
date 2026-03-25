@@ -147,7 +147,6 @@ export default function DriverPortal() {
         <div style={{ width:40,height:40,borderRadius:'50%',border:'3px solid #E5E7EB',borderTopColor:'#B8860B',animation:'spin 0.7s linear infinite',margin:'0 auto 12px' }}/>
         <div style={{ fontSize:13,color:'#9CA3AF' }}>Loading your portal…</div>
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 
@@ -165,7 +164,6 @@ export default function DriverPortal() {
 
   return (
     <div style={{ minHeight:'100vh',background:'#F9FAFB',fontFamily:'Poppins,sans-serif',paddingBottom:76 }}>
-      <style>{`*{box-sizing:border-box;} ::-webkit-scrollbar{display:none;} @keyframes spin{to{transform:rotate(360deg)}} @keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}} .fade{animation:up 0.3s ease both}`}</style>
 
       {/* ── HEADER ── */}
       <div style={{ background:'#FFF',borderBottom:'1px solid #F0F0EE',padding:'14px 16px',position:'sticky',top:0,zIndex:50,boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>

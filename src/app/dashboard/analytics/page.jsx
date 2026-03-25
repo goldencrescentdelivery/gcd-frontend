@@ -19,72 +19,6 @@ function fmt(n) { return Number(n||0).toLocaleString() }
 /* ─────────────────────────────────────────────
    GLOBAL STYLES  (injected once)
 ───────────────────────────────────────────── */
-const GLASS_CSS = `
-  :root {
-    --gold: #B8860B;
-    --gold-lt: #D4A017;
-    --blue: #38BDF8;
-    --surface: rgba(255,255,255,0.62);
-    --surface-hover: rgba(255,255,255,0.82);
-    --border-glass: rgba(255,255,255,0.7);
-    --shadow-glass: 0 4px 32px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.9);
-    --shadow-lg: 0 8px 40px rgba(0,0,0,0.10);
-  }
-
-  /* Liquid glass base */
-  .glass {
-    background: var(--surface);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--border-glass);
-    box-shadow: var(--shadow-glass);
-  }
-  .glass:hover { background: var(--surface-hover); }
-
-  /* Slim scrollbar */
-  .no-scroll::-webkit-scrollbar { display:none; }
-  .no-scroll { scrollbar-width:none; }
-
-  /* Stagger animations */
-  @keyframes fadeUp {
-    from { opacity:0; transform:translateY(16px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
-  .fade-up { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) both; }
-
-  /* KPI number counter */
-  @keyframes countUp {
-    from { opacity:0; transform:scale(0.85); }
-    to   { opacity:1; transform:scale(1); }
-  }
-  .kpi-val { animation: countUp 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
-
-  /* Shimmer skeleton */
-  @keyframes shimmer { to { background-position: -200% 0; } }
-  .sk {
-    background: linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.03) 50%, rgba(0,0,0,0.06) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s infinite;
-    border-radius: 8px;
-  }
-
-  /* Mobile/desktop toggle */
-  .mob  { display:none !important; }
-  .desk { display:grid; }
-  @media(max-width:640px){
-    .mob  { display:flex !important; }
-    .desk { display:none !important; }
-    .mob.kpi-wrap { display:block !important; }
-    /* CRITICAL: prevent horizontal overflow */
-    * { max-width:100%; box-sizing:border-box; }
-    .glass { min-width:0 !important; max-width:100% !important; }
-    /* Charts */
-    .recharts-wrapper, .recharts-surface { max-width:100% !important; }
-    /* Grids stack on mobile */
-    [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
-  }
-`
-
 /* ─────────────────────────────────────────────
    CHART TOOLTIP
 ───────────────────────────────────────────── */
@@ -609,7 +543,6 @@ function SimpleKPIGrid({ kpis, loading }) {
       <div className="mob kpi-wrap">
         <Swiper items={kpis} peek="calc(50% - 15px)" render={(k,i) => <KPI {...k} loading={loading} delay={i*0.05}/>}/>
       </div>
-    </>
   )
 }
 
@@ -813,11 +746,6 @@ export default function AnalyticsPage() {
 
   return (
     <>
-      <style>{GLASS_CSS}</style>
-      <style>{`
-        .two-col-glass { grid-template-columns: 1fr 1fr; }
-        @media(max-width:640px) { .two-col-glass { grid-template-columns: 1fr; } }
-      `}</style>
       <div style={{ display:'flex', flexDirection:'column', gap:0, animation:'fadeUp 0.4s ease both', minWidth:0, maxWidth:'100%', width:'100%' }}>
         {/* Page header */}
         <div style={{ marginBottom:18, display:'flex', alignItems:'flex-end', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
@@ -842,6 +770,5 @@ export default function AnalyticsPage() {
           dashboards[role] || dashboards.admin
         )}
       </div>
-    </>
   )
 }

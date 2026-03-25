@@ -258,3 +258,75 @@ body {
 .three-col { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
 @media(max-width:900px) { .three-col { grid-template-columns:1fr 1fr; } }
 @media(max-width:640px) { .two-col,.three-col { grid-template-columns:1fr; } }
+
+/* ── Analytics page classes ──────────────────────────────────── */
+:root {
+  --gold: #B8860B;
+  --gold-lt: #D4A017;
+  --surface: rgba(255,255,255,0.62);
+  --surface-hover: rgba(255,255,255,0.82);
+  --border-glass: rgba(255,255,255,0.7);
+  --shadow-glass: 0 4px 32px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-glass);
+}
+.glass:hover { background: var(--surface-hover); }
+
+.no-scroll::-webkit-scrollbar { display: none; }
+.no-scroll { scrollbar-width: none; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.fade-up  { animation: fadeUp   0.45s cubic-bezier(0.16,1,0.3,1) both; }
+.kpi-val  { animation: countUp  0.5s  cubic-bezier(0.34,1.56,0.64,1) both; }
+
+.mob  { display: none !important; }
+.desk { display: grid; }
+.mob.kpi-wrap { display: none !important; }
+
+/* Driver portal animations */
+@keyframes up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade { animation: up 0.3s ease both; }
+
+/* Mobile menu button */
+#mobile-menu-btn { display: none; }
+
+/* Two/three column responsive grids */
+.two-col-glass  { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.three-col-glass { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+
+/* POC tabs scrollbar */
+.poc-tabs::-webkit-scrollbar { display: none; }
+
+@media (max-width: 1024px) {
+  #mobile-menu-btn { display: flex !important; }
+}
+@media (max-width: 900px) {
+  .three-col-glass { grid-template-columns: 1fr 1fr !important; }
+}
+@media (max-width: 640px) {
+  .mob       { display: flex !important; }
+  .mob.kpi-wrap { display: block !important; }
+  .desk      { display: none !important; }
+  .two-col-glass  { grid-template-columns: 1fr !important; }
+  .three-col-glass { grid-template-columns: 1fr !important; }
+  * { max-width: 100%; box-sizing: border-box; }
+  .recharts-wrapper, .recharts-surface { max-width: 100% !important; }
+  [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+}
