@@ -5,11 +5,20 @@ import { Plus, X, Pencil, Trash2, Eye, EyeOff, RefreshCw, Search, Shield, User, 
 const API = process.env.NEXT_PUBLIC_API_URL
 
 const ALL_ROLES = ['admin','general_manager','hr','accountant','poc','driver']
+
+// Manager sub-types — stored in manager_type column, shown under Manager label
+const MANAGER_TYPES = [
+  { value:'general_manager',    label:'General Manager'    },
+  { value:'project_manager',    label:'Project Manager'    },
+  { value:'operations_manager', label:'Operations Manager' },
+  { value:'logistics_manager',  label:'Logistics Manager'  },
+  { value:'fleet_manager',      label:'Fleet Manager'      },
+]
 const STATIONS  = ['DDB1','DXE6']
 
 const ROLE_CFG = {
   admin:           { c:'#7C3AED', bg:'#F5F3FF', bc:'#DDD6FE', label:'Admin' },
-  general_manager: { c:'#0F766E', bg:'#F0FDFA', bc:'#99F6E4', label:'General Manager' },
+  general_manager: { c:'#0F766E', bg:'#F0FDFA', bc:'#99F6E4', label:'Manager' },
   hr:              { c:'#B45309', bg:'#FFFBEB', bc:'#FCD34D', label:'HR' },
   accountant:      { c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0', label:'Accountant' },
   poc:             { c:'#B8860B', bg:'#FDF6E3', bc:'#F0D78C', label:'POC' },
@@ -28,6 +37,7 @@ function UserModal({ user, onSave, onClose }) {
   const [empId,    setEmpId]    = useState(user?.emp_id||'')
   const [station,  setStation]  = useState(user?.station_code||'DDB1')
   const [status,   setStatus]   = useState(user?.status||'active')
+  const [mgrType,  setMgrType]  = useState(user?.manager_type||'general_manager')
   const [showPw,   setShowPw]   = useState(false)
   const [saving,   setSaving]   = useState(false)
   const [err,      setErr]      = useState(null)
@@ -39,7 +49,7 @@ function UserModal({ user, onSave, onClose }) {
     if (!isEdit && !password) return setErr('Password required for new account')
     setSaving(true); setErr(null)
     try {
-      const body = { name, email, role, emp_id:empId||null, station_code:role==='poc'?station:null, status }
+      const body = { name, email, role, manager_type:role==='general_manager'?mgrType:null, emp_id:empId||null, station_code:role==='poc'?station:null, status }
       if (password) body.password = password
       const res  = await fetch(`${API}/api/auth/users${isEdit?`/${user.id}`:''}`, { method:isEdit?'PUT':'POST', headers:hdr(), body:JSON.stringify(body) })
       const data = await res.json()
@@ -170,6 +180,11 @@ function UserCard({ u, onEdit, onDelete, onToggle, index }) {
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3, flexWrap:'wrap' }}>
             <span style={{ fontWeight:700, fontSize:14, color:'#1A1612' }}>{u.name}</span>
             <span style={{ fontSize:10.5, fontWeight:700, color:rc.c, background:rc.bg, border:`1px solid ${rc.bc}`, borderRadius:20, padding:'2px 9px' }}>{rc.label}</span>
+            {u.role==='general_manager' && u.manager_type && u.manager_type!=='general_manager' && (
+              <span style={{ fontSize:10, fontWeight:600, color:'#6B7280', background:'#F3F4F6', border:'1px solid #E5E7EB', borderRadius:20, padding:'2px 8px' }}>
+                {MANAGER_TYPES.find(m=>m.value===u.manager_type)?.label||'General Manager'}
+              </span>
+            )}
             {u.station_code && <span style={{ fontSize:10.5, fontWeight:700, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:20, padding:'2px 9px' }}>{u.station_code}</span>}
             <button onClick={()=>onToggle(u)}
               style={{ fontSize:10.5, fontWeight:700, color:u.status==='active'?'#2E7D52':'#C0392B', background:u.status==='active'?'#ECFDF5':'#FEF2F2', border:`1px solid ${u.status==='active'?'#A7F3D0':'#FCA5A5'}`, borderRadius:20, padding:'2px 9px', cursor:'pointer', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:3 }}>

@@ -19,7 +19,7 @@ const ICONS = {
 
 const ROLE_LABELS = {
   admin:           'Admin',
-  general_manager: 'General Manager',
+  general_manager: 'Manager',
   hr:              'HR',
   accountant:      'Accountant',
   poc:             'POC',

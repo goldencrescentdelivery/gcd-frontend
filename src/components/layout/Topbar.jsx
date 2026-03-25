@@ -26,7 +26,7 @@ const PAGE_TITLES = {
 const ROLE_CFG = {
   admin:           { l:'Admin',    e:'👑' },
   manager:         { l:'Manager',  e:'⭐' },
-  general_manager: { l:'GM',       e:'🎯' },
+  general_manager: { l:'Manager',  e:'🎯' },
   hr:              { l:'HR',       e:'👥' },
   accountant:      { l:'Finance',  e:'💰' },
   poc:             { l:'POC',      e:'📡' },

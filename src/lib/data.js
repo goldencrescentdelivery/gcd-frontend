@@ -4,7 +4,7 @@ export const GOLD_LIGHT = '#D4A017'
 // Role display names
 export const ROLE_LABELS = {
   admin:           'Admin',
-  general_manager: 'General Manager',
+  general_manager: 'Manager',
   hr:              'HR',
   accountant:      'Accountant',
   poc:             'POC',
