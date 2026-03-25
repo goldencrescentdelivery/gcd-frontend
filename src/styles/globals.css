@@ -46,26 +46,7 @@ input, select, textarea { font-family:inherit; }
 }
 
 /* ══ DARK MODE ═══════════════════════════════════════════════ */
-body.dark {
-  --bg:          #0F0F0F;
-  --bg-alt:      #1A1A1A;
-  --card:        #1E1E1E;
-  --card-hover:  #252525;
-  --border:      #2A2A2A;
-  --border-med:  #333333;
-  --text:        #F9FAFB;
-  --text-sub:    #9CA3AF;
-  --text-muted:  #6B7280;
-  --shadow:      0 1px 4px rgba(0,0,0,0.3), 0 2px 12px rgba(0,0,0,0.2);
-  --shadow-md:   0 4px 20px rgba(0,0,0,0.4);
-  --shadow-lg:   0 8px 32px rgba(0,0,0,0.5);
 
-  --green-bg:  rgba(16,185,129,0.1);  --green-border: rgba(16,185,129,0.25);
-  --red-bg:    rgba(239,68,68,0.1);   --red-border:   rgba(239,68,68,0.25);
-  --amber-bg:  rgba(245,158,11,0.1);  --amber-border: rgba(245,158,11,0.25);
-  --blue-bg:   rgba(37,99,235,0.1);   --blue-border:  rgba(37,99,235,0.25);
-  --purple-bg: rgba(124,58,237,0.1);  --purple-border:rgba(124,58,237,0.25);
-}
 
 body {
   background: var(--bg);

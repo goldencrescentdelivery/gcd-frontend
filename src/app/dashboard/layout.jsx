@@ -8,10 +8,10 @@ import Link from 'next/link'
 import { BarChart3, Users, DollarSign, ShieldCheck, Radio, LogOut } from 'lucide-react'
 
 const BOTTOM_NAV = [
-  { href:'/dashboard/analytics', icon:BarChart3,   label:'Analytics', roles:['admin','manager','general_manager','hr','accountant','poc'] },
-  { href:'/dashboard/hr',        icon:Users,        label:'HR',        roles:['admin','manager','general_manager','hr'] },
-  { href:'/dashboard/finance',   icon:DollarSign,   label:'Finance',   roles:['admin','manager','accountant'] },
-  { href:'/dashboard/poc',       icon:Radio,        label:'Station',   roles:['admin','manager','general_manager','poc'] },
+  { href:'/dashboard/analytics', icon:BarChart3,   label:'Analytics', roles:['admin','general_manager','hr','accountant','poc'] },
+  { href:'/dashboard/hr',        icon:Users,        label:'HR',        roles:['admin','general_manager','hr'] },
+  { href:'/dashboard/finance',   icon:DollarSign,   label:'Finance',   roles:['admin','accountant'] },
+  { href:'/dashboard/poc',       icon:Radio,        label:'Station',   roles:['admin','general_manager','poc'] },
 ]
 
 export default function DashboardLayout({ children }) {
@@ -20,12 +20,6 @@ export default function DashboardLayout({ children }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed,  setCollapsed]  = useState(false)
-
-  // Apply saved dark mode on mount
-  useEffect(() => {
-    const dark = localStorage.getItem('gcd_dark') === 'true'
-    document.body.classList.toggle('dark', dark)
-  }, [])
 
   useEffect(() => {
     if (loading) return
