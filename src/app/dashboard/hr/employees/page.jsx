@@ -500,6 +500,14 @@ export default function EmployeesPage() {
   const [selected,  setSelected]  = useState(null)
   const [modal,     setModal]     = useState(null)
   const [userRole,  setUserRole]  = useState(null)
+  const [isMobile,  setIsMobile]  = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     try { const t=localStorage.getItem('gcd_token'); if(t){const p=JSON.parse(atob(t.split('.')[1]));setUserRole(p.role)} } catch(e){}
@@ -549,7 +557,7 @@ export default function EmployeesPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
+        <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:10 }}>
           {[
             {l:'Total',   v:total,   c:'var(--text)', bg:'var(--bg-alt)',     bc:'var(--border)',       icon:Users        },
             {l:'Active',  v:active,  c:'#10B981',    bg:'#F0FDF4',           bc:'#A7F3D0',             icon:CheckCircle2 },
@@ -612,11 +620,19 @@ export default function EmployeesPage() {
 
       {/* Detail panel */}
       {selected && (
-        <div style={{ width:272, flexShrink:0 }} className="emp-detail-panel">
-          <div style={{ position:'sticky', top:0 }}>
-            <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}/>
+        isMobile ? (
+          <div style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'flex-end' }} onClick={e=>e.target===e.currentTarget&&setSelected(null)}>
+            <div style={{ width:'100%', maxHeight:'90vh', overflowY:'auto', borderRadius:'20px 20px 0 0', background:'var(--card)' }}>
+              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}/>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={{ width:272, flexShrink:0 }} className="emp-detail-panel">
+            <div style={{ position:'sticky', top:0 }}>
+              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}/>
+            </div>
+          </div>
+        )
       )}
 
       {modal && <EmpModal mode={modal.mode} emp={modal.emp} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
