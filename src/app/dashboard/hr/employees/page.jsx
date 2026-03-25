@@ -521,6 +521,7 @@ export default function EmployeesPage() {
       if (station!=='All') params.station_code = station
       const data = await empApi.list(params)
       setEmployees(data.employees)
+      setSelected(s => s ? (data.employees.find(e => e.id === s.id) || s) : null)
     } catch(e) { console.error(e) } finally { setLoading(false) }
   }, [search, station])
 
@@ -528,8 +529,8 @@ export default function EmployeesPage() {
 
   useSocket({
     'employee:created': e      => setEmployees(p=>[...p,e]),
-    'employee:updated': e      => setEmployees(p=>p.map(x=>x.id===e.id?e:x)),
-    'employee:deleted': ({id}) => setEmployees(p=>p.filter(x=>x.id!==id)),
+    'employee:updated': e      => { setEmployees(p=>p.map(x=>x.id===e.id?e:x)); setSelected(s=>s?.id===e.id?e:s) },
+    'employee:deleted': ({id}) => { setEmployees(p=>p.filter(x=>x.id!==id)); setSelected(s=>s?.id===id?null:s) },
   })
 
   async function handleDelete(emp) {
