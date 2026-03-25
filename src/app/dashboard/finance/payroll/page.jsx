@@ -599,7 +599,6 @@ export default function PayrollPage() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
         <div>
-          <h1 style={{ fontWeight:900, fontSize:22, color:'#1A1612', letterSpacing:'-0.03em', margin:0 }}>Payroll</h1>
           <p style={{ fontSize:12, color:'#A89880', marginTop:4 }}>{payroll.length} employees · {paidCount} paid · v{APP_VERSION}</p>
         </div>
         <select value={month} onChange={e=>setMonth(e.target.value)}

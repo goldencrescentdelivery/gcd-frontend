@@ -140,30 +140,14 @@ export default function OverviewPage() {
     Total:  (m.DDB1||0) + (m.DXE6||0),
   }))
 
-  const today = new Date().toLocaleDateString('en-AE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
-      {/* ── HEADER ───────────────────────────────────────────── */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-        <div>
-          <h1 style={{ fontWeight:900, fontSize:22, color:'var(--text)', letterSpacing:'-0.03em', margin:0 }}>
-            Overview
-          </h1>
-          <p style={{ fontSize:12.5, color:'var(--text-muted)', margin:'3px 0 0' }}>{today}</p>
-        </div>
-        <Link href="/dashboard/analytics" style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:20, background:'var(--bg-alt)', border:'1px solid var(--border)', color:'var(--text-sub)', fontSize:12.5, fontWeight:600, textDecoration:'none', transition:'all 0.15s' }}>
+      <div style={{ display:'flex', justifyContent:'flex-end' }}>
+        <Link href="/dashboard/analytics" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:20, background:'var(--bg-alt)', border:'1px solid var(--border)', color:'var(--text-sub)', fontSize:12, fontWeight:600, textDecoration:'none' }}>
           <TrendingUp size={13}/> Detailed Analytics
         </Link>
-      </div>
-
-      {/* ── TOP KPIs ─────────────────────────────────────────── */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }} className="four-kpi-grid">
-        <KPI icon={Users}         label="Active DAs"        color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
-        <KPI icon={Package}       label="Total Deliveries"  color="#38BDF8" loading={loading} value={fmt(totalDeliv)} sub="Last 6 months"/>
-        <KPI icon={Receipt}       label="Expenses This Month" color="#10B981" loading={loading} value={fmtAED(totalExp)} sub={`${pendingExp} pending`}/>
-        <KPI icon={Smartphone}    label="SIM Cards"         color="#A78BFA" loading={loading} value={simStats?.total||'—'} sub={`${simStats?.assigned||0} assigned`}/>
       </div>
 
       {/* ── LAST 6 MONTHS — PROJECT-WISE ─────────────────────── */}
@@ -219,6 +203,14 @@ export default function OverviewPage() {
             </div>
           </>
         )}
+      </div>
+
+      {/* ── TOP KPIs ─────────────────────────────────────────── */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }} className="four-kpi-grid">
+        <KPI icon={Users}         label="Active DAs"        color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
+        <KPI icon={Package}       label="Total Deliveries"  color="#38BDF8" loading={loading} value={fmt(totalDeliv)} sub="Last 6 months"/>
+        <KPI icon={Receipt}       label="Expenses This Month" color="#10B981" loading={loading} value={fmtAED(totalExp)} sub={`${pendingExp} pending`}/>
+        <KPI icon={Smartphone}    label="SIM Cards"         color="#A78BFA" loading={loading} value={simStats?.total||'—'} sub={`${simStats?.assigned||0} assigned`}/>
       </div>
 
       {/* ── EXPENSES + EMPLOYEES ─────────────────────────────── */}

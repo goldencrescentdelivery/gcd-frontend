@@ -748,17 +748,6 @@ export default function AnalyticsPage() {
   return (
     <>
       <div style={{ display:'flex', flexDirection:'column', gap:0, animation:'fadeUp 0.4s ease both', minWidth:0, maxWidth:'100%', width:'100%' }}>
-        {/* Page header */}
-        <div style={{ marginBottom:18, display:'flex', alignItems:'flex-end', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-          <div>
-            <h1 style={{ fontWeight:900, fontSize:20, color:'#1A1612', letterSpacing:'-0.03em', margin:0 }}>Analytics</h1>
-            <p style={{ fontSize:12, color:'#A89880', margin:'3px 0 0', fontWeight:500 }}>Live overview</p>
-          </div>
-          <div style={{ fontSize:11.5, color:'#A89880', fontWeight:500 }}>
-            {new Date().toLocaleDateString('en-AE',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
-          </div>
-        </div>
-
         {loading && !summary ? (
           <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
             <div className="sk" style={{ height:160, borderRadius:22 }}/>
