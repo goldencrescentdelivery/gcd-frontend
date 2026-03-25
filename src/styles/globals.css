@@ -1,19 +1,19 @@
-/* ── Fonts (loaded via <link> in layout.jsx) ─────────────────── */
+﻿/* â”€â”€ Fonts (loaded via <link> in layout.jsx) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { overflow-x:hidden; height:100%; }
-body { font-family:'Poppins',-apple-system,sans-serif; background:#F9FAFB; color:#111827; min-height:100vh; }
+body { font-family:''Poppins'',-apple-system,sans-serif; background:#F9FAFB; color:#111827; min-height:100vh; }
 #__next { height:100%; }
-* { font-family:'Poppins',-apple-system,sans-serif !important; }
+* { font-family:''Poppins'',-apple-system,sans-serif !important; }
 button { cursor:pointer; border:none; background:none; font-family:inherit; }
 a { text-decoration:none; color:inherit; }
 input, select, textarea { font-family:inherit; }
 
-/* ── Scrollbar ───────────────────────────────────────────────── */
+/* â”€â”€ Scrollbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 ::-webkit-scrollbar { width:4px; height:4px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:#D1D5DB; border-radius:10px; }
 
-/* ── CSS Variables ───────────────────────────────────────────── */
+/* â”€â”€ CSS Variables â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :root {
   --gold:        #B8860B;
   --gold-light:  #D4A017;
@@ -42,7 +42,7 @@ input, select, textarea { font-family:inherit; }
   --shadow-glass: 0 4px 32px rgba(0,0,0,0.07);
 }
 
-/* ── Animations ─────────────────────────────────────────────── */
+/* â”€â”€ Animations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @keyframes fadeIn  { from{opacity:0}               to{opacity:1} }
 @keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 @keyframes spin    { to{transform:rotate(360deg)} }
@@ -51,10 +51,10 @@ input, select, textarea { font-family:inherit; }
 @keyframes up      { from{opacity:0;transform:translateY(8px)}  to{opacity:1;transform:translateY(0)} }
 @keyframes pulse-dot{ 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-/* ── Dashboard Shell ─────────────────────────────────────────── */
+/* â”€â”€ Dashboard Shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .dashboard-shell { display:flex; height:100vh; overflow:hidden; background:var(--bg); }
 
-/* ── Sidebar ─────────────────────────────────────────────────── */
+/* â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sidebar {
   width:240px; min-width:240px; height:100vh;
   background:var(--card); border-right:1px solid var(--border);
@@ -67,10 +67,10 @@ input, select, textarea { font-family:inherit; }
 .sidebar-logo { padding:18px 16px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
 .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); z-index:99; }
 
-/* ── Main area ───────────────────────────────────────────────── */
+/* â”€â”€ Main area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .main-area { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
 
-/* ── Topbar ──────────────────────────────────────────────────── */
+/* â”€â”€ Topbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .topbar {
   height:58px; min-height:58px; background:var(--card);
   border-bottom:1px solid var(--border);
@@ -78,10 +78,10 @@ input, select, textarea { font-family:inherit; }
   z-index:50; flex-shrink:0;
 }
 
-/* ── Page content ────────────────────────────────────────────── */
+/* â”€â”€ Page content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .page-content { flex:1; overflow-y:auto; overflow-x:hidden; padding:22px 24px; background:var(--bg); }
 
-/* ── Nav items ───────────────────────────────────────────────── */
+/* â”€â”€ Nav items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .nav-item {
   display:flex; align-items:center; gap:10px; padding:8px 12px;
   border-radius:10px; margin:1px 8px; font-size:13px; font-weight:500;
@@ -100,12 +100,12 @@ input, select, textarea { font-family:inherit; }
 }
 .sidebar.collapsed .nav-section-label { opacity:0; }
 
-/* ── Cards ───────────────────────────────────────────────────── */
+/* â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
 .stat-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; transition:all 0.2s; }
 .stat-card:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
 
-/* ── Glass ───────────────────────────────────────────────────── */
+/* â”€â”€ Glass â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .glass {
   background:var(--surface);
   backdrop-filter:blur(20px) saturate(180%);
@@ -114,7 +114,7 @@ input, select, textarea { font-family:inherit; }
   box-shadow:var(--shadow-glass);
 }
 
-/* ── Buttons ─────────────────────────────────────────────────── */
+/* â”€â”€ Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; border:none; font-family:inherit; }
 .btn-primary { background:linear-gradient(135deg,#B8860B,#D4A017); color:white; box-shadow:0 2px 8px rgba(184,134,11,0.3); }
 .btn-primary:hover { box-shadow:0 4px 16px rgba(184,134,11,0.4); transform:translateY(-1px); }
@@ -125,44 +125,44 @@ input, select, textarea { font-family:inherit; }
 .btn-ghost:hover { background:var(--bg-alt); }
 .btn-icon { width:34px; height:34px; padding:0; justify-content:center; border-radius:8px; }
 
-/* ── Inputs ──────────────────────────────────────────────────── */
+/* â”€â”€ Inputs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .input { width:100%; padding:9px 12px; border-radius:10px; border:1.5px solid var(--border-med); background:var(--bg); color:var(--text); font-size:13px; outline:none; transition:border-color 0.15s; }
 .input:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,134,11,0.1); }
 .input-label { display:block; font-size:10.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:5px; }
 
-/* ── Badges ──────────────────────────────────────────────────── */
+/* â”€â”€ Badges â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .badge { display:inline-flex; align-items:center; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600; }
 .badge-success { color:var(--green); background:var(--green-bg); }
 .badge-warning { color:var(--amber); background:var(--amber-bg); }
 .badge-danger  { color:var(--red);   background:var(--red-bg);   }
 .badge-info    { color:var(--blue);  background:var(--blue-bg);  }
 
-/* ── Modal ───────────────────────────────────────────────────── */
+/* â”€â”€ Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .modal-overlay { position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px; }
 .modal { background:var(--card); border-radius:18px; width:100%; max-width:480px; padding:24px; box-shadow:var(--shadow-lg); border:1px solid var(--border); max-height:90vh; overflow-y:auto; }
 
-/* ── Table ───────────────────────────────────────────────────── */
+/* â”€â”€ Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .data-table { width:100%; border-collapse:collapse; }
 .data-table thead th { background:var(--bg-alt); padding:9px 12px; text-align:left; font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--border); }
 .data-table tbody td { padding:11px 12px; font-size:13px; color:var(--text); border-bottom:1px solid var(--border); }
 .data-table tbody tr:hover td { background:var(--bg-alt); }
 .data-table tbody tr:last-child td { border-bottom:none; }
 
-/* ── Skeleton ────────────────────────────────────────────────── */
+/* â”€â”€ Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sk { background:linear-gradient(90deg,var(--bg-alt) 25%,var(--border) 50%,var(--bg-alt) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:8px; }
 .skeleton { background:linear-gradient(90deg,var(--bg-alt) 25%,var(--border) 50%,var(--bg-alt) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:8px; }
 
-/* ── Tabs ────────────────────────────────────────────────────── */
+/* â”€â”€ Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tabs { display:flex; gap:4px; background:var(--bg-alt); padding:4px; border-radius:12px; border:1px solid var(--border); }
 .tab-btn { padding:7px 16px; border-radius:9px; font-size:12.5px; font-weight:500; color:var(--text-sub); cursor:pointer; border:none; background:none; transition:all 0.15s; font-family:inherit; white-space:nowrap; }
 .tab-btn.active { background:var(--card); color:var(--gold); font-weight:700; box-shadow:var(--shadow); }
 
-/* ── Mobile bottom nav ───────────────────────────────────────── */
+/* â”€â”€ Mobile bottom nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .mobile-bottomnav { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--border); z-index:90; box-shadow:0 -2px 12px rgba(0,0,0,0.06); }
 .mobile-bottomnav a { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:9px 4px 13px; color:var(--text-muted); font-size:10px; font-weight:500; gap:3px; transition:color 0.15s; }
 .mobile-bottomnav a.active { color:var(--gold); font-weight:700; }
 
-/* ── Analytics / grid helpers ────────────────────────────────── */
+/* â”€â”€ Analytics / grid helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .fade-up  { animation:fadeUp  0.45s cubic-bezier(0.16,1,0.3,1) both; }
 .fade-up-1{ animation:fadeUp  0.45s 0.05s cubic-bezier(0.16,1,0.3,1) both; }
 .fade-up-2{ animation:fadeUp  0.45s 0.10s cubic-bezier(0.16,1,0.3,1) both; }
@@ -181,12 +181,12 @@ input, select, textarea { font-family:inherit; }
 .two-col-glass  { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 .three-col-glass{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
 
-/* ── Misc ────────────────────────────────────────────────────── */
+/* â”€â”€ Misc â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .hide-mobile { }
 .collapsible-body { overflow:hidden; transition:max-height 0.3s ease; }
 #mobile-menu-btn { display:none; }
 
-/* ── Responsive ──────────────────────────────────────────────── */
+/* â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width:1024px) {
   #mobile-menu-btn { display:flex !important; }
   .sidebar { position:fixed; top:0; left:0; height:100%; transform:translateX(-100%); width:240px !important; min-width:240px !important; }
