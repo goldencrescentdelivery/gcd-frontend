@@ -771,5 +771,6 @@ export default function AnalyticsPage() {
           dashboards[role] || dashboards.admin
         )}
       </div>
+    </>
   )
 }
