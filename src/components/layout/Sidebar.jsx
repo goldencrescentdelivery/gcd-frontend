@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
+import { useAlerts } from '@/lib/AlertsContext'
 import { NAV } from '@/lib/data'
 import { useState } from 'react'
 import {
@@ -32,6 +33,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
   const pathname     = usePathname()
   const searchParams = useSearchParams()
   const { user, logout } = useAuth()
+  const { counts = {} } = useAlerts()
   const router = useRouter()
   const [expanded, setExpanded] = useState({ '/dashboard/hr': true, '/dashboard/finance': true, '/dashboard/poc': true })
 
@@ -112,6 +114,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
             const isActive   = pathname.startsWith(item.href)
             const isExpanded = expanded[item.href]
             const hasKids    = item.children?.length > 0
+            const itemBadge  = item.alertKey ? (counts[item.alertKey] || 0) : 0
 
             return (
               <div key={item.href}>
@@ -121,6 +124,11 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
                     style={{ userSelect:'none', cursor:'pointer' }}>
                     {Icon && <Icon size={16}/>}
                     <span className="nav-label" style={{ flex:1 }}>{item.label}</span>
+                    {itemBadge > 0 && (
+                      <span style={{ minWidth:17, height:17, borderRadius:9, background:'#EF4444', color:'white', fontSize:10, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', padding:'0 4px', flexShrink:0 }}>
+                        {itemBadge > 99 ? '99+' : itemBadge}
+                      </span>
+                    )}
                     {!collapsed && (
                       <ChevronDown size={12} style={{ transition:'transform 0.2s', transform:isExpanded?'rotate(180deg)':'none', opacity:0.4, flexShrink:0 }}/>
                     )}
@@ -128,18 +136,23 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
                   <div style={{ overflow:'hidden', maxHeight: collapsed?0 : isExpanded?'500px':'0', transition:'max-height 0.3s ease' }}>
                     {item.children
                       ?.filter(c => !c.roles || c.roles.includes(user?.role))
-                      // Remove manager-only items
                       .filter(c => !c.roles || !c.roles.every(r => r === 'manager'))
                       .map(child => {
-                        const CIcon = ICONS[child.icon]
-                        const active = isChildActive(child.href)
+                        const CIcon      = ICONS[child.icon]
+                        const active     = isChildActive(child.href)
+                        const childBadge = child.alertKey ? (counts[child.alertKey] || 0) : 0
                         return (
                           <Link key={child.href} href={child.href}
                             className={`nav-item${active?' active':''}`}
                             style={{ paddingLeft: collapsed?undefined:34, fontSize:12.5 }}
                             onClick={() => setMobileOpen(false)}>
                             {CIcon && <CIcon size={13} style={{ opacity:0.7 }}/>}
-                            <span className="nav-label">{child.label}</span>
+                            <span className="nav-label" style={{ flex:1 }}>{child.label}</span>
+                            {childBadge > 0 && (
+                              <span style={{ minWidth:16, height:16, borderRadius:8, background:'#EF4444', color:'white', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', padding:'0 4px', flexShrink:0 }}>
+                                {childBadge > 99 ? '99+' : childBadge}
+                              </span>
+                            )}
                           </Link>
                         )
                     })}

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
+import { AlertsProvider } from '@/lib/AlertsContext'
 import Sidebar from '@/components/layout/Sidebar'
 import Topbar from '@/components/layout/Topbar'
 import Link from 'next/link'
@@ -46,6 +47,7 @@ export default function DashboardLayout({ children }) {
   if (!user || user.role==='driver') return null
 
   return (
+    <AlertsProvider>
     <div className="dashboard-shell">
       {/* Sidebar overlay for mobile */}
       {mobileOpen && <div className="sidebar-overlay" onClick={()=>setMobileOpen(false)}/>}
@@ -77,5 +79,6 @@ export default function DashboardLayout({ children }) {
         </button>
       </nav>
     </div>
+    </AlertsProvider>
   )
 }
