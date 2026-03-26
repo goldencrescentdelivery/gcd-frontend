@@ -35,7 +35,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
   const { user, logout } = useAuth()
   const { counts = {} } = useAlerts()
   const router = useRouter()
-  const [expanded, setExpanded] = useState({ '/dashboard/hr': true, '/dashboard/finance': true, '/dashboard/poc': true })
+  const [expanded, setExpanded] = useState({})
 
   function isChildActive(href) {
     const [path, qs] = href.split('?')
