@@ -421,6 +421,8 @@ function WorkNumberAssigner({ emp, onSaved, userRole, onSelectEmployee }) {
 function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onSelectEmployee }) {
   const [leaves,     setLeaves]    = useState([])
   const [leavesLoad, setLeavesLoad]= useState(true)
+  const [expenses,   setExpenses]  = useState([])
+  const [expLoad,    setExpLoad]   = useState(false)
   const [tab,        setTab]       = useState('info')
 
   useEffect(() => {
@@ -429,15 +431,29 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
       .then(r=>r.json()).then(d=>setLeaves(d.leaves||[])).catch(()=>setLeaves([])).finally(()=>setLeavesLoad(false))
   }, [emp.id])
 
+  useEffect(() => {
+    if (tab !== 'expenses') return
+    setExpLoad(true)
+    fetch(`${API}/api/expenses?emp_id=${emp.id}`,{headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}})
+      .then(r=>r.json()).then(d=>setExpenses(d.expenses||[])).catch(()=>setExpenses([])).finally(()=>setExpLoad(false))
+  }, [tab, emp.id])
+
   const s   = STATUS[emp.status]||STATUS.inactive
   const sc  = SC_COLOR[emp.station_code]||'#B8860B'
   const sbg = SC_BG[emp.station_code]||'#FFFBEB'
   const sbc = SC_BORDER[emp.station_code]||'#FDE68A'
 
+  const TABS = [
+    { id:'info',     l:'Profile' },
+    { id:'leaves',   l:`Leaves${leaves.length>0?` (${leaves.length})`:''}`  },
+    { id:'sims',     l:'SIMs' },
+    { id:'expenses', l:'Expenses' },
+  ]
+
   return (
-    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', boxShadow:'var(--shadow-md)' }}>
+    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', boxShadow:'var(--shadow-md)', display:'flex', flexDirection:'column', height:'100%' }}>
       {/* Profile header */}
-      <div style={{ background:`linear-gradient(135deg,${sbg},var(--card))`, padding:'20px 16px 16px', position:'relative', borderBottom:'1px solid var(--border)' }}>
+      <div style={{ background:`linear-gradient(135deg,${sbg},var(--card))`, padding:'20px 16px 14px', position:'relative', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
         <button onClick={onClose} style={{ position:'absolute',top:12,right:12,width:26,height:26,borderRadius:8,background:'var(--card)',border:'1px solid var(--border)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
           <X size={13} color="var(--text-sub)"/>
         </button>
@@ -455,28 +471,27 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
         </div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display:'flex',gap:2,padding:'0 14px',borderBottom:'1px solid var(--border)' }}>
-        {[{id:'info',l:'Profile'},{id:'leaves',l:`Leaves${leaves.length>0?` (${leaves.length})`:''}`}].map(t=>(
+      {/* Scrollable tab bar */}
+      <div className="detail-tabs" style={{ display:'flex', overflowX:'auto', padding:'0 14px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+        {TABS.map(t=>(
           <button key={t.id} onClick={()=>setTab(t.id)}
-            style={{ padding:'9px 12px',fontSize:12,fontWeight:tab===t.id?700:500,color:tab===t.id?'var(--gold)':'var(--text-muted)',background:'none',border:'none',borderBottom:`2px solid ${tab===t.id?'var(--gold)':'transparent'}`,cursor:'pointer',fontFamily:'Poppins,sans-serif',marginBottom:-1,transition:'all 0.15s' }}>
+            style={{ padding:'9px 12px', fontSize:12, fontWeight:tab===t.id?700:500, color:tab===t.id?'var(--gold)':'var(--text-muted)', background:'none', border:'none', borderBottom:`2px solid ${tab===t.id?'var(--gold)':'transparent'}`, cursor:'pointer', fontFamily:'Poppins,sans-serif', marginBottom:-1, transition:'all 0.15s', whiteSpace:'nowrap', flexShrink:0 }}>
             {t.l}
           </button>
         ))}
       </div>
 
-      <div style={{ padding:'14px' }}>
+      {/* Scrollable content */}
+      <div style={{ flex:1, overflowY:'auto', padding:'14px' }}>
         {tab==='info' && (
           <>
-            {/* Info rows */}
             <div style={{ display:'flex',flexDirection:'column',gap:1,marginBottom:12 }}>
               {[
-                {icon:User,      l:'Employee ID', v:emp.id,                                 mono:true  },
-                {icon:Phone,     l:'Phone',        v:emp.phone||'—',                         mono:false },
-                {icon:Briefcase, l:'Work Number',  v:emp.work_number||'—',                   mono:false },
-                {icon:CreditCard,l:'Emirates ID',  v:emp.emirates_id||'—',                   mono:false },
-                {icon:Building2, l:'Amazon ID',    v:emp.amazon_id||'—',                     mono:true  },
-                {icon:User,      l:'Nationality',  v:emp.nationality||'—',                   mono:false },
+                {icon:User,      l:'Employee ID', v:emp.id,                                           mono:true  },
+                {icon:Phone,     l:'Phone',        v:emp.phone||'—',                                   mono:false },
+                {icon:CreditCard,l:'Emirates ID',  v:emp.emirates_id||'—',                             mono:false },
+                {icon:Building2, l:'Amazon ID',    v:emp.amazon_id||'—',                               mono:true  },
+                {icon:User,      l:'Nationality',  v:emp.nationality||'—',                             mono:false },
                 {icon:Shield,    l:'Salary',       v:`AED ${Number(emp.salary||0).toLocaleString()}/mo`, mono:false },
               ].map(row=>{
                 const Icon=row.icon
@@ -490,7 +505,6 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
               })}
             </div>
 
-            {/* Salary formula */}
             <div style={{ background:'var(--purple-bg)',border:'1px solid var(--purple-border)',borderRadius:10,padding:'9px 12px',marginBottom:10 }}>
               <div style={{ fontSize:10,fontWeight:700,color:'#7C3AED',letterSpacing:'0.07em',textTransform:'uppercase',marginBottom:4 }}>Salary Formula</div>
               <div style={{ fontSize:11.5,color:'var(--text-sub)',fontWeight:500 }}>
@@ -498,8 +512,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
               </div>
             </div>
 
-            {/* Document expiry */}
-            <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6,marginBottom:10 }}>
+            <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6,marginBottom:12 }}>
               {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].map(([l,d])=>{
                 const info=expiry(d)
                 return (
@@ -510,13 +523,6 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                 )
               })}
             </div>
-
-            <WorkNumberAssigner emp={emp} onSaved={onRefresh} userRole={userRole} onSelectEmployee={onSelectEmployee}/>
-
-            <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`}
-              style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'9px',borderRadius:10,background:'var(--blue-bg)',border:'1px solid var(--blue-border)',color:'var(--blue)',fontWeight:600,fontSize:12,textDecoration:'none',marginBottom:8 }}>
-              <Receipt size={13}/> View Expenses <ExternalLink size={11}/>
-            </a>
 
             <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:8 }}>
               <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center',borderRadius:10 }}>
@@ -533,9 +539,9 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
           <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
             <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6,marginBottom:4 }}>
               {[
-                {l:'Total',v:leaves.length,                                  c:'var(--text)',bg:'var(--bg-alt)'},
-                {l:'Approved',v:leaves.filter(l=>l.status==='approved').length, c:'#10B981',bg:'#F0FDF4'},
-                {l:'Pending', v:leaves.filter(l=>l.status==='pending').length,  c:'#F59E0B',bg:'#FFFBEB'},
+                {l:'Total',   v:leaves.length,                                    c:'var(--text)',bg:'var(--bg-alt)'},
+                {l:'Approved',v:leaves.filter(l=>l.status==='approved').length,   c:'#10B981',   bg:'#F0FDF4'     },
+                {l:'Pending', v:leaves.filter(l=>l.status==='pending').length,    c:'#F59E0B',   bg:'#FFFBEB'     },
               ].map(s=>(
                 <div key={s.l} style={{ textAlign:'center',padding:'8px 4px',borderRadius:10,background:s.bg,border:'1px solid var(--border)' }}>
                   <div style={{ fontWeight:900,fontSize:18,color:s.c }}>{s.v}</div>
@@ -548,7 +554,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
               <div style={{ textAlign:'center',padding:20,color:'var(--text-muted)',fontSize:12 }}>
                 <Calendar size={28} style={{ margin:'0 auto 8px',display:'block',opacity:0.2 }}/>No leave records
               </div>
-            ) : leaves.map((lv,i)=>{
+            ) : leaves.map((lv)=>{
               const TC={Annual:'#B8860B',Sick:'#2563EB',Emergency:'#EF4444',Unpaid:'#6B7280',Other:'#9CA3AF'}
               const SC2={approved:'#10B981',pending:'#F59E0B',rejected:'#EF4444'}
               const SBG={approved:'#F0FDF4',pending:'#FFFBEB',rejected:'#FEF2F2'}
@@ -569,6 +575,40 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {tab==='sims' && (
+          <div>
+            <WorkNumberAssigner emp={emp} onSaved={onRefresh} userRole={userRole} onSelectEmployee={onSelectEmployee}/>
+            <div style={{ marginTop:10, padding:'10px 12px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:6 }}>Personal Phone</div>
+              <div style={{ fontSize:13, fontWeight:600, color:'var(--text)', fontFamily:'monospace' }}>{emp.phone||'—'}</div>
+            </div>
+          </div>
+        )}
+
+        {tab==='expenses' && (
+          <div>
+            <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`}
+              style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px',borderRadius:10,background:'var(--blue-bg)',border:'1px solid var(--blue-border)',color:'var(--blue)',fontWeight:600,fontSize:12,textDecoration:'none',marginBottom:12 }}>
+              <Receipt size={13}/> View All Expenses <ExternalLink size={11}/>
+            </a>
+            {expLoad ? (
+              <div style={{ textAlign:'center',padding:20,color:'var(--text-muted)',fontSize:12 }}>Loading…</div>
+            ) : expenses.length===0 ? (
+              <div style={{ textAlign:'center',padding:24,color:'var(--text-muted)',fontSize:12 }}>
+                <Receipt size={28} style={{ margin:'0 auto 8px',display:'block',opacity:0.2 }}/>No expenses found
+              </div>
+            ) : expenses.slice(0,20).map(ex=>(
+              <div key={ex.id} style={{ display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 10px',background:'var(--bg-alt)',border:'1px solid var(--border)',borderRadius:9,marginBottom:5 }}>
+                <div style={{ minWidth:0 }}>
+                  <div style={{ fontSize:12,fontWeight:600,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:130 }}>{ex.description||ex.category||'Expense'}</div>
+                  <div style={{ fontSize:10.5,color:'var(--text-muted)',marginTop:1 }}>{ex.date?.slice(0,10)}</div>
+                </div>
+                <span style={{ fontSize:12,fontWeight:700,color:'#EF4444',flexShrink:0 }}>AED {Number(ex.amount||0).toLocaleString()}</span>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -773,11 +813,9 @@ export default function EmployeesPage() {
             </div>
           </div>
         ) : (
-          <div style={{ width:272, flexShrink:0 }} className="emp-detail-panel">
-            <div style={{ position:'sticky', top:0 }}>
-              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
-                onSelectEmployee={id=>{ const t=employees.find(e=>e.id===id); if(t) setSelected(t) }}/>
-            </div>
+          <div style={{ width:288, flexShrink:0, position:'sticky', top:0, height:'calc(100vh - 130px)' }}>
+            <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
+              onSelectEmployee={id=>{ const t=employees.find(e=>e.id===id); if(t) setSelected(t) }}/>
           </div>
         )
       )}

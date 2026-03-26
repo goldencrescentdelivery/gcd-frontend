@@ -598,61 +598,67 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole }) {
   const TABS = [
     { id:'profile',    l:'Profile'    },
     { id:'docs',       l:'Documents'  },
+    { id:'sims',       l:'SIMs'       },
     { id:'salary',     l:'Salary'     },
     { id:'attendance', l:'Attendance' },
   ]
 
   return (
-    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden' }}>
-      {/* Header */}
-      <div style={{ padding:'16px 16px 0', background:`linear-gradient(135deg,${rc.bg},var(--card))`, borderBottom:'1px solid var(--border)' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
-          <div style={{ display:'flex', gap:12, alignItems:'center' }}>
-            <div style={{ width:50, height:50, borderRadius:14, background:`linear-gradient(135deg,${rc.bg},#FFF)`, border:`2px solid ${rc.bc}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, fontWeight:900, color:rc.c, flexShrink:0, position:'relative' }}>
-              {emp.name?.slice(0,2).toUpperCase()}
-              <div style={{ position:'absolute', bottom:-1, right:-1, width:12, height:12, borderRadius:'50%', background:s.dot, border:'2px solid var(--card)' }}/>
-            </div>
-            <div>
-              <div style={{ fontWeight:800, fontSize:15, color:'var(--text)' }}>{emp.name}</div>
-              <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:1 }}>{emp.id}</div>
-              <span style={{ fontSize:10.5, fontWeight:700, color:rc.c, background:rc.bg, border:`1px solid ${rc.bc}`, borderRadius:20, padding:'2px 8px', display:'inline-block', marginTop:3 }}>{emp.role}</span>
-            </div>
+    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', boxShadow:'var(--shadow-md)', display:'flex', flexDirection:'column', height:'100%' }}>
+      {/* Centered header — matches DAs style */}
+      <div style={{ background:`linear-gradient(135deg,${rc.bg},var(--card))`, padding:'20px 16px 14px', position:'relative', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+        <button onClick={onClose} style={{ position:'absolute', top:12, right:12, width:26, height:26, borderRadius:8, background:'var(--card)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <X size={13} color="var(--text-sub)"/>
+        </button>
+        <div style={{ textAlign:'center' }}>
+          <div style={{ width:54, height:54, borderRadius:16, background:'var(--card)', border:`2px solid ${rc.bc}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:900, color:rc.c, margin:'0 auto 10px', boxShadow:`0 4px 12px ${rc.c}18` }}>
+            {emp.name?.slice(0,2).toUpperCase()}
           </div>
-          <button onClick={onClose} style={{ width:27, height:27, borderRadius:8, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <X size={13} color="var(--text-sub)"/>
-          </button>
-        </div>
-        <div style={{ display:'flex', gap:2 }}>
-          {TABS.map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)}
-              style={{ padding:'7px 12px', fontSize:12, fontWeight:tab===t.id?700:500, color:tab===t.id?'var(--gold)':'var(--text-muted)', background:'none', border:'none', borderBottom:`2px solid ${tab===t.id?'var(--gold)':'transparent'}`, cursor:'pointer', fontFamily:'Poppins,sans-serif', marginBottom:-1, transition:'all 0.15s' }}>
-              {t.l}
-            </button>
-          ))}
+          <div style={{ fontWeight:800, fontSize:14, color:'var(--text)', marginBottom:2 }}>{emp.name}</div>
+          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:10 }}>{emp.dept}</div>
+          <div style={{ display:'flex', gap:5, justifyContent:'center', flexWrap:'wrap' }}>
+            <span style={{ fontSize:11, fontWeight:700, color:s.c, background:s.bg, border:`1px solid ${s.bc}`, borderRadius:20, padding:'2px 9px' }}>{s.l}</span>
+            <span style={{ fontSize:11, fontWeight:700, color:rc.c, background:rc.bg, border:`1px solid ${rc.bc}`, borderRadius:20, padding:'2px 9px' }}>{emp.role}</span>
+            {emp.station_code && <span style={{ fontSize:11, fontWeight:700, color:'var(--text-sub)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:20, padding:'2px 9px' }}>{emp.station_code}</span>}
+          </div>
         </div>
       </div>
 
-      <div style={{ padding:'14px', maxHeight:500, overflowY:'auto' }}>
+      {/* Scrollable tab bar */}
+      <div className="detail-tabs" style={{ display:'flex', overflowX:'auto', padding:'0 14px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+        {TABS.map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)}
+            style={{ padding:'9px 12px', fontSize:12, fontWeight:tab===t.id?700:500, color:tab===t.id?'var(--gold)':'var(--text-muted)', background:'none', border:'none', borderBottom:`2px solid ${tab===t.id?'var(--gold)':'transparent'}`, cursor:'pointer', fontFamily:'Poppins,sans-serif', marginBottom:-1, transition:'all 0.15s', whiteSpace:'nowrap', flexShrink:0 }}>
+            {t.l}
+          </button>
+        ))}
+      </div>
+
+      {/* Scrollable content */}
+      <div style={{ flex:1, overflowY:'auto', padding:'14px' }}>
         {/* ── Profile ── */}
         {tab==='profile' && (
           <>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:9, marginBottom:12 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:1, marginBottom:12 }}>
               {[
-                { l:'Department', v:emp.dept },
-                { l:'Station',    v:emp.station_code||'—' },
-                { l:'Personal Phone', v:emp.phone||'—', mono:true },
-                { l:'Nationality',    v:emp.nationality||'—' },
-                { l:'Emirates ID',    v:emp.emirates_id||'—', mono:true },
-                { l:'Start Date',     v:emp.joined?.slice(0,10)||'—' },
-              ].map(f=>(
-                <div key={f.l} style={{ background:'var(--bg-alt)', borderRadius:9, padding:'9px 11px', border:'1px solid var(--border)' }}>
-                  <div style={{ fontSize:9.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:3 }}>{f.l}</div>
-                  <div style={{ fontSize:12.5, fontWeight:600, color:'var(--text)', fontFamily:f.mono?'monospace':'inherit', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.v}</div>
-                </div>
-              ))}
+                { icon:User,       l:'Employee ID',   v:emp.id,                    mono:true  },
+                { icon:Phone,      l:'Personal Phone',v:emp.phone||'—',            mono:false },
+                { icon:Building2,  l:'Department',    v:emp.dept||'—',             mono:false },
+                { icon:User,       l:'Nationality',   v:emp.nationality||'—',      mono:false },
+                { icon:Shield,     l:'Emirates ID',   v:emp.emirates_id||'—',      mono:true  },
+                { icon:Calendar,   l:'Start Date',    v:emp.joined?.slice(0,10)||'—', mono:false },
+                { icon:DollarSign, l:'Salary',        v:`AED ${Number(emp.salary||0).toLocaleString()}/mo`, mono:false },
+              ].map(row=>{
+                const Icon=row.icon
+                return (
+                  <div key={row.l} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 10px', borderRadius:9, background:'var(--bg-alt)' }}>
+                    <Icon size={12} color="var(--text-muted)" style={{ flexShrink:0 }}/>
+                    <span style={{ fontSize:11.5, color:'var(--text-muted)', flex:1 }}>{row.l}</span>
+                    <span style={{ fontSize:12, color:'var(--text)', fontWeight:600, fontFamily:row.mono?'monospace':'Poppins,sans-serif', maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{row.v}</span>
+                  </div>
+                )
+              })}
             </div>
-
-            <WorkNumberAssigner emp={emp} onSaved={onRefresh} userRole={userRole}/>
 
             <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`}
               style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px', borderRadius:10, background:'var(--blue-bg)', border:'1px solid var(--blue-border)', color:'var(--blue)', fontWeight:600, fontSize:12, textDecoration:'none', marginBottom:10 }}>
@@ -672,17 +678,40 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole }) {
 
         {/* ── Documents ── */}
         {tab==='docs' && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
-            {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].map(([l,d])=>{
+          <>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:10 }}>
+              {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].map(([l,d])=>{
+                const info = expiry(d)
+                return (
+                  <div key={l} style={{ textAlign:'center', padding:'14px 6px', borderRadius:12, background:info?.bg||'var(--bg-alt)', border:`1px solid ${info?.bc||'var(--border)'}` }}>
+                    <div style={{ fontSize:10, fontWeight:700, color:info?.c||'var(--text-muted)', marginBottom:4 }}>{l}</div>
+                    <div style={{ fontSize:10, color:info?.c||'var(--text-muted)', fontWeight:600 }}>{info?.label||'N/A'}</div>
+                    {d && <div style={{ fontSize:9, color:'var(--text-muted)', marginTop:2 }}>{d.slice(0,10)}</div>}
+                  </div>
+                )
+              })}
+            </div>
+            {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].filter(([,d])=>d).map(([l,d])=>{
               const info = expiry(d)
+              if (!info || info.label==='Valid') return null
               return (
-                <div key={l} style={{ textAlign:'center', padding:'14px 6px', borderRadius:12, background:info?.bg||'var(--bg-alt)', border:`1px solid ${info?.bc||'var(--border)'}` }}>
-                  <div style={{ fontSize:10, fontWeight:700, color:info?.c||'var(--text-muted)', marginBottom:4 }}>{l}</div>
-                  <div style={{ fontSize:10, color:info?.c||'var(--text-muted)', fontWeight:600 }}>{info?.label||'N/A'}</div>
-                  {d && <div style={{ fontSize:9, color:'var(--text-muted)', marginTop:2 }}>{d.slice(0,10)}</div>}
+                <div key={l} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', background:info.bg, border:`1px solid ${info.bc}`, borderRadius:10, marginBottom:6, fontSize:12 }}>
+                  <AlertCircle size={13} color={info.c} style={{ flexShrink:0 }}/>
+                  <span style={{ fontWeight:600, color:info.c }}>{l} — {info.label}</span>
                 </div>
               )
             })}
+          </>
+        )}
+
+        {/* ── SIMs ── */}
+        {tab==='sims' && (
+          <div>
+            <WorkNumberAssigner emp={emp} onSaved={onRefresh} userRole={userRole}/>
+            <div style={{ marginTop:10, padding:'10px 12px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:6 }}>Personal Phone</div>
+              <div style={{ fontSize:13, fontWeight:600, color:'var(--text)', fontFamily:'monospace' }}>{emp.phone||'—'}</div>
+            </div>
           </div>
         )}
 
@@ -873,10 +902,8 @@ export default function AdminsPage() {
             </div>
           </div>
         ) : (
-          <div style={{ width:280, flexShrink:0 }}>
-            <div style={{ position:'sticky', top:0 }}>
-              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}/>
-            </div>
+          <div style={{ width:288, flexShrink:0, position:'sticky', top:0, height:'calc(100vh - 130px)' }}>
+            <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}/>
           </div>
         )
       )}

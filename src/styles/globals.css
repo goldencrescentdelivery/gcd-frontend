@@ -173,6 +173,8 @@ input, select, textarea { font-family:inherit; }
 .no-scroll::-webkit-scrollbar { display:none; }
 .no-scroll { scrollbar-width:none; }
 .poc-tabs::-webkit-scrollbar { display:none; }
+.detail-tabs::-webkit-scrollbar { display:none; }
+.detail-tabs { scrollbar-width:none; -ms-overflow-style:none; }
 
 .mob  { display:none !important; }
 .desk { display:grid; }
@@ -207,4 +209,21 @@ input, select, textarea { font-family:inherit; }
   .modal { padding:18px; }
   .two-col-glass  { grid-template-columns:1fr !important; }
   .three-col-glass{ grid-template-columns:1fr !important; }
+}
+
+/* ── Overview page grids ─────────────────────────────────────── */
+.four-kpi-grid    { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.exp-emp-grid     { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; }
+.sim-kpi-grid     { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.quick-actions-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; }
+
+@media (max-width:1024px) {
+  .four-kpi-grid    { grid-template-columns:repeat(2,1fr) !important; }
+  .exp-emp-grid     { grid-template-columns:1fr !important; }
+  .quick-actions-grid { grid-template-columns:repeat(4,1fr) !important; }
+}
+@media (max-width:640px) {
+  .four-kpi-grid    { grid-template-columns:1fr 1fr !important; }
+  .sim-kpi-grid     { grid-template-columns:1fr 1fr !important; }
+  .quick-actions-grid { grid-template-columns:repeat(3,1fr) !important; }
 }
