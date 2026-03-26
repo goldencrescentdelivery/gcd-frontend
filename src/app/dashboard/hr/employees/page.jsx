@@ -664,7 +664,7 @@ export default function EmployeesPage() {
       if (search)          params.search       = search
       if (station!=='All') params.station_code = station
       const data = await empApi.list(params)
-      setEmployees(data.employees)
+      setEmployees((data.employees||[]).filter(e => (e.role||'').toLowerCase() === 'driver'))
       setSelected(s => s ? (data.employees.find(e => e.id === s.id) || s) : null)
     } catch(e) { console.error(e) } finally { setLoading(false) }
   }, [search, station])
@@ -695,7 +695,7 @@ export default function EmployeesPage() {
 
         {/* Action bar */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
-          <p style={{ fontSize:12.5, color:'var(--text-muted)' }}>{total} employees · {active} active</p>
+          <p style={{ fontSize:12.5, color:'var(--text-muted)' }}>{total} DAs · {active} active</p>
           <button className="btn btn-primary" onClick={()=>setModal({mode:'add',emp:null})} style={{ borderRadius:24, flexShrink:0 }}>
             <Plus size={14}/> Add DA
           </button>
@@ -748,7 +748,7 @@ export default function EmployeesPage() {
         ) : employees.length===0 ? (
           <div style={{ textAlign:'center', padding:'60px 20px' }}>
             <Search size={40} style={{ margin:'0 auto 12px', display:'block', opacity:0.15 }}/>
-            <div style={{ fontWeight:700, fontSize:15, color:'var(--text-sub)' }}>{search?`No results for "${search}"`:'No employees found'}</div>
+            <div style={{ fontWeight:700, fontSize:15, color:'var(--text-sub)' }}>{search?`No results for "${search}"`:'No DAs found'}</div>
           </div>
         ) : (
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>

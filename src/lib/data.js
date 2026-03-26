@@ -22,14 +22,15 @@ export const NAV = [
   },
   {
     label:'HR & Staff', href:'/dashboard/hr', icon:'Users', alertKey:'hr',
-    roles:['admin','general_manager','hr'],
+    roles:['admin','general_manager','hr','accountant'],
     children:[
-      { label:'Employees',     href:'/dashboard/hr/employees',   icon:'UserCircle',  alertKey:'employees' },
-      { label:'Attendance',    href:'/dashboard/hr/attendance',  icon:'Clock'      },
-      { label:'Leaves',        href:'/dashboard/hr/leaves',      icon:'CalendarOff', alertKey:'leaves'    },
-      { label:'Documents',     href:'/dashboard/hr/documents',   icon:'FileText'   },
-      { label:'Compliance',    href:'/dashboard/hr/compliance',  icon:'ShieldCheck'},
-      { label:'User Accounts', href:'/dashboard/hr/users',       icon:'KeyRound',  roles:['admin'] }]
+      { label:'DAs',           href:'/dashboard/hr/employees',   icon:'UserCircle',  alertKey:'employees', roles:['admin','general_manager','hr','accountant'] },
+      { label:'Admins',        href:'/dashboard/hr/admins',      icon:'Shield',      roles:['admin','general_manager','hr','accountant'] },
+      { label:'Attendance',    href:'/dashboard/hr/attendance',  icon:'Clock',       roles:['admin','general_manager','hr'] },
+      { label:'Leaves',        href:'/dashboard/hr/leaves',      icon:'CalendarOff', alertKey:'leaves', roles:['admin','general_manager','hr'] },
+      { label:'Documents',     href:'/dashboard/hr/documents',   icon:'FileText',    roles:['admin','hr'] },
+      { label:'Compliance',    href:'/dashboard/hr/compliance',  icon:'ShieldCheck', roles:['admin','hr'] },
+      { label:'User Accounts', href:'/dashboard/hr/users',       icon:'KeyRound',    roles:['admin'] }]
   },
   {
     label:'Finance', href:'/dashboard/finance', icon:'DollarSign',

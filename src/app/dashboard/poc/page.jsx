@@ -938,8 +938,8 @@ export default function POCPage() {
                     </div>
                   )}
                   <div>
-                    <label className="input-label" style={{marginBottom:6}}>Assigned Driver — {date}</label>
-                    <DriverSearch employees={emps} value={asgn?.emp_id||''} onChange={eId=>assignVehicle(v.id,eId)} placeholder="— Unassigned —"/>
+                    <label className="input-label" style={{marginBottom:6}}>Assigned DA — {date}</label>
+                    <DriverSearch employees={emps.filter(e=>(e.role||'').toLowerCase()==='driver')} value={asgn?.emp_id||''} onChange={eId=>assignVehicle(v.id,eId)} placeholder="— Unassigned —"/>
                   </div>
                 </div>
               </div>
