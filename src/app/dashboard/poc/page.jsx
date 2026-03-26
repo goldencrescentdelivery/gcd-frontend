@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/lib/auth'
+import { useSearchParams } from 'next/navigation'
 import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
@@ -686,8 +687,14 @@ function WorkNumModal({ emp, station, sims, onSave, onClose }) {
 // ── Main ──────────────────────────────────────────────────────
 export default function POCPage() {
   const { user }  = useAuth()
-  const station   = user?.station_code || 'DDB1'
-  const [tab,     setTab]     = useState('attendance')
+  const station      = user?.station_code || 'DDB1'
+  const searchParams = useSearchParams()
+  const [tab,     setTab]     = useState(searchParams.get('tab') || 'attendance')
+
+  useEffect(() => {
+    const t = searchParams.get('tab')
+    if (t) setTab(t)
+  }, [searchParams])
   const [date,    setDate]    = useState(new Date().toISOString().slice(0,10))
   const [att,     setAtt]     = useState([])
   const [emps,    setEmps]    = useState([])

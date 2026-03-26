@@ -40,7 +40,12 @@ export const NAV = [
   },
   {
     label:'POC Station', href:'/dashboard/poc', icon:'Radio',
-    roles:['admin','general_manager','poc']
+    roles:['admin','general_manager','poc'],
+    children:[
+      { label:'Fleet',     href:'/dashboard/poc?tab=fleet',  icon:'Truck'      },
+      { label:'SIM Cards', href:'/dashboard/poc?tab=sims',   icon:'Smartphone' },
+      { label:'Leaves',    href:'/dashboard/poc?tab=leaves', icon:'CalendarOff'},
+    ]
   },
   {
     label:'Backup', href:'/dashboard/backup', icon:'HardDrive',

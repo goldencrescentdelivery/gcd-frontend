@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { NAV } from '@/lib/data'
 import { useState } from 'react'
@@ -9,12 +9,14 @@ import {
   FileText, Wallet, Receipt, ChevronDown, LogOut,
   ShieldCheck, Radio, HardDrive, KeyRound, ChevronLeft, ChevronRight,
   Settings, Trophy, AlertTriangle, Calendar, Zap, LayoutDashboard,
+  Truck, Smartphone,
 } from 'lucide-react'
 
 const ICONS = {
   BarChart3, Users, DollarSign, UserCircle, Clock, CalendarOff,
   FileText, Wallet, Receipt, ShieldCheck, Radio, HardDrive, KeyRound,
   Settings, Trophy, AlertTriangle, Calendar, Zap, LayoutDashboard,
+  Truck, Smartphone,
 }
 
 const ROLE_LABELS = {
@@ -27,10 +29,22 @@ const ROLE_LABELS = {
 }
 
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
-  const pathname = usePathname()
+  const pathname     = usePathname()
+  const searchParams = useSearchParams()
   const { user, logout } = useAuth()
   const router = useRouter()
-  const [expanded, setExpanded] = useState({ '/dashboard/hr': true, '/dashboard/finance': true })
+  const [expanded, setExpanded] = useState({ '/dashboard/hr': true, '/dashboard/finance': true, '/dashboard/poc': true })
+
+  function isChildActive(href) {
+    const [path, qs] = href.split('?')
+    if (pathname !== path && !pathname.startsWith(path + '/')) return false
+    if (!qs) return true
+    const params = new URLSearchParams(qs)
+    for (const [k, v] of params.entries()) {
+      if (searchParams.get(k) !== v) return false
+    }
+    return true
+  }
 
   function toggle(href) { setExpanded(p => ({ ...p, [href]: !p[href] })) }
 
@@ -118,7 +132,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
                       .filter(c => !c.roles || !c.roles.every(r => r === 'manager'))
                       .map(child => {
                         const CIcon = ICONS[child.icon]
-                        const active = pathname === child.href || pathname.startsWith(child.href+'/')
+                        const active = isChildActive(child.href)
                         return (
                           <Link key={child.href} href={child.href}
                             className={`nav-item${active?' active':''}`}
