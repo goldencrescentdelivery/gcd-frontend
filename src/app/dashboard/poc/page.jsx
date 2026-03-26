@@ -568,38 +568,116 @@ function SimSection({ sims, emps, station, onRefresh }) {
 
 
 // ── Work Number Modal (POC) ───────────────────────────────────
-function WorkNumModal({ emp, station, onSave, onClose }) {
-  const [value, setValue] = useState(emp.work_number||'')
-  const [saving, setSaving] = useState(false)
+function WorkNumModal({ emp, station, sims, onSave, onClose }) {
+  const available = (sims||[]).filter(s => s.phone_number && (s.status==='available' || s.emp_id===emp.id))
+  const [saving,   setSaving]  = useState(false)
+  const [conflict, setConflict]= useState(null)  // { conflictEmpId, conflictEmpName }
+  const [step,     setStep]    = useState(0)      // 0 | 1 | 2
+  const [pending,  setPending] = useState('')
+  const hdr = { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` }
 
-  async function handleSave() {
+  async function tryAssign(phoneNumber, force=false) {
     setSaving(true)
     try {
-      await fetch(`${API}/api/employees/${emp.id}`, {
-        method:'PUT',
-        headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` },
-        body: JSON.stringify({ ...emp, work_number: value })
+      const r = await fetch(`${API}/api/employees/${emp.id}/assign-work-number`, {
+        method:'POST', headers:hdr,
+        body: JSON.stringify({ phone_number: phoneNumber, force })
       })
+      const d = await r.json()
+      if (d.conflict) {
+        setPending(phoneNumber)
+        setConflict({ conflictEmpId: d.conflictEmpId, conflictEmpName: d.conflictEmpName })
+        setStep(1)
+      } else if (d.ok) { onSave() }
+      else if (d.error) { alert(d.error) }
+    } catch(e) { alert('Failed to assign') } finally { setSaving(false) }
+  }
+
+  async function handleRemove() {
+    setSaving(true)
+    try {
+      await fetch(`${API}/api/employees/${emp.id}/work-number`, { method:'DELETE', headers:hdr })
       onSave()
-    } catch(e) { alert('Failed to update') } finally { setSaving(false) }
+    } catch(e) { alert('Failed to remove') } finally { setSaving(false) }
   }
 
   return (
     <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal" style={{ maxWidth:340 }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+      <div className="modal" style={{ maxWidth:360 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
           <div>
             <h3 style={{ fontWeight:800, fontSize:16, color:'#1A1612' }}>Assign Work Number</h3>
-            <p style={{ fontSize:12, color:'#A89880', marginTop:2 }}>{emp.name}</p>
+            <p style={{ fontSize:12, color:'#A89880', marginTop:2 }}>{emp.name}{emp.work_number && <span style={{ marginLeft:8, fontFamily:'monospace', color:'#B8860B' }}>({emp.work_number})</span>}</p>
           </div>
           <button onClick={onClose} style={{ width:28, height:28, borderRadius:8, background:'#F5F4F1', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={13}/></button>
         </div>
-        <label className="input-label">Work / Contact Number</label>
-        <input className="input" value={value} onChange={e=>setValue(e.target.value)} placeholder="e.g. 971501234567" autoFocus/>
-        <div style={{ display:'flex', gap:10, marginTop:16 }}>
-          <button onClick={onClose} className="btn btn-secondary" style={{ flex:1, justifyContent:'center' }}>Cancel</button>
-          <button onClick={handleSave} disabled={saving} className="btn btn-primary" style={{ flex:2, justifyContent:'center' }}>{saving?'Saving…':'Save'}</button>
-        </div>
+
+        {/* Conflict step 1 */}
+        {step===1 && conflict && (
+          <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:10, padding:'12px 14px', marginBottom:14 }}>
+            <p style={{ fontSize:13, fontWeight:600, color:'#92400E', marginBottom:10 }}>
+              ⚠️ <strong>{pending}</strong> is already assigned to <strong>{conflict.conflictEmpName}</strong>. Proceed?
+            </p>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={()=>setStep(2)} style={{ flex:1, padding:'8px', borderRadius:8, background:'#B8860B', color:'white', border:'none', cursor:'pointer', fontWeight:700, fontSize:12 }}>Yes, proceed</button>
+              <button onClick={()=>{ setStep(0); setPending(''); setConflict(null) }} style={{ flex:1, padding:'8px', borderRadius:8, background:'#F5F4F1', color:'#6B5D4A', border:'none', cursor:'pointer', fontSize:12 }}>Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {/* Conflict step 2 */}
+        {step===2 && conflict && (
+          <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:10, padding:'12px 14px', marginBottom:14 }}>
+            <p style={{ fontSize:13, fontWeight:600, color:'#7F1D1D', marginBottom:10 }}>
+              Assign a new number to <strong>{conflict.conflictEmpName}</strong>?
+            </p>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={()=>tryAssign(pending,true)} disabled={saving}
+                style={{ flex:1, padding:'8px', borderRadius:8, background:'#EF4444', color:'white', border:'none', cursor:'pointer', fontWeight:700, fontSize:12 }}>
+                {saving?'…':'No, just remove it'}
+              </button>
+              <button onClick={()=>{ tryAssign(pending,true) }} disabled={saving}
+                style={{ flex:1, padding:'8px', borderRadius:8, background:'#10B981', color:'white', border:'none', cursor:'pointer', fontWeight:700, fontSize:12 }}>
+                {saving?'…':'Yes, will reassign'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* SIM picker */}
+        {step===0 && (
+          <>
+            <p style={{ fontSize:11, fontWeight:700, color:'#A89880', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8 }}>Select from SIM cards ({station})</p>
+            {available.length===0 ? (
+              <div style={{ textAlign:'center', padding:'20px 0', fontSize:13, color:'#A89880' }}>No available SIM numbers for this station</div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:6, maxHeight:220, overflowY:'auto', marginBottom:14 }}>
+                {available.map(s=>(
+                  <button key={s.id} onClick={()=>tryAssign(s.phone_number)} disabled={saving}
+                    style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', borderRadius:10,
+                      background: s.emp_id===emp.id ? '#F0FDF4' : '#FAFAF8',
+                      border: `1.5px solid ${s.emp_id===emp.id ? '#A7F3D0' : '#EAE6DE'}`,
+                      cursor:'pointer', textAlign:'left' }}>
+                    <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:'#1A1612' }}>{s.phone_number}</span>
+                    <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                      {s.emp_id===emp.id && <span style={{ fontSize:10, fontWeight:700, color:'#10B981' }}>Current</span>}
+                      <span style={{ fontSize:10, color:'#A89880' }}>{s.carrier}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={onClose} className="btn btn-secondary" style={{ flex:1, justifyContent:'center' }}>Cancel</button>
+              {emp.work_number && (
+                <button onClick={handleRemove} disabled={saving}
+                  style={{ flex:1, padding:'9px', borderRadius:10, background:'#FEF2F2', border:'1px solid #FECACA', color:'#EF4444', fontWeight:700, fontSize:12, cursor:'pointer' }}>
+                  {saving?'…':'Remove Number'}
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -959,7 +1037,7 @@ export default function POCPage() {
       )}
 
       {/* Modals */}
-      {modal?.type==='work-num'&&<WorkNumModal emp={modal.emp} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/> }
+      {modal?.type==='work-num'&&<WorkNumModal emp={modal.emp} station={station} sims={sims} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/> }
       {modal==='att'&&<AttModal employees={emps} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal?.type==='att-edit'&&<AttModal employees={emps} station={station} editRecord={modal.record} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal==='ann-add'&&<AnnModal onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}

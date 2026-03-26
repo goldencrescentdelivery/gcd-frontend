@@ -234,39 +234,183 @@ function EmpModal({ emp, onSave, onClose, mode }) {
   )
 }
 
-/* ── Work Number Editor ───────────────────────────────────────── */
-function WorkNumberEditor({ emp, onSaved, userRole }) {
-  const [editing, setEditing] = useState(false)
-  const [value,   setValue]   = useState(emp.work_number||'')
+/* ── Work Number Assigner ─────────────────────────────────────── */
+function WorkNumberAssigner({ emp, onSaved, userRole, onSelectEmployee }) {
+  const [mode,    setMode]    = useState('view') // 'view' | 'pick'
+  const [sims,    setSims]    = useState([])
+  const [loading, setLoading] = useState(false)
   const [saving,  setSaving]  = useState(false)
-  if (!['admin','manager','general_manager','hr','poc'].includes(userRole)) return null
+  const [conflict,setConflict]= useState(null)   // { conflictEmpId, conflictEmpName }
+  const [step,    setStep]    = useState(0)       // 0 | 1 | 2
+  const [pending, setPending] = useState('')
+  const [history, setHistory] = useState(null)   // null = hidden, [] = loaded
+  const [hLoad,   setHLoad]   = useState(false)
 
-  async function handleSave() {
+  const canEdit = ['admin','manager','general_manager','hr','poc'].includes(userRole)
+
+  function reset() { setMode('view'); setStep(0); setConflict(null); setPending(''); setSims([]) }
+
+  async function openPicker() {
+    setMode('pick'); setLoading(true)
+    try {
+      const r = await fetch(`${API}/api/sims`, { headers: hdr() })
+      const d = await r.json()
+      setSims((d.sims||[]).filter(s => s.phone_number && (s.status==='available' || s.emp_id===emp.id)))
+    } catch(e) {} finally { setLoading(false) }
+  }
+
+  async function tryAssign(phoneNumber, force=false) {
     setSaving(true)
     try {
-      await fetch(`${API}/api/employees/${emp.id}`,{method:'PUT',headers:hdr(),body:JSON.stringify({...emp,work_number:value})})
-      setEditing(false); onSaved?.()
-    } catch(e){} finally { setSaving(false) }
+      const r = await fetch(`${API}/api/employees/${emp.id}/assign-work-number`, {
+        method:'POST', headers:hdr(),
+        body: JSON.stringify({ phone_number: phoneNumber, force })
+      })
+      const d = await r.json()
+      if (d.conflict) {
+        setPending(phoneNumber)
+        setConflict({ conflictEmpId: d.conflictEmpId, conflictEmpName: d.conflictEmpName })
+        setStep(1)
+      } else if (d.ok) { reset(); onSaved?.() }
+      else if (d.error) { alert(d.error); reset() }
+    } catch(e) {} finally { setSaving(false) }
   }
+
+  async function handleRemove() {
+    if (!confirm('Remove work number from this employee?')) return
+    setSaving(true)
+    try {
+      await fetch(`${API}/api/employees/${emp.id}/work-number`, { method:'DELETE', headers:hdr() })
+      onSaved?.()
+    } catch(e) {} finally { setSaving(false) }
+  }
+
+  async function openHistory() {
+    setHLoad(true); setHistory([])
+    try {
+      const r = await fetch(`${API}/api/employees/work-number/history?emp_id=${emp.id}`, { headers: hdr() })
+      const d = await r.json()
+      setHistory(d.history||[])
+    } catch(e) { setHistory([]) } finally { setHLoad(false) }
+  }
+
+  const ACTION_COLOR = { assigned:'#10B981', reassigned:'#F59E0B', removed:'#EF4444' }
+  const ACTION_BG    = { assigned:'#F0FDF4', reassigned:'#FFFBEB', removed:'#FEF2F2' }
 
   return (
     <div style={{ background:'var(--bg-alt)', borderRadius:10, padding:'10px 12px', marginBottom:10, border:'1px solid var(--border)' }}>
-      <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:6 }}>Work Number</div>
-      {editing ? (
-        <div style={{ display:'flex', gap:6 }}>
-          <input value={value} onChange={e=>setValue(e.target.value)} autoFocus placeholder="Work number"
-            style={{ flex:1,padding:'6px 10px',borderRadius:8,border:'1.5px solid var(--gold)',fontSize:13,fontWeight:600,fontFamily:'Poppins,sans-serif',outline:'none',background:'var(--card)',color:'var(--text)' }}/>
-          <button onClick={handleSave} disabled={saving} style={{ padding:'6px 11px',borderRadius:8,background:'var(--gold)',color:'white',border:'none',fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>{saving?'…':'Save'}</button>
-          <button onClick={()=>{setEditing(false);setValue(emp.work_number||'')}} style={{ padding:'6px 9px',borderRadius:8,background:'var(--bg-alt)',color:'var(--text-sub)',border:'1px solid var(--border)',cursor:'pointer',fontSize:13 }}>✕</button>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+        <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em' }}>Work Number</div>
+        {canEdit && emp.work_number && (
+          <button onClick={history===null ? openHistory : ()=>setHistory(null)}
+            style={{ fontSize:10, color:'var(--text-muted)', background:'none', border:'none', cursor:'pointer', padding:0, fontFamily:'Poppins,sans-serif', textDecoration:'underline' }}>
+            {history===null ? 'History' : 'Hide'}
+          </button>
+        )}
+      </div>
+
+      {/* ── Conflict step 1 ── */}
+      {step===1 && conflict && (
+        <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:9, padding:'10px 12px', fontSize:12 }}>
+          <div style={{ fontWeight:600, color:'#92400E', marginBottom:8 }}>
+            ⚠️ <strong>{pending}</strong> is already assigned to <strong>{conflict.conflictEmpName}</strong>. Proceed?
+          </div>
+          <div style={{ display:'flex', gap:6 }}>
+            <button onClick={()=>setStep(2)} style={{ flex:1, padding:'6px', borderRadius:7, background:'#B8860B', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>Yes, proceed</button>
+            <button onClick={reset} style={{ flex:1, padding:'6px', borderRadius:7, background:'var(--card)', color:'var(--text-sub)', border:'1px solid var(--border)', cursor:'pointer', fontSize:11, fontFamily:'Poppins,sans-serif' }}>Cancel</button>
+          </div>
         </div>
-      ) : (
+      )}
+
+      {/* ── Conflict step 2 ── */}
+      {step===2 && conflict && (
+        <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:9, padding:'10px 12px', fontSize:12 }}>
+          <div style={{ fontWeight:600, color:'#7F1D1D', marginBottom:8 }}>
+            Assign a new number to <strong>{conflict.conflictEmpName}</strong>?
+          </div>
+          <div style={{ display:'flex', gap:6 }}>
+            <button onClick={()=>{ tryAssign(pending,true); onSelectEmployee?.(conflict.conflictEmpId) }}
+              disabled={saving}
+              style={{ flex:1, padding:'6px', borderRadius:7, background:'#10B981', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>
+              Yes, reassign them
+            </button>
+            <button onClick={()=>tryAssign(pending,true)} disabled={saving}
+              style={{ flex:1, padding:'6px', borderRadius:7, background:'#EF4444', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>
+              {saving?'…':'No, just remove it'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── View mode ── */}
+      {step===0 && mode==='view' && (
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <span style={{ fontSize:13,fontWeight:700,color:emp.work_number?'var(--text)':'var(--text-muted)',fontFamily:emp.work_number?'monospace':'inherit' }}>
+          <span style={{ fontSize:13, fontWeight:700, color:emp.work_number?'var(--text)':'var(--text-muted)', fontFamily:emp.work_number?'monospace':'inherit' }}>
             {emp.work_number||'Not assigned'}
           </span>
-          <button onClick={()=>setEditing(true)} style={{ padding:'4px 10px',borderRadius:7,background:'var(--card)',border:'1px solid var(--border)',color:'var(--text-sub)',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:4 }}>
-            <Pencil size={10}/> {emp.work_number?'Edit':'Assign'}
-          </button>
+          {canEdit && (
+            <div style={{ display:'flex', gap:5 }}>
+              <button onClick={openPicker} style={{ padding:'4px 10px', borderRadius:7, background:'var(--card)', border:'1px solid var(--border)', color:'var(--text-sub)', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:4 }}>
+                <Phone size={10}/> {emp.work_number?'Change':'Assign'}
+              </button>
+              {emp.work_number && (
+                <button onClick={handleRemove} disabled={saving} style={{ padding:'4px 8px', borderRadius:7, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', cursor:'pointer', display:'flex', alignItems:'center' }}>
+                  <X size={10}/>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── SIM picker ── */}
+      {step===0 && mode==='pick' && (
+        <div>
+          {loading ? (
+            <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'10px 0' }}>Loading SIMs…</div>
+          ) : sims.length===0 ? (
+            <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'10px 0' }}>No available SIM numbers</div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:5, maxHeight:180, overflowY:'auto', marginBottom:8 }}>
+              {sims.map(s => (
+                <button key={s.id} onClick={()=>tryAssign(s.phone_number)} disabled={saving}
+                  style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 10px', borderRadius:8,
+                    background: s.emp_id===emp.id ? 'var(--green-bg)' : 'var(--card)',
+                    border: `1px solid ${s.emp_id===emp.id ? 'var(--green)' : 'var(--border)'}`,
+                    cursor:'pointer', textAlign:'left', fontFamily:'Poppins,sans-serif' }}>
+                  <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:'var(--text)' }}>{s.phone_number}</span>
+                  <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                    {s.emp_id===emp.id && <span style={{ fontSize:10, color:'var(--green)', fontWeight:700 }}>Current</span>}
+                    <span style={{ fontSize:10, color:'var(--text-muted)' }}>{s.carrier}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          <button onClick={reset} style={{ width:'100%', padding:'6px', borderRadius:8, background:'var(--bg-alt)', border:'1px solid var(--border)', color:'var(--text-sub)', cursor:'pointer', fontSize:11, fontFamily:'Poppins,sans-serif' }}>Cancel</button>
+        </div>
+      )}
+
+      {/* ── History panel ── */}
+      {history !== null && (
+        <div style={{ marginTop:10, borderTop:'1px solid var(--border)', paddingTop:10 }}>
+          {hLoad ? (
+            <div style={{ fontSize:11, color:'var(--text-muted)', textAlign:'center' }}>Loading…</div>
+          ) : history.length===0 ? (
+            <div style={{ fontSize:11, color:'var(--text-muted)', textAlign:'center' }}>No history yet</div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:5, maxHeight:160, overflowY:'auto' }}>
+              {history.map(h => (
+                <div key={h.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 8px', borderRadius:7, background:'var(--card)', border:'1px solid var(--border)' }}>
+                  <div>
+                    <span style={{ fontSize:10, fontWeight:700, color:ACTION_COLOR[h.action], background:ACTION_BG[h.action], borderRadius:4, padding:'1px 6px', marginRight:6, textTransform:'capitalize' }}>{h.action}</span>
+                    <span style={{ fontSize:11, fontFamily:'monospace', color:'var(--text)' }}>{h.phone_number}</span>
+                  </div>
+                  <span style={{ fontSize:10, color:'var(--text-muted)' }}>{new Date(h.performed_at).toLocaleDateString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -274,7 +418,7 @@ function WorkNumberEditor({ emp, onSaved, userRole }) {
 }
 
 /* ── Detail Drawer ───────────────────────────────────────────── */
-function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole }) {
+function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onSelectEmployee }) {
   const [leaves,     setLeaves]    = useState([])
   const [leavesLoad, setLeavesLoad]= useState(true)
   const [tab,        setTab]       = useState('info')
@@ -367,7 +511,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole }) {
               })}
             </div>
 
-            <WorkNumberEditor emp={emp} onSaved={onRefresh} userRole={userRole}/>
+            <WorkNumberAssigner emp={emp} onSaved={onRefresh} userRole={userRole} onSelectEmployee={onSelectEmployee}/>
 
             <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`}
               style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'9px',borderRadius:10,background:'var(--blue-bg)',border:'1px solid var(--blue-border)',color:'var(--blue)',fontWeight:600,fontSize:12,textDecoration:'none',marginBottom:8 }}>
@@ -624,13 +768,15 @@ export default function EmployeesPage() {
         isMobile ? (
           <div style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'flex-end' }} onClick={e=>e.target===e.currentTarget&&setSelected(null)}>
             <div style={{ width:'100%', maxHeight:'90vh', overflowY:'auto', borderRadius:'20px 20px 0 0', background:'var(--card)' }}>
-              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}/>
+              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
+                onSelectEmployee={id=>{ const t=employees.find(e=>e.id===id); if(t) setSelected(t) }}/>
             </div>
           </div>
         ) : (
           <div style={{ width:272, flexShrink:0 }} className="emp-detail-panel">
             <div style={{ position:'sticky', top:0 }}>
-              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}/>
+              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
+                onSelectEmployee={id=>{ const t=employees.find(e=>e.id===id); if(t) setSelected(t) }}/>
             </div>
           </div>
         )
