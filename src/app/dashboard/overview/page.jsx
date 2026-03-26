@@ -85,6 +85,18 @@ function MiniBar({ value, total, color }) {
 /* ══════════════════════════════════════════════════════════════
    MAIN PAGE
 ══════════════════════════════════════════════════════════════ */
+/* ── Horizontal slider wrapper (mobile) ─────────────────────── */
+function Slider({ children, cardWidth = 160, gap = 12 }) {
+  return (
+    <div style={{ display:'flex', gap, overflowX:'auto', scrollSnapType:'x mandatory', WebkitOverflowScrolling:'touch', scrollbarWidth:'none', paddingBottom:4, marginRight:-20, paddingRight:20 }}>
+      <style>{`.slider-hide::-webkit-scrollbar{display:none}`}</style>
+      {React.Children.map(children, child =>
+        <div style={{ flexShrink:0, width:cardWidth, scrollSnapAlign:'start' }}>{child}</div>
+      )}
+    </div>
+  )
+}
+
 export default function OverviewPage() {
   const [summary,      setSummary]      = useState(null)
   const [chart,        setChart]        = useState([])
@@ -93,6 +105,14 @@ export default function OverviewPage() {
   const [simByStation, setSimByStation] = useState([])
   const [loading,      setLoading]      = useState(true)
   const [userRole,     setUserRole]     = useState(null)
+  const [isMobile,     setIsMobile]     = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const load = useCallback(async () => {
     let role = null
@@ -206,15 +226,24 @@ export default function OverviewPage() {
       </div>
 
       {/* ── TOP KPIs ─────────────────────────────────────────── */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }} className="four-kpi-grid">
-        <KPI icon={Users}         label="Active DAs"        color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
-        <KPI icon={Package}       label="Total Deliveries"  color="#38BDF8" loading={loading} value={fmt(totalDeliv)} sub="Last 6 months"/>
-        <KPI icon={Receipt}       label="Expenses This Month" color="#10B981" loading={loading} value={fmtAED(totalExp)} sub={`${pendingExp} pending`}/>
-        <KPI icon={Smartphone}    label="SIM Cards"         color="#A78BFA" loading={loading} value={simStats?.total||'—'} sub={`${simStats?.assigned||0} assigned`}/>
-      </div>
+      {isMobile ? (
+        <Slider cardWidth={155}>
+          <KPI icon={Users}      label="Active DAs"          color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
+          <KPI icon={Package}    label="Total Deliveries"    color="#38BDF8" loading={loading} value={fmt(totalDeliv)} sub="Last 6 months"/>
+          <KPI icon={Receipt}    label="Expenses This Month" color="#10B981" loading={loading} value={fmtAED(totalExp)} sub={`${pendingExp} pending`}/>
+          <KPI icon={Smartphone} label="SIM Cards"           color="#A78BFA" loading={loading} value={simStats?.total||'—'} sub={`${simStats?.assigned||0} assigned`}/>
+        </Slider>
+      ) : (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
+          <KPI icon={Users}      label="Active DAs"          color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
+          <KPI icon={Package}    label="Total Deliveries"    color="#38BDF8" loading={loading} value={fmt(totalDeliv)} sub="Last 6 months"/>
+          <KPI icon={Receipt}    label="Expenses This Month" color="#10B981" loading={loading} value={fmtAED(totalExp)} sub={`${pendingExp} pending`}/>
+          <KPI icon={Smartphone} label="SIM Cards"           color="#A78BFA" loading={loading} value={simStats?.total||'—'} sub={`${simStats?.assigned||0} assigned`}/>
+        </div>
+      )}
 
       {/* ── EXPENSES + EMPLOYEES ─────────────────────────────── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:16 }} className="exp-emp-grid">
+      <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1.4fr 1fr', gap:16 }}>
 
         {/* EXPENSES */}
         <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
@@ -338,7 +367,22 @@ export default function OverviewPage() {
       {/* ── SIM DATA ─────────────────────────────────────────── */}
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
         <SH title="SIM Card Inventory" sub="Fleet communication management" href="/dashboard/poc"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }} className="sim-kpi-grid">
+        {isMobile ? (
+          <Slider cardWidth={130} gap={10}>
+            {[
+              { l:'Total SIMs',   v:simStats?.total||'—',               c:'#7C3AED', bg:'#F5F3FF' },
+              { l:'Assigned',     v:simStats?.assigned||'—',            c:'#F59E0B', bg:'#FFFBEB' },
+              { l:'Available',    v:simStats?.available||'—',           c:'#10B981', bg:'#F0FDF4' },
+              { l:'Monthly Cost', v:fmtAED(simStats?.monthly_cost||0),  c:'#2563EB', bg:'#EFF6FF' },
+            ].map(s=>(
+              <div key={s.l} style={{ textAlign:'center', padding:'14px 10px', borderRadius:12, background:s.bg, border:'1px solid var(--border)', height:'100%' }}>
+                <div style={{ fontWeight:900, fontSize:18, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>
+                <div style={{ fontSize:10.5, color:'var(--text-muted)', fontWeight:600, marginTop:3 }}>{s.l}</div>
+              </div>
+            ))}
+          </Slider>
+        ) : null}
+        <div style={{ display:isMobile?'none':'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
           {[
             { l:'Total SIMs',    v:simStats?.total||'—',          c:'#7C3AED', bg:'#F5F3FF' },
             { l:'Assigned',      v:simStats?.assigned||'—',       c:'#F59E0B', bg:'#FFFBEB' },
@@ -394,18 +438,19 @@ export default function OverviewPage() {
       {/* ── QUICK ACTIONS ────────────────────────────────────── */}
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
         <SH title="Quick Actions"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }} className="quick-actions-grid">
-          {[
+        {(() => {
+          const actions = [
             { l:'Employees',   href:'/dashboard/hr/employees',    c:'#F59E0B', icon:Users },
             { l:'Payroll',     href:'/dashboard/finance/payroll', c:'#38BDF8', icon:Wallet },
             { l:'Expenses',    href:'/dashboard/finance/expenses',c:'#10B981', icon:Receipt },
             { l:'Performance', href:'/dashboard/performance',     c:'#A78BFA', icon:TrendingUp },
             { l:'Damage',      href:'/dashboard/damage',          c:'#EF4444', icon:AlertTriangle },
             { l:'Advances',    href:'/dashboard/advances',        c:'#F97316', icon:Zap },
-          ].map(item=>{
-            const Icon=item.icon
+          ]
+          const card = item => {
+            const Icon = item.icon
             return (
-              <Link key={item.l} href={item.href} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'14px 8px', borderRadius:14, background:`${item.c}10`, border:`1px solid ${item.c}22`, textDecoration:'none', transition:'all 0.18s' }}
+              <Link key={item.l} href={item.href} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'14px 8px', borderRadius:14, background:`${item.c}10`, border:`1px solid ${item.c}22`, textDecoration:'none', transition:'all 0.18s', height:'100%' }}
                 onMouseEnter={e=>{e.currentTarget.style.background=`${item.c}20`;e.currentTarget.style.transform='translateY(-2px)'}}
                 onMouseLeave={e=>{e.currentTarget.style.background=`${item.c}10`;e.currentTarget.style.transform='none'}}>
                 <div style={{ width:40, height:40, borderRadius:12, background:`${item.c}18`, display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -414,8 +459,15 @@ export default function OverviewPage() {
                 <span style={{ fontSize:11, fontWeight:700, color:item.c, textAlign:'center' }}>{item.l}</span>
               </Link>
             )
-          })}
-        </div>
+          }
+          return isMobile ? (
+            <Slider cardWidth={100} gap={10}>{actions.map(card)}</Slider>
+          ) : (
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
+              {actions.map(card)}
+            </div>
+          )
+        })()}
       </div>
 
     </div>
