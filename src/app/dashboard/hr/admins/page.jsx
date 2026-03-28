@@ -779,14 +779,17 @@ function AdminCard({ emp, onClick, onEdit, onDelete, index, isSelected }) {
 }
 
 /* ══ MAIN PAGE ═══════════════════════════════════════════════ */
+const ROLE_FILTERS = ['All','Admin','Manager','HR','Accountant','POC']
+
 export default function AdminsPage() {
-  const [admins,  setAdmins]  = useState([])
-  const [loading, setLoading] = useState(true)
-  const [search,  setSearch]  = useState('')
-  const [selected,setSelected]= useState(null)
-  const [modal,   setModal]   = useState(null)
-  const [userRole,setUserRole]= useState(null)
-  const [isMobile,setIsMobile]= useState(false)
+  const [admins,     setAdmins]     = useState([])
+  const [loading,    setLoading]    = useState(true)
+  const [search,     setSearch]     = useState('')
+  const [roleFilter, setRoleFilter] = useState('All')
+  const [selected,   setSelected]   = useState(null)
+  const [modal,      setModal]      = useState(null)
+  const [userRole,   setUserRole]   = useState(null)
+  const [isMobile,   setIsMobile]   = useState(false)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -821,9 +824,10 @@ export default function AdminsPage() {
     } catch(e) { alert(e.message) }
   }
 
+  const byRole = roleFilter === 'All' ? admins : admins.filter(e => (e.role||'').toLowerCase() === roleFilter.toLowerCase())
   const filtered = search
-    ? admins.filter(e => e.name.toLowerCase().includes(search.toLowerCase()) || e.id.toLowerCase().includes(search.toLowerCase()) || (e.role||'').toLowerCase().includes(search.toLowerCase()))
-    : admins
+    ? byRole.filter(e => e.name.toLowerCase().includes(search.toLowerCase()) || e.id.toLowerCase().includes(search.toLowerCase()) || (e.role||'').toLowerCase().includes(search.toLowerCase()))
+    : byRole
 
   const total   = admins.length
   const active  = admins.filter(e=>e.status==='active').length
@@ -868,6 +872,22 @@ export default function AdminsPage() {
           <Search size={14} style={{ position:'absolute',left:13,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)',pointerEvents:'none' }}/>
           <input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, ID, role…" autoComplete="off" style={{ paddingLeft:38, borderRadius:24 }}/>
           {search&&<button onClick={()=>setSearch('')} style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',padding:0,display:'flex' }}><X size={13}/></button>}
+        </div>
+
+        {/* Role filter chips */}
+        <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+          {ROLE_FILTERS.map(r => {
+            const count = r==='All' ? admins.length : admins.filter(e=>(e.role||'').toLowerCase()===r.toLowerCase()).length
+            const rc    = ROLE_COLOR[r] || ROLE_COLOR.default
+            const active = roleFilter === r
+            return (
+              <button key={r} onClick={()=>setRoleFilter(r)}
+                style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 12px', borderRadius:20, border:`1px solid ${active ? rc.bc : 'var(--border)'}`, background: active ? rc.bg : 'var(--bg-alt)', color: active ? rc.c : 'var(--text-sub)', fontWeight: active ? 700 : 500, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif', transition:'all 0.15s' }}>
+                {r}
+                <span style={{ minWidth:16, height:16, borderRadius:8, background: active ? rc.c : 'var(--border)', color: active ? '#fff' : 'var(--text-muted)', fontSize:9.5, fontWeight:700, display:'inline-flex', alignItems:'center', justifyContent:'center', padding:'0 4px' }}>{count}</span>
+              </button>
+            )
+          })}
         </div>
 
         {/* List */}

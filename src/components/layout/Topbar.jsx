@@ -65,23 +65,25 @@ export default function Topbar({ onMenuClick }) {
         </div>
       </div>
 
-      {/* Right side */}
-      <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-        {/* User pill */}
-        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 10px 5px 5px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:20, cursor:'default' }}>
-          <div style={{ width:26, height:26, borderRadius:8, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0 }}>
-            {role.e}
-          </div>
-          <div className="hide-mobile">
-            <div style={{ fontSize:12, fontWeight:600, color:'var(--text)', lineHeight:1 }}>{user?.name?.split(' ')[0]}</div>
-            <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:1 }}>{role.l}</div>
-          </div>
+      {/* Right side — combined user + sign-out pill */}
+      <div style={{ display:'flex', alignItems:'center', gap:0, flexShrink:0, background:'var(--card)', border:'1px solid var(--border)', borderRadius:28, boxShadow:'0 1px 4px rgba(0,0,0,0.06)', overflow:'hidden' }}>
+        {/* Avatar */}
+        <div style={{ width:34, height:34, margin:'4px 0 4px 4px', borderRadius:20, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>
+          {role.e}
         </div>
-
-        {/* Sign out — always visible */}
+        {/* Name + role */}
+        <div className="hide-mobile" style={{ padding:'0 10px 0 8px' }}>
+          <div style={{ fontSize:12.5, fontWeight:700, color:'var(--text)', lineHeight:1.2 }}>{user?.name?.split(' ')[0]}</div>
+          <div style={{ fontSize:10, color:'var(--text-muted)', fontWeight:500 }}>{role.l}</div>
+        </div>
+        {/* Divider */}
+        <div className="hide-mobile" style={{ width:1, height:22, background:'var(--border)', flexShrink:0 }}/>
+        {/* Sign out */}
         <button onClick={signOut}
-          style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:20, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap', flexShrink:0 }}>
-          <LogOut size={13}/><span className="hide-mobile">Sign Out</span>
+          style={{ display:'flex', alignItems:'center', gap:5, padding:'0 14px', height:42, background:'transparent', border:'none', color:'#EF4444', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap', flexShrink:0, transition:'background 0.15s' }}
+          onMouseEnter={e=>e.currentTarget.style.background='rgba(239,68,68,0.07)'}
+          onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+          <LogOut size={13}/><span className="hide-mobile" style={{ marginLeft:2 }}>Sign Out</span>
         </button>
       </div>
     </header>

@@ -1,17 +1,18 @@
 'use client'
 import Link from 'next/link'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { useAlerts } from '@/lib/AlertsContext'
 import { NAV } from '@/lib/data'
 import { useState } from 'react'
 import {
   BarChart3, Users, DollarSign, UserCircle, Clock, CalendarOff,
-  FileText, Wallet, Receipt, ChevronDown, LogOut,
+  FileText, Wallet, Receipt, ChevronDown,
   ShieldCheck, Radio, HardDrive, KeyRound, ChevronLeft, ChevronRight,
   Settings, Trophy, AlertTriangle, Calendar, Zap, LayoutDashboard,
   Truck, Smartphone, Shield, Package, Bell,
 } from 'lucide-react'
+
 
 const ICONS = {
   BarChart3, Users, DollarSign, UserCircle, Clock, CalendarOff,
@@ -32,9 +33,8 @@ const ROLE_LABELS = {
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
   const pathname     = usePathname()
   const searchParams = useSearchParams()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const { counts = {} } = useAlerts()
-  const router = useRouter()
   const [expanded, setExpanded] = useState({})
 
   function isChildActive(href) {
@@ -52,13 +52,6 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
 
   // Filter out manager role from nav visibility — admin handles everything manager did
   const nav = NAV.filter(item => !item.roles || item.roles.includes(user?.role))
-
-  function handleLogout() {
-    try { logout() } catch(e) {}
-    localStorage.removeItem('gcd_token')
-    localStorage.removeItem('gcd_user')
-    router.replace('/login')
-  }
 
   return (
     <>
@@ -168,13 +161,6 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
           })}
         </nav>
 
-        {/* ── Sign out ── */}
-        <div style={{ padding:'8px 8px 16px', borderTop:'1px solid var(--border)', marginTop:'auto' }}>
-          <button onClick={handleLogout} className="nav-item" style={{ width:'100%', color:'#EF4444' }}>
-            <LogOut size={16}/>
-            <span className="nav-label">Sign Out</span>
-          </button>
-        </div>
       </aside>
     </>
   )
