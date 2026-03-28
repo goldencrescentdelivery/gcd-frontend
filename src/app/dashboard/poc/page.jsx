@@ -736,7 +736,7 @@ export default function POCPage() {
   useEffect(()=>{load()},[load])
 
   async function handleLeave(id,status) {
-    await fetch(`${API}/api/leaves/${id}/poc`,{method:'PATCH',headers:hdr(),body:JSON.stringify({status})})
+    await fetch(`${API}/api/leaves/${id}/status`,{method:'PATCH',headers:hdr(),body:JSON.stringify({status})})
     load()
   }
   async function deleteAtt(id) {
@@ -998,7 +998,7 @@ export default function POCPage() {
                   <span style={{fontSize:11,fontWeight:700,color:'#B45309',background:'#FFFBEB',border:'1px solid #FCD34D',padding:'3px 10px',borderRadius:20}}>Pending Review</span>
                 </div>
                 <div style={{display:'flex',gap:6,alignItems:'center',fontSize:12,color:'#6B5D4A',marginBottom:l.reason?8:0}}>
-                  <Calendar size={12}/> {l.from_date} → {l.to_date} · <strong>{l.days} days</strong>
+                  <Calendar size={12}/> {l.from_date?.slice(0,10)} → {l.to_date?.slice(0,10)} · <strong>{l.days} day{l.days!==1?'s':''}</strong>
                 </div>
                 {l.reason&&<div style={{fontSize:12,color:'#A89880',padding:'7px 10px',background:'#FAFAF8',borderRadius:8}}>{l.reason}</div>}
               </div>

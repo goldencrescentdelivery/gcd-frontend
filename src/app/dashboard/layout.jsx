@@ -38,7 +38,8 @@ export default function DashboardLayout({ children }) {
   if (loading) return (
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg,#F9FAFB)' }}>
       <div style={{ textAlign:'center' }}>
-        <div style={{ width:36,height:36,borderRadius:'50%',border:'3px solid #E5E7EB',borderTopColor:'#B8860B',animation:'spin 0.7s linear infinite',margin:'0 auto 10px' }}/>
+        <img src="/logo.webp" alt="GCD" style={{ width:72, height:72, objectFit:'contain', margin:'0 auto 16px', display:'block', borderRadius:16, boxShadow:'0 4px 20px rgba(184,134,11,0.25)' }}/>
+        <div style={{ width:32,height:32,borderRadius:'50%',border:'3px solid #E5E7EB',borderTopColor:'#B8860B',animation:'spin 0.7s linear infinite',margin:'0 auto 10px' }}/>
         <div style={{ fontSize:13,color:'#9CA3AF' }}>Loading…</div>
       </div>
     </div>
