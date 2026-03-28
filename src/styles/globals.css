@@ -50,6 +50,7 @@ input, select, textarea { font-family:inherit; }
 @keyframes fadeUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 @keyframes up      { from{opacity:0;transform:translateY(8px)}  to{opacity:1;transform:translateY(0)} }
 @keyframes pulse-dot{ 0%,100%{opacity:1} 50%{opacity:0.4} }
+@keyframes logoPulse{ 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.75;transform:scale(0.92)} }
 
 /* ── Dashboard Shell ─────────────────────────────────────────── */
 .dashboard-shell { display:flex; height:100vh; overflow:hidden; background:var(--bg); }

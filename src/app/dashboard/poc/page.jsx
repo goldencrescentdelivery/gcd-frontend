@@ -713,7 +713,7 @@ export default function POCPage() {
     setLoading(true)
     try {
       const h = { headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
-      const [a,e,an,lv,v,asgn,d,s] = await Promise.all([
+      const [a,e,an,lv,v,asgn,d,s,hv] = await Promise.all([
         fetch(`${API}/api/attendance?date=${date}`,h).then(r=>r.json()),
         fetch(`${API}/api/employees`,h).then(r=>r.json()),  // fetch all, filter client-side
         fetch(`${API}/api/poc/announcements`,h).then(r=>r.json()),
@@ -768,7 +768,7 @@ export default function POCPage() {
   const absent   = att.filter(a=>a.status==='absent').length
   const earnings = att.reduce((s,a)=>s+parseFloat(a.earnings||0),0)
   const active   = vehs.filter(v=>v.status==='active').length
-  const pending  = leaves.length
+  const pending  = leaves.filter(l=>l.status==='pending').length
 
   const filtEmp  = emps.filter(e=>!search||e.name.toLowerCase().includes(search.toLowerCase())||e.id.toLowerCase().includes(search.toLowerCase()))
 
@@ -983,8 +983,8 @@ export default function POCPage() {
       {/* ── LEAVES ── */}
       {!loading && tab==='leaves' && (
         <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          {leaves.length===0&&<div style={{textAlign:'center',padding:50,color:'#A89880'}}>No pending leave requests</div>}
-          {leaves.map((l,i)=>(
+          {leaves.filter(l=>l.status==='pending').length===0&&<div style={{textAlign:'center',padding:50,color:'#A89880'}}>No pending leave requests</div>}
+          {leaves.filter(l=>l.status==='pending').map((l,i)=>(
             <div key={l.id} style={{background:'#FFF',border:'1px solid #EAE6DE',borderRadius:16,overflow:'hidden',animation:`slideUp 0.3s ${i*0.05}s ease both`}}>
               <div style={{padding:'14px 16px'}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>

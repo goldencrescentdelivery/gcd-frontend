@@ -71,9 +71,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
           <div style={{ display:'flex', alignItems:'center', justifyContent: collapsed?'center':'space-between', gap:8 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, overflow:'hidden', minWidth:0 }}>
               {/* Logo image */}
-              <div style={{ flexShrink:0, width:collapsed?34:38, height:collapsed?34:38, borderRadius:10, overflow:'hidden', transition:'width 0.2s,height 0.2s', background:'white', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(184,134,11,0.3)' }}>
-                <img src="/logo.webp" alt="GCD" style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }}/>
-              </div>
+              <img src="/logo.webp" alt="GCD" style={{ flexShrink:0, width:collapsed?34:38, height:collapsed?34:38, borderRadius:10, objectFit:'contain', display:'block', transition:'width 0.2s,height 0.2s' }}/>
               {/* Brand text — hidden when collapsed */}
               {!collapsed && (
                 <div style={{ minWidth:0, overflow:'hidden' }}>
