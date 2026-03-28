@@ -159,7 +159,10 @@ function AdminModal({ emp, onSave, onClose, mode }) {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13 }}>
               {sel('Role *','role',ADMIN_ROLE_OPTIONS)}
               {sel('Department *','dept',DEPT_OPTIONS)}
-              {sel('Station','station_code',STATIONS)}
+              {form.role?.toLowerCase().includes('poc')
+                ? sel('Station','station_code',STATIONS)
+                : <div><Lbl>Location</Lbl><input className="input" value="Office" readOnly style={{ color:'var(--text-muted)', background:'var(--bg-alt)', cursor:'default' }}/></div>
+              }
               {sel('Status','status',[{v:'active',l:'Active'},{v:'on_leave',l:'On Leave'},{v:'inactive',l:'Inactive'}])}
               {inp('Fixed Monthly Salary (AED)','salary','number','5000')}
               {inp('Start Date','joined','date')}
