@@ -6,7 +6,7 @@ import { AlertsProvider } from '@/lib/AlertsContext'
 import Sidebar from '@/components/layout/Sidebar'
 import Topbar from '@/components/layout/Topbar'
 import Link from 'next/link'
-import { LayoutDashboard, Users, DollarSign, Radio, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, DollarSign, Radio } from 'lucide-react'
 
 const BOTTOM_NAV = [
   { href:'/dashboard/overview',  icon:LayoutDashboard, label:'Overview',  roles:['admin','general_manager','hr','accountant','poc'] },
@@ -16,7 +16,7 @@ const BOTTOM_NAV = [
 ]
 
 export default function DashboardLayout({ children }) {
-  const { user, loading, logout } = useAuth()
+  const { user, loading } = useAuth()
   const router   = useRouter()
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -27,13 +27,6 @@ export default function DashboardLayout({ children }) {
     if (!user) router.replace('/login')
     else if (user.role === 'driver') router.replace('/driver')
   }, [user, loading, router])
-
-  function signOut() {
-    try { logout() } catch(e) {}
-    localStorage.removeItem('gcd_token')
-    localStorage.removeItem('gcd_user')
-    router.replace('/login')
-  }
 
   if (loading) return (
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg,#F9FAFB)' }}>
@@ -59,7 +52,7 @@ export default function DashboardLayout({ children }) {
         <main className="page-content">{children}</main>
       </div>
 
-      {/* Mobile bottom nav — includes Sign Out */}
+      {/* Mobile bottom nav */}
       <nav className="mobile-bottomnav">
         {BOTTOM_NAV.filter(item=>!item.roles||item.roles.includes(user?.role)).map(item=>{
           const Icon   = item.icon
@@ -71,12 +64,6 @@ export default function DashboardLayout({ children }) {
             </Link>
           )
         })}
-        {/* Sign Out always in bottom nav on mobile */}
-        <button onClick={signOut}
-          style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'9px 4px 13px',color:'#EF4444',fontSize:10,fontWeight:600,gap:3,background:'none',border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
-          <LogOut size={19} strokeWidth={1.8}/>
-          <span>Sign Out</span>
-        </button>
       </nav>
     </div>
     </AlertsProvider>
