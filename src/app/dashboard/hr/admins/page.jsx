@@ -14,6 +14,12 @@ const STATIONS = ['DDB1','DXE6']
 const ADMIN_ROLE_OPTIONS = ['Manager','HR','Accountant','POC','Admin','Operations Manager','Fleet Manager','POC Supervisor','Finance Manager']
 const DEPT_OPTIONS = ['Admin','HR','Finance','Operations']
 
+// Maps JWT/DB role → display role matching ROLE_COLOR keys
+const SYS_ROLE_DISPLAY = {
+  admin: 'Admin', general_manager: 'Manager', manager: 'Manager',
+  hr: 'HR', accountant: 'Accountant', poc: 'POC',
+}
+
 const STATUS = {
   active:   { l:'Active',   c:'#10B981', bg:'#F0FDF4', bc:'#A7F3D0', dot:'#10B981' },
   on_leave: { l:'On Leave', c:'#F59E0B', bg:'#FFFBEB', bc:'#FDE68A', dot:'#F59E0B' },
@@ -83,7 +89,7 @@ function AdminModal({ emp, onSave, onClose, mode }) {
       const res  = await fetch(url, { method: mode==='add'?'POST':'PUT', headers: hdr(), body: JSON.stringify(body) })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to save')
-      onSave()
+      onSave(data.employee || data)
     } catch(e) { setErr(e.message) } finally { setSaving(false) }
   }
 
@@ -590,10 +596,55 @@ function AttendancePanel({ emp, userRole }) {
 }
 
 /* ── Detail Drawer ─────────────────────────────────────────────── */
-function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole }) {
+function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfile, userRole }) {
   const [tab, setTab] = useState('profile')
   const rc = roleStyle(emp.role)
   const s  = STATUS[emp.status]||STATUS.inactive
+
+  // ── User-only entry (no employee profile yet) ──────────────────
+  if (!emp.hasProfile) {
+    return (
+      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', boxShadow:'var(--shadow-md)', display:'flex', flexDirection:'column', height:'100%' }}>
+        <div style={{ background:`linear-gradient(135deg,${rc.bg},var(--card))`, padding:'20px 16px 14px', position:'relative', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+          <button onClick={onClose} style={{ position:'absolute', top:12, right:12, width:26, height:26, borderRadius:8, background:'var(--card)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <X size={13} color="var(--text-sub)"/>
+          </button>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ width:54, height:54, borderRadius:16, background:'var(--card)', border:`2px solid ${rc.bc}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:900, color:rc.c, margin:'0 auto 10px', boxShadow:`0 4px 12px ${rc.c}18` }}>
+              {emp.name?.slice(0,2).toUpperCase()}
+            </div>
+            <div style={{ fontWeight:800, fontSize:14, color:'var(--text)', marginBottom:4 }}>{emp.name}</div>
+            <div style={{ display:'flex', gap:5, justifyContent:'center', flexWrap:'wrap' }}>
+              <span style={{ fontSize:11, fontWeight:700, color:rc.c, background:rc.bg, border:`1px solid ${rc.bc}`, borderRadius:20, padding:'2px 9px' }}>{emp.role}</span>
+              {emp.station_code && <span style={{ fontSize:11, fontWeight:700, color:'var(--text-sub)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:20, padding:'2px 9px' }}>{emp.station_code}</span>}
+            </div>
+          </div>
+        </div>
+        <div style={{ flex:1, overflowY:'auto', padding:'16px' }}>
+          <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:12, padding:'12px 14px', marginBottom:14, fontSize:12.5, color:'#B45309', display:'flex', gap:8, alignItems:'flex-start' }}>
+            <AlertCircle size={14} style={{ flexShrink:0, marginTop:1 }}/>
+            <span>This user has a login account but no employee profile yet. Create a profile to track their salary, attendance, and documents.</span>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:16 }}>
+            {[
+              { l:'Name',    v: emp.name },
+              { l:'Role',    v: emp.role },
+              { l:'Email',   v: emp.email || '—' },
+              { l:'Station', v: emp.station_code || '—' },
+            ].map(row => (
+              <div key={row.l} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 10px', borderRadius:9, background:'var(--bg-alt)' }}>
+                <span style={{ fontSize:11.5, color:'var(--text-muted)', flex:1 }}>{row.l}</span>
+                <span style={{ fontSize:12, color:'var(--text)', fontWeight:600 }}>{row.v}</span>
+              </div>
+            ))}
+          </div>
+          <button onClick={()=>onCreateProfile(emp)} className="btn btn-primary" style={{ width:'100%', justifyContent:'center', borderRadius:12 }}>
+            <Plus size={14}/> Create Employee Profile
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   const TABS = [
     { id:'profile',    l:'Profile'    },
@@ -747,10 +798,17 @@ function AdminCard({ emp, onClick, onEdit, onDelete, index, isSelected }) {
           <div style={{ position:'absolute',bottom:-1,right:-1,width:11,height:11,borderRadius:'50%',background:s.dot,border:'2px solid var(--card)' }}/>
         </div>
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontWeight:700,fontSize:13.5,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{emp.name}</div>
+          <div style={{ fontWeight:700,fontSize:13.5,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:6 }}>
+            {emp.name}
+            {!emp.hasProfile && <span style={{ fontSize:9,fontWeight:700,color:'#6B7280',background:'#F3F4F6',border:'1px solid #E5E7EB',borderRadius:4,padding:'1px 5px',letterSpacing:'0.04em',textTransform:'uppercase' }}>No Profile</span>}
+          </div>
           <div style={{ fontSize:11,color:'var(--text-muted)',marginTop:2,display:'flex',gap:5,alignItems:'center' }}>
-            <span style={{ fontFamily:'monospace' }}>{emp.id}</span>
-            {emp.work_number&&<><span>·</span><span style={{ color:'var(--text-sub)' }}>{emp.work_number}</span></>}
+            {emp.hasProfile ? (
+              <><span style={{ fontFamily:'monospace' }}>{emp.id}</span>
+              {emp.work_number&&<><span>·</span><span style={{ color:'var(--text-sub)' }}>{emp.work_number}</span></>}</>
+            ) : (
+              <span style={{ color:'var(--text-muted)' }}>{emp.email}</span>
+            )}
           </div>
         </div>
         <div style={{ display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4,flexShrink:0 }}>
@@ -804,12 +862,41 @@ export default function AdminsPage() {
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      const res  = await fetch(`${API}/api/employees`, { headers: hdr() })
-      const data = await res.json()
-      // Filter to non-driver employees (admin staff)
-      const nonDrivers = (data.employees||[]).filter(e => (e.role||'').toLowerCase() !== 'driver')
-      setAdmins(nonDrivers)
-      setSelected(s => s ? (nonDrivers.find(e=>e.id===s.id)||s) : null)
+      const [empRes, userRes] = await Promise.all([
+        fetch(`${API}/api/employees`,   { headers: hdr() }),
+        fetch(`${API}/api/auth/users`,  { headers: hdr() }),
+      ])
+      const empData  = await empRes.json()
+      const userData = await userRes.json()
+
+      // Non-driver employees (full profiles)
+      const nonDriverEmps = (empData.employees||[]).filter(e => (e.role||'').toLowerCase() !== 'driver')
+      const empsWithFlag  = nonDriverEmps.map(e => ({ ...e, hasProfile: true }))
+      const empIdSet      = new Set(nonDriverEmps.map(e => e.id))
+
+      // Admin-type users whose emp_id doesn't link to an existing employee
+      const usersWithoutProfile = (userData.users||[]).filter(u =>
+        u.role !== 'driver' && (!u.emp_id || !empIdSet.has(u.emp_id))
+      )
+      const userOnlyEntries = usersWithoutProfile.map(u => ({
+        id:           u.id,
+        userId:       u.id,
+        name:         u.name,
+        role:         SYS_ROLE_DISPLAY[u.role] || u.role,
+        dept:         '—',
+        status:       u.status || 'active',
+        station_code: u.station_code,
+        email:        u.email,
+        phone:        null,
+        salary:       null,
+        avatar:       '👔',
+        hasProfile:   false,
+        _userRole:    u.role,
+      }))
+
+      const merged = [...empsWithFlag, ...userOnlyEntries]
+      setAdmins(merged)
+      setSelected(s => s ? (merged.find(e=>e.id===s.id)||s) : null)
     } catch(e) { console.error(e) } finally { setLoading(false) }
   }, [])
 
@@ -918,12 +1005,14 @@ export default function AdminsPage() {
         isMobile ? (
           <div style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'flex-end' }} onClick={e=>e.target===e.currentTarget&&setSelected(null)}>
             <div style={{ width:'100%', maxHeight:'90vh', overflowY:'auto', borderRadius:'20px 20px 0 0', background:'var(--card)' }}>
-              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}/>
+              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
+                onCreateProfile={u=>setModal({mode:'add',emp:{name:u.name,role:u.role,station_code:u.station_code},linkUserId:u.userId})}/>
             </div>
           </div>
         ) : (
           <div style={{ width:288, flexShrink:0, position:'sticky', top:0, height:'calc(100vh - 130px)' }}>
-            <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}/>
+            <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
+              onCreateProfile={u=>setModal({mode:'add',emp:{name:u.name,role:u.role,station_code:u.station_code},linkUserId:u.userId})}/>
           </div>
         )
       )}
@@ -934,7 +1023,18 @@ export default function AdminsPage() {
           emp={modal.emp}
           mode={modal.mode}
           onClose={()=>setModal(null)}
-          onSave={()=>{ setModal(null); load() }}/>
+          onSave={async (savedEmp) => {
+            // If creating profile for a user-account entry, link emp_id
+            if (modal.linkUserId && savedEmp?.id) {
+              try {
+                await fetch(`${API}/api/auth/users/${modal.linkUserId}`, {
+                  method:'PUT', headers:hdr(),
+                  body: JSON.stringify({ emp_id: savedEmp.id })
+                })
+              } catch(e) { console.error('Link failed:', e) }
+            }
+            setModal(null); load()
+          }}/>
       )}
     </div>
   )
