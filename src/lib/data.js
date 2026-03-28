@@ -14,7 +14,7 @@ export const ROLE_LABELS = {
 export const NAV = [
   {
     label:'Overview', href:'/dashboard/overview', icon:'LayoutDashboard',
-    roles:['admin','general_manager','hr','accountant','poc']
+    roles:['admin']
   },
   {
     label:'Reports', href:'/dashboard/analytics', icon:'BarChart3',
