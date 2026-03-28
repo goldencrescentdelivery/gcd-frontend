@@ -43,9 +43,12 @@ export const NAV = [
     label:'POC Station', href:'/dashboard/poc', icon:'Radio', alertKey:'poc',
     roles:['admin','general_manager','poc'],
     children:[
-      { label:'Fleet',     href:'/dashboard/poc?tab=fleet',  icon:'Truck',       alertKey:'fleet'  },
-      { label:'SIM Cards', href:'/dashboard/poc?tab=sims',   icon:'Smartphone',  alertKey:'sims'   },
-      { label:'Leaves',    href:'/dashboard/poc?tab=leaves', icon:'CalendarOff', alertKey:'leaves' },
+      { label:'Attendance', href:'/dashboard/poc?tab=attendance', icon:'Clock'                        },
+      { label:'Fleet',      href:'/dashboard/poc?tab=fleet',      icon:'Truck',      alertKey:'fleet' },
+      { label:'SIM Cards',  href:'/dashboard/poc?tab=sims',       icon:'Smartphone', alertKey:'sims'  },
+      { label:'Leaves',     href:'/dashboard/poc?tab=leaves',     icon:'CalendarOff',alertKey:'leaves'},
+      { label:'Deliveries', href:'/dashboard/poc?tab=deliveries', icon:'Package'                      },
+      { label:'Notices',    href:'/dashboard/poc?tab=notices',    icon:'Bell'                         },
     ]
   },
   {

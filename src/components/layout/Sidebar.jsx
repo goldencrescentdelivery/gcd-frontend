@@ -10,14 +10,14 @@ import {
   FileText, Wallet, Receipt, ChevronDown, LogOut,
   ShieldCheck, Radio, HardDrive, KeyRound, ChevronLeft, ChevronRight,
   Settings, Trophy, AlertTriangle, Calendar, Zap, LayoutDashboard,
-  Truck, Smartphone, Shield,
+  Truck, Smartphone, Shield, Package, Bell,
 } from 'lucide-react'
 
 const ICONS = {
   BarChart3, Users, DollarSign, UserCircle, Clock, CalendarOff,
   FileText, Wallet, Receipt, ShieldCheck, Radio, HardDrive, KeyRound,
   Settings, Trophy, AlertTriangle, Calendar, Zap, LayoutDashboard,
-  Truck, Smartphone, Shield,
+  Truck, Smartphone, Shield, Package, Bell,
 }
 
 const ROLE_LABELS = {
