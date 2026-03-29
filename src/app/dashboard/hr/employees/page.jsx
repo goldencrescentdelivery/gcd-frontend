@@ -524,14 +524,16 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
               })}
             </div>
 
-            <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:8 }}>
-              <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center',borderRadius:10 }}>
-                <Pencil size={13}/> Edit
-              </button>
-              <button onClick={onDelete} style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'9px',borderRadius:10,background:'var(--red-bg)',border:'1px solid var(--red-border)',color:'var(--red)',fontWeight:600,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
-                <Trash2 size={13}/> Delete
-              </button>
-            </div>
+            {userRole !== 'accountant' && (
+              <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:8 }}>
+                <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center',borderRadius:10 }}>
+                  <Pencil size={13}/> Edit
+                </button>
+                <button onClick={onDelete} style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'9px',borderRadius:10,background:'var(--red-bg)',border:'1px solid var(--red-border)',color:'var(--red)',fontWeight:600,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
+                  <Trash2 size={13}/> Delete
+                </button>
+              </div>
+            )}
           </>
         )}
 
@@ -617,7 +619,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
 }
 
 /* ── Employee Card ───────────────────────────────────────────── */
-function EmpCard({ emp, onClick, onEdit, onDelete, index, isSelected }) {
+function EmpCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole }) {
   const s   = STATUS[emp.status]||STATUS.inactive
   const sc  = SC_COLOR[emp.station_code]||'#B8860B'
   const sbg = SC_BG[emp.station_code]||'#FFFBEB'
@@ -662,14 +664,16 @@ function EmpCard({ emp, onClick, onEdit, onDelete, index, isSelected }) {
           <span style={{ width:6,height:6,borderRadius:'50%',background:s.dot,display:'inline-block' }}/>{s.l}
         </span>
         {emp.phone&&<span style={{ fontSize:11,color:'var(--text-sub)',display:'flex',alignItems:'center',gap:3 }}><Phone size={10}/>{emp.phone}</span>}
-        <button onClick={e=>{e.stopPropagation();onEdit(emp)}}
-          style={{ padding:'4px 10px',borderRadius:7,background:'var(--bg-alt)',border:'1px solid var(--border)',cursor:'pointer',fontSize:11,color:'var(--text-sub)',fontWeight:600,display:'flex',alignItems:'center',gap:4,fontFamily:'Poppins,sans-serif' }}>
-          <Pencil size={11}/> Edit
-        </button>
-        <button onClick={e=>{e.stopPropagation();onDelete(emp)}}
-          style={{ padding:'4px 8px',borderRadius:7,background:'var(--red-bg)',border:'1px solid var(--red-border)',cursor:'pointer',color:'var(--red)',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif' }}>
-          <Trash2 size={11}/>
-        </button>
+        {userRole !== 'accountant' && <>
+          <button onClick={e=>{e.stopPropagation();onEdit(emp)}}
+            style={{ padding:'4px 10px',borderRadius:7,background:'var(--bg-alt)',border:'1px solid var(--border)',cursor:'pointer',fontSize:11,color:'var(--text-sub)',fontWeight:600,display:'flex',alignItems:'center',gap:4,fontFamily:'Poppins,sans-serif' }}>
+            <Pencil size={11}/> Edit
+          </button>
+          <button onClick={e=>{e.stopPropagation();onDelete(emp)}}
+            style={{ padding:'4px 8px',borderRadius:7,background:'var(--red-bg)',border:'1px solid var(--red-border)',cursor:'pointer',color:'var(--red)',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif' }}>
+            <Trash2 size={11}/>
+          </button>
+        </>}
       </div>
     </div>
   )
@@ -736,9 +740,11 @@ export default function EmployeesPage() {
         {/* Action bar */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
           <p style={{ fontSize:12.5, color:'var(--text-muted)' }}>{total} DAs · {active} active</p>
-          <button className="btn btn-primary" onClick={()=>setModal({mode:'add',emp:null})} style={{ borderRadius:24, flexShrink:0 }}>
-            <Plus size={14}/> Add DA
-          </button>
+          {userRole !== 'accountant' && (
+            <button className="btn btn-primary" onClick={()=>setModal({mode:'add',emp:null})} style={{ borderRadius:24, flexShrink:0 }}>
+              <Plus size={14}/> Add DA
+            </button>
+          )}
         </div>
 
         {/* Stats */}
@@ -797,7 +803,8 @@ export default function EmployeesPage() {
                 isSelected={selected?.id===emp.id}
                 onClick={()=>setSelected(selected?.id===emp.id?null:emp)}
                 onEdit={e=>setModal({mode:'edit',emp:e})}
-                onDelete={handleDelete}/>
+                onDelete={handleDelete}
+                userRole={userRole}/>
             ))}
           </div>
         )}

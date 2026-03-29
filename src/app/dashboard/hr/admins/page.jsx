@@ -65,6 +65,7 @@ function Lbl({ children }) {
 /* ── Admin Modal ─────────────────────────────────────────────── */
 function AdminModal({ emp, onSave, onClose, mode }) {
   const [form, setForm] = useState(() => emp ? {
+    ...EMPTY,
     ...emp,
     salary:             emp.salary||'',
     joined:             emp.joined?.slice(0,10)||'',
@@ -203,7 +204,7 @@ function WorkNumberAssigner({ emp, onSaved, userRole }) {
   const [history, setHistory] = useState(null)
   const [hLoad,   setHLoad]   = useState(false)
 
-  const canEdit = ['admin','manager','general_manager','hr','accountant'].includes(userRole)
+  const canEdit = ['admin','manager','general_manager','hr'].includes(userRole)
 
   function reset() { setMode('view'); setStep(0); setConflict(null); setPending(''); setSims([]) }
 
@@ -350,7 +351,7 @@ function SalaryPanel({ emp, userRole }) {
   const [showBonus,setShowBonus]=useState(false)
   const [showDed, setShowDed] = useState(false)
 
-  const canManage = ['admin','accountant'].includes(userRole)
+  const canManage = ['admin'].includes(userRole)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -511,7 +512,7 @@ function AttendancePanel({ emp, userRole }) {
   const [saving,  setSaving]  = useState(false)
   const [showLog, setShowLog] = useState(false)
 
-  const canManage = ['admin','accountant','manager','general_manager'].includes(userRole)
+  const canManage = ['admin','manager','general_manager'].includes(userRole)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -719,14 +720,16 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
               <Receipt size={13}/> View Expenses <ExternalLink size={11}/>
             </a>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-              <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center', borderRadius:10 }}>
-                <Pencil size={13}/> Edit
-              </button>
-              <button onClick={onDelete} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px', borderRadius:10, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                <Trash2 size={13}/> Delete
-              </button>
-            </div>
+            {userRole !== 'accountant' && (
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center', borderRadius:10 }}>
+                  <Pencil size={13}/> Edit
+                </button>
+                <button onClick={onDelete} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px', borderRadius:10, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                  <Trash2 size={13}/> Delete
+                </button>
+              </div>
+            )}
           </>
         )}
 
@@ -780,7 +783,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
 }
 
 /* ── Admin Staff Card ─────────────────────────────────────────── */
-function AdminCard({ emp, onClick, onEdit, onDelete, index, isSelected }) {
+function AdminCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole }) {
   const rc  = roleStyle(emp.role)
   const s   = STATUS[emp.status]||STATUS.inactive
   const vExp = expiry(emp.visa_expiry)
@@ -826,14 +829,16 @@ function AdminCard({ emp, onClick, onEdit, onDelete, index, isSelected }) {
         </span>
         {emp.phone&&<span style={{ fontSize:11,color:'var(--text-sub)',display:'flex',alignItems:'center',gap:3 }}><Phone size={10}/>{emp.phone}</span>}
         {emp.salary&&<span style={{ fontSize:11,color:'var(--text-sub)',display:'flex',alignItems:'center',gap:3 }}><DollarSign size={10}/>AED {Number(emp.salary).toLocaleString()}</span>}
-        <button onClick={e=>{e.stopPropagation();onEdit(emp)}}
-          style={{ padding:'4px 10px',borderRadius:7,background:'var(--bg-alt)',border:'1px solid var(--border)',cursor:'pointer',fontSize:11,color:'var(--text-sub)',fontWeight:600,display:'flex',alignItems:'center',gap:4,fontFamily:'Poppins,sans-serif' }}>
-          <Pencil size={11}/> Edit
-        </button>
-        <button onClick={e=>{e.stopPropagation();onDelete(emp)}}
-          style={{ padding:'4px 8px',borderRadius:7,background:'var(--red-bg)',border:'1px solid var(--red-border)',cursor:'pointer',color:'var(--red)',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif' }}>
-          <Trash2 size={11}/>
-        </button>
+        {userRole !== 'accountant' && <>
+          <button onClick={e=>{e.stopPropagation();onEdit(emp)}}
+            style={{ padding:'4px 10px',borderRadius:7,background:'var(--bg-alt)',border:'1px solid var(--border)',cursor:'pointer',fontSize:11,color:'var(--text-sub)',fontWeight:600,display:'flex',alignItems:'center',gap:4,fontFamily:'Poppins,sans-serif' }}>
+            <Pencil size={11}/> Edit
+          </button>
+          <button onClick={e=>{e.stopPropagation();onDelete(emp)}}
+            style={{ padding:'4px 8px',borderRadius:7,background:'var(--red-bg)',border:'1px solid var(--red-border)',cursor:'pointer',color:'var(--red)',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif' }}>
+            <Trash2 size={11}/>
+          </button>
+        </>}
       </div>
     </div>
   )
@@ -931,7 +936,7 @@ export default function AdminsPage() {
 
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
           <p style={{ fontSize:12.5, color:'var(--text-muted)' }}>{total} admin staff · {active} active</p>
-          {['admin','hr','accountant','general_manager'].includes(userRole) && (
+          {['admin','hr','general_manager'].includes(userRole) && (
             <button className="btn btn-primary" onClick={()=>setModal({mode:'add',emp:null})} style={{ borderRadius:24, flexShrink:0 }}>
               <Plus size={14}/> Add Staff
             </button>
@@ -997,7 +1002,8 @@ export default function AdminsPage() {
                 isSelected={selected?.id===emp.id}
                 onClick={()=>setSelected(selected?.id===emp.id?null:emp)}
                 onEdit={e=>setModal({mode:'edit',emp:e})}
-                onDelete={handleDelete}/>
+                onDelete={handleDelete}
+                userRole={userRole}/>
             ))}
           </div>
         )}

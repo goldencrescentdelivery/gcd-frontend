@@ -12,38 +12,23 @@ export const ROLE_LABELS = {
 }
 
 export const NAV = [
-  {
-    label:'Overview', href:'/dashboard/overview', icon:'LayoutDashboard',
-    roles:['admin']
-  },
-  {
-    label:'Reports', href:'/dashboard/analytics', icon:'BarChart3',
-    roles:['admin','general_manager','hr','accountant','poc']
-  },
-  {
-    label:'HR & Staff', href:'/dashboard/hr', icon:'Users', alertKey:'hr',
-    roles:['admin','general_manager','hr','accountant'],
-    children:[
-      { label:'DAs',           href:'/dashboard/hr/employees',   icon:'UserCircle',  alertKey:'employees', roles:['admin','general_manager','hr','accountant'] },
-      { label:'Admins',        href:'/dashboard/hr/admins',      icon:'Shield',      roles:['admin','general_manager','hr','accountant'] },
-      { label:'Attendance',    href:'/dashboard/hr/attendance',  icon:'Clock',       roles:['admin','general_manager','hr'] },
-      { label:'Leaves',        href:'/dashboard/hr/leaves',      icon:'CalendarOff', alertKey:'leaves', roles:['admin','general_manager','hr'] },
-      { label:'Documents',     href:'/dashboard/hr/documents',   icon:'FileText',    roles:['admin','hr'] },
-      { label:'Compliance',    href:'/dashboard/hr/compliance',  icon:'ShieldCheck', roles:['admin','hr'] },
-      { label:'User Accounts', href:'/dashboard/hr/users',       icon:'KeyRound',    roles:['admin'] }]
-  },
-  {
-    label:'Finance', href:'/dashboard/finance', icon:'DollarSign',
-    roles:['admin','accountant'],
-    children:[
-      { label:'Payroll',    href:'/dashboard/finance/payroll',    icon:'Wallet'  },
-      { label:'Expenses',   href:'/dashboard/finance/expenses',   icon:'Receipt' },
-      { label:'Petty Cash', href:'/dashboard/finance/petty-cash', icon:'Banknote'}]
-  },
-  {
-    label:'Petty Cash', href:'/dashboard/finance/petty-cash', icon:'Banknote',
-    roles:['general_manager','hr','poc']
-  },
+  { label:'Overview',      href:'/dashboard/overview',          icon:'LayoutDashboard', roles:['admin'] },
+  { label:'Reports',       href:'/dashboard/analytics',         icon:'BarChart3',       roles:['admin','general_manager','hr','accountant','poc'] },
+
+  // HR items — direct (no group)
+  { label:'DAs',           href:'/dashboard/hr/employees',      icon:'UserCircle',      roles:['admin','general_manager','hr','accountant'], alertKey:'employees' },
+  { label:'Admins',        href:'/dashboard/hr/admins',         icon:'Shield',          roles:['admin','general_manager','hr','accountant'] },
+  { label:'Attendance',    href:'/dashboard/hr/attendance',     icon:'Clock',           roles:['admin','general_manager','hr'] },
+  { label:'Leaves',        href:'/dashboard/hr/leaves',         icon:'CalendarOff',     roles:['admin','general_manager','hr'], alertKey:'leaves' },
+  { label:'Documents',     href:'/dashboard/hr/documents',      icon:'FileText',        roles:['admin','hr'] },
+  { label:'Compliance',    href:'/dashboard/hr/compliance',     icon:'ShieldCheck',     roles:['admin','hr'] },
+  { label:'User Accounts', href:'/dashboard/hr/users',          icon:'KeyRound',        roles:['admin'] },
+
+  // Finance items — direct (no group)
+  { label:'Payroll',       href:'/dashboard/finance/payroll',   icon:'Wallet',          roles:['admin','accountant'] },
+  { label:'Expenses',      href:'/dashboard/finance/expenses',  icon:'Receipt',         roles:['admin','accountant'] },
+  { label:'Petty Cash',    href:'/dashboard/finance/petty-cash',icon:'Banknote',        roles:['admin','accountant','general_manager','hr','poc'] },
+
   {
     label:'POC Station', href:'/dashboard/poc', icon:'Radio', alertKey:'poc',
     roles:['admin','general_manager','poc'],
@@ -56,11 +41,6 @@ export const NAV = [
       { label:'Notices',    href:'/dashboard/poc?tab=notices',    icon:'Bell'                         },
     ]
   },
-  {
-    label:'Backup', href:'/dashboard/backup', icon:'HardDrive',
-    roles:['admin']
-  },
-  {
-    label:'Settings', href:'/dashboard/settings', icon:'Settings',
-    roles:['admin','general_manager','hr','accountant','poc']
-  }]
+  { label:'Backup',        href:'/dashboard/backup',            icon:'HardDrive',       roles:['admin'] },
+  { label:'Settings',      href:'/dashboard/settings',          icon:'Settings',        roles:['admin','general_manager','hr','accountant','poc'] },
+]

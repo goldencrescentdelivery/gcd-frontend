@@ -149,6 +149,11 @@ export default function AttendancePage() {
   const [stationFilter, setStationFilter] = useState('All')
   const [modal,       setModal]       = useState(false)
   const [viewTab,     setViewTab]     = useState('daily')   // daily | summary
+  const [userRole,    setUserRole]    = useState(null)
+
+  useEffect(() => {
+    try { const t=localStorage.getItem('gcd_token'); if(t){const p=JSON.parse(atob(t.split('.')[1]));setUserRole(p.role)} } catch(e){}
+  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -191,7 +196,9 @@ export default function AttendancePage() {
         ))}
         <div style={{ flex:1 }}/>
         <button className="btn btn-secondary btn-sm"><Download size={13}/> Export</button>
-        <button className="btn btn-primary" onClick={()=>setModal(true)}><Plus size={14}/> Log Attendance</button>
+        {userRole !== 'accountant' && (
+          <button className="btn btn-primary" onClick={()=>setModal(true)}><Plus size={14}/> Log Attendance</button>
+        )}
       </div>
 
       {/* KPIs */}
@@ -247,7 +254,7 @@ export default function AttendancePage() {
                     <td className="hide-mobile" style={{ fontFamily:'monospace', fontSize:12, color:'#6B5D4A' }}>{att.check_in||'—'}</td>
                     <td className="hide-mobile" style={{ fontFamily:'monospace', fontSize:12, color:'#A89880' }}>{att.check_out||'—'}</td>
                     <td>
-                      {att.status==='present' && att.check_in && !att.check_out && (
+                      {att.status==='present' && att.check_in && !att.check_out && userRole !== 'accountant' && (
                         <button className="btn btn-secondary btn-sm" onClick={()=>handleCheckout(att)}>Check Out</button>
                       )}
                     </td>

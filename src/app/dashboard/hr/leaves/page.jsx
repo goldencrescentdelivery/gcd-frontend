@@ -138,9 +138,11 @@ export default function LeavesPage() {
             </button>
           ))}
         </div>
-        <button className="btn btn-primary btn-sm" onClick={()=>setModal(true)} style={{ borderRadius:20 }}>
-          <Plus size={13}/> New Request
-        </button>
+        {userRole !== 'accountant' && (
+          <button className="btn btn-primary btn-sm" onClick={()=>setModal(true)} style={{ borderRadius:20 }}>
+            <Plus size={13}/> New Request
+          </button>
+        )}
       </div>
 
       {/* Leaves */}

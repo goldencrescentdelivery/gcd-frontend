@@ -22,6 +22,7 @@ const PAGE_TITLES = {
   '/dashboard/roster':            'Weekly Roster',
   '/dashboard/damage':            'Damage Reports',
   '/dashboard/advances':          'Salary Advances',
+  '/dashboard/petty-cash':        'Petty Cash',
 }
 
 const ROLE_CFG = {
