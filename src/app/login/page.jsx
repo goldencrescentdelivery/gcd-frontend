@@ -106,65 +106,13 @@ export default function LoginPage() {
           animation: 'fadeIn 0.5s ease',
         }}>
 
-          {/* Award image — full bleed top half */}
-          <div style={{ flex: '1 1 0', overflow: 'hidden', position: 'relative', minHeight: 0 }}>
-            <img
-              src="/award.jpeg"
-              alt="Amazon Best Performance Award"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              onError={e => { e.currentTarget.parentElement.style.background='linear-gradient(135deg,#FEF3C7,#FDE68A)'; e.currentTarget.style.display='none' }}
-            />
-            {/* subtle overlay at bottom for readability */}
-            <div style={{ position:'absolute', bottom:0, left:0, right:0, height:80, background:'linear-gradient(to top, rgba(255,255,255,0.9), transparent)', pointerEvents:'none' }}/>
-          </div>
-
-          {/* Brand + award info — bottom section */}
-          <div style={{ padding: '28px 36px 36px', background: '#fff' }}>
-            {/* Logo + name row */}
-            <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:20 }}>
-              <div style={{ width:52, height:52, borderRadius:14, overflow:'hidden', border:'1.5px solid #E2E8F0', flexShrink:0, background:'#fff' }}>
-                <img src="/logo.webp" alt="GCD" style={{ width:'100%', height:'100%', objectFit:'contain' }}/>
-              </div>
-              <div>
-                <div style={{ fontFamily:"'Poppins',sans-serif", fontWeight:800, fontSize:18, color:'#1E293B', letterSpacing:'-0.02em', lineHeight:1.2 }}>
-                  Golden Crescent
-                </div>
-                <div style={{ fontSize:10, letterSpacing:'0.18em', textTransform:'uppercase', color:'#B8860B', fontWeight:600, marginTop:2 }}>
-                  Operations Dashboard
-                </div>
-              </div>
-            </div>
-
-            {/* Award badge */}
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              background: 'linear-gradient(135deg,#FFFBEB,#FEF3C7)',
-              border: '1px solid #FDE68A',
-              borderRadius: 10,
-              padding: '10px 16px',
-              marginBottom: 14,
-            }}>
-              <span style={{ fontSize:20 }}>🏆</span>
-              <div>
-                <div style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:13, color:'#92400E' }}>
-                  Amazon Outstanding DSP Award 2025
-                </div>
-                <div style={{ fontSize:11, color:'#B45309', marginTop:1 }}>
-                  DSP Lite · Together, We Deliver
-                </div>
-              </div>
-            </div>
-
-            <p style={{ fontSize:12.5, color:'#64748B', margin:0, lineHeight:1.7 }}>
-              Proud recipients of Amazon's Outstanding DSP recognition — a testament to our team's relentless dedication and operational excellence.
-            </p>
-
-            <p style={{ fontSize:11.5, color:'#94A3B8', margin:'20px 0 0', fontStyle:'italic' }}>
-              "Excellence is not a destination, it's a continuous journey."
-            </p>
-          </div>
+          {/* Award image — full bleed entire panel */}
+          <img
+            src="/award.jpeg"
+            alt="Amazon Best Performance Award"
+            style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', position:'absolute', top:0, left:0 }}
+            onError={e => { e.currentTarget.style.display='none' }}
+          />
         </div>
 
         {/* ══════════════ RIGHT PANEL ══════════════ */}
