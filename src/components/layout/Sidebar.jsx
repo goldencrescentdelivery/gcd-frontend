@@ -7,7 +7,7 @@ import { NAV } from '@/lib/data'
 import { useState } from 'react'
 import {
   BarChart3, Users, DollarSign, UserCircle, Clock, CalendarOff,
-  FileText, Wallet, Receipt, ChevronDown,
+  FileText, Wallet, Receipt, ChevronDown, Banknote,
   ShieldCheck, Radio, HardDrive, KeyRound, ChevronLeft, ChevronRight,
   Settings, Trophy, AlertTriangle, Calendar, Zap, LayoutDashboard,
   Truck, Smartphone, Shield, Package, Bell,
@@ -18,7 +18,7 @@ const ICONS = {
   BarChart3, Users, DollarSign, UserCircle, Clock, CalendarOff,
   FileText, Wallet, Receipt, ShieldCheck, Radio, HardDrive, KeyRound,
   Settings, Trophy, AlertTriangle, Calendar, Zap, LayoutDashboard,
-  Truck, Smartphone, Shield, Package, Bell,
+  Truck, Smartphone, Shield, Package, Bell, Banknote,
 }
 
 const ROLE_LABELS = {
