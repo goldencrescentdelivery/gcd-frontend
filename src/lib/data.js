@@ -34,10 +34,11 @@ export const NAV = [
   },
   {
     label:'Finance', href:'/dashboard/finance', icon:'DollarSign',
-    roles:['admin','accountant'],
+    roles:['admin','accountant','general_manager','hr','poc'],
     children:[
-      { label:'Payroll',  href:'/dashboard/finance/payroll',  icon:'Wallet'  },
-      { label:'Expenses', href:'/dashboard/finance/expenses', icon:'Receipt' }]
+      { label:'Payroll',    href:'/dashboard/finance/payroll',     icon:'Wallet',   roles:['admin','accountant'] },
+      { label:'Expenses',  href:'/dashboard/finance/expenses',    icon:'Receipt',  roles:['admin','accountant'] },
+      { label:'Petty Cash',href:'/dashboard/finance/petty-cash',  icon:'Banknote', roles:['admin','accountant','general_manager','hr','poc'] }]
   },
   {
     label:'POC Station', href:'/dashboard/poc', icon:'Radio', alertKey:'poc',
