@@ -4,6 +4,10 @@ import { AuthProvider } from '@/lib/auth'
 export const metadata = {
   title: { default: 'GCD Dashboard', template: '%s | GCD' },
   description: 'Golden Crescent Delivery — Internal Operations Dashboard',
+  icons: {
+    icon: '/logo.webp',
+    apple: '/logo.webp',
+  },
 }
 
 export const viewport = {
