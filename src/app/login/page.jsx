@@ -24,192 +24,182 @@ export default function LoginPage() {
   return (
     <>
       <style>{`
-        @keyframes fadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-        @keyframes shimmer {
-          0%{background-position:200% center}
-          100%{background-position:-200% center}
-        }
+        @keyframes spin   { to{transform:rotate(360deg)} }
+
         .login-input {
-          width:100%;
-          padding:12px 14px;
-          border:1.5px solid #E5E0D8;
-          border-radius:11px;
-          font-size:14px;
-          color:#1A1612;
-          background:#FAFAF8;
-          outline:none;
-          transition:border-color 0.2s, box-shadow 0.2s;
-          box-sizing:border-box;
-          font-family:'Poppins',sans-serif;
+          width: 100%;
+          padding: 12px 16px;
+          border: 1.5px solid #E2E8F0;
+          border-radius: 10px;
+          font-size: 14px;
+          color: #1E293B;
+          background: #F8FAFC;
+          outline: none;
+          transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+          box-sizing: border-box;
+          font-family: 'Poppins', sans-serif;
         }
         .login-input:focus {
-          border-color:#B8860B;
-          box-shadow:0 0 0 3px rgba(184,134,11,0.12);
-          background:#fff;
+          border-color: #B8860B;
+          box-shadow: 0 0 0 3px rgba(184,134,11,0.1);
+          background: #fff;
         }
-        .login-input::placeholder { color:#C4B89A; }
+        .login-input::placeholder { color: #94A3B8; }
+
         .sign-btn {
-          width:100%;
-          padding:13px;
-          border:none;
-          border-radius:12px;
-          font-size:14px;
-          font-weight:700;
-          font-family:'Poppins',sans-serif;
-          letter-spacing:0.01em;
-          cursor:pointer;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          gap:8px;
-          transition:all 0.2s;
-          background:linear-gradient(135deg,#B8860B 0%,#D4A017 50%,#C8980E 100%);
-          color:#fff;
-          box-shadow:0 4px 20px rgba(184,134,11,0.35);
+          width: 100%;
+          padding: 13px;
+          border: none;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 700;
+          font-family: 'Poppins', sans-serif;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: all 0.2s;
+          background: linear-gradient(135deg, #B8860B 0%, #D4A017 100%);
+          color: #fff;
+          box-shadow: 0 4px 16px rgba(184,134,11,0.3);
         }
         .sign-btn:hover:not(:disabled) {
-          transform:translateY(-1px);
-          box-shadow:0 8px 28px rgba(184,134,11,0.45);
+          transform: translateY(-1px);
+          box-shadow: 0 8px 24px rgba(184,134,11,0.4);
         }
-        .sign-btn:active:not(:disabled) { transform:translateY(0); }
-        .sign-btn:disabled { opacity:0.65; cursor:not-allowed; }
-        @media(max-width:768px){
-          .left-panel { display:none !important; }
-          .right-panel { border-radius:0 !important; min-height:100vh !important; }
-          .login-wrap { padding:0 !important; }
+        .sign-btn:active:not(:disabled) { transform: translateY(0); }
+        .sign-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        @media (max-width: 768px) {
+          .left-panel  { display: none !important; }
+          .right-panel { border-radius: 0 !important; }
+          .login-wrap  { padding: 0 !important; }
         }
       `}</style>
 
+      {/* ── Page wrapper ── */}
       <div className="login-wrap" style={{
-        minHeight:'100vh',
-        display:'flex',
-        alignItems:'stretch',
-        background:'linear-gradient(135deg,#FDF6E3 0%,#F5EDCC 100%)',
-        padding:'24px',
-        gap:24,
-        boxSizing:'border-box',
+        minHeight: '100vh',
+        display: 'flex',
+        background: '#F1F5F9',
+        padding: 20,
+        gap: 20,
+        boxSizing: 'border-box',
+        alignItems: 'stretch',
       }}>
 
-        {/* ── LEFT PANEL ───────────────────────── */}
+        {/* ══════════════ LEFT PANEL ══════════════ */}
         <div className="left-panel" style={{
-          flex:'1 1 0',
-          borderRadius:24,
-          background:'linear-gradient(160deg,#FFFBF0 0%,#FEF3C7 45%,#FDE68A 100%)',
-          display:'flex',
-          flexDirection:'column',
-          alignItems:'center',
-          justifyContent:'space-between',
-          padding:'52px 44px',
-          overflow:'hidden',
-          position:'relative',
-          animation:'fadeIn 0.6s ease',
-          border:'1px solid #F5DFA0',
+          flex: '1 1 0',
+          minWidth: 0,
+          borderRadius: 20,
+          overflow: 'hidden',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          background: '#fff',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+          animation: 'fadeIn 0.5s ease',
         }}>
 
-          {/* decorative glow circles */}
-          <div style={{ position:'absolute', top:-60, right:-60, width:240, height:240, borderRadius:'50%', background:'radial-gradient(circle,rgba(184,134,11,0.15) 0%,transparent 70%)', pointerEvents:'none' }}/>
-          <div style={{ position:'absolute', bottom:-40, left:-40, width:180, height:180, borderRadius:'50%', background:'radial-gradient(circle,rgba(212,160,23,0.12) 0%,transparent 70%)', pointerEvents:'none' }}/>
-
-          {/* brand */}
-          <div style={{ textAlign:'center', animation:'fadeUp 0.7s ease' }}>
-            <div style={{
-              width:90, height:90,
-              borderRadius:24,
-              background:'#fff',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              margin:'0 auto 20px',
-              boxShadow:'0 8px 32px rgba(184,134,11,0.25)',
-              overflow:'hidden',
-              border:'2px solid rgba(184,134,11,0.15)',
-            }}>
-              <img src="/logo.webp" alt="GCD" style={{ width:90, height:90, objectFit:'contain' }}/>
-            </div>
-            <div style={{ fontFamily:"'Poppins',sans-serif", fontWeight:800, fontSize:26, color:'#1A1612', letterSpacing:'-0.03em', marginBottom:6 }}>
-              Golden Crescent
-            </div>
-            <div style={{ fontSize:11, letterSpacing:'0.2em', textTransform:'uppercase', color:'#9A6E00', fontWeight:600 }}>
-              Operations Dashboard
-            </div>
-          </div>
-
-          {/* award card */}
-          <div style={{
-            width:'100%',
-            background:'#fff',
-            border:'1px solid rgba(184,134,11,0.25)',
-            borderRadius:18,
-            overflow:'hidden',
-            animation:'fadeUp 0.9s ease',
-            boxShadow:'0 4px 24px rgba(184,134,11,0.15)',
-          }}>
+          {/* Award image — full bleed top half */}
+          <div style={{ flex: '1 1 0', overflow: 'hidden', position: 'relative', minHeight: 0 }}>
             <img
               src="/award.jpeg"
               alt="Amazon Best Performance Award"
-              style={{ width:'100%', display:'block', maxHeight:220, objectFit:'cover' }}
-              onError={e => { e.currentTarget.style.display='none' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              onError={e => { e.currentTarget.parentElement.style.background='linear-gradient(135deg,#FEF3C7,#FDE68A)'; e.currentTarget.style.display='none' }}
             />
-            <div style={{ padding:'14px 18px' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
-                <span style={{ fontSize:18 }}>🏆</span>
-                <span style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:13, color:'#B8860B' }}>
-                  Amazon Best Performance Award
-                </span>
-              </div>
-              <p style={{ fontSize:12, color:'#7A6A50', margin:0, lineHeight:1.6 }}>
-                Proud recipients of Amazon's Best Performance recognition — a testament to our team's dedication and excellence.
-              </p>
-            </div>
+            {/* subtle overlay at bottom for readability */}
+            <div style={{ position:'absolute', bottom:0, left:0, right:0, height:80, background:'linear-gradient(to top, rgba(255,255,255,0.9), transparent)', pointerEvents:'none' }}/>
           </div>
 
-          {/* footer quote */}
-          <div style={{ textAlign:'center', animation:'fadeUp 1.1s ease' }}>
-            <p style={{ fontSize:12, color:'#A08040', margin:0, fontStyle:'italic', lineHeight:1.6 }}>
-              "Excellence is not a destination,<br/>it's a continuous journey."
+          {/* Brand + award info — bottom section */}
+          <div style={{ padding: '28px 36px 36px', background: '#fff' }}>
+            {/* Logo + name row */}
+            <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:20 }}>
+              <div style={{ width:52, height:52, borderRadius:14, overflow:'hidden', border:'1.5px solid #E2E8F0', flexShrink:0, background:'#fff' }}>
+                <img src="/logo.webp" alt="GCD" style={{ width:'100%', height:'100%', objectFit:'contain' }}/>
+              </div>
+              <div>
+                <div style={{ fontFamily:"'Poppins',sans-serif", fontWeight:800, fontSize:18, color:'#1E293B', letterSpacing:'-0.02em', lineHeight:1.2 }}>
+                  Golden Crescent
+                </div>
+                <div style={{ fontSize:10, letterSpacing:'0.18em', textTransform:'uppercase', color:'#B8860B', fontWeight:600, marginTop:2 }}>
+                  Operations Dashboard
+                </div>
+              </div>
+            </div>
+
+            {/* Award badge */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'linear-gradient(135deg,#FFFBEB,#FEF3C7)',
+              border: '1px solid #FDE68A',
+              borderRadius: 10,
+              padding: '10px 16px',
+              marginBottom: 14,
+            }}>
+              <span style={{ fontSize:20 }}>🏆</span>
+              <div>
+                <div style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:13, color:'#92400E' }}>
+                  Amazon Outstanding DSP Award 2025
+                </div>
+                <div style={{ fontSize:11, color:'#B45309', marginTop:1 }}>
+                  DSP Lite · Together, We Deliver
+                </div>
+              </div>
+            </div>
+
+            <p style={{ fontSize:12.5, color:'#64748B', margin:0, lineHeight:1.7 }}>
+              Proud recipients of Amazon's Outstanding DSP recognition — a testament to our team's relentless dedication and operational excellence.
+            </p>
+
+            <p style={{ fontSize:11.5, color:'#94A3B8', margin:'20px 0 0', fontStyle:'italic' }}>
+              "Excellence is not a destination, it's a continuous journey."
             </p>
           </div>
         </div>
 
-        {/* ── RIGHT PANEL ──────────────────────── */}
+        {/* ══════════════ RIGHT PANEL ══════════════ */}
         <div className="right-panel" style={{
-          width:'100%',
-          maxWidth:440,
-          background:'#fff',
-          borderRadius:24,
-          display:'flex',
-          flexDirection:'column',
-          alignItems:'center',
-          justifyContent:'center',
-          padding:'52px 44px',
-          boxShadow:'0 8px 48px rgba(0,0,0,0.08)',
-          animation:'fadeUp 0.5s ease',
-          boxSizing:'border-box',
-          flexShrink:0,
+          flex: '1 1 0',
+          minWidth: 0,
+          background: '#fff',
+          borderRadius: 20,
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '52px 48px',
+          boxSizing: 'border-box',
+          animation: 'fadeUp 0.5s ease',
         }}>
+          <div style={{ width:'100%', maxWidth:380 }}>
 
-          {/* mobile-only logo */}
-          <div style={{ display:'none', textAlign:'center', marginBottom:32 }} className="mobile-logo">
-            <div style={{ width:68, height:68, borderRadius:20, overflow:'hidden', margin:'0 auto 14px', boxShadow:'0 6px 24px rgba(184,134,11,0.3)' }}>
-              <img src="/logo.webp" alt="GCD" style={{ width:'100%', height:'100%', objectFit:'contain' }}/>
-            </div>
-            <div style={{ fontFamily:"'Poppins',sans-serif", fontWeight:800, fontSize:20, color:'#1A1612', letterSpacing:'-0.03em' }}>Golden Crescent</div>
-            <div style={{ fontSize:10, letterSpacing:'0.18em', textTransform:'uppercase', color:'#B8860B', fontWeight:600 }}>Operations Dashboard</div>
-          </div>
-
-          <div style={{ width:'100%', maxWidth:360 }}>
+            {/* Heading */}
             <div style={{ marginBottom:36 }}>
-              <h1 style={{ fontFamily:"'Poppins',sans-serif", fontWeight:800, fontSize:26, color:'#1A1612', margin:'0 0 6px', letterSpacing:'-0.03em' }}>
+              <h1 style={{ fontFamily:"'Poppins',sans-serif", fontWeight:800, fontSize:28, color:'#1E293B', margin:'0 0 8px', letterSpacing:'-0.03em' }}>
                 Welcome back 👋
               </h1>
-              <p style={{ fontSize:13.5, color:'#A89880', margin:0, lineHeight:1.5 }}>
+              <p style={{ fontSize:14, color:'#94A3B8', margin:0, lineHeight:1.5 }}>
                 Sign in to your GCD Operations Dashboard to continue.
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:18 }}>
+            {/* Form */}
+            <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
               <div>
-                <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#6B5E4E', marginBottom:7, letterSpacing:'0.03em', textTransform:'uppercase' }}>
+                <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#475569', marginBottom:8, letterSpacing:'0.05em', textTransform:'uppercase' }}>
                   Email Address
                 </label>
                 <input
@@ -224,7 +214,7 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#6B5E4E', marginBottom:7, letterSpacing:'0.03em', textTransform:'uppercase' }}>
+                <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#475569', marginBottom:8, letterSpacing:'0.05em', textTransform:'uppercase' }}>
                   Password
                 </label>
                 <div style={{ position:'relative' }}>
@@ -236,12 +226,12 @@ export default function LoginPage() {
                     onChange={e => setPassword(e.target.value)}
                     required
                     autoComplete="current-password"
-                    style={{ paddingRight:44 }}
+                    style={{ paddingRight:46 }}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPw(v => !v)}
-                    style={{ position:'absolute', right:13, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#A89880', display:'flex', padding:4 }}
+                    style={{ position:'absolute', right:14, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#94A3B8', display:'flex', padding:4 }}
                   >
                     {showPw ? <EyeOff size={16}/> : <Eye size={16}/>}
                   </button>
@@ -249,7 +239,7 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div style={{ background:'#FEF2F2', border:'1px solid #FCA5A5', borderRadius:10, padding:'11px 14px', fontSize:13, color:'#C0392B', display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:10, padding:'11px 14px', fontSize:13, color:'#DC2626', display:'flex', alignItems:'center', gap:8 }}>
                   <span>⚠️</span> {error}
                 </div>
               )}
@@ -262,19 +252,16 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div style={{ marginTop:36, paddingTop:24, borderTop:'1px solid #F0EBE1', textAlign:'center' }}>
-              <p style={{ fontSize:12, color:'#C4B89A', margin:0, lineHeight:1.6 }}>
+            <div style={{ marginTop:40, paddingTop:24, borderTop:'1px solid #F1F5F9', textAlign:'center' }}>
+              <p style={{ fontSize:12, color:'#CBD5E1', margin:0, lineHeight:1.7 }}>
                 Authorized personnel only.<br/>
                 Contact your administrator for access.
               </p>
             </div>
           </div>
         </div>
-      </div>
 
-      <style>{`
-        @keyframes spin { to{transform:rotate(360deg)} }
-      `}</style>
+      </div>
     </>
   )
 }
