@@ -85,7 +85,7 @@ export default function LoginPage() {
         minHeight:'100vh',
         display:'flex',
         alignItems:'stretch',
-        background:'#F5F0E8',
+        background:'linear-gradient(135deg,#FDF6E3 0%,#F5EDCC 100%)',
         padding:'24px',
         gap:24,
         boxSizing:'border-box',
@@ -95,7 +95,7 @@ export default function LoginPage() {
         <div className="left-panel" style={{
           flex:'1 1 0',
           borderRadius:24,
-          background:'linear-gradient(160deg,#1A1612 0%,#2C2416 40%,#1E1A0F 100%)',
+          background:'linear-gradient(160deg,#FFFBF0 0%,#FEF3C7 45%,#FDE68A 100%)',
           display:'flex',
           flexDirection:'column',
           alignItems:'center',
@@ -104,29 +104,31 @@ export default function LoginPage() {
           overflow:'hidden',
           position:'relative',
           animation:'fadeIn 0.6s ease',
+          border:'1px solid #F5DFA0',
         }}>
 
           {/* decorative glow circles */}
-          <div style={{ position:'absolute', top:-80, right:-80, width:280, height:280, borderRadius:'50%', background:'radial-gradient(circle,rgba(184,134,11,0.18) 0%,transparent 70%)', pointerEvents:'none' }}/>
-          <div style={{ position:'absolute', bottom:-60, left:-60, width:220, height:220, borderRadius:'50%', background:'radial-gradient(circle,rgba(212,160,23,0.12) 0%,transparent 70%)', pointerEvents:'none' }}/>
+          <div style={{ position:'absolute', top:-60, right:-60, width:240, height:240, borderRadius:'50%', background:'radial-gradient(circle,rgba(184,134,11,0.15) 0%,transparent 70%)', pointerEvents:'none' }}/>
+          <div style={{ position:'absolute', bottom:-40, left:-40, width:180, height:180, borderRadius:'50%', background:'radial-gradient(circle,rgba(212,160,23,0.12) 0%,transparent 70%)', pointerEvents:'none' }}/>
 
           {/* brand */}
           <div style={{ textAlign:'center', animation:'fadeUp 0.7s ease' }}>
             <div style={{
               width:90, height:90,
               borderRadius:24,
-              background:'linear-gradient(135deg,#B8860B,#D4A017)',
+              background:'#fff',
               display:'flex', alignItems:'center', justifyContent:'center',
               margin:'0 auto 20px',
-              boxShadow:'0 12px 40px rgba(184,134,11,0.45)',
+              boxShadow:'0 8px 32px rgba(184,134,11,0.25)',
               overflow:'hidden',
+              border:'2px solid rgba(184,134,11,0.15)',
             }}>
               <img src="/logo.webp" alt="GCD" style={{ width:90, height:90, objectFit:'contain' }}/>
             </div>
-            <div style={{ fontFamily:"'Poppins',sans-serif", fontWeight:800, fontSize:26, color:'#fff', letterSpacing:'-0.03em', marginBottom:6 }}>
+            <div style={{ fontFamily:"'Poppins',sans-serif", fontWeight:800, fontSize:26, color:'#1A1612', letterSpacing:'-0.03em', marginBottom:6 }}>
               Golden Crescent
             </div>
-            <div style={{ fontSize:11, letterSpacing:'0.2em', textTransform:'uppercase', color:'#B8860B', fontWeight:600 }}>
+            <div style={{ fontSize:11, letterSpacing:'0.2em', textTransform:'uppercase', color:'#9A6E00', fontWeight:600 }}>
               Operations Dashboard
             </div>
           </div>
@@ -134,26 +136,27 @@ export default function LoginPage() {
           {/* award card */}
           <div style={{
             width:'100%',
-            background:'rgba(255,255,255,0.05)',
-            border:'1px solid rgba(184,134,11,0.3)',
+            background:'#fff',
+            border:'1px solid rgba(184,134,11,0.25)',
             borderRadius:18,
             overflow:'hidden',
             animation:'fadeUp 0.9s ease',
-            backdropFilter:'blur(8px)',
+            boxShadow:'0 4px 24px rgba(184,134,11,0.15)',
           }}>
             <img
               src="/award.jpeg"
               alt="Amazon Best Performance Award"
-              style={{ width:'100%', display:'block', maxHeight:200, objectFit:'cover' }}
+              style={{ width:'100%', display:'block', maxHeight:220, objectFit:'cover' }}
+              onError={e => { e.currentTarget.style.display='none' }}
             />
             <div style={{ padding:'14px 18px' }}>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
                 <span style={{ fontSize:18 }}>🏆</span>
-                <span style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:13, color:'#D4A017' }}>
+                <span style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:13, color:'#B8860B' }}>
                   Amazon Best Performance Award
                 </span>
               </div>
-              <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', margin:0, lineHeight:1.5 }}>
+              <p style={{ fontSize:12, color:'#7A6A50', margin:0, lineHeight:1.6 }}>
                 Proud recipients of Amazon's Best Performance recognition — a testament to our team's dedication and excellence.
               </p>
             </div>
@@ -161,7 +164,7 @@ export default function LoginPage() {
 
           {/* footer quote */}
           <div style={{ textAlign:'center', animation:'fadeUp 1.1s ease' }}>
-            <p style={{ fontSize:12, color:'rgba(255,255,255,0.35)', margin:0, fontStyle:'italic', lineHeight:1.6 }}>
+            <p style={{ fontSize:12, color:'#A08040', margin:0, fontStyle:'italic', lineHeight:1.6 }}>
               "Excellence is not a destination,<br/>it's a continuous journey."
             </p>
           </div>
