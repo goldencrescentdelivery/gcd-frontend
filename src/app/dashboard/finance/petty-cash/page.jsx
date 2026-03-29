@@ -245,28 +245,28 @@ function UserDetailPanel({ userId, userName, userRole, onBack, canDelete }) {
         style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, padding: 0, fontFamily: 'Poppins,sans-serif', alignSelf: 'flex-start' }}>
         <ChevronLeft size={14} /> Back to Overview
       </button>
-      <div style={{ background: isNeg ? 'linear-gradient(135deg,#1A0A0A,#2C1212)' : 'linear-gradient(135deg,#0D1F12,#133A1F)', borderRadius: 16, padding: '20px 22px', color: 'white' }}>
+      <div style={{ background: isNeg ? '#FEF2F2' : '#F0FDF4', border: `1px solid ${isNeg ? '#FECACA' : '#BBF7D0'}`, borderRadius: 16, padding: '20px 22px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
           <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg,#B8860B,#D4A017)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>
             {ROLE_EMOJI[userRole] || '👤'}
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>{userName}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{ROLE_LABELS[userRole] || userRole}</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>{userName}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{ROLE_LABELS[userRole] || userRole}</div>
           </div>
         </div>
-        <div style={{ fontSize: 28, fontWeight: 800, color: isNeg ? '#FCA5A5' : '#6EE7B7', letterSpacing: '-0.03em' }}>
+        <div style={{ fontSize: 28, fontWeight: 800, color: isNeg ? '#DC2626' : '#16A34A', letterSpacing: '-0.03em' }}>
           {isNeg ? '-' : ''}{fmt(balance)}
         </div>
         <div style={{ display: 'flex', gap: 20, marginTop: 12 }}>
           <div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Total Received</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#FCD34D' }}>{fmt(data?.total_allocated || 0)}</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Received</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#B8860B' }}>{fmt(data?.total_allocated || 0)}</div>
           </div>
-          <div style={{ width: 1, background: 'rgba(255,255,255,0.1)' }} />
+          <div style={{ width: 1, background: 'var(--border)' }} />
           <div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Total Recorded</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#6EE7B7' }}>{fmt(data?.total_spent || 0)}</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Recorded</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#16A34A' }}>{fmt(data?.total_spent || 0)}</div>
           </div>
         </div>
       </div>
@@ -353,33 +353,29 @@ export default function PettyCashPage() {
     <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* Hero */}
-      <div style={{ background: 'linear-gradient(135deg,#1A1612 0%,#2C1F0A 100%)', borderRadius: 20, padding: '24px', color: 'white', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', right: -30, top: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(184,134,11,0.15)' }} />
-        <div style={{ position: 'absolute', right: 40, bottom: -40, width: 80, height: 80, borderRadius: '50%', background: 'rgba(184,134,11,0.1)' }} />
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg,#B8860B,#D4A017)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 14px rgba(184,134,11,0.4)' }}>
-              <Wallet size={26} color="white" />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: 18, letterSpacing: '-0.02em', lineHeight: 1.2 }}>Petty Cash</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 3 }}>
-                {user?.name} · <span style={{ color: '#D4A017', fontWeight: 600 }}>{ROLE_LABELS[user?.role] || user?.role}</span>
-              </div>
+      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 20, padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg,#B8860B,#D4A017)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 14px rgba(184,134,11,0.25)' }}>
+            <Wallet size={22} color="white" />
+          </div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>Petty Cash</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+              {user?.name} · <span style={{ color: '#B8860B', fontWeight: 600 }}>{ROLE_LABELS[user?.role] || user?.role}</span>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {canManage && (
-              <button onClick={() => setModal('allocate')}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#B8860B,#D4A017)', color: 'white', fontWeight: 700, fontSize: 13, fontFamily: 'Poppins,sans-serif' }}>
-                <Plus size={14} /> Give Cash
-              </button>
-            )}
-            <button onClick={() => setModal('expense')}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 600, fontSize: 13, fontFamily: 'Poppins,sans-serif' }}>
-              <Plus size={14} /> Record Expense
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {canManage && (
+            <button onClick={() => setModal('allocate')}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#B8860B,#D4A017)', color: 'white', fontWeight: 700, fontSize: 13, fontFamily: 'Poppins,sans-serif', boxShadow: '0 2px 8px rgba(184,134,11,0.3)' }}>
+              <Plus size={14} /> Give Cash
             </button>
-          </div>
+          )}
+          <button onClick={() => setModal('expense')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', background: 'var(--bg-alt)', color: 'var(--text)', fontWeight: 600, fontSize: 13, fontFamily: 'Poppins,sans-serif' }}>
+            <Plus size={14} /> Record Expense
+          </button>
         </div>
       </div>
 
@@ -398,24 +394,24 @@ export default function PettyCashPage() {
       {/* My Balance Tab */}
       {tab === 'my' && (
         <>
-          <div style={{ background: isNeg ? 'linear-gradient(135deg,#1A0A0A,#2C1212)' : 'linear-gradient(135deg,#0D1F12,#133A1F)', borderRadius: 16, padding: '20px 22px', color: 'white' }}>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Your Balance</div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: isNeg ? '#FCA5A5' : '#6EE7B7', letterSpacing: '-0.03em' }}>
+          <div style={{ background: isNeg ? '#FEF2F2' : '#F0FDF4', border: `1px solid ${isNeg ? '#FECACA' : '#BBF7D0'}`, borderRadius: 16, padding: '20px 22px' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Your Balance</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: isNeg ? '#DC2626' : '#16A34A', letterSpacing: '-0.03em' }}>
               {isNeg ? '-' : ''}{fmt(balance)}
             </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
               {isNeg ? `${fmt(Math.abs(balance))} remaining to record as expenses`
                 : balance === 0 ? 'Fully accounted — nothing pending' : 'All expenses recorded'}
             </div>
-            <div style={{ display: 'flex', gap: 20, marginTop: 14 }}>
+            <div style={{ display: 'flex', gap: 20, marginTop: 14, paddingTop: 14, borderTop: `1px solid ${isNeg ? '#FECACA' : '#BBF7D0'}` }}>
               <div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Total Received</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#FCD34D' }}>{fmt(myData?.total_allocated || 0)}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Received</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#B8860B' }}>{fmt(myData?.total_allocated || 0)}</div>
               </div>
-              <div style={{ width: 1, background: 'rgba(255,255,255,0.1)' }} />
+              <div style={{ width: 1, background: 'var(--border)' }} />
               <div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Total Recorded</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#6EE7B7' }}>{fmt(myData?.total_spent || 0)}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Recorded</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#16A34A' }}>{fmt(myData?.total_spent || 0)}</div>
               </div>
             </div>
           </div>
