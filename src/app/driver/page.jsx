@@ -87,7 +87,7 @@ function Card({ children, style }) {
 
 /* ── Main ── */
 export default function DriverPortal() {
-  const { user, logout } = useAuth()
+  const { user, loading: authLoading, logout } = useAuth()
   const router = useRouter()
 
   const [tab,        setTab]        = useState('home')
@@ -100,7 +100,7 @@ export default function DriverPortal() {
   const [handovers,  setHandovers]  = useState([])
   const [perf,       setPerf]       = useState(null)
   const [leaveModal, setLeaveModal] = useState(false)
-  const [hvModal,    setHvModal]    = useState(false)
+  const [hvModal,    setHvModal]    = useState(null) // null | 'received' | 'returned'
 
   function signOut() {
     try { logout() } catch(e) {}
@@ -110,9 +110,9 @@ export default function DriverPortal() {
   }
 
   useEffect(() => {
-    if (user===null) { router.replace('/login'); return }
-    if (user && user.role!=='driver') { router.replace('/dashboard/analytics'); return }
-    if (!user) return
+    if (authLoading) return                                           // wait for auth to restore from localStorage
+    if (!user) { router.replace('/login'); return }
+    if (user.role !== 'driver') { router.replace('/dashboard/analytics'); return }
 
     const token = localStorage.getItem('gcd_token')
     const hdr   = { Authorization:`Bearer ${token}` }
@@ -139,7 +139,7 @@ export default function DriverPortal() {
       setVehicle(cur||null)
     }).catch(()=>{})
     fetch(`${API}/api/performance/${user.emp_id}`,{headers:hdr}).then(r=>r.json()).then(d=>setPerf(d.history?.[0]||null)).catch(()=>{})
-  }, [user, router])
+  }, [user, authLoading, router])
 
   if (!user||loading) return (
     <div style={{ minHeight:'100vh',background:'#FFF',display:'flex',alignItems:'center',justifyContent:'center' }}>
@@ -217,7 +217,7 @@ export default function DriverPortal() {
                   </div>
                   <div style={{ width:44,height:44,borderRadius:12,background:'#F0FDF4',display:'flex',alignItems:'center',justifyContent:'center' }}><Car size={20} color="#10B981"/></div>
                 </div>
-                <button onClick={()=>setHvModal(true)} style={{ width:'100%',padding:'10px',borderRadius:10,background:'#FEF2F2',border:'1.5px solid #FECACA',color:'#EF4444',fontWeight:600,fontSize:13,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
+                <button onClick={()=>setHvModal('returned')} style={{ width:'100%',padding:'10px',borderRadius:10,background:'#FEF2F2',border:'1.5px solid #FECACA',color:'#EF4444',fontWeight:600,fontSize:13,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
                   Return Vehicle
                 </button>
               </Card>
@@ -225,7 +225,7 @@ export default function DriverPortal() {
               <Card style={{ textAlign:'center',padding:'20px' }}>
                 <Car size={24} color="#D1D5DB" style={{ margin:'0 auto 8px',display:'block' }}/>
                 <div style={{ fontSize:13,color:'#9CA3AF',marginBottom:10 }}>No vehicle assigned</div>
-                <button onClick={()=>setHvModal(true)} style={{ padding:'8px 20px',borderRadius:10,background:'#B8860B',color:'#FFF',fontWeight:600,fontSize:12,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>Log Handover</button>
+                <button onClick={()=>setHvModal('received')} style={{ padding:'8px 20px',borderRadius:10,background:'#B8860B',color:'#FFF',fontWeight:600,fontSize:12,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>Receive Vehicle</button>
               </Card>
             )}
 
@@ -233,7 +233,7 @@ export default function DriverPortal() {
             <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10 }}>
               {[
                 {l:'Apply Leave',    icon:Calendar,  c:'#F59E0B', bg:'#FFFBEB', action:()=>setLeaveModal(true)},
-                {l:'Log Handover',   icon:Car,       c:'#2563EB', bg:'#EFF6FF', action:()=>setHvModal(true)},
+                {l:'Receive Vehicle', icon:Car,       c:'#2563EB', bg:'#EFF6FF', action:()=>setHvModal('received')},
                 {l:'My Payslips',    icon:Wallet,    c:'#10B981', bg:'#F0FDF4', action:()=>setTab('pay')},
                 {l:'Performance',    icon:BarChart2, c:'#7C3AED', bg:'#F5F3FF', action:()=>setTab('perf')},
               ].map(a=>{
@@ -483,8 +483,8 @@ export default function DriverPortal() {
           <div style={{ display:'flex',flexDirection:'column',gap:12 }} className="fade">
             <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center' }}>
               <h2 style={{ fontWeight:700,fontSize:17,color:'#111',margin:0 }}>Vehicle</h2>
-              <button onClick={()=>setHvModal(true)} style={{ display:'flex',alignItems:'center',gap:5,padding:'7px 14px',borderRadius:20,background:'#B8860B',color:'#FFF',fontWeight:600,fontSize:12,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
-                <Plus size={13}/> Handover
+              <button onClick={()=>setHvModal(vehicle ? 'returned' : 'received')} style={{ display:'flex',alignItems:'center',gap:5,padding:'7px 14px',borderRadius:20,background:'#B8860B',color:'#FFF',fontWeight:600,fontSize:12,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
+                <Plus size={13}/> {vehicle ? 'Return' : 'Receive'}
               </button>
             </div>
             {handovers.length===0 ? (
@@ -542,7 +542,21 @@ export default function DriverPortal() {
       </nav>
 
       {leaveModal&&<LeaveModal empId={user.emp_id} onClose={()=>setLeaveModal(false)} onSave={()=>{ setLeaveModal(false); fetch(`${API}/api/leaves`,{headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}}).then(r=>r.json()).then(d=>setLeaves(d.leaves||[])).catch(()=>{}) }}/>}
-      {hvModal&&<HandoverModal modal={{type:'received'}} user={{...user, station_code:user.station_code}} onClose={()=>setHvModal(false)} onSave={()=>setHvModal(false)}/>}
+      {hvModal&&<HandoverModal
+        modal={{ type: hvModal, vehicle: hvModal==='returned' ? vehicle : null }}
+        user={user}
+        onClose={()=>setHvModal(null)}
+        onSave={()=>{
+          setHvModal(null)
+          const token = localStorage.getItem('gcd_token')
+          fetch(`${API}/api/handovers`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.json()).then(d=>{
+            const list=d.handovers||[]
+            setHandovers(list)
+            const cur=list.find(h=>h.type==='received'&&!list.find(h2=>h2.vehicle_id===h.vehicle_id&&h2.type==='returned'&&new Date(h2.submitted_at)>new Date(h.submitted_at)))
+            setVehicle(cur||null)
+          }).catch(()=>{})
+        }}
+      />}
     </div>
   )
 }

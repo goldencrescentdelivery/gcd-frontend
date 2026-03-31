@@ -52,13 +52,20 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
   const [err,        setErr]        = useState(null)
   const [done,       setDone]       = useState(false)
 
-  // Load vehicles for "received" type
+  // Load only available (unassigned) vehicles at DA's station for "received" type
   useEffect(() => {
     if (!isReturn) {
-      fetch(`${API}/api/vehicles`, { headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } })
-        .then(r=>r.json()).then(d=>setVehicles(d.vehicles||[])).catch(()=>{})
+      const sc  = user?.station_code
+      const hdr = { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` }
+      Promise.all([
+        fetch(`${API}/api/vehicles${sc?`?station_code=${sc}`:''}`, { headers:hdr }).then(r=>r.json()),
+        fetch(`${API}/api/handovers/current${sc?`?station_code=${sc}`:''}`, { headers:hdr }).then(r=>r.json()),
+      ]).then(([vData, hData]) => {
+        const assigned = new Set((hData.handovers||[]).map(h=>h.vehicle_id))
+        setVehicles((vData.vehicles||[]).filter(v => v.status==='active' && !assigned.has(v.id)))
+      }).catch(()=>{})
     }
-  }, [isReturn])
+  }, [isReturn, user])
 
   function setPhoto(i, file) { setPhotos(p => { const n=[...p]; n[i]=file; return n }) }
   function removePhoto(i)    { setPhotos(p => { const n=[...p]; n[i]=null; return n }) }
