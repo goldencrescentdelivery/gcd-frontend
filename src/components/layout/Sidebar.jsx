@@ -101,6 +101,16 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
         {/* ── Nav ── */}
         <nav style={{ flex:1, paddingTop:4, paddingBottom:12, overflowY:'auto', overflowX:'hidden' }}>
           {nav.map((item, i) => {
+            // Section divider
+            if (item.type === 'section') {
+              if (collapsed) return null
+              return (
+                <div key={`section-${item.label}`} style={{ fontSize:9, fontWeight:700, color:'var(--text-muted)', letterSpacing:'0.1em', textTransform:'uppercase', padding:'14px 14px 4px', marginTop:2, opacity:0.7 }}>
+                  {item.label}
+                </div>
+              )
+            }
+
             const Icon       = ICONS[item.icon]
             const isActive   = pathname.startsWith(item.href)
             const isExpanded = expanded[item.href]
