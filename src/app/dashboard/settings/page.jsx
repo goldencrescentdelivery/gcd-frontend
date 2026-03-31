@@ -57,6 +57,12 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error(data.error)
       setDone(true)
       setCurrent(''); setNewPw(''); setConfirm('')
+      // Clear session — force re-login with new password
+      setTimeout(() => {
+        localStorage.removeItem('gcd_token')
+        localStorage.removeItem('gcd_user')
+        window.location.href = '/login'
+      }, 2000)
     } catch(e) { setErr(e.message) } finally { setSaving(false) }
   }
 
@@ -104,7 +110,7 @@ export default function SettingsPage() {
           {done && (
             <div style={{ display:'flex', gap:10, alignItems:'center', background:'#ECFDF5', border:'1px solid #A7F3D0', borderRadius:12, padding:'12px 16px' }}>
               <CheckCircle size={16} color="#059669"/>
-              <span style={{ fontSize:13, color:'#059669', fontWeight:600 }}>Password updated successfully!</span>
+              <span style={{ fontSize:13, color:'#059669', fontWeight:600 }}>Password updated! Signing you out to re-login…</span>
             </div>
           )}
 
