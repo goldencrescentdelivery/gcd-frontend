@@ -102,7 +102,7 @@ export default function LeavesPage() {
   }
 
   const pendingCount = leaves.filter(l => {
-    if (userRole==='manager'||userRole==='admin') return l.hr_status==='approved' && l.mgr_status==='pending'
+    if (userRole==='general_manager'||userRole==='admin') return l.hr_status==='approved' && l.mgr_status==='pending'
     return l.poc_status==='approved' && l.hr_status==='pending'
   }).length
 
@@ -191,7 +191,7 @@ export default function LeavesPage() {
               )}
 
               {/* Action bar — Manager final */}
-              {(userRole==='manager'||userRole==='admin') && l.hr_status==='approved' && (l.mgr_status==='pending'||!l.mgr_status) && (
+              {(userRole==='general_manager'||userRole==='admin') && l.hr_status==='approved' && (l.mgr_status==='pending'||!l.mgr_status) && (
                 <div style={{ background:'linear-gradient(135deg,#FDF6E3,#FFFBEB)', borderTop:'1px solid #F0D78C', padding:'10px 16px', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
                   <span style={{ fontSize:12, color:'#B8860B', fontWeight:700, flex:1 }}>HR approved — final sign-off required</span>
                   <button onClick={()=>action(l.id,'approved','manager')} style={{ padding:'7px 18px', borderRadius:20, background:'linear-gradient(135deg,#B8860B,#D4A017)', border:'none', color:'white', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Final Approve</button>
