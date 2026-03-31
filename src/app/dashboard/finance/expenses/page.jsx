@@ -4,27 +4,29 @@ import { expenseApi, empApi } from '@/lib/api'
 import { useSocket } from '@/lib/socket'
 import {
   Plus, X, Receipt, Search, AlertCircle, Check, Trash2,
-  Pencil, ChevronDown, TrendingUp, Users, ArrowUpDown
+  Pencil, Users, ParkingCircle, Banknote, Plane, Fuel,
+  HeartPulse, ScanSearch, Smartphone, Building2, Wallet,
+  Bus, Car, KeyRound, FileText, Package, Tag,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
 const CATEGORIES = [
-  { v:'Parking',            c:'#F59E0B', e:'🅿️' },
-  { v:'Advances',               c:'#10B981', e:'💵' },
-  { v:'Air Tickets',            c:'#3B82F6', e:'✈️' },
-  { v:'ENOC',                   c:'#EF4444', e:'⛽' },
-  { v:'Health Insurance',       c:'#8B5CF6', e:'🏥' },
-  { v:'Idfy',                   c:'#EC4899', e:'🔍' },
-  { v:'Mobile Expenses',        c:'#06B6D4', e:'📱' },
-  { v:'Office Expenses',        c:'#84CC16', e:'🏢' },
-  { v:'Petty Cash',             c:'#F97316', e:'💰' },
-  { v:'RTA Top-up',             c:'#0EA5E9', e:'🚌' },
-  { v:'Vehicle Expenses',       c:'#6366F1', e:'🚗' },
-  { v:'Vehicle Rent',           c:'#7C3AED', e:'🔑' },
-  { v:'Visa Expenses',          c:'#D97706', e:'📋' },
-  { v:'Miscellaneous Expenses', c:'#94A3B8', e:'📦' },
+  { v:'Parking',            c:'#F59E0B', I:ParkingCircle },
+  { v:'Advances',           c:'#10B981', I:Banknote      },
+  { v:'Air Tickets',        c:'#3B82F6', I:Plane         },
+  { v:'ENOC',               c:'#EF4444', I:Fuel          },
+  { v:'Health Insurance',   c:'#8B5CF6', I:HeartPulse    },
+  { v:'Idfy',               c:'#EC4899', I:ScanSearch    },
+  { v:'Mobile Expenses',    c:'#06B6D4', I:Smartphone    },
+  { v:'Office Expenses',    c:'#84CC16', I:Building2     },
+  { v:'Petty Cash',         c:'#F97316', I:Wallet        },
+  { v:'RTA Top-up',         c:'#0EA5E9', I:Bus           },
+  { v:'Vehicle Expenses',   c:'#6366F1', I:Car           },
+  { v:'Vehicle Rent',       c:'#7C3AED', I:KeyRound      },
+  { v:'Visa Expenses',      c:'#D97706', I:FileText      },
+  { v:'Miscellaneous Expenses', c:'#94A3B8', I:Package   },
 ]
 const CAT_MAP = Object.fromEntries(CATEGORIES.map(c => [c.v, c]))
 const MONTHS  = Array.from({length:6}, (_,i) => {
@@ -99,12 +101,12 @@ function ExpenseModal({ expense, employees, onSave, onClose }) {
           {/* Scrollable category pills */}
           <div style={{ overflowX:'auto', paddingBottom:4, marginBottom:-4 }}>
             <div style={{ display:'flex', gap:7, width:'max-content' }}>
-              {CATEGORIES.map(c => (
+              {CATEGORIES.map(c => { const CI = c.I; return (
                 <button key={c.v} onClick={()=>set('category',c.v)} type="button"
-                  style={{ padding:'6px 12px', borderRadius:20, border:`2px solid ${form.category===c.v?c.c:'rgba(0,0,0,0.1)'}`, background:form.category===c.v?`${c.c}15`:'rgba(255,255,255,0.7)', color:form.category===c.v?c.c:'#8B7355', fontWeight:form.category===c.v?700:500, fontSize:11.5, cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.15s', fontFamily:'Poppins,sans-serif' }}>
-                  {c.e} {c.v}
+                  style={{ padding:'6px 12px', borderRadius:20, border:`2px solid ${form.category===c.v?c.c:'rgba(0,0,0,0.1)'}`, background:form.category===c.v?`${c.c}15`:'rgba(255,255,255,0.7)', color:form.category===c.v?c.c:'#8B7355', fontWeight:form.category===c.v?700:500, fontSize:11.5, cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.15s', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:5 }}>
+                  <CI size={12}/> {c.v}
                 </button>
-              ))}
+              )})}
             </div>
           </div>
           {/* Scroll hint */}
@@ -214,7 +216,7 @@ export default function ExpensesPage() {
 
   /* By category */
   const byCat = CATEGORIES.map(cat => ({
-    name:cat.v, short:cat.e+' '+cat.v.split(' ')[0], value:expenses.filter(e=>e.category===cat.v).reduce((s,e)=>s+Number(e.amount||0),0), color:cat.c,
+    name:cat.v, short:cat.v.split(' ')[0], value:expenses.filter(e=>e.category===cat.v).reduce((s,e)=>s+Number(e.amount||0),0), color:cat.c,
   })).filter(c=>c.value>0).sort((a,b)=>b.value-a.value)
 
   /* By employee */
@@ -238,8 +240,7 @@ export default function ExpensesPage() {
     return new Date(b.date||b.created_at) - new Date(a.date||a.created_at)
   })
 
-  const canApprove  = ['admin','manager'].includes(userRole)
-  const canEdit     = ['accountant','admin','manager'].includes(userRole)
+  const canEdit = userRole === 'accountant'
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:18, animation:'slideUp 0.35s ease' }}>
@@ -381,7 +382,7 @@ export default function ExpensesPage() {
         <select value={catFilter} onChange={e=>setCatFilter(e.target.value)}
           style={{ padding:'9px 12px', borderRadius:20, border:'1.5px solid rgba(255,255,255,0.7)', background:'rgba(255,255,255,0.65)', backdropFilter:'blur(12px)', fontSize:12, fontWeight:600, color:'#1A1612', cursor:'pointer', outline:'none', fontFamily:'Poppins,sans-serif' }}>
           <option value="all">All Categories</option>
-          {CATEGORIES.map(c=><option key={c.v} value={c.v}>{c.e} {c.v}</option>)}
+          {CATEGORIES.map(c=><option key={c.v} value={c.v}>{c.v}</option>)}
         </select>
         {/* Sort */}
         <select value={sortBy} onChange={e=>setSortBy(e.target.value)}
@@ -402,7 +403,8 @@ export default function ExpensesPage() {
           <div style={{ fontWeight:600, color:'#6B5D4A' }}>No expenses found</div>
         </div>
       ) : filtered.map((exp,i) => {
-        const cat = CAT_MAP[exp.category]||{ c:'#94A3B8', e:'📦' }
+        const cat = CAT_MAP[exp.category]||{ c:'#94A3B8', I:Tag }
+        const CatIcon = cat.I
         const isPending  = exp.status === 'pending'
         const isRejected = exp.status === 'rejected'
         const statusC    = isPending?'#F59E0B':isRejected?'#EF4444':'#10B981'
@@ -416,15 +418,15 @@ export default function ExpensesPage() {
             <div style={{ height:3, background:`linear-gradient(90deg,${cat.c},${cat.c}66)` }}/>
             <div style={{ padding:'13px 16px' }}>
               <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-                <div style={{ width:46, height:46, borderRadius:13, background:`${cat.c}12`, border:`1.5px solid ${cat.c}25`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0 }}>
-                  {cat.e}
+                <div style={{ width:46, height:46, borderRadius:13, background:`${cat.c}12`, border:`1.5px solid ${cat.c}25`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <CatIcon size={20} color={cat.c}/>
                 </div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:8 }}>
                     <div style={{ minWidth:0 }}>
                       {/* Show employee NAME, not ID */}
                       <div style={{ fontWeight:700, fontSize:14, color:'#1A1612' }}>{exp.emp_name || employees.find(e=>e.id===exp.emp_id)?.name || exp.emp_id}</div>
-                      <div style={{ fontSize:11, color:cat.c, fontWeight:600, marginTop:1 }}>{cat.e} {exp.category}</div>
+                      <div style={{ fontSize:11, color:cat.c, fontWeight:600, marginTop:1 }}><CatIcon size={11}/>{exp.category}</div>
                       {exp.description && <div style={{ fontSize:11.5, color:'#6B5D4A', marginTop:2 }}>{exp.description}</div>}
                     </div>
                     <div style={{ textAlign:'right', flexShrink:0 }}>
@@ -442,31 +444,16 @@ export default function ExpensesPage() {
                       {exp.emp_id && <span style={{ marginLeft:6, fontFamily:'monospace', fontSize:10 }}>{exp.emp_id}</span>}
                     </div>
                     <div style={{ display:'flex', gap:6 }}>
-                      {/* Edit — accountant/admin/manager */}
-                      {canEdit && (
+                      {canEdit && (<>
                         <button onClick={()=>setModal(exp)}
                           style={{ padding:'4px 10px', borderRadius:7, background:'rgba(255,255,255,0.7)', border:'1px solid rgba(0,0,0,0.1)', color:'#6B5D4A', fontWeight:600, fontSize:11, cursor:'pointer', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:3 }}>
                           <Pencil size={10}/> Edit
                         </button>
-                      )}
-                      {/* Approve/Reject — admin/manager only */}
-                      {canApprove && isPending && (<>
-                        <button onClick={()=>approve(exp.id)}
-                          style={{ padding:'4px 10px', borderRadius:7, background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', color:'#059669', fontWeight:700, fontSize:11, cursor:'pointer', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:3 }}>
-                          <Check size={10}/> Approve
-                        </button>
-                        <button onClick={()=>reject(exp.id)}
-                          style={{ padding:'4px 10px', borderRadius:7, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', color:'#EF4444', fontWeight:700, fontSize:11, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                          ✕
-                        </button>
-                      </>)}
-                      {/* Delete */}
-                      {(canApprove||canEdit) && (
                         <button onClick={()=>del(exp.id)}
                           style={{ padding:'4px 8px', borderRadius:7, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.15)', color:'#EF4444', cursor:'pointer', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center' }}>
                           <Trash2 size={11}/>
                         </button>
-                      )}
+                      </>)}
                     </div>
                   </div>
                 </div>
