@@ -365,6 +365,78 @@ export default function ExpensesPage() {
         </div>
       )}
 
+      {/* ── Costwise Expense Summary Table ── */}
+      {expenses.length > 0 && (() => {
+        const stations = [...new Set(expenses.map(e => e.emp_station).filter(Boolean))].sort()
+        const rows = CATEGORIES.filter(cat => expenses.some(e => e.category === cat.v))
+        const catTotals = rows.map(cat => ({
+          cat,
+          stationTotals: stations.map(st => expenses.filter(e => e.category === cat.v && e.emp_station === st).reduce((s,e) => s+Number(e.amount||0), 0)),
+          rowTotal: expenses.filter(e => e.category === cat.v).reduce((s,e) => s+Number(e.amount||0), 0),
+        }))
+        const colTotals = stations.map(st => expenses.filter(e => e.emp_station === st).reduce((s,e) => s+Number(e.amount||0), 0))
+        const grandTotal = expenses.reduce((s,e) => s+Number(e.amount||0), 0)
+        const thStyle = { padding:'8px 12px', fontSize:11, fontWeight:700, color:'#6B5D4A', background:'#F5F3EF', borderBottom:'2px solid #EAE6DE', whiteSpace:'nowrap', textAlign:'right' }
+        const tdStyle = { padding:'7px 12px', fontSize:12, color:'#374151', borderBottom:'1px solid #F5F4F1', textAlign:'right', whiteSpace:'nowrap' }
+        return (
+          <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden' }}>
+            <div style={{ padding:'14px 18px 10px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <div>
+                <div style={{ fontWeight:800, fontSize:13, color:'#1A1612' }}>Costwise Expense Summary</div>
+                <div style={{ fontSize:11, color:'#A89880', marginTop:1 }}>By category × station</div>
+              </div>
+              <button onClick={() => {
+                const rows2 = [['Expense Type', ...stations, 'Total'], ...catTotals.map(r => [r.cat.v, ...r.stationTotals.map(v => v||''), r.rowTotal]), ['Total', ...colTotals.map(v => v||''), grandTotal]]
+                const csv = rows2.map(r => r.join(',')).join('\n')
+                const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download = `expenses-${month}.csv`; a.click()
+              }} style={{ padding:'6px 14px', borderRadius:20, background:'#F0FDF4', border:'1px solid #A7F3D0', color:'#059669', fontWeight:700, fontSize:11, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                Export CSV
+              </button>
+            </div>
+            <div style={{ overflowX:'auto' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thStyle, textAlign:'left', position:'sticky', left:0, background:'#F5F3EF', minWidth:160 }}>Expense Type</th>
+                    {stations.map(st => <th key={st} style={thStyle}>{st}</th>)}
+                    <th style={{ ...thStyle, color:'#B8860B' }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {catTotals.map(({ cat, stationTotals, rowTotal }) => (
+                    <tr key={cat.v} style={{ transition:'background 0.15s' }}
+                      onMouseEnter={e=>e.currentTarget.style.background='#FAFAF8'}
+                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <td style={{ ...tdStyle, textAlign:'left', position:'sticky', left:0, background:'inherit', fontWeight:600, color:cat.c }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                          <div style={{ width:6, height:6, borderRadius:2, background:cat.c, flexShrink:0 }}/>
+                          {cat.v}
+                        </div>
+                      </td>
+                      {stationTotals.map((v, i) => (
+                        <td key={stations[i]} style={{ ...tdStyle, color: v > 0 ? '#1A1612' : '#D1D5DB' }}>
+                          {v > 0 ? fmt(v) : '—'}
+                        </td>
+                      ))}
+                      <td style={{ ...tdStyle, fontWeight:700, color:'#B8860B' }}>{fmt(rowTotal)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ background:'#FDF6E3', borderTop:'2px solid #F0D78C' }}>
+                    <td style={{ ...tdStyle, textAlign:'left', position:'sticky', left:0, background:'#FDF6E3', fontWeight:800, color:'#1A1612' }}>Total</td>
+                    {colTotals.map((v, i) => (
+                      <td key={stations[i]} style={{ ...tdStyle, fontWeight:700, color:'#B8860B' }}>{v > 0 ? fmt(v) : '—'}</td>
+                    ))}
+                    <td style={{ ...tdStyle, fontWeight:900, color:'#B8860B', fontSize:13 }}>{fmt(grandTotal)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Filters + Sort */}
       <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
         {/* Search */}
