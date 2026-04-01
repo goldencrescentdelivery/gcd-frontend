@@ -179,9 +179,11 @@ export default function OverviewPage() {
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
       {/* ── COSTWISE EXPENSE SUMMARY ─────────────────────────── */}
-      {costRows.length > 0 && (
-        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
-          <SH title="Costwise Expense Summary" sub="Expenses by category and station" href="/dashboard/finance/expenses"/>
+      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
+        <SH title="Costwise Expense Summary" sub="Expenses by category and station" href="/dashboard/finance/expenses"/>
+        {costRows.length === 0 ? (
+          <div style={{ textAlign:'center', padding:'30px 20px', color:'var(--text-muted)', fontSize:13 }}>No expense data for this month yet.</div>
+        ) : (
           <div style={{ overflowX:'auto' }}>
             <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
               <thead>
@@ -222,8 +224,8 @@ export default function OverviewPage() {
               </tfoot>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* ── LAST 6 MONTHS — PROJECT-WISE — Coming Soon ────────── */}
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
