@@ -245,9 +245,13 @@ export default function UsersPage() {
   useEffect(() => { load() }, [load])
 
   async function handleDelete(u) {
-    if (!confirm(`Delete account for ${u.name}?`)) return
-    await fetch(`${API}/api/auth/users/${u.id}`, { method:'DELETE', headers:hdr() })
-    load()
+    if (!confirm(`Delete account for ${u.name}? This will also delete their employee record.`)) return
+    try {
+      const res = await fetch(`${API}/api/auth/users/${u.id}`, { method:'DELETE', headers:hdr() })
+      const data = await res.json()
+      if (!res.ok) { alert(data.error || 'Delete failed'); return }
+      load()
+    } catch(e) { alert('Network error — could not delete account') }
   }
   async function toggleStatus(u) {
     await fetch(`${API}/api/auth/users/${u.id}`, { method:'PUT', headers:hdr(), body:JSON.stringify({ status: u.status==='active'?'inactive':'active' }) })

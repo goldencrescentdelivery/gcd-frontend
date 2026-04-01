@@ -152,6 +152,20 @@ export default function OverviewPage() {
     color:cat.c,
   })).filter(c=>c.value>0).sort((a,b)=>b.value-a.value)
 
+  // Costwise expense summary (pivot: rows=categories, cols=stations)
+  const stations = [...new Set(expenses.map(e=>e.emp_station).filter(Boolean))].sort()
+  const costRows = ECATS.map(cat => {
+    const stationVals = {}
+    stations.forEach(st => {
+      stationVals[st] = expenses.filter(e=>e.category===cat.v && e.emp_station===st).reduce((s,e)=>s+Number(e.amount||0),0)
+    })
+    const rowTotal = Object.values(stationVals).reduce((s,v)=>s+v,0)
+    return { name:cat.v, color:cat.c, stationVals, rowTotal }
+  }).filter(r=>r.rowTotal>0)
+  const colTotals = {}
+  stations.forEach(st => { colTotals[st] = costRows.reduce((s,r)=>s+(r.stationVals[st]||0),0) })
+  const grandTotal = costRows.reduce((s,r)=>s+r.rowTotal,0)
+
   // Project-wise delivery data — DDB1 = Pulser, DXE6 = CRET
   const projectData = delivData.map(m => ({
     month: m.month,
@@ -164,11 +178,52 @@ export default function OverviewPage() {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
-      <div style={{ display:'flex', justifyContent:'flex-end' }}>
-        <Link href="/dashboard/analytics" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:20, background:'var(--bg-alt)', border:'1px solid var(--border)', color:'var(--text-sub)', fontSize:12, fontWeight:600, textDecoration:'none' }}>
-          <TrendingUp size={13}/> Detailed Analytics
-        </Link>
-      </div>
+      {/* ── COSTWISE EXPENSE SUMMARY ─────────────────────────── */}
+      {costRows.length > 0 && (
+        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
+          <SH title="Costwise Expense Summary" sub="Expenses by category and station" href="/dashboard/finance/expenses"/>
+          <div style={{ overflowX:'auto' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+              <thead>
+                <tr style={{ background:'var(--bg-alt)' }}>
+                  <th style={{ textAlign:'left', padding:'8px 12px', fontWeight:700, color:'var(--text)', borderBottom:'1px solid var(--border)', position:'sticky', left:0, background:'var(--bg-alt)', whiteSpace:'nowrap', minWidth:160 }}>Category</th>
+                  {stations.map(st=>(
+                    <th key={st} style={{ textAlign:'right', padding:'8px 12px', fontWeight:700, color:'var(--text-sub)', borderBottom:'1px solid var(--border)', whiteSpace:'nowrap' }}>{st}</th>
+                  ))}
+                  <th style={{ textAlign:'right', padding:'8px 12px', fontWeight:700, color:'var(--text)', borderBottom:'1px solid var(--border)', whiteSpace:'nowrap' }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {costRows.map((row,i)=>(
+                  <tr key={row.name} style={{ background: i%2===0?'transparent':'var(--bg-alt)' }}>
+                    <td style={{ padding:'7px 12px', color:'var(--text)', fontWeight:600, borderBottom:'1px solid var(--border)', position:'sticky', left:0, background: i%2===0?'var(--card)':'var(--bg-alt)', whiteSpace:'nowrap' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+                        <div style={{ width:8, height:8, borderRadius:2, background:row.color, flexShrink:0 }}/>
+                        {row.name}
+                      </div>
+                    </td>
+                    {stations.map(st=>(
+                      <td key={st} style={{ padding:'7px 12px', textAlign:'right', color: row.stationVals[st]>0?'var(--text)':'var(--text-muted)', borderBottom:'1px solid var(--border)', fontWeight: row.stationVals[st]>0?600:400 }}>
+                        {row.stationVals[st]>0 ? `AED ${fmt(row.stationVals[st])}` : '—'}
+                      </td>
+                    ))}
+                    <td style={{ padding:'7px 12px', textAlign:'right', fontWeight:700, color:'#10B981', borderBottom:'1px solid var(--border)' }}>AED {fmt(row.rowTotal)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr style={{ background:'var(--bg-alt)', borderTop:'2px solid var(--border)' }}>
+                  <td style={{ padding:'8px 12px', fontWeight:800, color:'var(--text)', position:'sticky', left:0, background:'var(--bg-alt)' }}>Total</td>
+                  {stations.map(st=>(
+                    <td key={st} style={{ padding:'8px 12px', textAlign:'right', fontWeight:700, color:'var(--text)' }}>AED {fmt(colTotals[st]||0)}</td>
+                  ))}
+                  <td style={{ padding:'8px 12px', textAlign:'right', fontWeight:800, color:'#10B981' }}>AED {fmt(grandTotal)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ── LAST 6 MONTHS — PROJECT-WISE — Coming Soon ────────── */}
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
@@ -198,128 +253,6 @@ export default function OverviewPage() {
           <KPI icon={Smartphone} label="SIM Cards"           color="#A78BFA" loading={loading} value={simStats?.total||'—'} sub={`${simStats?.assigned||0} assigned`}/>
         </div>
       )}
-
-      {/* ── EXPENSES + EMPLOYEES ─────────────────────────────── */}
-      <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1.4fr 1fr', gap:16 }}>
-
-        {/* EXPENSES */}
-        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
-          <SH title="Expenses This Month" sub={`${fmtAED(totalExp)} total · ${pendingExp} pending`} href="/dashboard/finance/expenses"/>
-
-          {/* Big stat row */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:16 }}>
-            {[
-              { l:'Total',    v:fmtAED(totalExp),    c:'#111827', bg:'#F9FAFB' },
-              { l:'Approved', v:fmtAED(approvedExp), c:'#10B981', bg:'#F0FDF4' },
-              { l:'Pending',  v:pendingExp,           c:'#F59E0B', bg:'#FFFBEB' },
-            ].map(s=>(
-              <div key={s.l} style={{ textAlign:'center', padding:'10px 6px', borderRadius:12, background:s.bg, border:'1px solid var(--border)' }}>
-                <div style={{ fontWeight:800, fontSize:15, color:s.c, letterSpacing:'-0.02em' }}>{s.v}</div>
-                <div style={{ fontSize:10.5, color:'var(--text-muted)', fontWeight:600, marginTop:2 }}>{s.l}</div>
-              </div>
-            ))}
-          </div>
-
-          {byCat.length === 0 ? (
-            <div className="sk" style={{ height:140, borderRadius:10 }}/>
-          ) : (
-            <div style={{ display:'grid', gridTemplateColumns:'120px 1fr', gap:16, alignItems:'center' }}>
-              {/* Donut */}
-              <div style={{ position:'relative' }}>
-                <PieChart width={120} height={120}>
-                  <Pie data={byCat} cx={55} cy={55} innerRadius={34} outerRadius={54} paddingAngle={3} dataKey="value">
-                    {byCat.map((c,i)=><Cell key={c.name} fill={c.color}/>)}
-                  </Pie>
-                  <Tooltip content={<Tip/>}/>
-                </PieChart>
-                <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', pointerEvents:'none' }}>
-                  <div style={{ fontWeight:900, fontSize:12, color:'var(--text)', letterSpacing:'-0.02em' }}>{byCat.length}</div>
-                  <div style={{ fontSize:9, color:'var(--text-muted)', fontWeight:600 }}>CATS</div>
-                </div>
-              </div>
-              {/* Category list */}
-              <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-                {byCat.slice(0,5).map(c=>(
-                  <div key={c.name}>
-                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:5, minWidth:0 }}>
-                        <div style={{ width:7, height:7, borderRadius:2, background:c.color, flexShrink:0 }}/>
-                        <span style={{ fontSize:11, color:'var(--text-sub)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.name}</span>
-                      </div>
-                      <span style={{ fontSize:11, fontWeight:700, color:c.color, flexShrink:0, marginLeft:4 }}>AED {fmt(c.value)}</span>
-                    </div>
-                    <MiniBar value={c.value} total={byCat[0]?.value||1} color={c.color}/>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* EMPLOYEES */}
-        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
-          <SH title="Employees" sub="Current workforce status" href="/dashboard/hr/employees"/>
-
-          {/* Staff ring */}
-          <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:16 }}>
-            <div style={{ position:'relative', flexShrink:0 }}>
-              <PieChart width={100} height={100}>
-                <Pie
-                  data={[
-                    { name:'Active',   value:summary?.employees?.active||0,   fill:'#10B981' },
-                    { name:'Inactive', value:(summary?.employees?.c||0)-(summary?.employees?.active||0), fill:'#E5E7EB' },
-                  ]}
-                  cx={45} cy={45} innerRadius={28} outerRadius={44} dataKey="value" paddingAngle={3}>
-                  <Cell fill="#10B981"/>
-                  <Cell fill="#E5E7EB"/>
-                </Pie>
-              </PieChart>
-              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', pointerEvents:'none' }}>
-                <div style={{ fontWeight:900, fontSize:16, color:'var(--text)', letterSpacing:'-0.03em' }}>{summary?.employees?.c||'—'}</div>
-                <div style={{ fontSize:8.5, color:'var(--text-muted)', fontWeight:600 }}>TOTAL</div>
-              </div>
-            </div>
-            <div style={{ flex:1, display:'flex', flexDirection:'column', gap:8 }}>
-              {[
-                { l:'Active',      v:summary?.employees?.active||0,                                                          c:'#10B981' },
-                { l:'Inactive',    v:(summary?.employees?.c||0)-(summary?.employees?.active||0),                             c:'#9CA3AF' },
-                { l:'On Leave',    v:summary?.pending_leaves||0,                                                             c:'#F59E0B' },
-              ].map(s=>(
-                <div key={s.l} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    <div style={{ width:7, height:7, borderRadius:2, background:s.c }}/>
-                    <span style={{ fontSize:11.5, color:'var(--text-sub)', fontWeight:500 }}>{s.l}</span>
-                  </div>
-                  <span style={{ fontSize:13, fontWeight:800, color:s.c }}>{s.v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Attendance today */}
-          <div style={{ borderTop:'1px solid var(--border)', paddingTop:14 }}>
-            <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10 }}>Today's Attendance</div>
-            {[
-              { l:'Present',  v:summary?.attendance?.present||0,  c:'#10B981', icon:CheckCircle },
-              { l:'Absent',   v:summary?.attendance?.absent||0,   c:'#EF4444', icon:UserMinus },
-              { l:'Leaves',   v:summary?.pending_leaves||0,       c:'#F59E0B', icon:Calendar },
-            ].map(s=>{
-              const Icon=s.icon
-              const total=(summary?.attendance?.present||0)+(summary?.attendance?.absent||0)
-              return (
-                <div key={s.l} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:9 }}>
-                  <Icon size={13} color={s.c}/>
-                  <span style={{ fontSize:12, color:'var(--text-sub)', flex:1 }}>{s.l}</span>
-                  <span style={{ fontSize:13, fontWeight:800, color:s.c }}>{s.v}</span>
-                  <div style={{ width:60 }}>
-                    <MiniBar value={s.v} total={total||1} color={s.c}/>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
 
       {/* ── SIM DATA ─────────────────────────────────────────── */}
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
