@@ -939,7 +939,7 @@ export default function POCPage() {
                   )}
                   <div>
                     <label className="input-label" style={{marginBottom:6}}>Assigned DA — {date}</label>
-                    <DriverSearch employees={emps.filter(e=>(e.role||'').toLowerCase()==='driver')} value={asgn?.emp_id||''} onChange={eId=>assignVehicle(v.id,eId)} placeholder="— Unassigned —"/>
+                    <DriverSearch employees={emps.filter(e=>e.station_code===station)} value={asgn?.emp_id||''} onChange={eId=>assignVehicle(v.id,eId)} placeholder="— Unassigned —"/>
                   </div>
                 </div>
               </div>
@@ -949,34 +949,14 @@ export default function POCPage() {
         </div>
       )}
 
-      {/* ── DELIVERIES ── */}
+      {/* ── DELIVERIES — Coming Soon ── */}
       {!loading && tab==='deliveries' && (
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div style={{display:'flex',justifyContent:'flex-end'}}>
-            <button className="btn btn-primary" onClick={()=>setModal('delivery')} style={{borderRadius:20}}><Plus size={14}/> Log Deliveries</button>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'60px 24px',textAlign:'center'}}>
+          <div style={{width:64,height:64,borderRadius:20,background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)',border:'1px solid #F0D78C',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16}}>
+            <Package size={28} color="#B8860B"/>
           </div>
-          {delivs.length===0 ? (
-            <div style={{textAlign:'center',padding:50,color:'#A89880'}}>
-              <Package size={40} style={{margin:'0 auto 12px',opacity:0.3}}/>
-              <div>No deliveries logged yet</div>
-            </div>
-          ) : delivs.map((d,i)=>(
-            <div key={d.id} style={{background:'#FFF',border:'1px solid #EAE6DE',borderRadius:16,padding:'14px 16px',animation:`slideUp 0.3s ${i*0.05}s ease both`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
-                <div style={{fontWeight:700,fontSize:14,color:'#1A1612'}}>{d.date?.slice(0,10)}</div>
-                <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setModal({type:'delivery-edit',delivery:d})}><Pencil size={13}/></button>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
-                {[{l:'Total',v:d.total,c:'#1A1612'},{l:'Attempted',v:d.attempted,c:'#1D6FA4'},{l:'Successful',v:d.successful,c:'#2E7D52'},{l:'Returned',v:d.returned,c:'#C0392B'}].map(s=>(
-                  <div key={s.l} style={{textAlign:'center',padding:'8px',background:'#FAFAF8',borderRadius:10}}>
-                    <div style={{fontWeight:800,fontSize:18,color:s.c}}>{s.v||0}</div>
-                    <div style={{fontSize:10,color:'#A89880',fontWeight:500,marginTop:1}}>{s.l}</div>
-                  </div>
-                ))}
-              </div>
-              {d.notes&&<div style={{fontSize:12,color:'#A89880',marginTop:8,padding:'8px 10px',background:'#FAFAF8',borderRadius:8}}>{d.notes}</div>}
-            </div>
-          ))}
+          <div style={{fontWeight:800,fontSize:18,color:'#1A1612',marginBottom:8}}>Coming Soon</div>
+          <div style={{fontSize:13,color:'#A89880',lineHeight:1.6}}>Delivery tracking is being set up.<br/>Check back soon.</div>
         </div>
       )}
 
