@@ -150,7 +150,8 @@ export default function DriverPortal() {
     </div>
   )
 
-  const net  = payroll ? Number(payroll.net_pay||(Number(payroll.base_salary)+Number(payroll.bonus_total||0)-Number(payroll.deduction_total||0))) : 0
+  // Always calculate from live parts so bonuses/deductions added by accountant show immediately
+  const net  = payroll ? Number(payroll.base_salary||0) + Number(payroll.bonus_total||0) - Number(payroll.deduction_total||0) : 0
   const grade = perf ? getGrade(perf.total_score) : null
 
   const TABS = [
@@ -364,116 +365,16 @@ export default function DriverPortal() {
           </div>
         )}
 
-        {/* PERFORMANCE */}
+        {/* PERFORMANCE — Coming Soon */}
         {tab==='perf' && (
           <div style={{ display:'flex',flexDirection:'column',gap:12 }} className="fade">
             <h2 style={{ fontWeight:700,fontSize:17,color:'#111',margin:0 }}>Performance</h2>
-            {perf ? (
-              <>
-                {/* Score hero */}
-                <Card>
-                  <div style={{ display:'flex',alignItems:'center',gap:16 }}>
-                    <div style={{ position:'relative',width:80,height:80,flexShrink:0 }}>
-                      <svg width={80} height={80} style={{ transform:'rotate(-90deg)' }}>
-                        <circle cx={40} cy={40} r={32} fill="none" stroke="#F3F4F6" strokeWidth={8}/>
-                        <circle cx={40} cy={40} r={32} fill="none" stroke={grade.c} strokeWidth={8}
-                          strokeDasharray={`${(perf.total_score/100)*201} 201`} strokeLinecap="round" style={{ transition:'stroke-dasharray 1s ease' }}/>
-                      </svg>
-                      <div style={{ position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column' }}>
-                        <div style={{ fontWeight:900,fontSize:17,color:'#111',lineHeight:1 }}>{Number(perf.total_score).toFixed(0)}</div>
-                        <div style={{ fontSize:9,color:'#9CA3AF',fontWeight:600 }}>/100</div>
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontWeight:900,fontSize:22,color:grade.c,letterSpacing:'-0.02em' }}>{grade.label}</div>
-                      <div style={{ fontSize:12,color:'#9CA3AF',marginTop:3 }}>{perf.month}</div>
-                    </div>
-                  </div>
-                </Card>
-                {/* Score bars */}
-                <Card>
-                  <div style={{ fontSize:11,fontWeight:700,color:'#9CA3AF',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:14 }}>Score Breakdown</div>
-                  {[
-                    {l:'Attendance',  v:perf.attendance_score,  max:20, c:'#10B981'},
-                    {l:'Deliveries',  v:perf.delivery_score,    max:20, c:'#2563EB'},
-                    {l:'Compliance',  v:perf.compliance_score,  max:20, c:'#7C3AED'},
-                    {l:'Leave Usage', v:perf.leave_score,       max:20, c:'#F59E0B'},
-                    {l:'Conduct',     v:perf.deduction_score,   max:20, c:'#B8860B'},
-                  ].map(s=>(
-                    <div key={s.l} style={{ marginBottom:12 }}>
-                      <div style={{ display:'flex',justifyContent:'space-between',marginBottom:5 }}>
-                        <span style={{ fontSize:12.5,color:'#374151' }}>{s.l}</span>
-                        <span style={{ fontSize:12.5,fontWeight:700,color:s.c }}>{Number(s.v).toFixed(0)}/{s.max}</span>
-                      </div>
-                      <div style={{ height:6,background:'#F3F4F6',borderRadius:10,overflow:'hidden' }}>
-                        <div style={{ height:'100%',width:`${(s.v/s.max)*100}%`,background:s.c,borderRadius:10,transition:'width 1s ease' }}/>
-                      </div>
-                    </div>
-                  ))}
-                </Card>
-              </>
-            ) : (
-              <Card style={{ textAlign:'center',padding:'30px' }}>
-                <BarChart2 size={28} color="#D1D5DB" style={{ margin:'0 auto 8px',display:'block' }}/>
-                <div style={{ fontSize:13,color:'#9CA3AF' }}>Performance data not available yet</div>
-              </Card>
-            )}
-
-            {/* Amazon grade scale */}
-            <Card>
-              <div style={{ fontSize:11,fontWeight:700,color:'#9CA3AF',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12 }}>Amazon DSP Grades</div>
-              {[
-                {l:'Fantastic+',range:'92–100',c:'#10B981'},
-                {l:'Fantastic', range:'85–91', c:'#2563EB'},
-                {l:'Great',     range:'70–84', c:'#F59E0B'},
-                {l:'Fair',      range:'50–69', c:'#F97316'},
-                {l:'Poor',      range:'0–49',  c:'#EF4444'},
-              ].map(g=>{
-                const isMe = grade?.label===g.l
-                return (
-                  <div key={g.l} style={{ display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 10px',borderRadius:10,background:isMe?`${g.c}08`:'transparent',border:isMe?`1px solid ${g.c}20`:'1px solid transparent',marginBottom:4 }}>
-                    <div style={{ display:'flex',alignItems:'center',gap:8 }}>
-                      <div style={{ width:8,height:8,borderRadius:'50%',background:g.c }}/>
-                      <span style={{ fontSize:13,fontWeight:isMe?700:500,color:isMe?g.c:'#374151' }}>{g.l}</span>
-                      {isMe&&<span style={{ fontSize:10.5,color:g.c,fontWeight:600 }}>← you</span>}
-                    </div>
-                    <span style={{ fontSize:12,color:'#9CA3AF' }}>{g.range}</span>
-                  </div>
-                )
-              })}
-            </Card>
-
-            {/* SLS Targets */}
-            <Card>
-              <div style={{ fontSize:11,fontWeight:700,color:'#9CA3AF',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12 }}>Amazon SLS Targets</div>
-              {[
-                {l:'Delivery Completion', target:'96.7%', min:'94%'},
-                {l:'Photo on Delivery',   target:'92%',   min:'75%'},
-                {l:'Route Adherence',     target:'60%',   min:'50%'},
-                {l:'Preference Honor',    target:'90%',   min:'70%'},
-                {l:'FICO Score',          target:'>700',  min:'>400'},
-                {l:'VSA Compliance',      target:'98%',   min:'90%'},
-                {l:'Mentor Adoption',     target:'70%',   min:'30%'},
-              ].map((m,i)=>(
-                <div key={m.l} style={{ display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:i<6?'1px solid #F9FAFB':'none' }}>
-                  <span style={{ fontSize:12.5,color:'#374151' }}>{m.l}</span>
-                  <div style={{ display:'flex',gap:10,alignItems:'center' }}>
-                    <span style={{ fontSize:12,fontWeight:700,color:'#10B981' }}>{m.target}</span>
-                    <span style={{ fontSize:11,color:'#D1D5DB' }}>min {m.min}</span>
-                  </div>
-                </div>
-              ))}
-              <div style={{ marginTop:12,padding:'10px 12px',background:'#FFFBEB',borderRadius:10,border:'1px solid #FDE68A' }}>
-                <div style={{ fontSize:11,fontWeight:700,color:'#B8860B',marginBottom:6 }}>Incentive per package</div>
-                <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6,textAlign:'center' }}>
-                  {[{l:'Fantastic+',v:'AED 0.125'},{l:'Fantastic',v:'AED 0.0625'},{l:'Great/Fair',v:'AED 0'}].map(r=>(
-                    <div key={r.l} style={{ padding:'6px 4px',borderRadius:8,background:'#FFF' }}>
-                      <div style={{ fontSize:9.5,fontWeight:600,color:'#B8860B' }}>{r.l}</div>
-                      <div style={{ fontSize:11.5,fontWeight:800,color:'#111',marginTop:2 }}>{r.v}</div>
-                    </div>
-                  ))}
-                </div>
+            <Card style={{ textAlign:'center',padding:'50px 24px' }}>
+              <div style={{ width:64,height:64,borderRadius:20,background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)',border:'1px solid #F0D78C',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}>
+                <BarChart2 size={28} color="#B8860B"/>
               </div>
+              <div style={{ fontWeight:800,fontSize:18,color:'#111',marginBottom:8 }}>Coming Soon</div>
+              <div style={{ fontSize:13,color:'#9CA3AF',lineHeight:1.6 }}>Performance tracking is being set up.<br/>Check back soon.</div>
             </Card>
           </div>
         )}
