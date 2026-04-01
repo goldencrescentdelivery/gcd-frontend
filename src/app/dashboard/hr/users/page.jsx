@@ -37,7 +37,7 @@ function UserModal({ user, onSave, onClose }) {
   const [empId,    setEmpId]    = useState(user?.emp_id||'')
   const [station,  setStation]  = useState(user?.station_code||'DDB1')
   const [status,   setStatus]   = useState(user?.status||'active')
-  const [mgrType,  setMgrType]  = useState(user?.manager_type||'general_manager')
+  const [mgrType]              = useState(user?.manager_type||'general_manager')
   const [showPw,   setShowPw]   = useState(false)
   const [saving,   setSaving]   = useState(false)
   const [err,      setErr]      = useState(null)
@@ -163,6 +163,15 @@ function UserModal({ user, onSave, onClose }) {
 // ── User Card ─────────────────────────────────────────────────
 function UserCard({ u, onEdit, onDelete, onToggle, index }) {
   const rc = ROLE_CFG[u.role] || ROLE_CFG.driver
+  const [confirming, setConfirming] = useState(false)
+  const [deleting,   setDeleting]   = useState(false)
+
+  async function handleConfirmDelete() {
+    setDeleting(true)
+    await onDelete(u)
+    setDeleting(false)
+    setConfirming(false)
+  }
 
   return (
     <div style={{ background:'#FFF', border:'1px solid #EAE6DE', borderRadius:16, padding:'14px 16px', animation:`slideUp 0.4s ${index*0.04}s ease both`, transition:'all 0.2s' }}
@@ -202,13 +211,29 @@ function UserCard({ u, onEdit, onDelete, onToggle, index }) {
         </div>
 
         {/* Actions */}
-        <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-          <button onClick={()=>onEdit(u)} style={{ padding:'6px 12px', borderRadius:9, background:'#F5F4F1', border:'none', cursor:'pointer', fontSize:11.5, color:'#6B5D4A', fontWeight:600, display:'flex', alignItems:'center', gap:4, fontFamily:'Poppins,sans-serif' }}>
-            <Pencil size={12}/> Edit
-          </button>
-          <button onClick={()=>onDelete(u)} style={{ padding:'6px 8px', borderRadius:9, background:'#FEF2F2', border:'none', cursor:'pointer', color:'#C0392B', display:'flex', alignItems:'center', fontFamily:'Poppins,sans-serif' }}>
-            <Trash2 size={12}/>
-          </button>
+        <div style={{ display:'flex', gap:6, flexShrink:0, alignItems:'center' }}>
+          {confirming ? (
+            <>
+              <span style={{ fontSize:11.5, color:'#C0392B', fontWeight:600 }}>Delete?</span>
+              <button onClick={handleConfirmDelete} disabled={deleting}
+                style={{ padding:'6px 10px', borderRadius:9, background:'#C0392B', border:'none', cursor:'pointer', fontSize:11.5, color:'#FFF', fontWeight:700, fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:4 }}>
+                {deleting ? '…' : 'Yes'}
+              </button>
+              <button onClick={()=>setConfirming(false)}
+                style={{ padding:'6px 10px', borderRadius:9, background:'#F5F4F1', border:'none', cursor:'pointer', fontSize:11.5, color:'#6B5D4A', fontWeight:600, fontFamily:'Poppins,sans-serif' }}>
+                No
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={()=>onEdit(u)} style={{ padding:'6px 12px', borderRadius:9, background:'#F5F4F1', border:'none', cursor:'pointer', fontSize:11.5, color:'#6B5D4A', fontWeight:600, display:'flex', alignItems:'center', gap:4, fontFamily:'Poppins,sans-serif' }}>
+                <Pencil size={12}/> Edit
+              </button>
+              <button onClick={()=>setConfirming(true)} style={{ padding:'6px 8px', borderRadius:9, background:'#FEF2F2', border:'none', cursor:'pointer', color:'#C0392B', display:'flex', alignItems:'center', fontFamily:'Poppins,sans-serif' }}>
+                <Trash2 size={12}/>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -245,7 +270,6 @@ export default function UsersPage() {
   useEffect(() => { load() }, [load])
 
   async function handleDelete(u) {
-    if (!confirm(`Delete account for ${u.name}? This will also delete their employee record.`)) return
     try {
       const res = await fetch(`${API}/api/auth/users/${u.id}`, { method:'DELETE', headers:hdr() })
       const data = await res.json()
