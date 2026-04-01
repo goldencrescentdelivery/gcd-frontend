@@ -1,14 +1,11 @@
 'use client'
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { analyticsApi } from '@/lib/api'
+import { PieChart, Pie, Cell } from 'recharts'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  AreaChart, Area, PieChart, Pie, Cell, LineChart, Line
-} from 'recharts'
-import {
-  Users, Package, Activity, Wallet, AlertTriangle, Calendar,
-  ChevronRight, ArrowUp, ArrowDown, TrendingUp, Smartphone,
-  Receipt, CheckCircle, UserMinus, Clock, Zap, Building2
+  Users, Package, Wallet, AlertTriangle,
+  ChevronRight, TrendingUp, Smartphone,
+  Receipt, Zap
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -17,21 +14,6 @@ const SC  = { DDB1:'#F59E0B', DXE6:'#38BDF8' }
 function hdr() { return { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
 function fmt(n) { return Number(n||0).toLocaleString() }
 function fmtAED(n) { return `AED ${fmt(n)}` }
-
-/* ── Tooltip ─────────────────────────────────────────────────── */
-function Tip({ active, payload, label }) {
-  if (!active || !payload?.length) return null
-  return (
-    <div style={{ background:'white', border:'1px solid #F0F0EE', borderRadius:10, padding:'8px 12px', boxShadow:'0 4px 20px rgba(0,0,0,0.1)', fontSize:12 }}>
-      <div style={{ fontWeight:700, color:'#6B7280', marginBottom:4 }}>{label}</div>
-      {payload.map(p => (
-        <div key={p.dataKey} style={{ color:p.color, fontWeight:600, display:'flex', gap:10, justifyContent:'space-between' }}>
-          <span>{p.name}</span><strong>{typeof p.value==='number'&&p.value>999?fmt(p.value):p.value}</strong>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 /* ── Section Header ──────────────────────────────────────────── */
 function SH({ title, sub, right, href }) {
@@ -72,16 +54,6 @@ function KPI({ icon:Icon, label, value, color, loading, sub }) {
   )
 }
 
-/* ── Mini bar ────────────────────────────────────────────────── */
-function MiniBar({ value, total, color }) {
-  const pct = total > 0 ? Math.min(100, Math.round(value/total*100)) : 0
-  return (
-    <div style={{ height:5, background:'var(--bg-alt)', borderRadius:10, overflow:'hidden' }}>
-      <div style={{ height:'100%', width:`${pct}%`, background:color, borderRadius:10, transition:'width 1.2s ease' }}/>
-    </div>
-  )
-}
-
 /* ══════════════════════════════════════════════════════════════
    MAIN PAGE
 ══════════════════════════════════════════════════════════════ */
@@ -99,12 +71,11 @@ function Slider({ children, cardWidth = 160, gap = 12 }) {
 
 export default function OverviewPage() {
   const [summary,      setSummary]      = useState(null)
-  const [chart,        setChart]        = useState([])
+  const [,             setChart]        = useState([])
   const [expenses,     setExpenses]     = useState([])
   const [simStats,     setSimStats]     = useState(null)
   const [simByStation, setSimByStation] = useState([])
   const [loading,      setLoading]      = useState(true)
-  const [userRole,     setUserRole]     = useState(null)
   const [isMobile,     setIsMobile]     = useState(false)
 
   useEffect(() => {
@@ -115,12 +86,6 @@ export default function OverviewPage() {
   }, [])
 
   const load = useCallback(async () => {
-    let role = null
-    try {
-      const token = localStorage.getItem('gcd_token')
-      if (token) { role = JSON.parse(atob(token.split('.')[1])).role; setUserRole(role) }
-    } catch(e) {}
-
     setLoading(true)
     try { const sum = await analyticsApi.summary(); setSummary(sum); setLoading(false) }
     catch(e) { setLoading(false) }
@@ -136,10 +101,7 @@ export default function OverviewPage() {
   const totalExp   = expenses.reduce((s,e)=>s+Number(e.amount||0),0)
   const pendingExp = expenses.filter(e=>e.status==='pending').length
   const approvedExp= expenses.filter(e=>e.status==='approved').reduce((s,e)=>s+Number(e.amount||0),0)
-  const delivData  = chart.length ? chart : []
-  const totalDeliv = delivData.reduce((a,m)=>a+(m.DDB1||0)+(m.DXE6||0),0)
-
-  const ECATS = [
+const ECATS = [
     {v:'Parking',c:'#F59E0B'},{v:'Advances',c:'#10B981'},{v:'Air Tickets',c:'#3B82F6'},
     {v:'ENOC',c:'#EF4444'},{v:'Health Insurance',c:'#8B5CF6'},{v:'Idfy',c:'#EC4899'},
     {v:'Mobile Expenses',c:'#06B6D4'},{v:'Office Expenses',c:'#84CC16'},{v:'Petty Cash',c:'#F97316'},
@@ -152,80 +114,8 @@ export default function OverviewPage() {
     color:cat.c,
   })).filter(c=>c.value>0).sort((a,b)=>b.value-a.value)
 
-  // Costwise expense summary (pivot: rows=categories, cols=stations)
-  const stations = [...new Set(expenses.map(e=>e.emp_station).filter(Boolean))].sort()
-  const costRows = ECATS.map(cat => {
-    const stationVals = {}
-    stations.forEach(st => {
-      stationVals[st] = expenses.filter(e=>e.category===cat.v && e.emp_station===st).reduce((s,e)=>s+Number(e.amount||0),0)
-    })
-    const rowTotal = Object.values(stationVals).reduce((s,v)=>s+v,0)
-    return { name:cat.v, color:cat.c, stationVals, rowTotal }
-  }).filter(r=>r.rowTotal>0)
-  const colTotals = {}
-  stations.forEach(st => { colTotals[st] = costRows.reduce((s,r)=>s+(r.stationVals[st]||0),0) })
-  const grandTotal = costRows.reduce((s,r)=>s+r.rowTotal,0)
-
-  // Project-wise delivery data — DDB1 = Pulser, DXE6 = CRET
-  const projectData = delivData.map(m => ({
-    month: m.month,
-    Pulser: m.DDB1 || 0,
-    CRET:   m.DXE6 || 0,
-    Total:  (m.DDB1||0) + (m.DXE6||0),
-  }))
-
-
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
-
-      {/* ── COSTWISE EXPENSE SUMMARY ─────────────────────────── */}
-      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
-        <SH title="Costwise Expense Summary" sub="Expenses by category and station" href="/dashboard/finance/expenses"/>
-        {costRows.length === 0 ? (
-          <div style={{ textAlign:'center', padding:'30px 20px', color:'var(--text-muted)', fontSize:13 }}>No expense data for this month yet.</div>
-        ) : (
-          <div style={{ overflowX:'auto' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
-              <thead>
-                <tr style={{ background:'var(--bg-alt)' }}>
-                  <th style={{ textAlign:'left', padding:'8px 12px', fontWeight:700, color:'var(--text)', borderBottom:'1px solid var(--border)', position:'sticky', left:0, background:'var(--bg-alt)', whiteSpace:'nowrap', minWidth:160 }}>Category</th>
-                  {stations.map(st=>(
-                    <th key={st} style={{ textAlign:'right', padding:'8px 12px', fontWeight:700, color:'var(--text-sub)', borderBottom:'1px solid var(--border)', whiteSpace:'nowrap' }}>{st}</th>
-                  ))}
-                  <th style={{ textAlign:'right', padding:'8px 12px', fontWeight:700, color:'var(--text)', borderBottom:'1px solid var(--border)', whiteSpace:'nowrap' }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {costRows.map((row,i)=>(
-                  <tr key={row.name} style={{ background: i%2===0?'transparent':'var(--bg-alt)' }}>
-                    <td style={{ padding:'7px 12px', color:'var(--text)', fontWeight:600, borderBottom:'1px solid var(--border)', position:'sticky', left:0, background: i%2===0?'var(--card)':'var(--bg-alt)', whiteSpace:'nowrap' }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                        <div style={{ width:8, height:8, borderRadius:2, background:row.color, flexShrink:0 }}/>
-                        {row.name}
-                      </div>
-                    </td>
-                    {stations.map(st=>(
-                      <td key={st} style={{ padding:'7px 12px', textAlign:'right', color: row.stationVals[st]>0?'var(--text)':'var(--text-muted)', borderBottom:'1px solid var(--border)', fontWeight: row.stationVals[st]>0?600:400 }}>
-                        {row.stationVals[st]>0 ? `AED ${fmt(row.stationVals[st])}` : '—'}
-                      </td>
-                    ))}
-                    <td style={{ padding:'7px 12px', textAlign:'right', fontWeight:700, color:'#10B981', borderBottom:'1px solid var(--border)' }}>AED {fmt(row.rowTotal)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr style={{ background:'var(--bg-alt)', borderTop:'2px solid var(--border)' }}>
-                  <td style={{ padding:'8px 12px', fontWeight:800, color:'var(--text)', position:'sticky', left:0, background:'var(--bg-alt)' }}>Total</td>
-                  {stations.map(st=>(
-                    <td key={st} style={{ padding:'8px 12px', textAlign:'right', fontWeight:700, color:'var(--text)' }}>AED {fmt(colTotals[st]||0)}</td>
-                  ))}
-                  <td style={{ padding:'8px 12px', textAlign:'right', fontWeight:800, color:'#10B981' }}>AED {fmt(grandTotal)}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        )}
-      </div>
 
       {/* ── LAST 6 MONTHS — PROJECT-WISE — Coming Soon ────────── */}
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
@@ -256,75 +146,110 @@ export default function OverviewPage() {
         </div>
       )}
 
-      {/* ── SIM DATA ─────────────────────────────────────────── */}
-      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
-        <SH title="SIM Card Inventory" sub="Fleet communication management" href="/dashboard/poc"/>
-        {isMobile ? (
-          <Slider cardWidth={130} gap={10}>
+      {/* ── EXPENSES + SIM SIDE BY SIDE ──────────────────────── */}
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:16 }}>
+
+        {/* Expenses This Month */}
+        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
+          <SH title="Expenses This Month" sub={`${fmtAED(totalExp)} total · ${pendingExp} pending`} href="/dashboard/finance/expenses"/>
+          {/* Stat row */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:16 }}>
             {[
-              { l:'Total SIMs',   v:simStats?.total||'—',               c:'#7C3AED', bg:'#F5F3FF' },
-              { l:'Assigned',     v:simStats?.assigned||'—',            c:'#F59E0B', bg:'#FFFBEB' },
-              { l:'Available',    v:simStats?.available||'—',           c:'#10B981', bg:'#F0FDF4' },
-              { l:'Monthly Cost', v:fmtAED(simStats?.monthly_cost||0),  c:'#2563EB', bg:'#EFF6FF' },
+              { l:'Total',    v:fmtAED(totalExp),    bg:'#F9FAFB', c:'var(--text)' },
+              { l:'Approved', v:fmtAED(approvedExp), bg:'#F0FDF4', c:'#10B981' },
+              { l:'Pending',  v:pendingExp,           bg:'#FFFBEB', c:'#F59E0B' },
             ].map(s=>(
-              <div key={s.l} style={{ textAlign:'center', padding:'14px 10px', borderRadius:12, background:s.bg, border:'1px solid var(--border)', height:'100%' }}>
-                <div style={{ fontWeight:900, fontSize:18, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>
-                <div style={{ fontSize:10.5, color:'var(--text-muted)', fontWeight:600, marginTop:3 }}>{s.l}</div>
+              <div key={s.l} style={{ textAlign:'center', padding:'10px 6px', borderRadius:10, background:s.bg, border:'1px solid var(--border)' }}>
+                <div style={{ fontWeight:800, fontSize:14, color:s.c, letterSpacing:'-0.02em' }}>{s.v}</div>
+                <div style={{ fontSize:10.5, color:'var(--text-muted)', fontWeight:600, marginTop:2 }}>{s.l}</div>
               </div>
             ))}
-          </Slider>
-        ) : null}
-        <div style={{ display:isMobile?'none':'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
-          {[
-            { l:'Total SIMs',    v:simStats?.total||'—',          c:'#7C3AED', bg:'#F5F3FF' },
-            { l:'Assigned',      v:simStats?.assigned||'—',       c:'#F59E0B', bg:'#FFFBEB' },
-            { l:'Available',     v:simStats?.available||'—',      c:'#10B981', bg:'#F0FDF4' },
-            { l:'Monthly Cost',  v:fmtAED(simStats?.monthly_cost||0), c:'#2563EB', bg:'#EFF6FF' },
-          ].map(s=>(
-            <div key={s.l} style={{ textAlign:'center', padding:'14px 10px', borderRadius:12, background:s.bg, border:'1px solid var(--border)' }}>
-              <div style={{ fontWeight:900, fontSize:18, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>
-              <div style={{ fontSize:10.5, color:'var(--text-muted)', fontWeight:600, marginTop:3 }}>{s.l}</div>
+          </div>
+
+          {byCat.length === 0 ? (
+            <div style={{ textAlign:'center', padding:'20px', color:'var(--text-muted)', fontSize:12 }}>No expenses this month yet.</div>
+          ) : (
+            <div style={{ display:'flex', gap:16, alignItems:'center' }}>
+              {/* Donut */}
+              <div style={{ flexShrink:0 }}>
+                <PieChart width={90} height={90}>
+                  <Pie data={byCat} cx={40} cy={40} innerRadius={26} outerRadius={42} dataKey="value" strokeWidth={1.5} stroke="var(--card)">
+                    {byCat.map((c,i)=><Cell key={i} fill={c.color}/>)}
+                  </Pie>
+                </PieChart>
+              </div>
+              {/* Legend */}
+              <div style={{ flex:1, display:'flex', flexDirection:'column', gap:5, overflow:'hidden' }}>
+                {byCat.slice(0,5).map(c=>(
+                  <div key={c.name} style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    <div style={{ width:8, height:8, borderRadius:2, background:c.color, flexShrink:0 }}/>
+                    <span style={{ fontSize:11, color:'var(--text-muted)', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.name}</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:'var(--text)', flexShrink:0 }}>AED {fmt(c.value)}</span>
+                  </div>
+                ))}
+                {byCat.length > 5 && (
+                  <div style={{ fontSize:10.5, color:'var(--text-muted)' }}>+{byCat.length - 5} more categories</div>
+                )}
+              </div>
             </div>
-          ))}
+          )}
         </div>
 
-        {/* Station breakdown */}
-        {simByStation.length > 0 && (
-          <div style={{ display:'grid', gridTemplateColumns:`repeat(${simByStation.length},1fr)`, gap:12 }}>
-            {simByStation.map(s=>{
-              const col = SC[s.station_code]||'#F59E0B'
-              const pct = s.total>0?Math.round(s.assigned/s.total*100):0
-              return (
-                <div key={s.station_code} style={{ padding:'16px', borderRadius:12, background:'var(--bg-alt)', border:'1px solid var(--border)' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-                    <div>
-                      <div style={{ fontWeight:800, fontSize:14, color:col }}>{s.station_code}</div>
-                      <div style={{ fontSize:10.5, color:'var(--text-muted)' }}>{s.assigned} assigned / {s.total} total</div>
-                    </div>
-                    <div style={{ textAlign:'right' }}>
-                      <div style={{ fontWeight:900, fontSize:20, color:col }}>{pct}%</div>
-                      <div style={{ fontSize:10, color:'var(--text-muted)' }}>utilised</div>
-                    </div>
-                  </div>
-                  {/* Radial-ish progress */}
-                  <div style={{ height:8, background:'var(--border)', borderRadius:20, overflow:'hidden' }}>
-                    <div style={{ height:'100%', width:`${pct}%`, background:`linear-gradient(90deg,${col},${col}cc)`, borderRadius:20, transition:'width 1.2s ease' }}/>
-                  </div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginTop:10 }}>
-                    {[
-                      { l:'Available',   v:s.available||0,         c:'#10B981' },
-                      { l:'Cost/mo',     v:fmtAED(s.monthly_cost||0), c:'#7C3AED' },
-                    ].map(x=>(
-                      <div key={x.l} style={{ fontSize:11, color:'var(--text-muted)' }}>
-                        <span style={{ fontWeight:700, color:x.c }}>{x.v}</span> {x.l}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
+        {/* SIM Card Inventory */}
+        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
+          <SH title="SIM Card Inventory" sub="Fleet communication management" href="/dashboard/poc"/>
+          {/* Stat row */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:16 }}>
+            {[
+              { l:'Total SIMs',   v:simStats?.total||'—',              c:'#7C3AED', bg:'#F5F3FF' },
+              { l:'Assigned',     v:simStats?.assigned||'—',           c:'#F59E0B', bg:'#FFFBEB' },
+              { l:'Available',    v:simStats?.available||'—',          c:'#10B981', bg:'#F0FDF4' },
+              { l:'Monthly Cost', v:fmtAED(simStats?.monthly_cost||0), c:'#2563EB', bg:'#EFF6FF' },
+            ].map(s=>(
+              <div key={s.l} style={{ textAlign:'center', padding:'10px 6px', borderRadius:10, background:s.bg, border:'1px solid var(--border)' }}>
+                <div style={{ fontWeight:900, fontSize:16, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>
+                <div style={{ fontSize:10.5, color:'var(--text-muted)', fontWeight:600, marginTop:2 }}>{s.l}</div>
+              </div>
+            ))}
           </div>
-        )}
+
+          {/* Station breakdown */}
+          {simByStation.length > 0 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {simByStation.map(s=>{
+                const col = SC[s.station_code]||'#F59E0B'
+                const pct = s.total>0?Math.round(s.assigned/s.total*100):0
+                return (
+                  <div key={s.station_code} style={{ padding:'12px', borderRadius:12, background:'var(--bg-alt)', border:'1px solid var(--border)' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                      <div>
+                        <div style={{ fontWeight:800, fontSize:13, color:col }}>{s.station_code}</div>
+                        <div style={{ fontSize:10.5, color:'var(--text-muted)' }}>{s.assigned} assigned / {s.total} total</div>
+                      </div>
+                      <div style={{ textAlign:'right' }}>
+                        <div style={{ fontWeight:900, fontSize:18, color:col }}>{pct}%</div>
+                        <div style={{ fontSize:10, color:'var(--text-muted)' }}>utilised</div>
+                      </div>
+                    </div>
+                    <div style={{ height:6, background:'var(--border)', borderRadius:20, overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:`${pct}%`, background:`linear-gradient(90deg,${col},${col}cc)`, borderRadius:20, transition:'width 1.2s ease' }}/>
+                    </div>
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginTop:8 }}>
+                      {[
+                        { l:'Available',   v:s.available||0,            c:'#10B981' },
+                        { l:'Cost/mo',     v:fmtAED(s.monthly_cost||0), c:'#7C3AED' },
+                      ].map(x=>(
+                        <div key={x.l} style={{ fontSize:11, color:'var(--text-muted)' }}>
+                          <span style={{ fontWeight:700, color:x.c }}>{x.v}</span> {x.l}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── QUICK ACTIONS ────────────────────────────────────── */}
