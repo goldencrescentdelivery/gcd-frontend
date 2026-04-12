@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { attApi, empApi } from '@/lib/api'
 import { useSocket } from '@/lib/socket'
-import { Plus, X, Download } from 'lucide-react'
+import { Plus, X, Download, CheckSquare, Search } from 'lucide-react'
 
 const CYCLES = ['A','B','C','Beset','MR','FM','Rescue']
 const CYCLE_HRS = { A:5, B:4, C:5, Beset:5, MR:4, FM:5 }
@@ -150,6 +150,8 @@ export default function AttendancePage() {
   const [modal,       setModal]       = useState(false)
   const [viewTab,     setViewTab]     = useState('daily')   // daily | summary
   const [userRole,    setUserRole]    = useState(null)
+  const [search,      setSearch]      = useState('')
+  const [bulkLoading, setBulkLoading] = useState(false)
 
   useEffect(() => {
     try { const t=localStorage.getItem('gcd_token'); if(t){const p=JSON.parse(atob(t.split('.')[1]));setUserRole(p.role)} } catch(e){}
@@ -174,10 +176,32 @@ export default function AttendancePage() {
     })
   })
 
+  async function handleBulkPresent() {
+    const unlogged = employees.filter(e => {
+      const station = stationFilter === 'All' ? true : e.station_code === stationFilter
+      const alreadyLogged = attendance.some(a => (a.emp_id === e.id || a.emp_id === e.emp_id) && a.status === 'present')
+      return station && !alreadyLogged
+    })
+    if (unlogged.length === 0) return alert('All employees already have attendance for this date.')
+    if (!confirm(`Mark ${unlogged.length} employee(s) as Present with Cycle A (5h)?`)) return
+    setBulkLoading(true)
+    try {
+      const records = unlogged.map(e => ({
+        emp_id: e.id || e.emp_id, date, status: 'present', cycle: 'A', cycle_hours: '5'
+      }))
+      await attApi.bulkLog(records)
+      load()
+    } catch(e) { alert(e.message) } finally { setBulkLoading(false) }
+  }
+
   async function handleCheckout(att) {
     const time = new Date().toTimeString().slice(0,5)
     try { await attApi.checkout(att.id, time); load() } catch(e) { alert(e.message) }
   }
+
+  const filtered = search.trim()
+    ? attendance.filter(a => a.name?.toLowerCase().includes(search.toLowerCase()))
+    : attendance
 
   const present  = attendance.filter(a=>a.status==='present').length
   const absent   = attendance.filter(a=>a.status==='absent').length
@@ -194,11 +218,18 @@ export default function AttendancePage() {
           <button key={s} onClick={()=>setStationFilter(s)}
             className={`btn btn-sm ${stationFilter===s?'btn-primary':'btn-secondary'}`}>{s}</button>
         ))}
+        <div style={{ position:'relative', flex:'0 0 180px' }}>
+          <Search size={13} style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', pointerEvents:'none' }}/>
+          <input className="input" placeholder="Search name…" value={search} onChange={e=>setSearch(e.target.value)} style={{ paddingLeft:30 }}/>
+        </div>
         <div style={{ flex:1 }}/>
         <button className="btn btn-secondary btn-sm"><Download size={13}/> Export</button>
-        {userRole !== 'accountant' && (
+        {userRole !== 'accountant' && userRole !== 'driver' && (<>
+          <button className="btn btn-secondary" onClick={handleBulkPresent} disabled={bulkLoading}>
+            <CheckSquare size={14}/> {bulkLoading ? 'Marking…' : 'Mark All Present'}
+          </button>
           <button className="btn btn-primary" onClick={()=>setModal(true)}><Plus size={14}/> Log Attendance</button>
-        )}
+        </>)}
       </div>
 
       {/* KPIs */}
@@ -229,12 +260,12 @@ export default function AttendancePage() {
                 <th></th>
               </tr></thead>
               <tbody>
-                {attendance.length === 0 && (
+                {filtered.length === 0 && (
                   <tr><td colSpan={10} style={{ textAlign:'center', padding:40, color:'#A89880' }}>
-                    No attendance records for {date}
+                    {search ? 'No matches found.' : `No attendance records for ${date}`}
                   </td></tr>
                 )}
-                {attendance.map(att => (
+                {filtered.map(att => (
                   <tr key={att.id}>
                     <td>
                       <div style={{ display:'flex', alignItems:'center', gap:8 }}>

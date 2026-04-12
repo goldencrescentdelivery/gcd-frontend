@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
-import { AlertTriangle, Camera, Plus, X, Check, Clock, Wrench, Car } from 'lucide-react'
+import { AlertTriangle, Camera, Plus, X, Check, Clock, Wrench, Car, Search } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 function hdr(json=true) {
@@ -25,6 +25,7 @@ export default function DamagePage() {
   const [reports,  setReports]  = useState([])
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState('all')
+  const [search,   setSearch]   = useState('')
   const [selected, setSelected] = useState(null)
   const [reviewing,setReviewing]= useState(null)
   const [reviewForm,setReviewForm] = useState({status:'reviewed',review_note:'',repair_cost:'',deduct_from_da:false})
@@ -49,6 +50,7 @@ export default function DamagePage() {
 
   const pending  = reports.filter(r=>r.status==='pending').length
   const resolved = reports.filter(r=>r.status==='resolved').length
+  const displayed = search ? reports.filter(r => r.plate?.toLowerCase().includes(search.toLowerCase()) || r.emp_name?.toLowerCase().includes(search.toLowerCase()) || r.description?.toLowerCase().includes(search.toLowerCase())) : reports
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:16,animation:'slideUp 0.35s ease'}}>
@@ -76,7 +78,13 @@ export default function DamagePage() {
         ))}
       </div>
 
-      {/* Filter */}
+      {/* Search + Filter */}
+      <div style={{display:'flex',gap:7,flexWrap:'wrap',alignItems:'center',marginBottom:0}}>
+        <div style={{position:'relative',flex:'0 0 220px'}}>
+          <Search size={13} style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)',pointerEvents:'none'}}/>
+          <input className="input" placeholder="Search plate, driver, description…" value={search} onChange={e=>setSearch(e.target.value)} style={{paddingLeft:30,borderRadius:20}}/>
+        </div>
+      </div>
       <div style={{display:'flex',gap:7}}>
         {['all','pending','reviewed','resolved'].map(f=>(
           <button key={f} onClick={()=>setFilter(f)} style={{padding:'7px 16px',borderRadius:20,fontSize:12,fontWeight:filter===f?700:500,border:`1.5px solid ${filter===f?'#B8860B':'#EAE6DE'}`,background:filter===f?'#FDF6E3':'#FFF',color:filter===f?'#B8860B':'#A89880',cursor:'pointer',fontFamily:'Poppins,sans-serif',textTransform:'capitalize'}}>
@@ -90,14 +98,14 @@ export default function DamagePage() {
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:12}}>
           {[1,2,3].map(i=><div key={i} className="skeleton" style={{height:200,borderRadius:16}}/>)}
         </div>
-      ) : reports.length===0 ? (
+      ) : displayed.length===0 ? (
         <div style={{textAlign:'center',padding:60,color:'#A89880'}}>
           <Car size={48} style={{margin:'0 auto 14px',display:'block',opacity:0.15}}/>
-          <div style={{fontWeight:600,color:'#6B5D4A',fontSize:16}}>No damage reports</div>
+          <div style={{fontWeight:600,color:'#6B5D4A',fontSize:16}}>{search ? 'No matches found.' : 'No damage reports'}</div>
         </div>
       ) : (
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:12}}>
-          {reports.map((r,i)=>{
+          {displayed.map((r,i)=>{
             const sv = SEV[r.severity]||SEV.minor
             const st = STATUS[r.status]||STATUS.pending
             return (

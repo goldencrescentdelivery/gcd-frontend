@@ -689,6 +689,8 @@ export default function EmployeesPage() {
   const [modal,     setModal]     = useState(null)
   const [userRole,  setUserRole]  = useState(null)
   const [isMobile,  setIsMobile]  = useState(false)
+  const [page,      setPage]      = useState(1)
+  const PAGE_SIZE = 20
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -713,6 +715,7 @@ export default function EmployeesPage() {
     } catch(e) { console.error(e) } finally { setLoading(false) }
   }, [search, station])
 
+  useEffect(() => { setPage(1) }, [search, station])
   useEffect(() => { const t=setTimeout(load,300); return()=>clearTimeout(t) }, [load])
 
   useSocket({
@@ -727,7 +730,10 @@ export default function EmployeesPage() {
     catch(e) { alert(e.message) }
   }
 
-  const total   = employees.length
+  const total      = employees.length
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+  const paginated  = employees.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE)
+
   const active  = employees.filter(e=>e.status==='active').length
   const onLeave = employees.filter(e=>e.status==='on_leave').length
   const alerts  = employees.filter(e=>{ const v=expiry(e.visa_expiry); return v&&(v.label==='Expired'||parseInt(v.label)<=60) }).length
@@ -798,7 +804,7 @@ export default function EmployeesPage() {
           </div>
         ) : (
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            {employees.map((emp,i)=>(
+            {paginated.map((emp,i)=>(
               <EmpCard key={emp.id} emp={emp} index={i}
                 isSelected={selected?.id===emp.id}
                 onClick={()=>setSelected(selected?.id===emp.id?null:emp)}
@@ -807,6 +813,13 @@ export default function EmployeesPage() {
                 userRole={userRole}/>
             ))}
           </div>
+          {totalPages > 1 && (
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, paddingTop:8 }}>
+              <button className="btn btn-secondary btn-sm" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1}>‹ Prev</button>
+              <span style={{ fontSize:12.5, color:'var(--text-muted)' }}>Page {page} of {totalPages}</span>
+              <button className="btn btn-secondary btn-sm" onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages}>Next ›</button>
+            </div>
+          )}
         )}
       </div>
 

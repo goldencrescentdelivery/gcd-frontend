@@ -42,6 +42,33 @@ input, select, textarea { font-family:inherit; }
   --shadow-glass: 0 4px 32px rgba(0,0,0,0.07);
 }
 
+/* ── Dark mode ───────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:          #0F1117;
+  --bg-alt:      #1A1D27;
+  --card:        #1E2130;
+  --border:      #2A2D3E;
+  --border-med:  #343748;
+  --text:        #F1F5F9;
+  --text-sub:    #94A3B8;
+  --text-muted:  #64748B;
+  --shadow:      0 1px 4px rgba(0,0,0,0.3);
+  --shadow-md:   0 4px 20px rgba(0,0,0,0.4);
+  --shadow-lg:   0 8px 32px rgba(0,0,0,0.5);
+  --gold-pale:   #1C1600;
+  --gold-border: #78580A;
+  --green-bg:    #052E16; --green-border: #166534;
+  --red-bg:      #2D0A0A; --red-border:   #991B1B;
+  --amber-bg:    #1C1200; --amber-border: #92400E;
+  --blue-bg:     #0A1628; --blue-border:  #1E40AF;
+  --purple-bg:   #1A0A2E; --purple-border:#5B21B6;
+  --surface:     rgba(30,33,48,0.75);
+  --border-glass:rgba(255,255,255,0.06);
+  --shadow-glass:0 4px 32px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] body { background:#0F1117; color:#F1F5F9; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background:#343748; }
+
 /* ── Animations ─────────────────────────────────────────────── */
 @keyframes fadeIn  { from{opacity:0}               to{opacity:1} }
 @keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
@@ -125,6 +152,11 @@ input, select, textarea { font-family:inherit; }
 .btn-ghost { background:none; color:var(--text-sub); border-radius:8px; padding:7px; }
 .btn-ghost:hover { background:var(--bg-alt); }
 .btn-icon { width:34px; height:34px; padding:0; justify-content:center; border-radius:8px; }
+.btn-sm { padding:6px 12px; font-size:12px; border-radius:16px; }
+.btn-success { background:#10B981; color:white; }
+.btn-success:hover { background:#059669; }
+.btn-danger { background:#EF4444; color:white; }
+.btn-danger:hover { background:#DC2626; }
 
 /* ── Inputs ──────────────────────────────────────────────────── */
 .input { width:100%; padding:9px 12px; border-radius:10px; border:1.5px solid var(--border-med); background:var(--bg); color:var(--text); font-size:13px; outline:none; transition:border-color 0.15s; }

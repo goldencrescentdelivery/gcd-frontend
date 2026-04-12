@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
 import { analyticsApi } from '@/lib/api'
-import { PieChart, Pie, Cell } from 'recharts'
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import {
   Users, Package, Wallet, AlertTriangle,
   ChevronRight, TrendingUp, Smartphone,
@@ -71,7 +71,7 @@ function Slider({ children, cardWidth = 160, gap = 12 }) {
 
 export default function OverviewPage() {
   const [summary,      setSummary]      = useState(null)
-  const [,             setChart]        = useState([])
+  const [chart,        setChart]        = useState([])
   const [expenses,     setExpenses]     = useState([])
   const [simStats,     setSimStats]     = useState(null)
   const [simByStation, setSimByStation] = useState([])
@@ -117,30 +117,47 @@ const ECATS = [
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
-      {/* ── LAST 6 MONTHS — PROJECT-WISE — Coming Soon ────────── */}
+      {/* ── LAST 6 MONTHS — PROJECT-WISE DELIVERIES ──────────── */}
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
         <SH title="Last 6 Months — Project Deliveries" sub="DDB1 (Pulser) vs DXE6 (CRET)"/>
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 24px', textAlign:'center' }}>
-          <div style={{ width:52, height:52, borderRadius:16, background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)', border:'1px solid #F0D78C', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
-            <Package size={22} color="#B8860B"/>
+        {chart.length === 0 ? (
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 24px', textAlign:'center' }}>
+            <div style={{ width:52, height:52, borderRadius:16, background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)', border:'1px solid #F0D78C', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
+              <Package size={22} color="#B8860B"/>
+            </div>
+            <div style={{ fontWeight:800, fontSize:16, color:'var(--text)', marginBottom:6 }}>No data yet</div>
+            <div style={{ fontSize:12.5, color:'var(--text-muted)', lineHeight:1.6 }}>Delivery records will appear here once logged.</div>
           </div>
-          <div style={{ fontWeight:800, fontSize:16, color:'var(--text)', marginBottom:6 }}>Coming Soon</div>
-          <div style={{ fontSize:12.5, color:'var(--text-muted)', lineHeight:1.6 }}>Delivery tracking is being set up.<br/>Check back soon.</div>
-        </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={chart} barSize={18} barGap={4}>
+              <XAxis dataKey="month" tick={{ fontSize:11, fill:'var(--text-muted)' }} axisLine={false} tickLine={false}/>
+              <YAxis tick={{ fontSize:11, fill:'var(--text-muted)' }} axisLine={false} tickLine={false} width={36}/>
+              <Tooltip
+                contentStyle={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:10, fontSize:12 }}
+                labelStyle={{ fontWeight:700, color:'var(--text)' }}
+                formatter={(v, name) => [Number(v).toLocaleString(), name]}
+              />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:12 }}/>
+              <Bar dataKey="DDB1" name="DDB1 (Pulser)" fill="#F59E0B" radius={[4,4,0,0]}/>
+              <Bar dataKey="DXE6" name="DXE6 (CRET)"   fill="#38BDF8" radius={[4,4,0,0]}/>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* ── TOP KPIs ─────────────────────────────────────────── */}
       {isMobile ? (
         <Slider cardWidth={155}>
           <KPI icon={Users}      label="Active DAs"          color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
-          <KPI icon={Package}    label="Total Deliveries"    color="#38BDF8" loading={false}   value="—" sub="Coming soon"/>
+          <KPI icon={Package}    label="Deliveries (6 mo)"  color="#38BDF8" loading={false}   value={chart.length?fmt(chart.reduce((s,r)=>s+(Number(r.DDB1||0)+Number(r.DXE6||0)),0)):'—'} sub={chart.length?`${chart.length} months`:'No data yet'}/>
           <KPI icon={Receipt}    label="Expenses This Month" color="#10B981" loading={loading} value={fmtAED(totalExp)} sub={`${pendingExp} pending`}/>
           <KPI icon={Smartphone} label="SIM Cards"           color="#A78BFA" loading={loading} value={simStats?.total||'—'} sub={`${simStats?.assigned||0} assigned`}/>
         </Slider>
       ) : (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
           <KPI icon={Users}      label="Active DAs"          color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
-          <KPI icon={Package}    label="Total Deliveries"    color="#38BDF8" loading={false}   value="—" sub="Coming soon"/>
+          <KPI icon={Package}    label="Deliveries (6 mo)"   color="#38BDF8" loading={false}   value={chart.length?fmt(chart.reduce((s,r)=>s+(Number(r.DDB1||0)+Number(r.DXE6||0)),0)):'—'} sub={chart.length?`${chart.length} months`:'No data yet'}/>
           <KPI icon={Receipt}    label="Expenses This Month" color="#10B981" loading={loading} value={fmtAED(totalExp)} sub={`${pendingExp} pending`}/>
           <KPI icon={Smartphone} label="SIM Cards"           color="#A78BFA" loading={loading} value={simStats?.total||'—'} sub={`${simStats?.assigned||0} assigned`}/>
         </div>

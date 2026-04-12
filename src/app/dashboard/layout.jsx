@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import React, { Component, useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { AlertsProvider } from '@/lib/AlertsContext'
@@ -7,6 +7,22 @@ import Sidebar from '@/components/layout/Sidebar'
 import Topbar from '@/components/layout/Topbar'
 import Link from 'next/link'
 import { LayoutDashboard, Users, DollarSign, Radio, X, Trophy } from 'lucide-react'
+
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null } }
+  static getDerivedStateFromError(error) { return { error } }
+  render() {
+    if (this.state.error) return (
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'60px 24px', textAlign:'center' }}>
+        <div style={{ fontSize:40, marginBottom:16 }}>⚠️</div>
+        <div style={{ fontWeight:800, fontSize:18, color:'var(--text)', marginBottom:8 }}>Something went wrong</div>
+        <div style={{ fontSize:13, color:'var(--text-muted)', marginBottom:20, maxWidth:400 }}>{this.state.error.message}</div>
+        <button className="btn btn-primary" onClick={() => this.setState({ error: null })}>Try again</button>
+      </div>
+    )
+    return this.props.children
+  }
+}
 
 const BOTTOM_NAV = [
   { href:'/dashboard/overview',  icon:LayoutDashboard, label:'Overview',  roles:['admin','general_manager','hr','accountant','poc'] },
@@ -158,7 +174,7 @@ export default function DashboardLayout({ children }) {
         <Topbar onMenuClick={()=>setMobileOpen(o=>!o)}/>
         <main className="page-content">
           {showAward && <AwardBanner onDismiss={dismissAward}/>}
-          {children}
+          <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>
 

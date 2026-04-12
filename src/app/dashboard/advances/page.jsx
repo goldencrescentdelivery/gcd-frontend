@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
-import { Wallet, Plus, X, Check, Clock, AlertCircle, TrendingDown } from 'lucide-react'
+import { Wallet, Plus, X, Check, Clock, AlertCircle, TrendingDown, Search } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 function hdr() { return { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
@@ -22,6 +22,7 @@ export default function AdvancesPage() {
   const [reviewNote,setReviewNote]= useState('')
   const [saving,    setSaving]    = useState(false)
   const [filter,    setFilter]    = useState('all')
+  const [search,    setSearch]    = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -54,7 +55,9 @@ export default function AdvancesPage() {
     } catch(e){} finally{setSaving(false)}
   }
 
-  const filtered = filter==='all' ? advances : advances.filter(a=>a.status===filter)
+  const filtered = advances
+    .filter(a => filter==='all' || a.status===filter)
+    .filter(a => !search || a.name?.toLowerCase().includes(search.toLowerCase()))
   const totalPending  = advances.filter(a=>a.status==='pending').reduce((s,a)=>s+Number(a.amount),0)
   const totalApproved = advances.filter(a=>a.status==='approved').reduce((s,a)=>s+Number(a.amount),0)
 
@@ -87,7 +90,13 @@ export default function AdvancesPage() {
         ))}
       </div>
 
-      {/* Filter */}
+      {/* Search + Filter */}
+      <div style={{display:'flex',gap:7,flexWrap:'wrap',alignItems:'center'}}>
+        <div style={{position:'relative',flex:'0 0 200px'}}>
+          <Search size={13} style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)',pointerEvents:'none'}}/>
+          <input className="input" placeholder="Search employee…" value={search} onChange={e=>setSearch(e.target.value)} style={{paddingLeft:30,borderRadius:20}}/>
+        </div>
+      </div>
       <div style={{display:'flex',gap:7}}>
         {['all','pending','approved','rejected'].map(f=>{
           const cfg = STATUS_CFG[f]

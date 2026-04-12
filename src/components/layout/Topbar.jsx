@@ -1,6 +1,6 @@
 'use client'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, LogOut } from 'lucide-react'
+import { Menu, LogOut, Moon, Sun } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useEffect, useState } from 'react'
 
@@ -47,6 +47,24 @@ export default function Topbar({ onMenuClick }) {
     router.replace('/login')
   }
 
+  const [dark, setDark] = useState(false)
+
+  useEffect(() => {
+    setDark(document.documentElement.getAttribute('data-theme') === 'dark')
+  }, [])
+
+  function toggleTheme() {
+    const next = !dark
+    setDark(next)
+    if (next) {
+      document.documentElement.setAttribute('data-theme', 'dark')
+      localStorage.setItem('gcd_theme', 'dark')
+    } else {
+      document.documentElement.removeAttribute('data-theme')
+      localStorage.setItem('gcd_theme', 'light')
+    }
+  }
+
   const title = PAGE_TITLES[pathname] || 'Dashboard'
   const role  = ROLE_CFG[user?.role] || { l: user?.role, e: '👤' }
 
@@ -65,6 +83,12 @@ export default function Topbar({ onMenuClick }) {
           {new Date().toLocaleDateString('en-AE',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
         </div>
       </div>
+
+      {/* Dark mode toggle */}
+      <button onClick={toggleTheme} className="btn btn-ghost btn-icon" title={dark ? 'Light mode' : 'Dark mode'}
+        style={{ color:'var(--text-sub)', flexShrink:0 }}>
+        {dark ? <Sun size={17}/> : <Moon size={17}/>}
+      </button>
 
       {/* Right side — combined user + sign-out pill */}
       <div style={{ display:'flex', alignItems:'center', gap:0, flexShrink:0, background:'var(--card)', border:'1px solid var(--border)', borderRadius:28, boxShadow:'0 1px 4px rgba(0,0,0,0.06)', overflow:'hidden' }}>

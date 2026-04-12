@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X, Calendar, Users, Truck, Coffee, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Calendar, Users, Truck, Coffee, AlertTriangle, Copy } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 function hdr() { return { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
@@ -111,6 +111,7 @@ export default function RosterPage() {
   const [employees, setEmployees]   = useState([])
   const [shifts,    setShifts]      = useState([])
   const [loading,   setLoading]     = useState(true)
+  const [copying,   setCopying]     = useState(false)
 
   const weekDates = getWeekDates(weekStart)
   const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
@@ -133,6 +134,29 @@ export default function RosterPage() {
 
   function prevWeek() { const d=new Date(weekStart); d.setDate(d.getDate()-7); setWeekStart(d.toISOString().slice(0,10)) }
   function nextWeek() { const d=new Date(weekStart); d.setDate(d.getDate()+7); setWeekStart(d.toISOString().slice(0,10)) }
+
+  async function copyLastWeek() {
+    const lastWeekStart = (() => { const d=new Date(weekStart); d.setDate(d.getDate()-7); return d.toISOString().slice(0,10) })()
+    const lastWeekDates = getWeekDates(lastWeekStart)
+    setCopying(true)
+    try {
+      const res = await fetch(`${API}/api/shifts?week=${lastWeekStart}&station_code=${station}`, {
+        headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` }
+      })
+      const data = await res.json()
+      const lastShifts = data.shifts || []
+      if (lastShifts.length === 0) { alert('No shifts found in the previous week to copy.'); setCopying(false); return }
+      const copies = lastShifts.map((s, i) => {
+        const dayIdx = lastWeekDates.indexOf(s.shift_date)
+        if (dayIdx < 0) return null
+        return fetch(`${API}/api/shifts`, { method:'POST', headers:hdr(),
+          body:JSON.stringify({ emp_id:s.emp_id, shift_date:weekDates[dayIdx], shift_type:s.shift_type, cycle:s.cycle||null, station_code:s.station_code })
+        })
+      }).filter(Boolean)
+      await Promise.all(copies)
+      load()
+    } catch(e) { alert('Failed to copy shifts') } finally { setCopying(false) }
+  }
 
   const today = new Date().toISOString().slice(0,10)
 
@@ -171,6 +195,9 @@ export default function RosterPage() {
         </div>
         <button onClick={nextWeek} style={{width:32,height:32,borderRadius:10,background:'#F5F4F1',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><ChevronRight size={15}/></button>
         <button onClick={()=>setWeekStart(getMonday())} style={{padding:'6px 14px',borderRadius:10,background:'#FDF6E3',border:'1px solid #F0D78C',color:'#B8860B',fontWeight:700,fontSize:11,cursor:'pointer',fontFamily:'Poppins,sans-serif'}}>Today</button>
+        <button onClick={copyLastWeek} disabled={copying} style={{padding:'6px 14px',borderRadius:10,background:'var(--bg-alt)',border:'1px solid var(--border-med)',color:'var(--text-sub)',fontWeight:600,fontSize:11,cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5}}>
+          <Copy size={12}/>{copying?'Copying…':'Copy Last Week'}
+        </button>
       </div>
 
       {/* Coverage summary */}
