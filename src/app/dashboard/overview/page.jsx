@@ -1,6 +1,5 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
-import { analyticsApi } from '@/lib/api'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import {
   Users, Package, Wallet, AlertTriangle,
@@ -87,13 +86,20 @@ export default function OverviewPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    try { const sum = await analyticsApi.summary(); setSummary(sum); setLoading(false) }
-    catch(e) { setLoading(false) }
-
     const month = new Date().toISOString().slice(0,7)
-    fetch(`${API}/api/analytics/deliveries-chart?months=6`,{headers:hdr()}).then(r=>r.json()).then(d=>setChart(d.chart||[])).catch(()=>{})
-    fetch(`${API}/api/expenses?month=${month}`,{headers:hdr()}).then(r=>r.json()).then(d=>setExpenses(d.expenses||[])).catch(()=>{})
-    fetch(`${API}/api/sims/stats`,{headers:hdr()}).then(r=>r.json()).then(d=>{setSimStats(d.stats||null);setSimByStation(d.by_station||[])}).catch(()=>{})
+    try {
+      const [sumData, chartData, expData, simData] = await Promise.all([
+        fetch(`${API}/api/analytics/summary`,                     {headers:hdr()}).then(r=>r.json()),
+        fetch(`${API}/api/analytics/deliveries-chart?months=6`,   {headers:hdr()}).then(r=>r.json()),
+        fetch(`${API}/api/expenses?month=${month}`,               {headers:hdr()}).then(r=>r.json()),
+        fetch(`${API}/api/sims/stats`,                            {headers:hdr()}).then(r=>r.json()),
+      ])
+      setSummary(sumData)
+      setChart(chartData.chart || [])
+      setExpenses(expData.expenses || [])
+      setSimStats(simData.stats || null)
+      setSimByStation(simData.by_station || [])
+    } catch(e) { console.error(e) } finally { setLoading(false) }
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -122,8 +128,8 @@ const ECATS = [
         <SH title="Last 6 Months — Project Deliveries" sub="DDB1 (Pulser) vs DXE6 (CRET)"/>
         {chart.length === 0 ? (
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 24px', textAlign:'center' }}>
-            <div style={{ width:52, height:52, borderRadius:16, background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)', border:'1px solid #F0D78C', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
-              <Package size={22} color="#B8860B"/>
+            <div style={{ width:52, height:52, borderRadius:16, background:'var(--amber-bg)', border:'1px solid var(--gold-border)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
+              <Package size={22} color="var(--gold)"/>
             </div>
             <div style={{ fontWeight:800, fontSize:16, color:'var(--text)', marginBottom:6 }}>No data yet</div>
             <div style={{ fontSize:12.5, color:'var(--text-muted)', lineHeight:1.6 }}>Delivery records will appear here once logged.</div>
@@ -172,9 +178,9 @@ const ECATS = [
           {/* Stat row */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:16 }}>
             {[
-              { l:'Total',    v:fmtAED(totalExp),    bg:'#F9FAFB', c:'var(--text)' },
-              { l:'Approved', v:fmtAED(approvedExp), bg:'#F0FDF4', c:'#10B981' },
-              { l:'Pending',  v:pendingExp,           bg:'#FFFBEB', c:'#F59E0B' },
+              { l:'Total',    v:fmtAED(totalExp),    bg:'var(--bg-alt)',   c:'var(--text)' },
+              { l:'Approved', v:fmtAED(approvedExp), bg:'var(--green-bg)', c:'var(--green)' },
+              { l:'Pending',  v:pendingExp,           bg:'var(--amber-bg)', c:'var(--amber)' },
             ].map(s=>(
               <div key={s.l} style={{ textAlign:'center', padding:'10px 6px', borderRadius:10, background:s.bg, border:'1px solid var(--border)' }}>
                 <div style={{ fontWeight:800, fontSize:14, color:s.c, letterSpacing:'-0.02em' }}>{s.v}</div>
@@ -218,10 +224,10 @@ const ECATS = [
           {/* Stat row */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:16 }}>
             {[
-              { l:'Total SIMs',   v:simStats?.total||'—',              c:'#7C3AED', bg:'#F5F3FF' },
-              { l:'Assigned',     v:simStats?.assigned||'—',           c:'#F59E0B', bg:'#FFFBEB' },
-              { l:'Available',    v:simStats?.available||'—',          c:'#10B981', bg:'#F0FDF4' },
-              { l:'Monthly Cost', v:fmtAED(simStats?.monthly_cost||0), c:'#2563EB', bg:'#EFF6FF' },
+              { l:'Total SIMs',   v:simStats?.total||'—',              c:'var(--purple)', bg:'var(--purple-bg)' },
+              { l:'Assigned',     v:simStats?.assigned||'—',           c:'var(--amber)',  bg:'var(--amber-bg)'  },
+              { l:'Available',    v:simStats?.available||'—',          c:'var(--green)',  bg:'var(--green-bg)'  },
+              { l:'Monthly Cost', v:fmtAED(simStats?.monthly_cost||0), c:'var(--blue)',   bg:'var(--blue-bg)'   },
             ].map(s=>(
               <div key={s.l} style={{ textAlign:'center', padding:'10px 6px', borderRadius:10, background:s.bg, border:'1px solid var(--border)' }}>
                 <div style={{ fontWeight:900, fontSize:16, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>

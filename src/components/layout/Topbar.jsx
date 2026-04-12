@@ -105,8 +105,8 @@ export default function Topbar({ onMenuClick }) {
         <div className="hide-mobile" style={{ width:1, height:22, background:'var(--border)', flexShrink:0 }}/>
         {/* Sign out */}
         <button onClick={signOut}
-          style={{ display:'flex', alignItems:'center', gap:5, padding:'0 14px', height:42, background:'transparent', border:'none', color:'#EF4444', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap', flexShrink:0, transition:'background 0.15s' }}
-          onMouseEnter={e=>e.currentTarget.style.background='rgba(239,68,68,0.07)'}
+          style={{ display:'flex', alignItems:'center', gap:5, padding:'0 14px', height:42, background:'transparent', border:'none', color:'var(--red)', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', flexShrink:0, transition:'background 0.15s' }}
+          onMouseEnter={e=>e.currentTarget.style.background='var(--red-bg)'}
           onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
           <LogOut size={13}/><span className="hide-mobile" style={{ marginLeft:2 }}>Sign Out</span>
         </button>

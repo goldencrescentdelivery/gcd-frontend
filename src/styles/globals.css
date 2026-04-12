@@ -1,12 +1,13 @@
-/* ── Fonts (loaded via <link> in layout.jsx) ─────────────────── */
+/* ── Font (self-hosted via next/font — variable injected on <html>) ── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { overflow-x:hidden; height:100%; }
-body { font-family:'Poppins',-apple-system,sans-serif; background:#F9FAFB; color:#111827; min-height:100vh; }
+body { font-family:var(--font-sans,'Poppins',-apple-system,sans-serif); background:#F9FAFB; color:#111827; min-height:100vh; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
 #__next { height:100%; }
-* { font-family:'Poppins',-apple-system,sans-serif !important; }
+* { font-family:var(--font-sans,'Poppins',-apple-system,sans-serif) !important; }
 button { cursor:pointer; border:none; background:none; font-family:inherit; }
 a { text-decoration:none; color:inherit; }
 input, select, textarea { font-family:inherit; }
+::selection { background:rgba(184,134,11,0.18); color:inherit; }
 
 /* ── Scrollbar ───────────────────────────────────────────────── */
 ::-webkit-scrollbar { width:4px; height:4px; }

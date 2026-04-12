@@ -30,45 +30,45 @@ function DriverSearch({ employees, value, onChange, placeholder='Search driver�
 
   return (
     <div ref={ref} style={{ position:'relative' }}>
-      <div onClick={()=>setOpen(p=>!p)} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px', background:'#FFF', border:`1.5px solid ${open?'#B8860B':'#EAE6DE'}`, borderRadius:12, cursor:'pointer', transition:'all 0.2s', boxShadow:open?'0 0 0 3px rgba(184,134,11,0.1)':'' }}>
+      <div onClick={()=>setOpen(p=>!p)} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px', background:'var(--card)', border:`1.5px solid ${open?'var(--gold)':'var(--border-med)'}`, borderRadius:12, cursor:'pointer', transition:'all 0.2s', boxShadow:open?'0 0 0 3px rgba(184,134,11,0.1)':'' }}>
         {selected ? (
           <div style={{ display:'flex', alignItems:'center', gap:10, flex:1 }}>
-            <div style={{ width:32, height:32, borderRadius:9, background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)', border:'1px solid #F0D78C', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{selected.avatar||'👤'}</div>
+            <div style={{ width:32, height:32, borderRadius:9, background:'var(--amber-bg)', border:'1px solid var(--gold-border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{selected.avatar||'👤'}</div>
             <div>
-              <div style={{ fontSize:13, fontWeight:700, color:'#1A1612' }}>{selected.name}</div>
-              <div style={{ fontSize:10.5, color:'#A89880', fontFamily:'monospace' }}>{selected.id}</div>
+              <div style={{ fontSize:13, fontWeight:700, color:'var(--text)' }}>{selected.name}</div>
+              <div style={{ fontSize:10.5, color:'var(--text-muted)', fontFamily:'monospace' }}>{selected.id}</div>
             </div>
           </div>
         ) : (
-          <span style={{ flex:1, fontSize:13, color:'#C4B49A' }}>{placeholder}</span>
+          <span style={{ flex:1, fontSize:13, color:'var(--text-muted)' }}>{placeholder}</span>
         )}
-        <ChevronDown size={15} color="#A89880" style={{ flexShrink:0, transition:'transform 0.2s', transform:open?'rotate(180deg)':'none' }}/>
+        <ChevronDown size={15} color="var(--text-muted)" style={{ flexShrink:0, transition:'transform 0.2s', transform:open?'rotate(180deg)':'none' }}/>
       </div>
       {open && (
-        <div style={{ position:'absolute', top:'calc(100% + 6px)', left:0, right:0, background:'#FFF', border:'1px solid #EAE6DE', borderRadius:14, boxShadow:'0 12px 40px rgba(0,0,0,0.14)', zIndex:999, maxHeight:300, overflow:'hidden', animation:'scaleIn 0.15s ease' }}>
-          <div style={{ padding:'10px 12px', borderBottom:'1px solid #F5F4F1' }}>
+        <div style={{ position:'absolute', top:'calc(100% + 6px)', left:0, right:0, background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, boxShadow:'var(--shadow-lg)', zIndex:999, maxHeight:300, overflow:'hidden', animation:'scaleIn 0.15s ease' }}>
+          <div style={{ padding:'10px 12px', borderBottom:'1px solid var(--border)' }}>
             <div style={{ position:'relative' }}>
-              <Search size={13} style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', color:'#C4B49A' }}/>
+              <Search size={13} style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)' }}/>
               <input autoFocus className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name or ID…" style={{ paddingLeft:32, fontSize:12, borderRadius:8 }}/>
             </div>
           </div>
           <div style={{ overflowY:'auto', maxHeight:230 }}>
-            <div onClick={()=>{onChange('');setOpen(false);setSearch('')}} style={{ padding:'10px 14px', fontSize:13, color:'#A89880', cursor:'pointer', borderBottom:'1px solid #F5F4F1', display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ width:28, height:28, borderRadius:8, background:'#F5F4F1', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>—</div>
+            <div onClick={()=>{onChange('');setOpen(false);setSearch('')}} style={{ padding:'10px 14px', fontSize:13, color:'var(--text-muted)', cursor:'pointer', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ width:28, height:28, borderRadius:8, background:'var(--bg-alt)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>—</div>
               None
             </div>
             {filtered.map(e => (
               <div key={e.id} onClick={()=>{onChange(e.id);setOpen(false);setSearch('')}}
-                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', cursor:'pointer', background:value===e.id?'#FDF6E3':'transparent', transition:'background 0.15s' }}>
-                <div style={{ width:32, height:32, borderRadius:9, background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)', border:`1px solid ${value===e.id?'#D4A017':'#F0D78C'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{e.avatar||'👤'}</div>
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', cursor:'pointer', background:value===e.id?'var(--amber-bg)':'transparent', transition:'background 0.15s' }}>
+                <div style={{ width:32, height:32, borderRadius:9, background:'var(--amber-bg)', border:`1px solid ${value===e.id?'var(--gold)':'var(--gold-border)'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{e.avatar||'👤'}</div>
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:13, fontWeight:600, color:'#1A1612' }}>{e.name}</div>
-                  <div style={{ fontSize:10.5, color:'#A89880', fontFamily:'monospace' }}>{e.id}</div>
+                  <div style={{ fontSize:13, fontWeight:600, color:'var(--text)' }}>{e.name}</div>
+                  <div style={{ fontSize:10.5, color:'var(--text-muted)', fontFamily:'monospace' }}>{e.id}</div>
                 </div>
-                {value===e.id && <CheckCircle size={15} color="#B8860B"/>}
+                {value===e.id && <CheckCircle size={15} color="var(--gold)"/>}
               </div>
             ))}
-            {filtered.length===0 && <div style={{ padding:24, textAlign:'center', color:'#A89880', fontSize:13 }}>No drivers found</div>}
+            {filtered.length===0 && <div style={{ padding:24, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>No drivers found</div>}
           </div>
         </div>
       )}
@@ -90,7 +90,7 @@ function CycleSelector({ selected, onChange, rescueHours, onRescueHours }) {
 
   return (
     <div>
-      <label className="input-label">Duty Cycles <span style={{ color:'#A89880', textTransform:'none', letterSpacing:0, fontSize:10, fontWeight:400 }}>— select multiple</span></label>
+      <label className="input-label">Duty Cycles <span style={{ color:'var(--text-muted)', textTransform:'none', letterSpacing:0, fontSize:10, fontWeight:400 }}>— select multiple</span></label>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:10 }}>
         {CYCLES.map(c => {
           const on = selected.includes(c)
@@ -98,16 +98,16 @@ function CycleSelector({ selected, onChange, rescueHours, onRescueHours }) {
             <button key={c} type="button" onClick={()=>toggle(c)}
               style={{
                 padding:'11px 6px', borderRadius:12,
-                border:`2px solid ${on?'#B8860B':'#EAE6DE'}`,
-                background: on ? 'linear-gradient(135deg,#FDF6E3,#FEF9F0)' : '#FAFAF8',
-                color: on ? '#B8860B' : '#6B5D4A',
+                border:`2px solid ${on?'var(--gold)':'var(--border-med)'}`,
+                background: on ? 'var(--amber-bg)' : 'var(--bg-alt)',
+                color: on ? 'var(--gold)' : 'var(--text-sub)',
                 fontSize:12, fontWeight:700, cursor:'pointer', textAlign:'center',
                 transition:'all 0.18s ease',
                 transform: on ? 'scale(1.05)' : 'scale(1)',
                 boxShadow: on ? '0 4px 12px rgba(184,134,11,0.2)' : 'none',
               }}>
               {c}
-              <div style={{ fontSize:9.5, fontWeight:500, color:on?'#B8860B':'#C4B49A', marginTop:2 }}>
+              <div style={{ fontSize:9.5, fontWeight:500, color:on?'var(--gold)':'var(--text-muted)', marginTop:2 }}>
                 {c==='Rescue'?'custom':`${CYCLE_H[c]}h`}
               </div>
             </button>
@@ -121,11 +121,11 @@ function CycleSelector({ selected, onChange, rescueHours, onRescueHours }) {
         </div>
       )}
       {total > 0 && (
-        <div style={{ padding:'11px 14px', borderRadius:10, background:overMax?'#FEF2F2':'#ECFDF5', border:`1px solid ${overMax?'#FCA5A5':'#A7F3D0'}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <span style={{ fontSize:13, fontWeight:700, color:overMax?'#C0392B':'#2E7D52' }}>
+        <div style={{ padding:'11px 14px', borderRadius:10, background:overMax?'var(--red-bg)':'var(--green-bg)', border:`1px solid ${overMax?'var(--red-border)':'var(--green-border)'}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <span style={{ fontSize:13, fontWeight:700, color:overMax?'var(--red)':'var(--green)' }}>
             {overMax ? `⚠️ ${total}h exceeds ${MAX_HRS}h limit` : `✓ ${total}h total`}
           </span>
-          {selected.length > 0 && <span style={{ fontSize:11, color:overMax?'#C0392B':'#2E7D52', fontWeight:500 }}>{selected.filter(c=>c!=='Rescue').join(' + ')}{hasRescue?' + Rescue':''}</span>}
+          {selected.length > 0 && <span style={{ fontSize:11, color:overMax?'var(--red)':'var(--green)', fontWeight:500 }}>{selected.filter(c=>c!=='Rescue').join(' + ')}{hasRescue?' + Rescue':''}</span>}
         </div>
       )}
     </div>
@@ -181,12 +181,12 @@ function AttModal({ employees, station, date, editRecord, onSave, onClose }) {
       <div className="modal" style={{ maxWidth:460 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
           <div>
-            <h3 style={{ fontWeight:800, fontSize:16, color:'#1A1612' }}>{isEdit?'Edit':'Log'} Attendance</h3>
-            <div style={{ fontSize:11, color:'#B8860B', fontWeight:600, marginTop:1 }}>📍 {station} Station</div>
+            <h3 style={{ fontWeight:800, fontSize:16, color:'var(--text)' }}>{isEdit?'Edit':'Log'} Attendance</h3>
+            <div style={{ fontSize:11, color:'var(--gold)', fontWeight:600, marginTop:1 }}>📍 {station} Station</div>
           </div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={17}/></button>
         </div>
-        {err && <div style={{ background:'#FEF2F2', border:'1px solid #FCA5A5', borderRadius:10, padding:'10px 14px', fontSize:13, color:'#C0392B', marginBottom:14 }}>{err}</div>}
+        {err && <div style={{ background:'var(--red-bg)', border:'1px solid var(--red-border)', borderRadius:10, padding:'10px 14px', fontSize:13, color:'var(--red)', marginBottom:14 }}>{err}</div>}
 
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
           {!isEdit ? (
@@ -195,9 +195,9 @@ function AttModal({ employees, station, date, editRecord, onSave, onClose }) {
               <DriverSearch employees={employees} value={empId} onChange={setEmpId}/>
             </div>
           ) : (
-            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'#FDF6E3', borderRadius:12, border:'1px solid #F0D78C' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'var(--amber-bg)', borderRadius:12, border:'1px solid var(--gold-border)' }}>
               <span style={{ fontSize:16 }}>{editRecord.avatar||'👤'}</span>
-              <span style={{ fontWeight:700, fontSize:14, color:'#B8860B' }}>{editRecord.name}</span>
+              <span style={{ fontWeight:700, fontSize:14, color:'var(--gold)' }}>{editRecord.name}</span>
             </div>
           )}
 
@@ -206,7 +206,7 @@ function AttModal({ employees, station, date, editRecord, onSave, onClose }) {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
               {[{v:'present',e:'✅',l:'Present'},{v:'absent',e:'❌',l:'Absent'},{v:'leave',e:'🏖',l:'Leave'}].map(s=>(
                 <button key={s.v} type="button" onClick={()=>setStatus(s.v)}
-                  style={{ padding:'11px 8px', borderRadius:11, border:`2px solid ${status===s.v?'#B8860B':'#EAE6DE'}`, background:status===s.v?'linear-gradient(135deg,#FDF6E3,#FEF9F0)':'#FAFAF8', color:status===s.v?'#B8860B':'#6B5D4A', fontWeight:600, fontSize:12, cursor:'pointer', transition:'all 0.18s', textAlign:'center' }}>
+                  style={{ padding:'11px 8px', borderRadius:11, border:`2px solid ${status===s.v?'var(--gold)':'var(--border-med)'}`, background:status===s.v?'var(--amber-bg)':'var(--bg-alt)', color:status===s.v?'var(--gold)':'var(--text-sub)', fontWeight:600, fontSize:12, cursor:'pointer', transition:'all 0.18s', textAlign:'center' }}>
                   <div style={{ fontSize:18, marginBottom:3 }}>{s.e}</div>
                   {s.l}
                 </button>
@@ -220,9 +220,9 @@ function AttModal({ employees, station, date, editRecord, onSave, onClose }) {
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                 {[{v:'driver',l:'🚗 Driver',r:'AED 115'},{v:'helper',l:'🔧 Helper',r:'AED 90'}].map(t=>(
                   <button key={t.v} type="button" onClick={()=>setWType(t.v)}
-                    style={{ padding:'12px', borderRadius:11, border:`2px solid ${wType===t.v?'#B8860B':'#EAE6DE'}`, background:wType===t.v?'linear-gradient(135deg,#FDF6E3,#FEF9F0)':'#FAFAF8', color:wType===t.v?'#B8860B':'#6B5D4A', fontWeight:600, cursor:'pointer', transition:'all 0.18s', textAlign:'center' }}>
+                    style={{ padding:'12px', borderRadius:11, border:`2px solid ${wType===t.v?'var(--gold)':'var(--border-med)'}`, background:wType===t.v?'var(--amber-bg)':'var(--bg-alt)', color:wType===t.v?'var(--gold)':'var(--text-sub)', fontWeight:600, cursor:'pointer', transition:'all 0.18s', textAlign:'center' }}>
                     <div style={{ fontSize:13 }}>{t.l}</div>
-                    <div style={{ fontSize:11, fontWeight:700, color:wType===t.v?'#2E7D52':'#A89880', marginTop:2 }}>{t.r}/day</div>
+                    <div style={{ fontSize:11, fontWeight:700, color:wType===t.v?'var(--green)':'var(--text-muted)', marginTop:2 }}>{t.r}/day</div>
                   </button>
                 ))}
               </div>
@@ -234,12 +234,12 @@ function AttModal({ employees, station, date, editRecord, onSave, onClose }) {
           )}
 
           {est && status==='present' && (
-            <div style={{ background:'linear-gradient(135deg,#ECFDF5,#F0FDF4)', border:'1px solid #A7F3D0', borderRadius:12, padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div style={{ background:'var(--green-bg)', border:'1px solid var(--green-border)', borderRadius:12, padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div>
-                <div style={{ fontSize:11, color:'#2E7D52', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Estimated Earnings</div>
-                <div style={{ fontSize:11, color:'#A89880', marginTop:1 }}>{isDXE6?'Daily rate':`${total}h × AED ${rate}/hr`}</div>
+                <div style={{ fontSize:11, color:'var(--green)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Estimated Earnings</div>
+                <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:1 }}>{isDXE6?'Daily rate':`${total}h × AED ${rate}/hr`}</div>
               </div>
-              <div style={{ fontSize:22, fontWeight:900, color:'#2E7D52', letterSpacing:'-0.03em' }}>AED {est}</div>
+              <div style={{ fontSize:22, fontWeight:900, color:'var(--green)', letterSpacing:'-0.03em' }}>AED {est}</div>
             </div>
           )}
 
@@ -279,7 +279,7 @@ function AnnModal({ ann, onSave, onClose }) {
     <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal" style={{maxWidth:440}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
-          <h3 style={{fontWeight:800,fontSize:16,color:'#1A1612'}}>{ann?'Edit':'New'} Announcement</h3>
+          <h3 style={{fontWeight:800,fontSize:16,color:'var(--text)'}}>{ann?'Edit':'New'} Announcement</h3>
           <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={17}/></button>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
@@ -314,7 +314,7 @@ function VehicleModal({ vehicle, station, onSave, onClose }) {
     <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal" style={{maxWidth:460}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
-          <h3 style={{fontWeight:800,fontSize:16,color:'#1A1612'}}>{vehicle?'Edit':'Add'} Vehicle</h3>
+          <h3 style={{fontWeight:800,fontSize:16,color:'var(--text)'}}>{vehicle?'Edit':'Add'} Vehicle</h3>
           <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={17}/></button>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
@@ -364,7 +364,7 @@ function DeliveryModal({ date, station, existing, onSave, onClose }) {
       <div className="modal" style={{maxWidth:400}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
           <div>
-            <h3 style={{fontWeight:800,fontSize:16,color:'#1A1612'}}>{existing?'Edit':'Log'} Deliveries</h3>
+            <h3 style={{fontWeight:800,fontSize:16,color:'var(--text)'}}>{existing?'Edit':'Log'} Deliveries</h3>
             <div style={{fontSize:11,color:'#B8860B',fontWeight:600,marginTop:1}}>📅 {date}</div>
           </div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={17}/></button>
@@ -433,7 +433,7 @@ function SimModal({ sim, emps, station, onSave, onClose }) {
       <div className="modal" style={{maxWidth:440}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
           <div>
-            <h3 style={{fontWeight:900,fontSize:16,color:'#1A1612'}}>{isEdit?'Edit':'Add'} SIM Card</h3>
+            <h3 style={{fontWeight:900,fontSize:16,color:'var(--text)'}}>{isEdit?'Edit':'Add'} SIM Card</h3>
             <p style={{fontSize:11.5,color:'#A89880',marginTop:2}}>{station} Station</p>
           </div>
           <button onClick={onClose} style={{width:30,height:30,borderRadius:9,background:'#F5F4F1',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><X size={14}/></button>
@@ -540,7 +540,7 @@ function SimSection({ sims, emps, station, onRefresh }) {
                 <Smartphone size={18} color={sc.c}/>
               </div>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontWeight:700,fontSize:13,color:'#1A1612',fontFamily:'monospace'}}>{sim.phone_number||sim.sim_number}</div>
+                <div style={{fontWeight:700,fontSize:13,color:'var(--text)',fontFamily:'monospace'}}>{sim.phone_number||sim.sim_number}</div>
                 <div style={{fontSize:11,color:'#A89880',marginTop:2,display:'flex',gap:5,flexWrap:'wrap'}}>
                   <span>{sim.carrier}</span>
                   {sim.phone_number&&<><span>·</span><span style={{fontFamily:'monospace',fontSize:10}}>{sim.sim_number}</span></>}
@@ -561,7 +561,7 @@ function SimSection({ sims, emps, station, onRefresh }) {
                   {sim.emp_name?.slice(0,2).toUpperCase()}
                 </div>
                 <div>
-                  <div style={{fontSize:12,fontWeight:700,color:'#1A1612'}}>{sim.emp_name}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:'var(--text)'}}>{sim.emp_name}</div>
                   <div style={{fontSize:10.5,color:'#A89880'}}>Assigned {sim.assigned_at?.slice(0,10)||'—'}</div>
                 </div>
               </div>
@@ -616,7 +616,7 @@ function WorkNumModal({ emp, station, sims, onSave, onClose }) {
       <div className="modal" style={{ maxWidth:360 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
           <div>
-            <h3 style={{ fontWeight:800, fontSize:16, color:'#1A1612' }}>Assign Work Number</h3>
+            <h3 style={{ fontWeight:800, fontSize:16, color:'var(--text)' }}>Assign Work Number</h3>
             <p style={{ fontSize:12, color:'#A89880', marginTop:2 }}>{emp.name}{emp.work_number && <span style={{ marginLeft:8, fontFamily:'monospace', color:'#B8860B' }}>({emp.work_number})</span>}</p>
           </div>
           <button onClick={onClose} style={{ width:28, height:28, borderRadius:8, background:'#F5F4F1', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={13}/></button>
@@ -668,7 +668,7 @@ function WorkNumModal({ emp, station, sims, onSave, onClose }) {
                       background: s.emp_id===emp.id ? '#F0FDF4' : '#FAFAF8',
                       border: `1.5px solid ${s.emp_id===emp.id ? '#A7F3D0' : '#EAE6DE'}`,
                       cursor:'pointer', textAlign:'left' }}>
-                    <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:'#1A1612' }}>{s.phone_number}</span>
+                    <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:'var(--text)' }}>{s.phone_number}</span>
                     <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                       {s.emp_id===emp.id && <span style={{ fontSize:10, fontWeight:700, color:'#10B981' }}>Current</span>}
                       <span style={{ fontSize:10, color:'#A89880' }}>{s.carrier}</span>
@@ -905,7 +905,7 @@ export default function POCPage() {
                   <div style={{width:44,height:44,borderRadius:13,background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)',border:'1px solid #F0D78C',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{emp.avatar||'👤'}</div>
                   {/* Info */}
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontWeight:700,fontSize:14,color:'#1A1612'}}>{emp.name}</div>
+                    <div style={{fontWeight:700,fontSize:14,color:'var(--text)'}}>{emp.name}</div>
                     <div style={{fontSize:11,color:'#A89880',fontFamily:'monospace',marginTop:1}}>{emp.id}</div>
                   </div>
                   {/* Status */}
@@ -970,7 +970,7 @@ export default function POCPage() {
                         <Truck size={20} color={sc}/>
                       </div>
                       <div>
-                        <div style={{fontWeight:800,fontSize:15,color:'#1A1612',letterSpacing:'0.04em'}}>{v.plate}</div>
+                        <div style={{fontWeight:800,fontSize:15,color:'var(--text)',letterSpacing:'0.04em'}}>{v.plate}</div>
                         <div style={{fontSize:12,color:'#A89880',marginTop:1}}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
                       </div>
                     </div>
@@ -1194,7 +1194,7 @@ export default function POCPage() {
               <div style={{position:'absolute',top:0,left:0,width:4,height:'100%',background:'linear-gradient(180deg,#B8860B,#D4A017)'}}/>
               <div style={{paddingLeft:12}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
-                  <div style={{fontWeight:700,fontSize:14,color:'#1A1612',flex:1,marginRight:8}}>{ann.title}</div>
+                  <div style={{fontWeight:700,fontSize:14,color:'var(--text)',flex:1,marginRight:8}}>{ann.title}</div>
                   <div style={{display:'flex',gap:4,flexShrink:0,alignItems:'center'}}>
                     <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,background:ann.station_code?'#EEF2FF':'#F5F4F1',color:ann.station_code?'#4F46E5':'#A89880',border:`1px solid ${ann.station_code?'#C7D2FE':'#E8E4DC'}`}}>
                       <MapPin size={9} style={{verticalAlign:'middle',marginRight:2}}/>{ann.station_code||'All Stations'}
