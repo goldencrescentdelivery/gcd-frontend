@@ -803,23 +803,25 @@ export default function EmployeesPage() {
             <div style={{ fontWeight:700, fontSize:15, color:'var(--text-sub)' }}>{search?`No results for "${search}"`:'No DAs found'}</div>
           </div>
         ) : (
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            {paginated.map((emp,i)=>(
-              <EmpCard key={emp.id} emp={emp} index={i}
-                isSelected={selected?.id===emp.id}
-                onClick={()=>setSelected(selected?.id===emp.id?null:emp)}
-                onEdit={e=>setModal({mode:'edit',emp:e})}
-                onDelete={handleDelete}
-                userRole={userRole}/>
-            ))}
-          </div>
-          {totalPages > 1 && (
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, paddingTop:8 }}>
-              <button className="btn btn-secondary btn-sm" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1}>‹ Prev</button>
-              <span style={{ fontSize:12.5, color:'var(--text-muted)' }}>Page {page} of {totalPages}</span>
-              <button className="btn btn-secondary btn-sm" onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages}>Next ›</button>
+          <>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {paginated.map((emp,i)=>(
+                <EmpCard key={emp.id} emp={emp} index={i}
+                  isSelected={selected?.id===emp.id}
+                  onClick={()=>setSelected(selected?.id===emp.id?null:emp)}
+                  onEdit={e=>setModal({mode:'edit',emp:e})}
+                  onDelete={handleDelete}
+                  userRole={userRole}/>
+              ))}
             </div>
-          )}
+            {totalPages > 1 && (
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, paddingTop:8 }}>
+                <button className="btn btn-secondary btn-sm" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1}>‹ Prev</button>
+                <span style={{ fontSize:12.5, color:'var(--text-muted)' }}>Page {page} of {totalPages}</span>
+                <button className="btn btn-secondary btn-sm" onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages}>Next ›</button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
