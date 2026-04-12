@@ -207,7 +207,7 @@ export default function DriverPortal() {
               </div>
             </Card>
 
-            {/* Vehicle */}
+            {/* Vehicle */} 
             {vehicle ? (
               <Card>
                 <div style={{ fontSize:10.5,fontWeight:700,color:'#10B981',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8 }}>Current Vehicle</div>
