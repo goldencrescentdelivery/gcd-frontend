@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/lib/auth'
 import { useSearchParams } from 'next/navigation'
-import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone } from 'lucide-react'
+import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone, ArrowLeftRight, CheckSquare, History } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 const CYCLES  = ['A','B','C','Beset','MR','FM','Rescue']
@@ -133,7 +133,7 @@ function CycleSelector({ selected, onChange, rescueHours, onRescueHours }) {
 }
 
 // ── Attendance Modal ──────────────────────────────────────────
-function AttModal({ employees, station, editRecord, onSave, onClose }) {
+function AttModal({ employees, station, date, editRecord, onSave, onClose }) {
   const isEdit = !!editRecord
   const [empId,  setEmpId]  = useState(editRecord?.emp_id||'')
   const [status, setStatus] = useState(editRecord?.status||'present')
@@ -157,7 +157,16 @@ function AttModal({ employees, station, editRecord, onSave, onClose }) {
     if (!isDXE6 && status==='present' && cycles.length===0) return setErr('Select at least one cycle')
     setErr(null); setSaving(true)
     try {
-      const body = { emp_id:empId, status, note, ...(isDXE6?{pay_type:'daily',worker_type:wType}:{cycles,rescue_hours:rescue||null}) }
+      const regCycles = cycles.filter(c=>c!=='Rescue')
+      const hasRescue = cycles.includes('Rescue')
+      const totalHours = regCycles.reduce((s,c)=>s+(CYCLE_H[c]||0),0) + (hasRescue ? (parseFloat(rescue)||0) : 0)
+      const body = isDXE6
+        ? { emp_id:empId, date: date||editRecord?.date, status, note, pay_type:'daily', worker_type:wType }
+        : { emp_id:empId, date: date||editRecord?.date, status, note,
+            cycle: regCycles.join(',') || null,
+            cycle_hours: status==='present' && totalHours>0 ? totalHours : null,
+            is_rescue: hasRescue,
+            rescue_hours: hasRescue ? (rescue||null) : null }
       const url    = isEdit ? `${API}/api/attendance/${editRecord.id}` : `${API}/api/attendance`
       const method = isEdit ? 'PUT' : 'POST'
       const res    = await fetch(url, { method, headers:hdr(), body:JSON.stringify(body) })
@@ -705,9 +714,11 @@ export default function POCPage() {
   const [delivs,  setDelivs]  = useState([])
   const [sims,    setSims]    = useState([])
   const [currentHandovers, setCurrentHandovers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [modal,   setModal]   = useState(null)
-  const [search,  setSearch]  = useState('')
+  const [loading,      setLoading]      = useState(true)
+  const [modal,        setModal]        = useState(null)
+  const [search,       setSearch]       = useState('')
+  const [bulkLoading,  setBulkLoading]  = useState(false)
+  const [showLeaveHistory, setShowLeaveHistory] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -717,7 +728,7 @@ export default function POCPage() {
         fetch(`${API}/api/attendance?date=${date}`,h).then(r=>r.json()),
         fetch(`${API}/api/employees`,h).then(r=>r.json()),  // fetch all, filter client-side
         fetch(`${API}/api/poc/announcements`,h).then(r=>r.json()),
-        fetch(`${API}/api/leaves`,h).then(r=>r.json()),
+        fetch(`${API}/api/leaves?stage=all`,h).then(r=>r.json()),
         fetch(`${API}/api/vehicles?station_code=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/vehicles/assignments?date=${date}&station_code=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/deliveries?station=${station}`,h).then(r=>r.json()),
@@ -734,6 +745,7 @@ export default function POCPage() {
   },[date,station])
 
   useEffect(()=>{load()},[load])
+  useEffect(()=>{ setSearch('') },[date])
 
   async function handleLeave(id,status) {
     await fetch(`${API}/api/leaves/${id}/status`,{method:'PATCH',headers:hdr(),body:JSON.stringify({status})})
@@ -749,6 +761,20 @@ export default function POCPage() {
     await fetch(`${API}/api/poc/announcements/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}})
     load()
   }
+  async function handleBulkPresent() {
+    const unlogged = filtEmp.filter(e => !att.find(a => a.emp_id === e.id))
+    if (unlogged.length === 0) return alert('All DAs already have attendance for this date.')
+    if (!confirm(`Mark ${unlogged.length} DA(s) as Present — Cycle A (5h)?`)) return
+    setBulkLoading(true)
+    try {
+      await fetch(`${API}/api/attendance/bulk`, {
+        method:'POST', headers:hdr(),
+        body:JSON.stringify({ records: unlogged.map(e => ({ emp_id:e.id, date, status:'present', cycle:'A', cycle_hours:'5' })) })
+      })
+      load()
+    } catch(e) { alert('Bulk log failed') } finally { setBulkLoading(false) }
+  }
+
   async function assignVehicle(vId,eId) {
     try {
       const res = await fetch(`${API}/api/vehicles/assignments`,{
@@ -768,17 +794,21 @@ export default function POCPage() {
   const absent   = att.filter(a=>a.status==='absent').length
   const earnings = att.reduce((s,a)=>s+parseFloat(a.earnings||0),0)
   const active   = vehs.filter(v=>v.status==='active').length
-  const pending  = leaves.length
+  const pendingLeaves  = leaves.filter(l => l.poc_status === 'pending')
+  const historyLeaves  = leaves.filter(l => l.poc_status !== 'pending')
 
-  const filtEmp  = emps.filter(e=>!search||e.name.toLowerCase().includes(search.toLowerCase())||e.id.toLowerCase().includes(search.toLowerCase()))
+  const stationEmps = emps.filter(e => e.station_code === station)
+  const filtEmp  = stationEmps.filter(e=>!search||e.name.toLowerCase().includes(search.toLowerCase())||e.id.toLowerCase().includes(search.toLowerCase()))
+  const loggedCount = filtEmp.filter(e => att.find(a => a.emp_id === e.id)).length
 
   const TABS = [
-    {id:'attendance',label:'Attendance',icon:Users,       count:present},
-    {id:'fleet',     label:'Fleet',     icon:Truck,       count:active},
-    {id:'deliveries',label:'Deliveries',icon:Package,     count:null},
-    {id:'sims',      label:'SIM Cards', icon:Smartphone,  count:null},
-    {id:'leaves',    label:'Leaves',    icon:Calendar,    count:pending||null},
-    {id:'notices',   label:'Notices',   icon:Bell,        count:anns.length||null},
+    {id:'attendance',label:'Attendance', icon:Users,          count:present},
+    {id:'fleet',     label:'Fleet',      icon:Truck,          count:active},
+    {id:'deliveries',label:'Deliveries', icon:Package,        count:null},
+    {id:'handovers', label:'Handovers',  icon:ArrowLeftRight, count:currentHandovers.length||null},
+    {id:'sims',      label:'SIM Cards',  icon:Smartphone,     count:null},
+    {id:'leaves',    label:'Leaves',     icon:Calendar,       count:pendingLeaves.length||null},
+    {id:'notices',   label:'Notices',    icon:Bell,           count:anns.length||null},
   ]
 
   return (
@@ -842,11 +872,22 @@ export default function POCPage() {
       {/* ── ATTENDANCE ── */}
       {!loading && tab==='attendance' && (
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div style={{display:'flex',gap:10}}>
-            <div className="search-wrap" style={{flex:1}}>
-              <Search className="search-icon" size={13}/>
-              <input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search driver…" style={{borderRadius:20}}/>
+          {/* Completion badge */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderRadius:12,background:'var(--card)',border:'1px solid var(--border)'}}>
+            <div style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>
+              <span style={{fontWeight:900,fontSize:18,color:loggedCount===filtEmp.length&&filtEmp.length>0?'#10B981':'#F59E0B'}}>{loggedCount}</span>
+              <span style={{color:'var(--text-muted)'}}> / {filtEmp.length} logged today</span>
             </div>
+            <div style={{width:`${filtEmp.length>0?Math.round(loggedCount/filtEmp.length*100):0}%`,height:6,background:'#10B981',borderRadius:20,minWidth:4,maxWidth:120,transition:'width 0.5s ease'}}/>
+          </div>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            <div style={{flex:'1 1 160px',position:'relative'}}>
+              <Search size={13} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)',pointerEvents:'none'}}/>
+              <input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search driver…" style={{paddingLeft:34,borderRadius:20}}/>
+            </div>
+            <button className="btn btn-secondary" onClick={handleBulkPresent} disabled={bulkLoading} style={{borderRadius:20,padding:'9px 14px',fontSize:12}}>
+              <CheckSquare size={13}/> {bulkLoading?'Marking…':'Mark All Present'}
+            </button>
             <button className="btn btn-primary" onClick={()=>setModal('att')} style={{borderRadius:20,padding:'9px 16px'}}>
               <Plus size={14}/> Log
             </button>
@@ -868,25 +909,31 @@ export default function POCPage() {
                     <div style={{fontSize:11,color:'#A89880',fontFamily:'monospace',marginTop:1}}>{emp.id}</div>
                   </div>
                   {/* Status */}
-                  {a ? (
-                    <div style={{textAlign:'right',flexShrink:0}}>
-                      <div style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',background:statusBg,borderRadius:20,marginBottom:4}}>
-                        <div style={{width:6,height:6,borderRadius:'50%',background:statusColor}}/>
-                        <span style={{fontSize:11,fontWeight:700,color:statusColor,textTransform:'capitalize'}}>{a.status}</span>
-                      </div>
-                      {hrs>0 && <div style={{fontSize:11,color:'#A89880',marginTop:2}}>{hrs}h · AED {parseFloat(a.earnings||0).toFixed(0)}</div>}
-                    </div>
-                  ) : (
-                    <span style={{fontSize:11,color:'#C4B49A',background:'#F5F4F1',padding:'4px 10px',borderRadius:20,fontWeight:500}}>Not logged</span>
-                  )}
+                  <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:5,flexShrink:0}}>
+                    {a ? (
+                      <>
+                        <div style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',background:statusBg,borderRadius:20}}>
+                          <div style={{width:6,height:6,borderRadius:'50%',background:statusColor}}/>
+                          <span style={{fontSize:11,fontWeight:700,color:statusColor,textTransform:'capitalize'}}>{a.status}</span>
+                        </div>
+                        {hrs>0 && <div style={{fontSize:11,color:'var(--text-muted)'}}>{hrs}h · AED {parseFloat(a.earnings||0).toFixed(0)}</div>}
+                      </>
+                    ) : (
+                      <span style={{fontSize:11,color:'#C4B49A',background:'#F5F4F1',padding:'4px 10px',borderRadius:20,fontWeight:500}}>Not logged</span>
+                    )}
+                    <button onClick={e=>{e.stopPropagation();setModal({type:'work-num',emp})}}
+                      style={{fontSize:10,fontWeight:600,color:'#7C3AED',background:'var(--purple-bg)',border:'1px solid var(--purple-border)',borderRadius:20,padding:'2px 8px',cursor:'pointer',fontFamily:'Poppins,sans-serif'}}>
+                      📱 {emp.work_number||'Assign SIM'}
+                    </button>
+                  </div>
                 </div>
                 {/* Cycles row */}
-                {a?.cycles?.length>0 && (
-                  <div style={{padding:'8px 16px',background:'#FAFAF8',borderTop:'1px solid #F5F4F1',display:'flex',gap:5,flexWrap:'wrap'}}>
-                    {a.cycles.map(c=>(
+                {(a?.cycle || a?.is_rescue) && (
+                  <div style={{padding:'8px 16px',background:'var(--bg-alt)',borderTop:'1px solid var(--border)',display:'flex',gap:5,flexWrap:'wrap'}}>
+                    {a.cycle?.split(',').filter(Boolean).map(c=>(
                       <span key={c} style={{fontSize:11,fontWeight:700,color:'#B8860B',background:'#FDF6E3',border:'1px solid #F0D78C',borderRadius:6,padding:'2px 8px'}}>{c}</span>
                     ))}
-                    {a.is_rescue && <span style={{fontSize:11,fontWeight:700,color:'#1D6FA4',background:'#EFF6FF',border:'1px solid #BFDBFE',borderRadius:6,padding:'2px 8px'}}>🆘 Rescue</span>}
+                    {a.is_rescue && <span style={{fontSize:11,fontWeight:700,color:'#1D6FA4',background:'#EFF6FF',border:'1px solid #BFDBFE',borderRadius:6,padding:'2px 8px'}}>🆘 {a.rescue_hours}h Rescue</span>}
                   </div>
                 )}
                 {/* Actions */}
@@ -949,45 +996,183 @@ export default function POCPage() {
         </div>
       )}
 
-      {/* ── DELIVERIES — Coming Soon ── */}
-      {!loading && tab==='deliveries' && (
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'60px 24px',textAlign:'center'}}>
-          <div style={{width:64,height:64,borderRadius:20,background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)',border:'1px solid #F0D78C',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16}}>
-            <Package size={28} color="#B8860B"/>
+      {/* ── DELIVERIES ── */}
+      {!loading && tab==='deliveries' && (() => {
+        const todayRecord = delivs.find(d => d.date === date)
+        const successRate = todayRecord?.total > 0 ? Math.round(todayRecord.successful / todayRecord.total * 100) : null
+        return (
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            <div style={{display:'flex',justifyContent:'flex-end'}}>
+              <button className="btn btn-primary" onClick={()=>setModal(todayRecord?{type:'delivery-edit',delivery:todayRecord}:'delivery')} style={{borderRadius:20}}>
+                <Package size={14}/> {todayRecord ? 'Edit Today\'s Log' : 'Log Today\'s Deliveries'}
+              </button>
+            </div>
+
+            {/* Today's delivery card */}
+            {todayRecord ? (
+              <div style={{background:'linear-gradient(135deg,var(--card),var(--bg-alt))',border:'1px solid var(--border)',borderRadius:16,padding:'18px'}}>
+                <div style={{fontWeight:700,fontSize:13,color:'var(--text-muted)',marginBottom:12,textTransform:'uppercase',letterSpacing:'0.06em'}}>📅 Today — {date}</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:14}}>
+                  {[
+                    {l:'Total',     v:todayRecord.total,      c:'#B8860B',bg:'#FDF6E3'},
+                    {l:'Attempted', v:todayRecord.attempted,  c:'#1D6FA4',bg:'#EFF6FF'},
+                    {l:'Successful',v:todayRecord.successful, c:'#2E7D52',bg:'#ECFDF5'},
+                    {l:'Returned',  v:todayRecord.returned,   c:'#C0392B',bg:'#FEF2F2'},
+                  ].map(s=>(
+                    <div key={s.l} style={{textAlign:'center',padding:'12px 8px',borderRadius:12,background:s.bg,border:'1px solid var(--border)'}}>
+                      <div style={{fontWeight:900,fontSize:22,color:s.c,letterSpacing:'-0.03em'}}>{s.v}</div>
+                      <div style={{fontSize:10,color:s.c,fontWeight:600,marginTop:2,opacity:0.8}}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
+                {successRate !== null && (
+                  <div>
+                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
+                      <span style={{fontSize:12,fontWeight:600,color:'var(--text-sub)'}}>Success Rate</span>
+                      <span style={{fontSize:13,fontWeight:800,color:successRate>=90?'#2E7D52':successRate>=70?'#B45309':'#C0392B'}}>{successRate}%</span>
+                    </div>
+                    <div style={{height:8,background:'var(--border)',borderRadius:20,overflow:'hidden'}}>
+                      <div style={{height:'100%',width:`${successRate}%`,background:successRate>=90?'#10B981':successRate>=70?'#F59E0B':'#EF4444',borderRadius:20,transition:'width 1s ease'}}/>
+                    </div>
+                  </div>
+                )}
+                {todayRecord.notes && <div style={{marginTop:12,fontSize:12,color:'var(--text-sub)',padding:'8px 12px',background:'var(--bg)',borderRadius:9,border:'1px solid var(--border)'}}>{todayRecord.notes}</div>}
+              </div>
+            ) : (
+              <div style={{textAlign:'center',padding:'30px 24px',background:'var(--card)',border:'1px dashed var(--border-med)',borderRadius:16}}>
+                <Package size={32} style={{margin:'0 auto 10px',display:'block',opacity:0.2}}/>
+                <div style={{fontSize:13,color:'var(--text-muted)'}}>No delivery log for {date} — tap above to log.</div>
+              </div>
+            )}
+
+            {/* Recent history */}
+            {delivs.filter(d=>d.date!==date).slice(0,7).map((d,i)=>{
+              const sr = d.total > 0 ? Math.round(d.successful / d.total * 100) : null
+              return (
+                <div key={d.id||i} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:14,padding:'13px 15px',display:'flex',alignItems:'center',gap:14}}>
+                  <div style={{fontWeight:700,fontSize:13,color:'var(--text)',minWidth:88}}>{d.date}</div>
+                  <div style={{flex:1,display:'flex',gap:12,flexWrap:'wrap'}}>
+                    <span style={{fontSize:12,color:'var(--text-sub)'}}><strong style={{color:'var(--text)'}}>{d.total}</strong> total</span>
+                    <span style={{fontSize:12,color:'#2E7D52'}}><strong>{d.successful}</strong> ✓</span>
+                    <span style={{fontSize:12,color:'#C0392B'}}><strong>{d.returned}</strong> returned</span>
+                  </div>
+                  {sr !== null && (
+                    <span style={{fontSize:12,fontWeight:800,color:sr>=90?'#2E7D52':sr>=70?'#B45309':'#C0392B',background:sr>=90?'#ECFDF5':sr>=70?'#FFFBEB':'#FEF2F2',padding:'3px 9px',borderRadius:20,border:`1px solid ${sr>=90?'#A7F3D0':sr>=70?'#FCD34D':'#FCA5A5'}`}}>{sr}%</span>
+                  )}
+                </div>
+              )
+            })}
           </div>
-          <div style={{fontWeight:800,fontSize:18,color:'#1A1612',marginBottom:8}}>Coming Soon</div>
-          <div style={{fontSize:13,color:'#A89880',lineHeight:1.6}}>Delivery tracking is being set up.<br/>Check back soon.</div>
+        )
+      })()}
+
+      {/* ── HANDOVERS ── */}
+      {!loading && tab==='handovers' && (
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          {currentHandovers.length===0 ? (
+            <div style={{textAlign:'center',padding:50,color:'var(--text-muted)'}}>
+              <ArrowLeftRight size={36} style={{margin:'0 auto 12px',display:'block',opacity:0.2}}/>
+              <div style={{fontWeight:600,fontSize:14,color:'var(--text-sub)'}}>No active handovers</div>
+              <div style={{fontSize:12,marginTop:4}}>Vehicle handover forms will appear here.</div>
+            </div>
+          ) : currentHandovers.map((h,i)=>{
+            const isPickup = h.type==='pickup'
+            return (
+              <div key={h.id||i} style={{background:'var(--card)',border:`1.5px solid ${isPickup?'#A7F3D0':'#BFDBFE'}`,borderRadius:16,overflow:'hidden',animation:`slideUp 0.3s ${i*0.05}s ease both`}}>
+                <div style={{height:3,background:isPickup?'#10B981':'#2563EB'}}/>
+                <div style={{padding:'14px 16px',display:'flex',alignItems:'center',gap:12}}>
+                  <div style={{width:42,height:42,borderRadius:12,background:isPickup?'#ECFDF5':'#EFF6FF',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                    <ArrowLeftRight size={18} color={isPickup?'#10B981':'#2563EB'}/>
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+                      <span style={{fontWeight:800,fontSize:14,color:'var(--text)'}}>{h.plate||'—'}</span>
+                      <span style={{fontSize:10.5,fontWeight:700,color:isPickup?'#10B981':'#2563EB',background:isPickup?'#ECFDF5':'#EFF6FF',padding:'1px 8px',borderRadius:20}}>{isPickup?'Pickup':'Return'}</span>
+                    </div>
+                    <div style={{fontSize:12,color:'var(--text-sub)'}}>{h.emp_name||h.emp_id}</div>
+                  </div>
+                  <div style={{textAlign:'right',flexShrink:0}}>
+                    <div style={{fontSize:11,color:'var(--text-muted)'}}>{h.handover_date?.slice(0,10)||h.created_at?.slice(0,10)||'—'}</div>
+                    {h.odometer_before && <div style={{fontSize:11,color:'var(--text-sub)',marginTop:2}}>ODO: {h.odometer_before} km</div>}
+                  </div>
+                </div>
+                {h.notes && <div style={{padding:'8px 16px',background:'var(--bg-alt)',borderTop:'1px solid var(--border)',fontSize:12,color:'var(--text-sub)'}}>{h.notes}</div>}
+              </div>
+            )
+          })}
         </div>
       )}
 
       {/* ── LEAVES ── */}
       {!loading && tab==='leaves' && (
         <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          {leaves.length===0&&<div style={{textAlign:'center',padding:50,color:'#A89880'}}>No pending leave requests</div>}
-          {leaves.map((l,i)=>(
-            <div key={l.id} style={{background:'#FFF',border:'1px solid #EAE6DE',borderRadius:16,overflow:'hidden',animation:`slideUp 0.3s ${i*0.05}s ease both`}}>
-              <div style={{padding:'14px 16px'}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8}}>
-                    <span style={{fontSize:20}}>{l.avatar||'👤'}</span>
-                    <div>
-                      <div style={{fontWeight:700,fontSize:14,color:'#1A1612'}}>{l.name}</div>
-                      <div style={{fontSize:11,color:'#B8860B',fontWeight:600}}>{l.type} Leave</div>
-                    </div>
-                  </div>
-                  <span style={{fontSize:11,fontWeight:700,color:'#B45309',background:'#FFFBEB',border:'1px solid #FCD34D',padding:'3px 10px',borderRadius:20}}>Pending Review</span>
-                </div>
-                <div style={{display:'flex',gap:6,alignItems:'center',fontSize:12,color:'#6B5D4A',marginBottom:l.reason?8:0}}>
-                  <Calendar size={12}/> {l.from_date?.slice(0,10)} → {l.to_date?.slice(0,10)} · <strong>{l.days} day{l.days!==1?'s':''}</strong>
-                </div>
-                {l.reason&&<div style={{fontSize:12,color:'#A89880',padding:'7px 10px',background:'#FAFAF8',borderRadius:8}}>{l.reason}</div>}
-              </div>
-              <div style={{padding:'10px 14px',background:'#FAFAF8',borderTop:'1px solid #F5F4F1',display:'flex',gap:8}}>
-                <button className="btn btn-success" style={{flex:1,justifyContent:'center',borderRadius:12}} onClick={()=>handleLeave(l.id,'approved')}><CheckCircle size={14}/> Approve</button>
-                <button className="btn btn-danger"  style={{flex:1,justifyContent:'center',borderRadius:12}} onClick={()=>handleLeave(l.id,'rejected')}><XCircle size={14}/> Reject</button>
-              </div>
+          {/* Toggle: Pending / History */}
+          <div style={{display:'flex',gap:8,background:'var(--bg-alt)',borderRadius:12,padding:4}}>
+            <button onClick={()=>setShowLeaveHistory(false)}
+              style={{flex:1,padding:'8px 12px',borderRadius:9,border:'none',cursor:'pointer',fontWeight:600,fontSize:12,transition:'all 0.2s',
+                background:!showLeaveHistory?'var(--card)':'transparent',
+                color:!showLeaveHistory?'#B8860B':'var(--text-muted)',
+                boxShadow:!showLeaveHistory?'0 1px 4px rgba(0,0,0,0.1)':'none'}}>
+              Pending ({pendingLeaves.length})
+            </button>
+            <button onClick={()=>setShowLeaveHistory(true)}
+              style={{flex:1,padding:'8px 12px',borderRadius:9,border:'none',cursor:'pointer',fontWeight:600,fontSize:12,transition:'all 0.2s',display:'flex',alignItems:'center',justifyContent:'center',gap:5,
+                background:showLeaveHistory?'var(--card)':'transparent',
+                color:showLeaveHistory?'#B8860B':'var(--text-muted)',
+                boxShadow:showLeaveHistory?'0 1px 4px rgba(0,0,0,0.1)':'none'}}>
+              <History size={12}/> History ({historyLeaves.length})
+            </button>
+          </div>
+
+          {(showLeaveHistory ? historyLeaves : pendingLeaves).length===0&&(
+            <div style={{textAlign:'center',padding:50,color:'#A89880'}}>
+              {showLeaveHistory ? 'No leave history yet' : 'No pending leave requests'}
             </div>
-          ))}
+          )}
+          {(showLeaveHistory ? historyLeaves : pendingLeaves).map((l,i)=>{
+            const isApproved = l.poc_status==='approved'
+            const isRejected = l.poc_status==='rejected'
+            return (
+              <div key={l.id} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,overflow:'hidden',animation:`slideUp 0.3s ${i*0.05}s ease both`}}>
+                <div style={{padding:'14px 16px'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <span style={{fontSize:20}}>{l.avatar||'👤'}</span>
+                      <div>
+                        <div style={{fontWeight:700,fontSize:14,color:'var(--text)'}}>{l.name}</div>
+                        <div style={{fontSize:11,color:'#B8860B',fontWeight:600}}>{l.type} Leave</div>
+                      </div>
+                    </div>
+                    {showLeaveHistory ? (
+                      <span style={{fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20,
+                        color:isApproved?'#2E7D52':isRejected?'#C0392B':'#B45309',
+                        background:isApproved?'#ECFDF5':isRejected?'#FEF2F2':'#FFFBEB',
+                        border:`1px solid ${isApproved?'#A7F3D0':isRejected?'#FECACA':'#FCD34D'}`}}>
+                        {isApproved?'Approved':isRejected?'Rejected':'Pending'}
+                      </span>
+                    ) : (
+                      <span style={{fontSize:11,fontWeight:700,color:'#B45309',background:'#FFFBEB',border:'1px solid #FCD34D',padding:'3px 10px',borderRadius:20}}>Pending Review</span>
+                    )}
+                  </div>
+                  <div style={{display:'flex',gap:6,alignItems:'center',fontSize:12,color:'var(--text-sub)',marginBottom:l.reason?8:0}}>
+                    <Calendar size={12}/> {l.from_date?.slice(0,10)} → {l.to_date?.slice(0,10)} · <strong>{l.days} day{l.days!==1?'s':''}</strong>
+                  </div>
+                  {l.reason&&<div style={{fontSize:12,color:'var(--text-muted)',padding:'7px 10px',background:'var(--bg-alt)',borderRadius:8}}>{l.reason}</div>}
+                  {showLeaveHistory && l.updated_at && (
+                    <div style={{fontSize:11,color:'var(--text-muted)',marginTop:6}}>
+                      Actioned: {new Date(l.updated_at).toLocaleString('en-AE',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+                    </div>
+                  )}
+                </div>
+                {!showLeaveHistory && (
+                  <div style={{padding:'10px 14px',background:'var(--bg-alt)',borderTop:'1px solid var(--border)',display:'flex',gap:8}}>
+                    <button className="btn btn-success" style={{flex:1,justifyContent:'center',borderRadius:12}} onClick={()=>handleLeave(l.id,'approved')}><CheckCircle size={14}/> Approve</button>
+                    <button className="btn btn-danger"  style={{flex:1,justifyContent:'center',borderRadius:12}} onClick={()=>handleLeave(l.id,'rejected')}><XCircle size={14}/> Reject</button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -1010,7 +1195,10 @@ export default function POCPage() {
               <div style={{paddingLeft:12}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
                   <div style={{fontWeight:700,fontSize:14,color:'#1A1612',flex:1,marginRight:8}}>{ann.title}</div>
-                  <div style={{display:'flex',gap:4,flexShrink:0}}>
+                  <div style={{display:'flex',gap:4,flexShrink:0,alignItems:'center'}}>
+                    <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,background:ann.station_code?'#EEF2FF':'#F5F4F1',color:ann.station_code?'#4F46E5':'#A89880',border:`1px solid ${ann.station_code?'#C7D2FE':'#E8E4DC'}`}}>
+                      <MapPin size={9} style={{verticalAlign:'middle',marginRight:2}}/>{ann.station_code||'All Stations'}
+                    </span>
                     <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setModal({type:'ann-edit',ann})}><Pencil size={12}/></button>
                     <button className="btn btn-ghost btn-icon btn-sm" style={{color:'#C0392B'}} onClick={()=>deleteAnn(ann.id)}><Trash2 size={12}/></button>
                   </div>
@@ -1025,8 +1213,8 @@ export default function POCPage() {
 
       {/* Modals */}
       {modal?.type==='work-num'&&<WorkNumModal emp={modal.emp} station={station} sims={sims} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/> }
-      {modal==='att'&&<AttModal employees={emps} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
-      {modal?.type==='att-edit'&&<AttModal employees={emps} station={station} editRecord={modal.record} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
+      {modal==='att'&&<AttModal employees={emps} station={station} date={date} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
+      {modal?.type==='att-edit'&&<AttModal employees={emps} station={station} date={date} editRecord={modal.record} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal==='ann-add'&&<AnnModal onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal?.type==='ann-edit'&&<AnnModal ann={modal.ann} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal==='vehicle-add'&&<VehicleModal station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
