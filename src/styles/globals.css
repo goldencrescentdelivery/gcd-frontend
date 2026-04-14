@@ -1,13 +1,12 @@
-/* ── Font (self-hosted via next/font — variable injected on <html>) ── */
+/* ── Fonts (loaded via <link> in layout.jsx) ─────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { overflow-x:hidden; height:100%; }
-body { font-family:var(--font-sans,'Poppins',-apple-system,sans-serif); background:#F9FAFB; color:#111827; min-height:100vh; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+body { font-family:'Poppins',-apple-system,sans-serif; background:#F9FAFB; color:#111827; min-height:100vh; }
 #__next { height:100%; }
-* { font-family:var(--font-sans,'Poppins',-apple-system,sans-serif) !important; }
+* { font-family:'Poppins',-apple-system,sans-serif !important; }
 button { cursor:pointer; border:none; background:none; font-family:inherit; }
 a { text-decoration:none; color:inherit; }
 input, select, textarea { font-family:inherit; }
-::selection { background:rgba(184,134,11,0.18); color:inherit; }
 
 /* ── Scrollbar ───────────────────────────────────────────────── */
 ::-webkit-scrollbar { width:4px; height:4px; }
@@ -43,33 +42,6 @@ input, select, textarea { font-family:inherit; }
   --shadow-glass: 0 4px 32px rgba(0,0,0,0.07);
 }
 
-/* ── Dark mode ───────────────────────────────────────────────── */
-[data-theme="dark"] {
-  --bg:          #0F1117;
-  --bg-alt:      #1A1D27;
-  --card:        #1E2130;
-  --border:      #2A2D3E;
-  --border-med:  #343748;
-  --text:        #F1F5F9;
-  --text-sub:    #94A3B8;
-  --text-muted:  #64748B;
-  --shadow:      0 1px 4px rgba(0,0,0,0.3);
-  --shadow-md:   0 4px 20px rgba(0,0,0,0.4);
-  --shadow-lg:   0 8px 32px rgba(0,0,0,0.5);
-  --gold-pale:   #1C1600;
-  --gold-border: #78580A;
-  --green-bg:    #052E16; --green-border: #166534;
-  --red-bg:      #2D0A0A; --red-border:   #991B1B;
-  --amber-bg:    #1C1200; --amber-border: #92400E;
-  --blue-bg:     #0A1628; --blue-border:  #1E40AF;
-  --purple-bg:   #1A0A2E; --purple-border:#5B21B6;
-  --surface:     rgba(30,33,48,0.75);
-  --border-glass:rgba(255,255,255,0.06);
-  --shadow-glass:0 4px 32px rgba(0,0,0,0.4);
-}
-[data-theme="dark"] body { background:#0F1117; color:#F1F5F9; }
-[data-theme="dark"] ::-webkit-scrollbar-thumb { background:#343748; }
-
 /* ── Animations ─────────────────────────────────────────────── */
 @keyframes fadeIn  { from{opacity:0}               to{opacity:1} }
 @keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
@@ -78,7 +50,6 @@ input, select, textarea { font-family:inherit; }
 @keyframes fadeUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 @keyframes up      { from{opacity:0;transform:translateY(8px)}  to{opacity:1;transform:translateY(0)} }
 @keyframes pulse-dot{ 0%,100%{opacity:1} 50%{opacity:0.4} }
-@keyframes logoPulse{ 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.75;transform:scale(0.92)} }
 
 /* ── Dashboard Shell ─────────────────────────────────────────── */
 .dashboard-shell { display:flex; height:100vh; overflow:hidden; background:var(--bg); }
@@ -153,11 +124,6 @@ input, select, textarea { font-family:inherit; }
 .btn-ghost { background:none; color:var(--text-sub); border-radius:8px; padding:7px; }
 .btn-ghost:hover { background:var(--bg-alt); }
 .btn-icon { width:34px; height:34px; padding:0; justify-content:center; border-radius:8px; }
-.btn-sm { padding:6px 12px; font-size:12px; border-radius:16px; }
-.btn-success { background:#10B981; color:white; }
-.btn-success:hover { background:#059669; }
-.btn-danger { background:#EF4444; color:white; }
-.btn-danger:hover { background:#DC2626; }
 
 /* ── Inputs ──────────────────────────────────────────────────── */
 .input { width:100%; padding:9px 12px; border-radius:10px; border:1.5px solid var(--border-med); background:var(--bg); color:var(--text); font-size:13px; outline:none; transition:border-color 0.15s; }
@@ -207,8 +173,6 @@ input, select, textarea { font-family:inherit; }
 .no-scroll::-webkit-scrollbar { display:none; }
 .no-scroll { scrollbar-width:none; }
 .poc-tabs::-webkit-scrollbar { display:none; }
-.detail-tabs::-webkit-scrollbar { display:none; }
-.detail-tabs { scrollbar-width:none; -ms-overflow-style:none; }
 
 .mob  { display:none !important; }
 .desk { display:grid; }
@@ -260,4 +224,61 @@ input, select, textarea { font-family:inherit; }
   .four-kpi-grid    { grid-template-columns:1fr 1fr !important; }
   .sim-kpi-grid     { grid-template-columns:1fr 1fr !important; }
   .quick-actions-grid { grid-template-columns:repeat(3,1fr) !important; }
+}
+
+/* ── Employees page ──────────────────────────────────────────── */
+.emp-stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+
+/* Detail panel — side panel on desktop */
+.emp-backdrop { display:none; }
+
+.emp-detail-panel {
+  width: 272px;
+  flex-shrink: 0;
+}
+
+/* Mobile — full-screen overlay */
+@media (max-width: 768px) {
+  /* Hide backdrop by default, show on mobile when panel open */
+  .emp-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 120;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .emp-detail-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    max-height: 88vh;
+    overflow-y: auto;
+    z-index: 130;
+    border-radius: 20px 20px 0 0;
+    animation: slideInBottom 0.3s cubic-bezier(0.16,1,0.3,1);
+    /* Ensure it scrolls independently */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Inner sticky becomes static on mobile */
+  .emp-detail-panel > div {
+    position: static !important;
+  }
+
+  /* Round the drawer top on mobile */
+  .emp-detail-panel > div > div:first-child {
+    border-radius: 20px 20px 0 0 !important;
+  }
+
+  /* Stats 2-col on mobile */
+  .emp-stats-grid { grid-template-columns: 1fr 1fr !important; }
+}
+
+@media (max-width: 480px) {
+  .emp-stats-grid { grid-template-columns: 1fr 1fr !important; }
 }
