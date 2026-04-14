@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/lib/auth'
 import { useSearchParams } from 'next/navigation'
-import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone, ArrowLeftRight, CheckSquare, History } from 'lucide-react'
+import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone, ArrowLeftRight, CheckSquare, History, Contact } from 'lucide-react'
 
 const _raw = process.env.NEXT_PUBLIC_API_URL
 const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
@@ -478,6 +478,55 @@ function SimModal({ sim, emps, station, onSave, onClose }) {
   )
 }
 
+// ── DAs Tab ───────────────────────────────────────────────────
+function DAsTab({ stationEmps, sims }) {
+  const [q, setQ] = useState('')
+  const filtered = stationEmps.filter(e =>
+    !q || e.name.toLowerCase().includes(q.toLowerCase()) || e.id.toLowerCase().includes(q.toLowerCase())
+  )
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:12}}>
+      <div style={{position:'relative'}}>
+        <Search size={13} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)',pointerEvents:'none'}}/>
+        <input className="input" value={q} onChange={e=>setQ(e.target.value)} placeholder="Search by name or ID…" style={{paddingLeft:34,borderRadius:20}}/>
+      </div>
+      {filtered.length===0&&(
+        <div style={{textAlign:'center',padding:50,color:'var(--text-muted)',fontSize:13}}>No drivers found</div>
+      )}
+      {filtered.map((emp,i)=>{
+        const workSim = sims.find(s=>s.emp_id===emp.id)
+        const initials = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+        return (
+          <div key={emp.id} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,padding:'14px 16px',animation:`slideUp 0.3s ${i*0.05}s ease both`,display:'flex',alignItems:'center',gap:14}}>
+            {/* Avatar */}
+            {emp.avatar
+              ? <img src={emp.avatar} alt={emp.name} style={{width:44,height:44,borderRadius:'50%',objectFit:'cover',flexShrink:0,border:'2px solid var(--border-med)'}}/>
+              : <div style={{width:44,height:44,borderRadius:'50%',background:'linear-gradient(135deg,#FDF6E3,#FEF9F0)',border:'2px solid var(--gold-border)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontWeight:800,fontSize:15,color:'#B8860B'}}>{initials}</div>
+            }
+            {/* Info */}
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:700,fontSize:14,color:'var(--text)',marginBottom:4,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{emp.name}</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:'4px 12px'}}>
+                <span style={{fontSize:11,color:'var(--text-muted)'}}><span style={{fontWeight:600,color:'var(--text)'}}>ID:</span> {emp.id}</span>
+                <span style={{fontSize:11,color:'var(--text-muted)'}}><span style={{fontWeight:600,color:'var(--text)'}}>Nationality:</span> {emp.nationality||'—'}</span>
+              </div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:'4px 12px',marginTop:4}}>
+                <span style={{fontSize:11,color:'var(--text-muted)'}}><span style={{fontWeight:600,color:'var(--text)'}}>Personal:</span> {emp.phone||'—'}</span>
+                <span style={{fontSize:11,color:'var(--text-muted)'}}><span style={{fontWeight:600,color:'var(--text)'}}>Work SIM:</span> {workSim?.phone_number||'—'}</span>
+              </div>
+              {workSim?.sim_number&&(
+                <div style={{marginTop:4}}>
+                  <span style={{fontSize:10,color:'var(--text-muted)',background:'var(--bg-alt)',padding:'2px 8px',borderRadius:10,border:'1px solid var(--border)'}}>SIM# {workSim.sim_number}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── SIM Section ───────────────────────────────────────────────
 function SimSection({ sims, emps, station, onRefresh }) {
   const [modal,  setModal]  = useState(null)
@@ -804,6 +853,7 @@ export default function POCPage() {
 
   const TABS = [
     {id:'attendance',label:'Attendance', icon:Users,          count:present},
+    {id:'das',       label:'DAs',        icon:Contact,        count:stationEmps.length||null},
     {id:'fleet',     label:'Fleet',      icon:Truck,          count:active},
     {id:'deliveries',label:'Deliveries', icon:Package,        count:null},
     {id:'handovers', label:'Handovers',  icon:ArrowLeftRight, count:currentHandovers.length||null},
@@ -1177,6 +1227,11 @@ export default function POCPage() {
         </div>
       )}
 
+
+      {/* ── DAs ── */}
+      {!loading && tab==='das' && (
+        <DAsTab stationEmps={stationEmps} sims={sims}/>
+      )}
 
       {/* ── SIM CARDS ── */}
       {!loading && tab==='sims' && (
