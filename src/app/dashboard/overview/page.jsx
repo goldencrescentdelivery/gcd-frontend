@@ -8,7 +8,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-const API = process.env.NEXT_PUBLIC_API_URL
+const _raw = process.env.NEXT_PUBLIC_API_URL
+const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
 const SC  = { DDB1:'#F59E0B', DXE6:'#38BDF8' }
 function hdr() { return { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
 function fmt(n) { return Number(n||0).toLocaleString() }

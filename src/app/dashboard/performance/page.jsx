@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Trophy, Star, TrendingUp, Award, Users, ChevronRight, Zap, Target, RefreshCw } from 'lucide-react'
 
-const API = process.env.NEXT_PUBLIC_API_URL
+const _raw = process.env.NEXT_PUBLIC_API_URL
+const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
 function hdr() { return { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
 function fmt(n) { return Number(n||0).toFixed(0) }
 

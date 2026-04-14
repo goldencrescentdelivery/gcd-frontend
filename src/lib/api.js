@@ -1,5 +1,7 @@
 // API base URL — reads from env or falls back to localhost
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
+// Ensure the URL always has a protocol (Vercel env vars sometimes omit https://)
+const _raw = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
+const BASE = _raw.startsWith('http') ? _raw : `https://${_raw}`
 
 function getToken() {
   if (typeof window === 'undefined') return null

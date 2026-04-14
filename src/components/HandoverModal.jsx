@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, Camera, Upload, Check, Car, Fuel, FileText, User } from 'lucide-react'
 
-const API = process.env.NEXT_PUBLIC_API_URL
+const _raw = process.env.NEXT_PUBLIC_API_URL
+const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
 
 const FUEL_LEVELS = [
   { v:'empty',          l:'Empty',    pct:0   },

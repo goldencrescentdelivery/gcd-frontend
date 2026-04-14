@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Wallet, Plus, X, Check, Clock, AlertCircle, TrendingDown, Search } from 'lucide-react'
 
-const API = process.env.NEXT_PUBLIC_API_URL
+const _raw = process.env.NEXT_PUBLIC_API_URL
+const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
 function hdr() { return { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
 const MONTHS = Array.from({length:6},(_,i)=>{ const d=new Date(); d.setMonth(d.getMonth()+i); return d.toISOString().slice(0,7) })
 

@@ -4,7 +4,8 @@ import { useAuth } from '@/lib/auth'
 import { useSearchParams } from 'next/navigation'
 import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone, ArrowLeftRight, CheckSquare, History } from 'lucide-react'
 
-const API = process.env.NEXT_PUBLIC_API_URL
+const _raw = process.env.NEXT_PUBLIC_API_URL
+const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
 const CYCLES  = ['A','B','C','Beset','MR','FM','Rescue']
 const CYCLE_H = { A:5, B:4, C:5, Beset:5, MR:4, FM:5 }
 const MAX_HRS = 10

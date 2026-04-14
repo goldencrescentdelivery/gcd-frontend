@@ -9,7 +9,8 @@ import {
 } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
 
-const API = process.env.NEXT_PUBLIC_API_URL
+const _raw = process.env.NEXT_PUBLIC_API_URL
+const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
 const STATIONS = ['All','DDB1','DXE6']
 const SC_COLOR = { DDB1:'#B8860B', DXE6:'#2563EB' }
 const SC_BG    = { DDB1:'#FFFBEB', DXE6:'#EFF6FF' }
