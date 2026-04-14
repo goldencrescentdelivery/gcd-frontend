@@ -853,7 +853,7 @@ export default function POCPage() {
 
   const TABS = [
     {id:'attendance',label:'Attendance', icon:Users,          count:present},
-    {id:'das',       label:'DAs',        icon:Contact,        count:stationEmps.length||null},
+    {id:'das',       label:'DAs',        icon:Contact,        count:emps.length||null},
     {id:'fleet',     label:'Fleet',      icon:Truck,          count:active},
     {id:'deliveries',label:'Deliveries', icon:Package,        count:null},
     {id:'handovers', label:'Handovers',  icon:ArrowLeftRight, count:currentHandovers.length||null},
@@ -1230,7 +1230,7 @@ export default function POCPage() {
 
       {/* ── DAs ── */}
       {!loading && tab==='das' && (
-        <DAsTab stationEmps={stationEmps} sims={sims}/>
+        <DAsTab stationEmps={emps} sims={sims}/>
       )}
 
       {/* ── SIM CARDS ── */}
