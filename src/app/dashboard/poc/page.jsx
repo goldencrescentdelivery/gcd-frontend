@@ -1013,7 +1013,7 @@ export default function POCPage() {
             const sc=VSTATUS_COLORS[v.status]||'#A89880'
             const sb=VSTATUS_BG[v.status]||'#F5F4F1'
             return (
-              <div key={v.id} style={{background:'#FFF',border:`1px solid ${isDown?'#FCA5A5':'#EAE6DE'}`,borderRadius:16,overflow:'hidden'}}>
+              <div key={v.id} style={{background:'#FFF',border:`1px solid ${isDown?'#FCA5A5':'#EAE6DE'}`,borderRadius:16}}>
                 <div style={{padding:'14px 16px'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
