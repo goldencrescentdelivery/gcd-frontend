@@ -561,7 +561,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                   <div key={row.l} style={{ display:'flex',alignItems:'center',gap:8,padding:'7px 10px',borderRadius:9,background:'var(--bg-alt)' }}>
                     <Icon size={12} color="var(--text-muted)" style={{ flexShrink:0 }}/>
                     <span style={{ fontSize:11.5,color:'var(--text-muted)',flex:1 }}>{row.l}</span>
-                    <span style={{ fontSize:12,color:'var(--text)',fontWeight:600,fontFamily:row.mono?'monospace':'Poppins,sans-serif',maxWidth:110,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{row.v}</span>
+                    <span style={{ fontSize:12,color:'var(--text)',fontWeight:600,fontFamily:row.mono?'monospace':'Poppins,sans-serif',maxWidth:160,wordBreak:'break-all',textAlign:'right' }}>{row.v}</span>
                   </div>
                 )
               })}
