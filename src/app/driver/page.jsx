@@ -92,16 +92,18 @@ export default function DriverPortal() {
   const router = useRouter()
 
   const [tab,        setTab]        = useState('home')
-  const [loading,    setLoading]    = useState(true)
-  const [profile,    setProfile]    = useState(null)
-  const [payroll,    setPayroll]    = useState(null)
-  const [leaves,     setLeaves]     = useState([])
-  const [notices,    setNotices]    = useState([])
-  const [vehicle,    setVehicle]    = useState(null)
-  const [handovers,  setHandovers]  = useState([])
-  const [perf,       setPerf]       = useState(null)
-  const [leaveModal, setLeaveModal] = useState(false)
-  const [hvModal,    setHvModal]    = useState(null) // null | 'received' | 'returned'
+  const [loading,      setLoading]      = useState(true)
+  const [profile,      setProfile]      = useState(null)
+  const [payroll,      setPayroll]      = useState(null)
+  const [leaves,       setLeaves]       = useState([])
+  const [notices,      setNotices]      = useState([])
+  const [vehicle,      setVehicle]      = useState(null)
+  const [handovers,    setHandovers]    = useState([])
+  const [perf,         setPerf]         = useState(null)
+  const [todayAsgn,    setTodayAsgn]    = useState(null)   // POC-assigned vehicle for today
+  const [asgHistory,   setAsgHistory]   = useState([])     // full assignment history
+  const [leaveModal,   setLeaveModal]   = useState(false)
+  const [hvModal,      setHvModal]      = useState(null) // null | 'received' | 'returned'
 
   function signOut() {
     try { logout() } catch(e) {}
@@ -131,6 +133,7 @@ export default function DriverPortal() {
     })
 
     // Phase 2 — background
+    const today = new Date().toISOString().slice(0,10)
     fetch(`${API}/api/leaves`,{headers:hdr}).then(r=>r.json()).then(d=>setLeaves(d.leaves||[])).catch(()=>{})
     fetch(`${API}/api/poc/announcements?station_code=${user.station_code}`,{headers:hdr}).then(r=>r.json()).then(d=>setNotices(d.announcements||[])).catch(()=>{})
     fetch(`${API}/api/handovers`,{headers:hdr}).then(r=>r.json()).then(d=>{
@@ -140,6 +143,13 @@ export default function DriverPortal() {
       setVehicle(cur||null)
     }).catch(()=>{})
     fetch(`${API}/api/performance/${user.emp_id}`,{headers:hdr}).then(r=>r.json()).then(d=>setPerf(d.history?.[0]||null)).catch(()=>{})
+    // POC-assigned vehicle for today
+    fetch(`${API}/api/vehicles/assignments/history?emp_id=${user.emp_id}&limit=60`,{headers:hdr})
+      .then(r=>r.json()).then(d=>{
+        const list=d.history||[]
+        setAsgHistory(list)
+        setTodayAsgn(list.find(a=>a.date?.slice(0,10)===today)||null)
+      }).catch(()=>{})
   }, [user, authLoading, router])
 
   if (!user||loading) return (
@@ -208,7 +218,7 @@ export default function DriverPortal() {
               </div>
             </Card>
 
-            {/* Vehicle */} 
+            {/* Vehicle */}
             {vehicle ? (
               <Card>
                 <div style={{ fontSize:10.5,fontWeight:700,color:'#10B981',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8 }}>Current Vehicle</div>
@@ -221,6 +231,20 @@ export default function DriverPortal() {
                 </div>
                 <button onClick={()=>setHvModal('returned')} style={{ width:'100%',padding:'10px',borderRadius:10,background:'#FEF2F2',border:'1.5px solid #FECACA',color:'#EF4444',fontWeight:600,fontSize:13,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
                   Return Vehicle
+                </button>
+              </Card>
+            ) : todayAsgn ? (
+              <Card style={{ background:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',border:'1px solid #A7F3D0' }}>
+                <div style={{ fontSize:10.5,fontWeight:700,color:'#10B981',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8 }}>Assigned Vehicle Today</div>
+                <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10 }}>
+                  <div>
+                    <div style={{ fontWeight:800,fontSize:18,color:'#111',letterSpacing:'-0.02em' }}>{todayAsgn.plate}</div>
+                    <div style={{ fontSize:12,color:'#6B7280',marginTop:2 }}>{[todayAsgn.make,todayAsgn.model].filter(Boolean).join(' ')||'Vehicle'}</div>
+                  </div>
+                  <div style={{ width:44,height:44,borderRadius:12,background:'#DCFCE7',display:'flex',alignItems:'center',justifyContent:'center' }}><Car size={20} color="#10B981"/></div>
+                </div>
+                <button onClick={()=>setHvModal('received')} style={{ width:'100%',padding:'10px',borderRadius:10,background:'#B8860B',color:'#FFF',fontWeight:600,fontSize:13,cursor:'pointer',fontFamily:'Poppins,sans-serif',border:'none' }}>
+                  Confirm Receipt
                 </button>
               </Card>
             ) : (
@@ -389,21 +413,72 @@ export default function DriverPortal() {
                 <Plus size={13}/> {vehicle ? 'Return' : 'Receive'}
               </button>
             </div>
-            {handovers.length===0 ? (
-              <Card style={{ textAlign:'center',padding:'30px' }}>
-                <Car size={28} color="#D1D5DB" style={{ margin:'0 auto 8px',display:'block' }}/>
-                <div style={{ fontSize:13,color:'#9CA3AF' }}>No handovers yet</div>
-              </Card>
-            ) : handovers.map((h,i)=>(
-              <Card key={h.id}>
-                <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4 }}>
-                  <span style={{ fontWeight:700,fontSize:15,color:'#111' }}>{h.plate||'—'}</span>
-                  <Pill label={h.type} color={h.type==='received'?'#10B981':'#EF4444'}/>
+
+            {/* Today's POC-assigned vehicle */}
+            {todayAsgn ? (
+              <Card style={{ background:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',border:'1px solid #A7F3D0' }}>
+                <div style={{ fontSize:10,fontWeight:700,color:'#10B981',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6 }}>Today's Assigned Vehicle</div>
+                <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+                  <div>
+                    <div style={{ fontWeight:800,fontSize:20,color:'#111',letterSpacing:'-0.02em' }}>{todayAsgn.plate}</div>
+                    <div style={{ fontSize:12,color:'#6B7280',marginTop:2 }}>{[todayAsgn.make,todayAsgn.model,todayAsgn.year].filter(Boolean).join(' ')||'Vehicle'}</div>
+                  </div>
+                  <div style={{ width:44,height:44,borderRadius:12,background:'#DCFCE7',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                    <Car size={20} color="#10B981"/>
+                  </div>
                 </div>
-                <div style={{ fontSize:12,color:'#9CA3AF' }}>{new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
-                {h.fuel_level&&<div style={{ fontSize:12,color:'#6B7280',marginTop:4 }}>Fuel: {h.fuel_level}%</div>}
+                <div style={{ marginTop:8,fontSize:11,color:'#6B7280' }}>Assigned by station · {todayAsgn.date?.slice(0,10)}</div>
               </Card>
-            ))}
+            ) : (
+              <Card style={{ textAlign:'center',padding:'14px',background:'#FAFAF9',border:'1px dashed #D1D5DB' }}>
+                <Car size={18} color="#D1D5DB" style={{ margin:'0 auto 5px',display:'block' }}/>
+                <div style={{ fontSize:12,color:'#9CA3AF' }}>No vehicle assigned by station today</div>
+              </Card>
+            )}
+
+            {/* Assignment History */}
+            {asgHistory.length > 0 && (
+              <div>
+                <div style={{ fontSize:11,fontWeight:700,color:'#9CA3AF',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:8 }}>Assignment History</div>
+                <div style={{ display:'flex',flexDirection:'column',gap:6 }}>
+                  {asgHistory.map(a=>(
+                    <div key={a.id} style={{ display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:12,background:'#FFF',border:'1px solid #F0F0EE' }}>
+                      <div style={{ width:36,height:36,borderRadius:10,background:'#FDF6E3',border:'1px solid #F0D78C',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                        <Car size={16} color="#B8860B"/>
+                      </div>
+                      <div style={{ flex:1,minWidth:0 }}>
+                        <div style={{ fontWeight:700,fontSize:13,color:'#111' }}>{a.plate}</div>
+                        <div style={{ fontSize:11,color:'#9CA3AF',marginTop:1 }}>{[a.make,a.model].filter(Boolean).join(' ')}</div>
+                      </div>
+                      <div style={{ textAlign:'right',flexShrink:0 }}>
+                        <div style={{ fontSize:12,fontWeight:600,color:'#374151' }}>{a.date?.slice(0,10)}</div>
+                        <div style={{ fontSize:10,color:'#B8860B',marginTop:1 }}>{a.station_code}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Handover log */}
+            <div>
+              <div style={{ fontSize:11,fontWeight:700,color:'#9CA3AF',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:8 }}>Handover Log</div>
+              {handovers.length===0 ? (
+                <Card style={{ textAlign:'center',padding:'20px' }}>
+                  <Car size={24} color="#D1D5DB" style={{ margin:'0 auto 8px',display:'block' }}/>
+                  <div style={{ fontSize:12,color:'#9CA3AF' }}>No handovers yet</div>
+                </Card>
+              ) : handovers.map((h,i)=>(
+                <Card key={h.id} style={{ marginBottom:6 }}>
+                  <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4 }}>
+                    <span style={{ fontWeight:700,fontSize:15,color:'#111' }}>{h.plate||'—'}</span>
+                    <Pill label={h.type} color={h.type==='received'?'#10B981':'#EF4444'}/>
+                  </div>
+                  <div style={{ fontSize:12,color:'#9CA3AF' }}>{new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+                  {h.fuel_level&&<div style={{ fontSize:12,color:'#6B7280',marginTop:4 }}>Fuel: {h.fuel_level}</div>}
+                </Card>
+              ))}
+            </div>
           </div>
         )}
 
