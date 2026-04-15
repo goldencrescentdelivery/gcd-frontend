@@ -561,7 +561,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                   <div key={row.l} style={{ display:'flex',alignItems:'center',gap:8,padding:'7px 10px',borderRadius:9,background:'var(--bg-alt)' }}>
                     <Icon size={12} color="var(--text-muted)" style={{ flexShrink:0 }}/>
                     <span style={{ fontSize:11.5,color:'var(--text-muted)',flex:1 }}>{row.l}</span>
-                    <span style={{ fontSize:12,color:'var(--text)',fontWeight:600,fontFamily:row.mono?'monospace':'Poppins,sans-serif',maxWidth:160,wordBreak:'break-all',textAlign:'right' }}>{row.v}</span>
+                    <span style={{ fontSize:12,color:'var(--text)',fontWeight:600,fontFamily:row.mono?'monospace':'Poppins,sans-serif',maxWidth:200,wordBreak:'break-all',textAlign:'right' }}>{row.v}</span>
                   </div>
                 )
               })}
@@ -897,7 +897,7 @@ export default function EmployeesPage() {
             </div>
           </div>
         ) : (
-          <div style={{ width:288, flexShrink:0, position:'sticky', top:0, height:'calc(100vh - 130px)' }}>
+          <div style={{ width:360, flexShrink:0, position:'sticky', top:0, height:'calc(100vh - 130px)' }}>
             <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
               onSelectEmployee={id=>{ const t=employees.find(e=>e.id===id); if(t) setSelected(t) }}/>
           </div>
