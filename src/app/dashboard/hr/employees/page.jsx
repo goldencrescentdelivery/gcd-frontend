@@ -30,7 +30,12 @@ const EMPTY = {
   iloe_expiry:'', annual_leave_start:'',
   amazon_id:'', emirates_id:'', annual_leave_balance:30,
   project_type:'pulser', per_shipment_rate:'0.5', performance_bonus:'100',
-  login_email:'', login_password:''
+  login_email:'', login_password:'',
+  // Extended personal / WPS fields
+  sub_group_name:'', beneficiary_first_name:'', beneficiary_middle_name:'',
+  beneficiary_last_name:'', father_family_name:'', dob:'', gender:'',
+  marital_status:'', uid_number:'', emirates_issuing_visa:'',
+  residential_location:'', work_location:'', passport_no:'', email_id:'', visa_file_no:''
 }
 
 function hdr() { return { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
@@ -62,9 +67,24 @@ function EmpModal({ emp, onSave, onClose, mode }) {
     license_expiry:       emp.license_expiry?.slice(0,10)||'',
     iloe_expiry:          emp.iloe_expiry?.slice(0,10)||'',
     annual_leave_start:   emp.annual_leave_start?.slice(0,10)||'',
+    dob:                  emp.dob?.slice(0,10)||'',
     project_type:         emp.project_type||'pulser',
     per_shipment_rate:    emp.per_shipment_rate||'0.5',
     performance_bonus:    emp.performance_bonus||'100',
+    sub_group_name:           emp.sub_group_name||'',
+    beneficiary_first_name:   emp.beneficiary_first_name||'',
+    beneficiary_middle_name:  emp.beneficiary_middle_name||'',
+    beneficiary_last_name:    emp.beneficiary_last_name||'',
+    father_family_name:       emp.father_family_name||'',
+    gender:                   emp.gender||'',
+    marital_status:            emp.marital_status||'',
+    uid_number:               emp.uid_number||'',
+    emirates_issuing_visa:    emp.emirates_issuing_visa||'',
+    residential_location:     emp.residential_location||'',
+    work_location:            emp.work_location||'',
+    passport_no:              emp.passport_no||'',
+    email_id:                 emp.email_id||'',
+    visa_file_no:             emp.visa_file_no||'',
     login_email:'', login_password:''
   } : EMPTY)
   const [saving, setSaving] = useState(false)
@@ -111,6 +131,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
 
   const TABS = [
     {id:'identity',l:'Identity'},
+    {id:'personal',l:'Personal'},
     {id:'work',l:'Work & Pay'},
     {id:'docs',l:'Documents'},
     ...(mode==='add'?[{id:'login',l:'Login'}]:[]),
@@ -165,6 +186,33 @@ function EmpModal({ emp, onSave, onClose, mode }) {
               {inp('Amazon / Transporter ID','amazon_id','text','TRS-00123')}
               {inp('Emirates ID','emirates_id','text','784-XXXX-XXXXXXX-X')}
               {inp('Nationality','nationality','text','UAE')}
+            </div>
+          )}
+
+          {tab==='personal' && (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13 }}>
+              {inp('Sub Group Name','sub_group_name')}
+              {inp('Passport No','passport_no','text','A1234567')}
+              {inp('Email ID','email_id','email','name@example.com')}
+              {inp('Visa File No','visa_file_no')}
+              {inp('UID Number','uid_number')}
+              {inp('Emirates Issuing Visa','emirates_issuing_visa','text','Dubai')}
+              {inp('Father / Family Name','father_family_name')}
+              {inp('Date of Birth','dob','date')}
+              {sel('Gender','gender',[{v:'',l:'— Select —'},{v:'Male',l:'Male'},{v:'Female',l:'Female'}])}
+              {sel('Marital Status','marital_status',[{v:'',l:'— Select —'},{v:'Single',l:'Single'},{v:'Married',l:'Married'},{v:'Divorced',l:'Divorced'},{v:'Widowed',l:'Widowed'}])}
+              {inp('Residential Location','residential_location','text','Dubai, Al Quoz')}
+              {inp('Work Location','work_location','text','DXE6 Station')}
+              <div style={{ gridColumn:'span 2' }}>
+                <div style={{ background:'var(--blue-bg)', border:'1px solid var(--blue-border)', borderRadius:12, padding:'14px 16px' }}>
+                  <label style={{ fontSize:11, fontWeight:800, letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--blue)', marginBottom:10, display:'block' }}>Beneficiary Details</label>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+                    {inp('First Name','beneficiary_first_name')}
+                    {inp('Middle Name','beneficiary_middle_name')}
+                    {inp('Last Name','beneficiary_last_name')}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -488,12 +536,25 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
           <>
             <div style={{ display:'flex',flexDirection:'column',gap:1,marginBottom:12 }}>
               {[
-                {icon:User,      l:'Employee ID', v:emp.id,                                           mono:true  },
-                {icon:Phone,     l:'Phone',        v:emp.phone||'—',                                   mono:false },
-                {icon:CreditCard,l:'Emirates ID',  v:emp.emirates_id||'—',                             mono:false },
-                {icon:Building2, l:'Amazon ID',    v:emp.amazon_id||'—',                               mono:true  },
-                {icon:User,      l:'Nationality',  v:emp.nationality||'—',                             mono:false },
-                {icon:Shield,    l:'Salary',       v:`AED ${Number(emp.salary||0).toLocaleString()}/mo`, mono:false },
+                {icon:User,      l:'Employee ID',          v:emp.id,                                              mono:true  },
+                {icon:Phone,     l:'Phone',                 v:emp.phone||'—',                                      mono:false },
+                {icon:CreditCard,l:'Emirates ID',           v:emp.emirates_id||'—',                                mono:false },
+                {icon:Building2, l:'Amazon ID',             v:emp.amazon_id||'—',                                  mono:true  },
+                {icon:User,      l:'Nationality',           v:emp.nationality||'—',                                mono:false },
+                {icon:Shield,    l:'Salary',                v:`AED ${Number(emp.salary||0).toLocaleString()}/mo`,  mono:false },
+                ...(emp.passport_no         ?[{icon:CreditCard,l:'Passport No',          v:emp.passport_no,              mono:true }]:[]),
+                ...(emp.uid_number          ?[{icon:CreditCard,l:'UID Number',            v:emp.uid_number,               mono:true }]:[]),
+                ...(emp.visa_file_no        ?[{icon:CreditCard,l:'Visa File No',          v:emp.visa_file_no,             mono:true }]:[]),
+                ...(emp.email_id            ?[{icon:User,      l:'Email',                 v:emp.email_id,                 mono:false}]:[]),
+                ...(emp.dob                 ?[{icon:Calendar,  l:'Date of Birth',         v:emp.dob?.slice(0,10)||'—',    mono:false}]:[]),
+                ...(emp.gender              ?[{icon:User,      l:'Gender',                v:emp.gender,                   mono:false}]:[]),
+                ...(emp.marital_status      ?[{icon:User,      l:'Marital Status',        v:emp.marital_status,           mono:false}]:[]),
+                ...(emp.father_family_name  ?[{icon:User,      l:'Father / Family Name',  v:emp.father_family_name,       mono:false}]:[]),
+                ...(emp.emirates_issuing_visa?[{icon:User,     l:'Emirates Issuing Visa', v:emp.emirates_issuing_visa,    mono:false}]:[]),
+                ...(emp.residential_location?[{icon:User,      l:'Residential Location',  v:emp.residential_location,     mono:false}]:[]),
+                ...(emp.work_location       ?[{icon:Building2, l:'Work Location',         v:emp.work_location,            mono:false}]:[]),
+                ...(emp.sub_group_name      ?[{icon:Users,     l:'Sub Group',             v:emp.sub_group_name,           mono:false}]:[]),
+                ...((emp.beneficiary_first_name||emp.beneficiary_last_name)?[{icon:User,  l:'Beneficiary',v:[emp.beneficiary_first_name,emp.beneficiary_middle_name,emp.beneficiary_last_name].filter(Boolean).join(' '),mono:false}]:[]),
               ].map(row=>{
                 const Icon=row.icon
                 return (
