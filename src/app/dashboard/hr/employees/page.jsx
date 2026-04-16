@@ -495,13 +495,9 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
   useEffect(() => {
     if (tab !== 'fleet') return
     setFleetLoad(true)
-    Promise.all([
-      fetch(`${API}/api/vehicles/assignments/history?emp_id=${emp.id}&limit=60`,{headers:hdr()}).then(r=>r.json()).catch(()=>({})),
-      fetch(`${API}/api/handovers?emp_id=${emp.id}`,{headers:hdr()}).then(r=>r.json()).catch(()=>({})),
-    ]).then(([a,h])=>{
-      setFleetAsgn(a.history||[])
-      setFleetHv(h.handovers||[])
-    }).finally(()=>setFleetLoad(false))
+    fetch(`${API}/api/handovers?emp_id=${emp.id}`,{headers:hdr()})
+      .then(r=>r.json()).then(d=>setFleetHv(d.handovers||[])).catch(()=>setFleetHv([]))
+      .finally(()=>setFleetLoad(false))
   }, [tab, emp.id])
 
   const s   = STATUS[emp.status]||STATUS.inactive
@@ -676,84 +672,74 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
               <div style={{ textAlign:'center',padding:30,color:'var(--text-muted)',fontSize:12 }}>Loading…</div>
             ) : (
               <>
-                {/* Today / current assignment */}
+                {/* Current vehicle — last "received" without a subsequent "returned" */}
                 {(() => {
-                  const today = new Date().toISOString().slice(0,10)
-                  const cur = fleetAsgn.find(a=>a.date?.slice(0,10)===today)
+                  const cur = fleetHv.find(h =>
+                    h.type === 'received' &&
+                    !fleetHv.find(h2 =>
+                      h2.vehicle_id === h.vehicle_id &&
+                      h2.type === 'returned' &&
+                      new Date(h2.submitted_at) > new Date(h.submitted_at)
+                    )
+                  )
                   return cur ? (
-                    <div style={{ background:'var(--green-bg)',border:'1px solid var(--green-border,#A7F3D0)',borderRadius:12,padding:'12px 14px' }}>
-                      <div style={{ fontSize:10,fontWeight:700,color:'#10B981',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:6 }}>Today's Assignment</div>
+                    <div style={{ background:'var(--green-bg)',border:'1px solid #A7F3D0',borderRadius:12,padding:'12px 14px' }}>
+                      <div style={{ fontSize:10,fontWeight:700,color:'#10B981',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:8 }}>Current Vehicle</div>
                       <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-                        <div style={{ width:38,height:38,borderRadius:10,background:'#DCFCE7',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
-                          <Truck size={18} color="#10B981"/>
+                        <div style={{ width:40,height:40,borderRadius:10,background:'#DCFCE7',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                          <Truck size={19} color="#10B981"/>
                         </div>
-                        <div>
-                          <div style={{ fontWeight:800,fontSize:15,color:'var(--text)' }}>{cur.plate}</div>
-                          <div style={{ fontSize:11,color:'var(--text-muted)',marginTop:1 }}>{[cur.make,cur.model,cur.year].filter(Boolean).join(' ')||'Vehicle'}</div>
+                        <div style={{ flex:1,minWidth:0 }}>
+                          <div style={{ fontWeight:800,fontSize:16,color:'var(--text)',fontFamily:'monospace' }}>{cur.plate||'—'}</div>
+                          <div style={{ fontSize:11,color:'var(--text-muted)',marginTop:2 }}>
+                            Since {new Date(cur.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'})}
+                          </div>
                         </div>
+                        <span style={{ fontSize:10,fontWeight:700,color:'#10B981',background:'#DCFCE7',border:'1px solid #A7F3D0',borderRadius:20,padding:'2px 9px',flexShrink:0 }}>Active</span>
                       </div>
+                      {cur.fuel_level && (
+                        <div style={{ marginTop:8,fontSize:11,color:'var(--text-sub)' }}>Fuel at receive: {cur.fuel_level}{cur.odometer?` · ODO: ${cur.odometer} km`:''}</div>
+                      )}
                     </div>
                   ) : (
-                    <div style={{ background:'var(--bg-alt)',border:'1px dashed var(--border)',borderRadius:12,padding:'12px 14px',textAlign:'center' }}>
-                      <Truck size={18} color="var(--text-muted)" style={{ margin:'0 auto 5px',display:'block',opacity:0.4 }}/>
-                      <div style={{ fontSize:12,color:'var(--text-muted)' }}>No vehicle assigned today</div>
+                    <div style={{ background:'var(--bg-alt)',border:'1px dashed var(--border)',borderRadius:12,padding:'16px',textAlign:'center' }}>
+                      <Truck size={20} color="var(--text-muted)" style={{ margin:'0 auto 6px',display:'block',opacity:0.3 }}/>
+                      <div style={{ fontSize:12,color:'var(--text-muted)' }}>No vehicle currently assigned</div>
                     </div>
                   )
                 })()}
 
-                {/* Assignment history */}
+                {/* Receive / Return log */}
                 <div>
                   <div style={{ fontSize:10,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:8,display:'flex',alignItems:'center',gap:6 }}>
-                    <Truck size={11}/> Assignment History
-                  </div>
-                  {fleetAsgn.length===0 ? (
-                    <div style={{ textAlign:'center',padding:'14px 0',color:'var(--text-muted)',fontSize:12 }}>No assignment records</div>
-                  ) : (
-                    <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
-                      {fleetAsgn.map(a=>(
-                        <div key={a.id} style={{ display:'flex',alignItems:'center',gap:10,padding:'8px 10px',borderRadius:10,background:'var(--bg-alt)',border:'1px solid var(--border)' }}>
-                          <div style={{ width:7,height:7,borderRadius:'50%',background:'#10B981',flexShrink:0 }}/>
-                          <div style={{ flex:1,minWidth:0 }}>
-                            <div style={{ fontWeight:700,fontSize:12.5,color:'var(--text)',fontFamily:'monospace' }}>{a.plate}</div>
-                            <div style={{ fontSize:10.5,color:'var(--text-muted)',marginTop:1 }}>{[a.make,a.model].filter(Boolean).join(' ')}</div>
-                          </div>
-                          <div style={{ textAlign:'right',flexShrink:0 }}>
-                            <div style={{ fontSize:11,fontWeight:600,color:'var(--text-sub)' }}>{a.date?.slice(0,10)}</div>
-                            <div style={{ fontSize:10,color:'var(--gold)',marginTop:1 }}>{a.station_code}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Handover history */}
-                <div>
-                  <div style={{ fontSize:10,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:8,display:'flex',alignItems:'center',gap:6 }}>
-                    <ArrowLeftRight size={11}/> Receive / Return Log
+                    <ArrowLeftRight size={11}/> Receive / Return History
                   </div>
                   {fleetHv.length===0 ? (
                     <div style={{ textAlign:'center',padding:'14px 0',color:'var(--text-muted)',fontSize:12 }}>No handover records</div>
                   ) : (
-                    <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
+                    <div style={{ display:'flex',flexDirection:'column',gap:6 }}>
                       {fleetHv.map(h=>{
                         const isRecv = h.type==='received'
                         return (
-                          <div key={h.id} style={{ padding:'9px 11px',borderRadius:10,background:'var(--bg-alt)',border:`1px solid ${isRecv?'var(--green-border,#A7F3D0)':'var(--red-border)'}` }}>
-                            <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4 }}>
+                          <div key={h.id} style={{ padding:'9px 12px',borderRadius:10,background:'var(--bg-alt)',border:`1px solid ${isRecv?'#A7F3D0':'#FECACA'}` }}>
+                            <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:h.fuel_level||h.odometer||h.condition_note?5:0 }}>
                               <div style={{ display:'flex',alignItems:'center',gap:7 }}>
                                 <span style={{ fontSize:10,fontWeight:700,color:isRecv?'#10B981':'#EF4444',background:isRecv?'#F0FDF4':'#FEF2F2',borderRadius:5,padding:'1px 7px',textTransform:'uppercase' }}>
                                   {h.type}
                                 </span>
                                 <span style={{ fontWeight:700,fontSize:12.5,color:'var(--text)',fontFamily:'monospace' }}>{h.plate||'—'}</span>
                               </div>
-                              <span style={{ fontSize:10.5,color:'var(--text-muted)' }}>{h.submitted_at?.slice(0,10)}</span>
+                              <span style={{ fontSize:10.5,color:'var(--text-muted)',flexShrink:0 }}>
+                                {new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'})}
+                              </span>
                             </div>
-                            <div style={{ display:'flex',gap:12,flexWrap:'wrap' }}>
-                              {h.fuel_level && <span style={{ fontSize:10.5,color:'var(--text-sub)' }}>Fuel: {h.fuel_level}</span>}
-                              {h.odometer   && <span style={{ fontSize:10.5,color:'var(--text-sub)' }}>ODO: {h.odometer} km</span>}
-                              {h.condition_note && <span style={{ fontSize:10.5,color:'var(--text-sub)',flexBasis:'100%' }}>{h.condition_note}</span>}
-                            </div>
+                            {(h.fuel_level||h.odometer||h.condition_note) && (
+                              <div style={{ display:'flex',gap:12,flexWrap:'wrap',marginTop:4 }}>
+                                {h.fuel_level    && <span style={{ fontSize:10.5,color:'var(--text-sub)' }}>Fuel: {h.fuel_level}</span>}
+                                {h.odometer      && <span style={{ fontSize:10.5,color:'var(--text-sub)' }}>ODO: {h.odometer} km</span>}
+                                {h.condition_note&& <span style={{ fontSize:10.5,color:'var(--text-sub)',flexBasis:'100%',marginTop:2 }}>{h.condition_note}</span>}
+                              </div>
+                            )}
                           </div>
                         )
                       })}
