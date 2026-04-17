@@ -54,7 +54,7 @@ function expiry(ds) {
 const COMPLETION_FIELDS = [
   'phone','emirates_id','nationality','dob','gender','marital_status',
   'passport_no','uid_number','visa_file_no','email_id','father_family_name',
-  'beneficiary_first_name','residential_location','work_location',
+  'residential_location','work_location',
   'emirates_issuing_visa','visa_expiry','license_expiry','amazon_id',
   'sub_group_name',
 ]
@@ -63,7 +63,7 @@ const COMPLETION_LABELS = {
   dob:'Date of Birth', gender:'Gender', marital_status:'Marital Status',
   passport_no:'Passport No', uid_number:'UID Number', visa_file_no:'Visa File No',
   email_id:'Email', father_family_name:'Father/Family Name',
-  beneficiary_first_name:'Beneficiary Name', residential_location:'Residential Location',
+  residential_location:'Residential Location',
   work_location:'Work Location', emirates_issuing_visa:'Emirates Issuing Visa',
   visa_expiry:'Visa Expiry', license_expiry:'License Expiry',
   amazon_id:'Amazon ID', sub_group_name:'Sub Group',
@@ -250,16 +250,6 @@ function EmpModal({ emp, onSave, onClose, mode }) {
               {sel('Marital Status','marital_status',[{v:'',l:'— Select —'},{v:'Single',l:'Single'},{v:'Married',l:'Married'},{v:'Divorced',l:'Divorced'},{v:'Widowed',l:'Widowed'}])}
               {inp('Residential Location','residential_location','text','Dubai, Al Quoz')}
               {inp('Work Location','work_location','text','DXE6 Station')}
-              <div style={{ gridColumn:'span 2' }}>
-                <div style={{ background:'var(--blue-bg)', border:'1px solid var(--blue-border)', borderRadius:12, padding:'14px 16px' }}>
-                  <label style={{ fontSize:11, fontWeight:800, letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--blue)', marginBottom:10, display:'block' }}>Beneficiary Details</label>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
-                    {inp('First Name','beneficiary_first_name')}
-                    {inp('Middle Name','beneficiary_middle_name')}
-                    {inp('Last Name','beneficiary_last_name')}
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
@@ -692,7 +682,6 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                 ...(emp.visa_file_no         ?[{icon:CreditCard,l:'Visa File No',          v:emp.visa_file_no,        mono:true }]:[]),
                 ...(emp.email_id             ?[{icon:User,      l:'Email',                 v:emp.email_id,            mono:false}]:[]),
                 ...(emp.emirates_issuing_visa?[{icon:User,      l:'Emirates Issuing Visa', v:emp.emirates_issuing_visa,mono:false}]:[]),
-                ...((emp.beneficiary_first_name||emp.beneficiary_last_name)?[{icon:User,l:'Beneficiary',v:[emp.beneficiary_first_name,emp.beneficiary_middle_name,emp.beneficiary_last_name].filter(Boolean).join(' '),mono:false}]:[]),
               ]
 
               return (
