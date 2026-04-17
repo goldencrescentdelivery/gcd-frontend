@@ -50,6 +50,37 @@ function expiry(ds) {
   } catch { return null }
 }
 
+/* ── Profile completion ──────────────────────────────────────── */
+const COMPLETION_FIELDS = [
+  'phone','emirates_id','nationality','dob','gender','marital_status',
+  'passport_no','uid_number','visa_file_no','email_id','father_family_name',
+  'beneficiary_first_name','residential_location','work_location',
+  'emirates_issuing_visa','visa_expiry','license_expiry','amazon_id',
+  'sub_group_name',
+]
+function profileCompletion(emp) {
+  if (!emp) return 0
+  const filled = COMPLETION_FIELDS.filter(f => emp[f] && String(emp[f]).trim() !== '').length
+  const hasSalary = Number(emp.salary||0) > 0 ? 1 : 0
+  return Math.round(((filled + hasSalary) / (COMPLETION_FIELDS.length + 1)) * 100)
+}
+
+/* ── Completion Ring (SVG) ───────────────────────────────────── */
+function CompletionRing({ pct, size=54, stroke=3 }) {
+  const r   = (size - stroke) / 2
+  const circ = 2 * Math.PI * r
+  const dash = (pct / 100) * circ
+  const color = pct === 100 ? '#10B981' : pct >= 60 ? '#F59E0B' : '#E5E7EB'
+  return (
+    <svg width={size} height={size} style={{ position:'absolute', top:0, left:0, transform:'rotate(-90deg)', pointerEvents:'none' }}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--border)" strokeWidth={stroke}/>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+        strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+        style={{ transition:'stroke-dasharray 0.5s ease' }}/>
+    </svg>
+  )
+}
+
 /* ── Label ───────────────────────────────────────────────────── */
 function Lbl({ children }) {
   return <label style={{ display:'block', fontSize:10.5, fontWeight:700, letterSpacing:'0.07em', textTransform:'uppercase', color:'var(--text-muted)', marginBottom:5 }}>{children}</label>
@@ -495,9 +526,13 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
   useEffect(() => {
     if (tab !== 'fleet') return
     setFleetLoad(true)
-    fetch(`${API}/api/handovers?emp_id=${emp.id}`,{headers:hdr()})
-      .then(r=>r.json()).then(d=>setFleetHv(d.handovers||[])).catch(()=>setFleetHv([]))
-      .finally(()=>setFleetLoad(false))
+    Promise.all([
+      fetch(`${API}/api/handovers?emp_id=${emp.id}`,{headers:hdr()}).then(r=>r.json()).catch(()=>({handovers:[]})),
+      fetch(`${API}/api/vehicles/assignments/history?emp_id=${emp.id}`,{headers:hdr()}).then(r=>r.json()).catch(()=>({history:[]})),
+    ]).then(([hv, asgn]) => {
+      setFleetHv(hv.handovers||[])
+      setFleetAsgn(asgn.history||[])
+    }).finally(()=>setFleetLoad(false))
   }, [tab, emp.id])
 
   const s   = STATUS[emp.status]||STATUS.inactive
@@ -521,8 +556,9 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
           <X size={13} color="var(--text-sub)"/>
         </button>
         <div style={{ textAlign:'center' }}>
-          <div style={{ width:54,height:54,borderRadius:16,background:'var(--card)',border:`2px solid ${sbc}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:900,color:sc,margin:'0 auto 10px',boxShadow:`0 4px 12px ${sc}18` }}>
+          <div style={{ width:54,height:54,borderRadius:16,background:'var(--card)',border:`2px solid ${sbc}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:900,color:sc,margin:'0 auto 10px',boxShadow:`0 4px 12px ${sc}18`,position:'relative' }}>
             {emp.name?.slice(0,2).toUpperCase()}
+            <CompletionRing pct={profileCompletion(emp)} size={54} stroke={3}/>
           </div>
           <div style={{ fontWeight:800,fontSize:14,color:'var(--text)',marginBottom:2 }}>{emp.name}</div>
           <div style={{ fontSize:12,color:'var(--text-muted)',marginBottom:10 }}>{emp.role}</div>
@@ -548,38 +584,70 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
       <div style={{ flex:1, overflowY:'auto', padding:'14px' }}>
         {tab==='info' && (
           <>
-            <div style={{ display:'flex',flexDirection:'column',gap:1,marginBottom:12 }}>
-              {[
-                {icon:User,      l:'Employee ID',          v:emp.id,                                              mono:true  },
-                {icon:Phone,     l:'Phone',                 v:emp.phone||'—',                                      mono:false },
-                {icon:CreditCard,l:'Emirates ID',           v:emp.emirates_id||'—',                                mono:false },
-                {icon:Building2, l:'Amazon ID',             v:emp.amazon_id||'—',                                  mono:true  },
-                {icon:User,      l:'Nationality',           v:emp.nationality||'—',                                mono:false },
-                {icon:Shield,    l:'Salary',                v:`AED ${Number(emp.salary||0).toLocaleString()}/mo`,  mono:false },
-                ...(emp.passport_no         ?[{icon:CreditCard,l:'Passport No',          v:emp.passport_no,              mono:true }]:[]),
-                ...(emp.uid_number          ?[{icon:CreditCard,l:'UID Number',            v:emp.uid_number,               mono:true }]:[]),
-                ...(emp.visa_file_no        ?[{icon:CreditCard,l:'Visa File No',          v:emp.visa_file_no,             mono:true }]:[]),
-                ...(emp.email_id            ?[{icon:User,      l:'Email',                 v:emp.email_id,                 mono:false}]:[]),
-                ...(emp.dob                 ?[{icon:Calendar,  l:'Date of Birth',         v:emp.dob?.slice(0,10)||'—',    mono:false}]:[]),
-                ...(emp.gender              ?[{icon:User,      l:'Gender',                v:emp.gender,                   mono:false}]:[]),
-                ...(emp.marital_status      ?[{icon:User,      l:'Marital Status',        v:emp.marital_status,           mono:false}]:[]),
-                ...(emp.father_family_name  ?[{icon:User,      l:'Father / Family Name',  v:emp.father_family_name,       mono:false}]:[]),
-                ...(emp.emirates_issuing_visa?[{icon:User,     l:'Emirates Issuing Visa', v:emp.emirates_issuing_visa,    mono:false}]:[]),
-                ...(emp.residential_location?[{icon:User,      l:'Residential Location',  v:emp.residential_location,     mono:false}]:[]),
-                ...(emp.work_location       ?[{icon:Building2, l:'Work Location',         v:emp.work_location,            mono:false}]:[]),
-                ...(emp.sub_group_name      ?[{icon:Users,     l:'Sub Group',             v:emp.sub_group_name,           mono:false}]:[]),
-                ...((emp.beneficiary_first_name||emp.beneficiary_last_name)?[{icon:User,  l:'Beneficiary',v:[emp.beneficiary_first_name,emp.beneficiary_middle_name,emp.beneficiary_last_name].filter(Boolean).join(' '),mono:false}]:[]),
-              ].map(row=>{
-                const Icon=row.icon
-                return (
-                  <div key={row.l} style={{ display:'flex',alignItems:'center',gap:8,padding:'7px 10px',borderRadius:9,background:'var(--bg-alt)' }}>
-                    <Icon size={12} color="var(--text-muted)" style={{ flexShrink:0 }}/>
-                    <span style={{ fontSize:11.5,color:'var(--text-muted)',flex:1 }}>{row.l}</span>
-                    <span style={{ fontSize:12,color:'var(--text)',fontWeight:600,fontFamily:row.mono?'monospace':'Poppins,sans-serif',maxWidth:200,wordBreak:'break-all',textAlign:'right' }}>{row.v}</span>
+            {/* 2-column grid of info fields */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:12 }}>
+              {/* Left column — core work info */}
+              <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
+                <div style={{ fontSize:9.5, fontWeight:800, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5, paddingLeft:4 }}>Work Info</div>
+                {[
+                  {icon:User,      l:'Employee ID', v:emp.id,                                             mono:true  },
+                  {icon:Building2, l:'Amazon ID',   v:emp.amazon_id||'—',                                 mono:true  },
+                  {icon:Users,     l:'Sub Group',   v:emp.sub_group_name||'—',                            mono:false },
+                  {icon:Building2, l:'Work Location',v:emp.work_location||'—',                            mono:false },
+                  {icon:Shield,    l:'Salary',      v:`AED ${Number(emp.salary||0).toLocaleString()}/mo`, mono:false },
+                ].map(row=>{ const Icon=row.icon; return (
+                  <div key={row.l} style={{ display:'flex',alignItems:'center',gap:7,padding:'6px 9px',borderRadius:8,background:'var(--bg-alt)' }}>
+                    <Icon size={11} color="var(--text-muted)" style={{ flexShrink:0 }}/>
+                    <span style={{ fontSize:11,color:'var(--text-muted)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{row.l}</span>
+                    <span style={{ fontSize:11.5,color:'var(--text)',fontWeight:600,fontFamily:row.mono?'monospace':'Poppins,sans-serif',maxWidth:130,wordBreak:'break-all',textAlign:'right' }}>{row.v}</span>
                   </div>
-                )
-              })}
+                )})}
+              </div>
+
+              {/* Right column — personal info */}
+              <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
+                <div style={{ fontSize:9.5, fontWeight:800, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5, paddingLeft:4 }}>Personal</div>
+                {[
+                  {icon:Phone,     l:'Phone',         v:emp.phone||'—',                 mono:false },
+                  {icon:CreditCard,l:'Emirates ID',   v:emp.emirates_id||'—',           mono:false },
+                  {icon:User,      l:'Nationality',   v:emp.nationality||'—',           mono:false },
+                  {icon:Calendar,  l:'Date of Birth', v:emp.dob?.slice(0,10)||'—',      mono:false },
+                  {icon:User,      l:'Gender',        v:emp.gender||'—',                mono:false },
+                  {icon:User,      l:'Marital Status',v:emp.marital_status||'—',        mono:false },
+                ].map(row=>{ const Icon=row.icon; return (
+                  <div key={row.l} style={{ display:'flex',alignItems:'center',gap:7,padding:'6px 9px',borderRadius:8,background:'var(--bg-alt)' }}>
+                    <Icon size={11} color="var(--text-muted)" style={{ flexShrink:0 }}/>
+                    <span style={{ fontSize:11,color:'var(--text-muted)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{row.l}</span>
+                    <span style={{ fontSize:11.5,color:'var(--text)',fontWeight:600,fontFamily:row.mono?'monospace':'Poppins,sans-serif',maxWidth:130,wordBreak:'break-all',textAlign:'right' }}>{row.v}</span>
+                  </div>
+                )})}
+              </div>
             </div>
+
+            {/* Full-width extra fields (shown only when filled) */}
+            {(emp.passport_no||emp.uid_number||emp.visa_file_no||emp.email_id||emp.father_family_name||emp.emirates_issuing_visa||emp.residential_location||(emp.beneficiary_first_name||emp.beneficiary_last_name)) && (
+              <div style={{ display:'flex',flexDirection:'column',gap:1,marginBottom:12 }}>
+                <div style={{ fontSize:9.5,fontWeight:800,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:5,paddingLeft:4 }}>Documents & Additional</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1 }}>
+                  {[
+                    ...(emp.passport_no          ?[{icon:CreditCard,l:'Passport No',         v:emp.passport_no,                 mono:true }]:[]),
+                    ...(emp.uid_number           ?[{icon:CreditCard,l:'UID Number',           v:emp.uid_number,                  mono:true }]:[]),
+                    ...(emp.visa_file_no         ?[{icon:CreditCard,l:'Visa File No',         v:emp.visa_file_no,                mono:true }]:[]),
+                    ...(emp.email_id             ?[{icon:User,      l:'Email',                v:emp.email_id,                    mono:false}]:[]),
+                    ...(emp.father_family_name   ?[{icon:User,      l:'Father/Family Name',   v:emp.father_family_name,          mono:false}]:[]),
+                    ...(emp.emirates_issuing_visa?[{icon:User,      l:'Emirates Issuing Visa',v:emp.emirates_issuing_visa,       mono:false}]:[]),
+                    ...(emp.residential_location ?[{icon:User,      l:'Residential',          v:emp.residential_location,        mono:false}]:[]),
+                    ...((emp.beneficiary_first_name||emp.beneficiary_last_name)?[{icon:User,  l:'Beneficiary',v:[emp.beneficiary_first_name,emp.beneficiary_middle_name,emp.beneficiary_last_name].filter(Boolean).join(' '),mono:false}]:[]),
+                  ].map(row=>{ const Icon=row.icon; return (
+                    <div key={row.l} style={{ display:'flex',alignItems:'center',gap:7,padding:'6px 9px',borderRadius:8,background:'var(--bg-alt)' }}>
+                      <Icon size={11} color="var(--text-muted)" style={{ flexShrink:0 }}/>
+                      <span style={{ fontSize:11,color:'var(--text-muted)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{row.l}</span>
+                      <span style={{ fontSize:11.5,color:'var(--text)',fontWeight:600,fontFamily:row.mono?'monospace':'Poppins,sans-serif',maxWidth:130,wordBreak:'break-all',textAlign:'right' }}>{row.v}</span>
+                    </div>
+                  )})}
+                </div>
+              </div>
+            )}
 
             <div style={{ background:'var(--purple-bg)',border:'1px solid var(--purple-border)',borderRadius:10,padding:'9px 12px',marginBottom:10 }}>
               <div style={{ fontSize:10,fontWeight:700,color:'#7C3AED',letterSpacing:'0.07em',textTransform:'uppercase',marginBottom:4 }}>Salary Formula</div>
@@ -746,6 +814,33 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                     </div>
                   )}
                 </div>
+
+                {/* POC assignment history — only shown if records exist */}
+                {fleetAsgn.length > 0 && (
+                  <div>
+                    <div style={{ fontSize:10,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:8,display:'flex',alignItems:'center',gap:6 }}>
+                      <Truck size={11}/> POC Assignment History
+                    </div>
+                    <div style={{ display:'flex',flexDirection:'column',gap:6 }}>
+                      {fleetAsgn.map((a,i)=>(
+                        <div key={a.id||i} style={{ padding:'9px 12px',borderRadius:10,background:'var(--bg-alt)',border:'1px solid var(--border)' }}>
+                          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+                            <div style={{ display:'flex',alignItems:'center',gap:7 }}>
+                              <span style={{ fontSize:10,fontWeight:700,color:'#2563EB',background:'#EFF6FF',borderRadius:5,padding:'1px 7px',textTransform:'uppercase' }}>POC</span>
+                              <span style={{ fontWeight:700,fontSize:12.5,color:'var(--text)',fontFamily:'monospace' }}>{a.plate||a.vehicle_plate||'—'}</span>
+                            </div>
+                            <span style={{ fontSize:10.5,color:'var(--text-muted)',flexShrink:0 }}>
+                              {a.date ? new Date(a.date).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'}) : '—'}
+                            </span>
+                          </div>
+                          {a.assigned_by_name && (
+                            <div style={{ fontSize:10.5,color:'var(--text-sub)',marginTop:4 }}>Assigned by: {a.assigned_by_name}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -800,6 +895,7 @@ function EmpCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole }
         {/* Avatar */}
         <div style={{ width:44,height:44,borderRadius:13,background:`linear-gradient(135deg,${sbg},var(--card))`,border:`1.5px solid ${sbc}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:sc,flexShrink:0,position:'relative' }}>
           {emp.name?.slice(0,2).toUpperCase()}
+          <CompletionRing pct={profileCompletion(emp)} size={44} stroke={3}/>
           <div style={{ position:'absolute',bottom:-1,right:-1,width:11,height:11,borderRadius:'50%',background:s.dot,border:'2px solid var(--card)' }}/>
         </div>
 
@@ -900,9 +996,9 @@ export default function EmployeesPage() {
   const alerts  = employees.filter(e=>{ const v=expiry(e.visa_expiry); return v&&(v.label==='Expired'||parseInt(v.label)<=60) }).length
 
   return (
-    <div style={{ display:'flex', gap:18, position:'relative', alignItems:'flex-start' }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
       {/* Main column */}
-      <div style={{ flex:1, display:'flex', flexDirection:'column', gap:14, minWidth:0 }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
 
         {/* Action bar */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
@@ -986,21 +1082,14 @@ export default function EmployeesPage() {
         )}
       </div>
 
-      {/* Detail panel */}
+      {/* Detail popup */}
       {selected && (
-        isMobile ? (
-          <div style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'flex-end' }} onClick={e=>e.target===e.currentTarget&&setSelected(null)}>
-            <div style={{ width:'100%', maxHeight:'90vh', overflowY:'auto', borderRadius:'20px 20px 0 0', background:'var(--card)' }}>
-              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
-                onSelectEmployee={id=>{ const t=employees.find(e=>e.id===id); if(t) setSelected(t) }}/>
-            </div>
-          </div>
-        ) : (
-          <div style={{ width:360, flexShrink:0, position:'sticky', top:0, height:'calc(100vh - 130px)' }}>
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setSelected(null)}>
+          <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:820, height:'92vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'var(--shadow-lg)', border:'1px solid var(--border)' }}>
             <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
               onSelectEmployee={id=>{ const t=employees.find(e=>e.id===id); if(t) setSelected(t) }}/>
           </div>
-        )
+        </div>
       )}
 
       {modal && <EmpModal mode={modal.mode} emp={modal.emp} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
