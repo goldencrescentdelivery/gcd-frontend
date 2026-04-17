@@ -15,6 +15,10 @@ export const NAV = [
   { label:'Overview', href:'/dashboard/overview', icon:'LayoutDashboard', roles:['admin'] },
   { label:'Reports',  href:'/dashboard/analytics', icon:'BarChart3',      roles:['admin','general_manager','hr','accountant','poc'] },
 
+  // ── Office ────────────────────────────────────────────────────
+  { type:'section', label:'Office', roles:['admin','general_manager','hr','accountant'] },
+  { label:'Office Profile', href:'/dashboard/office', icon:'Building2', roles:['admin','general_manager','hr','accountant'] },
+
   // ── HR Management ─────────────────────────────────────────────
   { type:'section', label:'HR Management', roles:['admin','general_manager','hr','accountant'] },
   { label:'DAs',          href:'/dashboard/hr/employees',  icon:'UserCircle',  roles:['admin','general_manager','hr','accountant'], alertKey:'employees' },
