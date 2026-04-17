@@ -58,11 +58,27 @@ const COMPLETION_FIELDS = [
   'emirates_issuing_visa','visa_expiry','license_expiry','amazon_id',
   'sub_group_name',
 ]
+const COMPLETION_LABELS = {
+  phone:'Phone', emirates_id:'Emirates ID', nationality:'Nationality',
+  dob:'Date of Birth', gender:'Gender', marital_status:'Marital Status',
+  passport_no:'Passport No', uid_number:'UID Number', visa_file_no:'Visa File No',
+  email_id:'Email', father_family_name:'Father/Family Name',
+  beneficiary_first_name:'Beneficiary Name', residential_location:'Residential Location',
+  work_location:'Work Location', emirates_issuing_visa:'Emirates Issuing Visa',
+  visa_expiry:'Visa Expiry', license_expiry:'License Expiry',
+  amazon_id:'Amazon ID', sub_group_name:'Sub Group',
+}
 function profileCompletion(emp) {
   if (!emp) return 0
   const filled = COMPLETION_FIELDS.filter(f => emp[f] && String(emp[f]).trim() !== '').length
   const hasSalary = Number(emp.salary||0) > 0 ? 1 : 0
   return Math.round(((filled + hasSalary) / (COMPLETION_FIELDS.length + 1)) * 100)
+}
+function missingFields(emp) {
+  if (!emp) return []
+  const missing = COMPLETION_FIELDS.filter(f => !emp[f] || String(emp[f]).trim() === '').map(f => COMPLETION_LABELS[f]||f)
+  if (!Number(emp.salary||0)) missing.unshift('Salary')
+  return missing
 }
 
 /* ── Completion Ring (SVG) ───────────────────────────────────── */
@@ -275,9 +291,6 @@ function EmpModal({ emp, onSave, onClose, mode }) {
                   </div>
                 </div>
               </div>
-              {inp('Start Date','joined','date')}
-              {inp('AL Start Date','annual_leave_start','date')}
-              {inp('AL Balance (days)','annual_leave_balance','number','30')}
             </div>
           )}
 
@@ -580,11 +593,40 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
             </div>
           </div>
 
-          {/* Completion circle summary */}
-          <div style={{ flexShrink:0, textAlign:'center', paddingRight:8 }}>
-            <div style={{ fontSize:22,fontWeight:900,color:pct===100?'#10B981':pct>=60?'#F59E0B':'var(--text-muted)',letterSpacing:'-0.04em',lineHeight:1 }}>{pct}%</div>
-            <div style={{ fontSize:9.5,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginTop:3 }}>Profile</div>
-          </div>
+          {/* Completion summary */}
+          {(() => {
+            const missing = missingFields(emp)
+            const ringColor = pct===100?'#10B981':pct>=60?'#F59E0B':'#EF4444'
+            return (
+              <div style={{ flexShrink:0, minWidth:160, maxWidth:200 }}>
+                {/* % + bar */}
+                <div style={{ display:'flex', alignItems:'baseline', gap:6, marginBottom:6 }}>
+                  <span style={{ fontSize:24,fontWeight:900,color:ringColor,letterSpacing:'-0.04em',lineHeight:1 }}>{pct}%</span>
+                  <span style={{ fontSize:10.5,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em' }}>Complete</span>
+                </div>
+                <div style={{ height:5,borderRadius:99,background:'var(--border)',marginBottom:pct===100?0:10 }}>
+                  <div style={{ height:'100%',borderRadius:99,background:ringColor,width:`${pct}%`,transition:'width 0.5s ease' }}/>
+                </div>
+                {/* Missing fields list */}
+                {pct < 100 && missing.length > 0 && (
+                  <div>
+                    <div style={{ fontSize:9.5,fontWeight:800,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:5 }}>Still needed:</div>
+                    <div style={{ display:'flex',flexWrap:'wrap',gap:4 }}>
+                      {missing.slice(0,8).map(f=>(
+                        <span key={f} style={{ fontSize:10,fontWeight:600,color:'#EF4444',background:'#FEF2F2',border:'1px solid #FECACA',borderRadius:6,padding:'1px 7px',whiteSpace:'nowrap' }}>{f}</span>
+                      ))}
+                      {missing.length>8 && <span style={{ fontSize:10,color:'var(--text-muted)',padding:'1px 4px' }}>+{missing.length-8} more</span>}
+                    </div>
+                  </div>
+                )}
+                {pct === 100 && (
+                  <div style={{ fontSize:11,fontWeight:700,color:'#10B981',display:'flex',alignItems:'center',gap:4 }}>
+                    <CheckCircle2 size={13}/> Profile complete
+                  </div>
+                )}
+              </div>
+            )
+          })()}
         </div>
       </div>
 
