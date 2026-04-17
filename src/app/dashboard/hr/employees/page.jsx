@@ -548,136 +548,170 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
     { id:'expenses', l:'Expenses' },
   ]
 
+  const pct = profileCompletion(emp)
+
   return (
-    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', boxShadow:'var(--shadow-md)', display:'flex', flexDirection:'column', height:'100%' }}>
-      {/* Profile header */}
-      <div style={{ background:`linear-gradient(135deg,${sbg},var(--card))`, padding:'20px 16px 14px', position:'relative', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
-        <button onClick={onClose} style={{ position:'absolute',top:12,right:12,width:26,height:26,borderRadius:8,background:'var(--card)',border:'1px solid var(--border)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
-          <X size={13} color="var(--text-sub)"/>
+    <div style={{ background:'var(--card)', borderRadius:20, overflow:'hidden', display:'flex', flexDirection:'column', height:'100%' }}>
+      {/* Profile header — horizontal layout */}
+      <div style={{ background:`linear-gradient(120deg,${sbg} 0%,var(--card) 60%)`, padding:'22px 24px 18px', position:'relative', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+        <button onClick={onClose} style={{ position:'absolute',top:14,right:16,width:28,height:28,borderRadius:9,background:'var(--card)',border:'1px solid var(--border)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'var(--shadow-sm)' }}>
+          <X size={14} color="var(--text-sub)"/>
         </button>
-        <div style={{ textAlign:'center' }}>
-          <div style={{ width:54,height:54,borderRadius:16,background:'var(--card)',border:`2px solid ${sbc}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:900,color:sc,margin:'0 auto 10px',boxShadow:`0 4px 12px ${sc}18`,position:'relative' }}>
-            {emp.name?.slice(0,2).toUpperCase()}
-            <CompletionRing pct={profileCompletion(emp)} size={54} stroke={3}/>
+
+        <div style={{ display:'flex', alignItems:'center', gap:20 }}>
+          {/* Avatar + ring */}
+          <div style={{ position:'relative', flexShrink:0 }}>
+            <div style={{ width:72,height:72,borderRadius:20,background:`linear-gradient(135deg,${sbg},${sbc})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:900,color:sc,boxShadow:`0 6px 20px ${sc}28` }}>
+              {emp.name?.slice(0,2).toUpperCase()}
+            </div>
+            <CompletionRing pct={pct} size={72} stroke={4}/>
+            {/* status dot */}
+            <div style={{ position:'absolute',bottom:2,right:2,width:13,height:13,borderRadius:'50%',background:s.dot,border:'2.5px solid var(--card)',boxShadow:`0 0 0 2px ${s.dot}40` }}/>
           </div>
-          <div style={{ fontWeight:800,fontSize:14,color:'var(--text)',marginBottom:2 }}>{emp.name}</div>
-          <div style={{ fontSize:12,color:'var(--text-muted)',marginBottom:10 }}>{emp.role}</div>
-          <div style={{ display:'flex',gap:5,justifyContent:'center',flexWrap:'wrap' }}>
-            <span style={{ fontSize:11,fontWeight:700,color:s.c,background:s.bg,border:`1px solid ${s.bc}`,borderRadius:20,padding:'2px 9px' }}>{s.l}</span>
-            <span style={{ fontSize:11,fontWeight:700,color:sc,background:sbg,border:`1px solid ${sbc}`,borderRadius:20,padding:'2px 9px' }}>{emp.station_code||'DDB1'}</span>
-            {emp.project_type && <span style={{ fontSize:11,fontWeight:700,color:'#7C3AED',background:'var(--purple-bg)',border:'1px solid var(--purple-border)',borderRadius:20,padding:'2px 9px' }}>{emp.project_type.toUpperCase()}</span>}
+
+          {/* Name + meta */}
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontWeight:900,fontSize:18,color:'var(--text)',letterSpacing:'-0.02em',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{emp.name}</div>
+            <div style={{ fontSize:12.5,color:'var(--text-muted)',marginBottom:10 }}>{emp.role} · <span style={{ fontFamily:'monospace',fontSize:12 }}>{emp.id}</span></div>
+            <div style={{ display:'flex',gap:6,flexWrap:'wrap',alignItems:'center' }}>
+              <span style={{ fontSize:11,fontWeight:700,color:s.c,background:s.bg,border:`1.5px solid ${s.bc}`,borderRadius:20,padding:'3px 10px' }}>{s.l}</span>
+              <span style={{ fontSize:11,fontWeight:700,color:sc,background:sbg,border:`1.5px solid ${sbc}`,borderRadius:20,padding:'3px 10px' }}>{emp.station_code||'DDB1'}</span>
+              {emp.project_type && <span style={{ fontSize:11,fontWeight:700,color:'#7C3AED',background:'var(--purple-bg)',border:'1.5px solid var(--purple-border)',borderRadius:20,padding:'3px 10px' }}>{emp.project_type.toUpperCase()}</span>}
+            </div>
+          </div>
+
+          {/* Completion circle summary */}
+          <div style={{ flexShrink:0, textAlign:'center', paddingRight:8 }}>
+            <div style={{ fontSize:22,fontWeight:900,color:pct===100?'#10B981':pct>=60?'#F59E0B':'var(--text-muted)',letterSpacing:'-0.04em',lineHeight:1 }}>{pct}%</div>
+            <div style={{ fontSize:9.5,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginTop:3 }}>Profile</div>
           </div>
         </div>
       </div>
 
-      {/* Scrollable tab bar */}
-      <div className="detail-tabs" style={{ display:'flex', overflowX:'auto', padding:'0 14px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+      {/* Tab bar */}
+      <div className="detail-tabs" style={{ display:'flex', overflowX:'auto', padding:'0 20px', borderBottom:'1px solid var(--border)', flexShrink:0, background:'var(--bg-alt)' }}>
         {TABS.map(t=>(
           <button key={t.id} onClick={()=>setTab(t.id)}
-            style={{ padding:'9px 12px', fontSize:12, fontWeight:tab===t.id?700:500, color:tab===t.id?'var(--gold)':'var(--text-muted)', background:'none', border:'none', borderBottom:`2px solid ${tab===t.id?'var(--gold)':'transparent'}`, cursor:'pointer', fontFamily:'Poppins,sans-serif', marginBottom:-1, transition:'all 0.15s', whiteSpace:'nowrap', flexShrink:0 }}>
+            style={{ padding:'10px 14px', fontSize:12, fontWeight:tab===t.id?700:500, color:tab===t.id?'var(--gold)':'var(--text-muted)', background:'none', border:'none', borderBottom:`2.5px solid ${tab===t.id?'var(--gold)':'transparent'}`, cursor:'pointer', fontFamily:'Poppins,sans-serif', marginBottom:-1, transition:'all 0.15s', whiteSpace:'nowrap', flexShrink:0 }}>
             {t.l}
           </button>
         ))}
       </div>
 
       {/* Scrollable content */}
-      <div style={{ flex:1, overflowY:'auto', padding:'14px' }}>
+      <div style={{ flex:1, overflowY:'auto', padding:'20px 24px' }}>
         {tab==='info' && (
           <>
-            {/* 2-column grid of info fields */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:12 }}>
-              {/* Left column — core work info */}
-              <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
-                <div style={{ fontSize:9.5, fontWeight:800, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5, paddingLeft:4 }}>Work Info</div>
-                {[
-                  {icon:User,      l:'Employee ID', v:emp.id,                                             mono:true  },
-                  {icon:Building2, l:'Amazon ID',   v:emp.amazon_id||'—',                                 mono:true  },
-                  {icon:Users,     l:'Sub Group',   v:emp.sub_group_name||'—',                            mono:false },
-                  {icon:Building2, l:'Work Location',v:emp.work_location||'—',                            mono:false },
-                  {icon:Shield,    l:'Salary',      v:`AED ${Number(emp.salary||0).toLocaleString()}/mo`, mono:false },
-                ].map(row=>{ const Icon=row.icon; return (
-                  <div key={row.l} style={{ display:'flex',alignItems:'center',gap:7,padding:'6px 9px',borderRadius:8,background:'var(--bg-alt)' }}>
-                    <Icon size={11} color="var(--text-muted)" style={{ flexShrink:0 }}/>
-                    <span style={{ fontSize:11,color:'var(--text-muted)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{row.l}</span>
-                    <span style={{ fontSize:11.5,color:'var(--text)',fontWeight:600,fontFamily:row.mono?'monospace':'Poppins,sans-serif',maxWidth:130,wordBreak:'break-all',textAlign:'right' }}>{row.v}</span>
-                  </div>
-                )})}
-              </div>
-
-              {/* Right column — personal info */}
-              <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
-                <div style={{ fontSize:9.5, fontWeight:800, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5, paddingLeft:4 }}>Personal</div>
-                {[
-                  {icon:Phone,     l:'Phone',         v:emp.phone||'—',                 mono:false },
-                  {icon:CreditCard,l:'Emirates ID',   v:emp.emirates_id||'—',           mono:false },
-                  {icon:User,      l:'Nationality',   v:emp.nationality||'—',           mono:false },
-                  {icon:Calendar,  l:'Date of Birth', v:emp.dob?.slice(0,10)||'—',      mono:false },
-                  {icon:User,      l:'Gender',        v:emp.gender||'—',                mono:false },
-                  {icon:User,      l:'Marital Status',v:emp.marital_status||'—',        mono:false },
-                ].map(row=>{ const Icon=row.icon; return (
-                  <div key={row.l} style={{ display:'flex',alignItems:'center',gap:7,padding:'6px 9px',borderRadius:8,background:'var(--bg-alt)' }}>
-                    <Icon size={11} color="var(--text-muted)" style={{ flexShrink:0 }}/>
-                    <span style={{ fontSize:11,color:'var(--text-muted)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{row.l}</span>
-                    <span style={{ fontSize:11.5,color:'var(--text)',fontWeight:600,fontFamily:row.mono?'monospace':'Poppins,sans-serif',maxWidth:130,wordBreak:'break-all',textAlign:'right' }}>{row.v}</span>
-                  </div>
-                )})}
-              </div>
-            </div>
-
-            {/* Full-width extra fields (shown only when filled) */}
-            {(emp.passport_no||emp.uid_number||emp.visa_file_no||emp.email_id||emp.father_family_name||emp.emirates_issuing_visa||emp.residential_location||(emp.beneficiary_first_name||emp.beneficiary_last_name)) && (
-              <div style={{ display:'flex',flexDirection:'column',gap:1,marginBottom:12 }}>
-                <div style={{ fontSize:9.5,fontWeight:800,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:5,paddingLeft:4 }}>Documents & Additional</div>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1 }}>
-                  {[
-                    ...(emp.passport_no          ?[{icon:CreditCard,l:'Passport No',         v:emp.passport_no,                 mono:true }]:[]),
-                    ...(emp.uid_number           ?[{icon:CreditCard,l:'UID Number',           v:emp.uid_number,                  mono:true }]:[]),
-                    ...(emp.visa_file_no         ?[{icon:CreditCard,l:'Visa File No',         v:emp.visa_file_no,                mono:true }]:[]),
-                    ...(emp.email_id             ?[{icon:User,      l:'Email',                v:emp.email_id,                    mono:false}]:[]),
-                    ...(emp.father_family_name   ?[{icon:User,      l:'Father/Family Name',   v:emp.father_family_name,          mono:false}]:[]),
-                    ...(emp.emirates_issuing_visa?[{icon:User,      l:'Emirates Issuing Visa',v:emp.emirates_issuing_visa,       mono:false}]:[]),
-                    ...(emp.residential_location ?[{icon:User,      l:'Residential',          v:emp.residential_location,        mono:false}]:[]),
-                    ...((emp.beneficiary_first_name||emp.beneficiary_last_name)?[{icon:User,  l:'Beneficiary',v:[emp.beneficiary_first_name,emp.beneficiary_middle_name,emp.beneficiary_last_name].filter(Boolean).join(' '),mono:false}]:[]),
-                  ].map(row=>{ const Icon=row.icon; return (
-                    <div key={row.l} style={{ display:'flex',alignItems:'center',gap:7,padding:'6px 9px',borderRadius:8,background:'var(--bg-alt)' }}>
-                      <Icon size={11} color="var(--text-muted)" style={{ flexShrink:0 }}/>
-                      <span style={{ fontSize:11,color:'var(--text-muted)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{row.l}</span>
-                      <span style={{ fontSize:11.5,color:'var(--text)',fontWeight:600,fontFamily:row.mono?'monospace':'Poppins,sans-serif',maxWidth:130,wordBreak:'break-all',textAlign:'right' }}>{row.v}</span>
-                    </div>
-                  )})}
-                </div>
-              </div>
-            )}
-
-            <div style={{ background:'var(--purple-bg)',border:'1px solid var(--purple-border)',borderRadius:10,padding:'9px 12px',marginBottom:10 }}>
-              <div style={{ fontSize:10,fontWeight:700,color:'#7C3AED',letterSpacing:'0.07em',textTransform:'uppercase',marginBottom:4 }}>Salary Formula</div>
-              <div style={{ fontSize:11.5,color:'var(--text-sub)',fontWeight:500 }}>
-                {emp.project_type==='cret' ? `AED ${emp.salary||0} + shipments × ${emp.per_shipment_rate||0.5}` : `AED ${emp.salary||0} + hrs × ${emp.hourly_rate||3.85} + ${emp.performance_bonus||100}`}
-              </div>
-            </div>
-
-            <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6,marginBottom:12 }}>
-              {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].map(([l,d])=>{
-                const info=expiry(d)
+            {/* ── Section helper ── */}
+            {(() => {
+              function SectionCard({ title, accentColor='var(--gold)', children }) {
                 return (
-                  <div key={l} style={{ textAlign:'center',padding:'8px 4px',borderRadius:9,background:info?.bg||'var(--bg-alt)',border:`1px solid ${info?.bc||'var(--border)'}` }}>
-                    <div style={{ fontSize:10,fontWeight:700,color:info?.c||'var(--text-muted)',marginBottom:2 }}>{l}</div>
-                    <div style={{ fontSize:10,color:info?.c||'var(--text-muted)',fontWeight:600 }}>{info?.label||'N/A'}</div>
+                  <div style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:14, overflow:'hidden', marginBottom:12 }}>
+                    <div style={{ padding:'9px 14px', borderBottom:'1px solid var(--border)', background:'var(--card)', display:'flex', alignItems:'center', gap:8 }}>
+                      <div style={{ width:3, height:14, borderRadius:2, background:accentColor, flexShrink:0 }}/>
+                      <span style={{ fontSize:10.5, fontWeight:800, color:'var(--text-sub)', textTransform:'uppercase', letterSpacing:'0.07em' }}>{title}</span>
+                    </div>
+                    <div style={{ padding:'4px 0' }}>{children}</div>
                   </div>
                 )
-              })}
-            </div>
+              }
+              function FieldRow({ icon:Icon, label, value, mono=false, last=false }) {
+                return (
+                  <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 14px', borderBottom:last?'none':'1px solid var(--border)' }}>
+                    <div style={{ width:26, height:26, borderRadius:8, background:'var(--card)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      <Icon size={12} color="var(--text-muted)"/>
+                    </div>
+                    <span style={{ fontSize:12, color:'var(--text-muted)', flex:1, minWidth:0 }}>{label}</span>
+                    <span style={{ fontSize:12.5, color: value==='—'?'var(--text-muted)':'var(--text)', fontWeight: value==='—'?400:600, fontFamily:mono?'monospace':'Poppins,sans-serif', maxWidth:220, wordBreak:'break-all', textAlign:'right' }}>{value}</span>
+                  </div>
+                )
+              }
 
-            {userRole !== 'accountant' && (
-              <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:8 }}>
-                <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center',borderRadius:10 }}>
-                  <Pencil size={13}/> Edit
-                </button>
-                <button onClick={onDelete} style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'9px',borderRadius:10,background:'var(--red-bg)',border:'1px solid var(--red-border)',color:'var(--red)',fontWeight:600,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
-                  <Trash2 size={13}/> Delete
-                </button>
-              </div>
-            )}
+              const workRows = [
+                {icon:User,      l:'Employee ID',  v:emp.id,                                             mono:true  },
+                {icon:Building2, l:'Amazon ID',    v:emp.amazon_id||'—',                                 mono:true  },
+                {icon:Users,     l:'Sub Group',    v:emp.sub_group_name||'—',                            mono:false },
+                {icon:Building2, l:'Work Location',v:emp.work_location||'—',                            mono:false },
+                {icon:User,      l:'Residential',  v:emp.residential_location||'—',                     mono:false },
+                {icon:Shield,    l:'Salary',       v:`AED ${Number(emp.salary||0).toLocaleString()} /mo`,mono:false },
+              ]
+              const personalRows = [
+                {icon:Phone,     l:'Phone',          v:emp.phone||'—',               mono:false },
+                {icon:CreditCard,l:'Emirates ID',    v:emp.emirates_id||'—',         mono:false },
+                {icon:User,      l:'Nationality',    v:emp.nationality||'—',         mono:false },
+                {icon:Calendar,  l:'Date of Birth',  v:emp.dob?.slice(0,10)||'—',    mono:false },
+                {icon:User,      l:'Gender',         v:emp.gender||'—',              mono:false },
+                {icon:User,      l:'Marital Status', v:emp.marital_status||'—',      mono:false },
+                {icon:User,      l:'Father/Family',  v:emp.father_family_name||'—',  mono:false },
+              ]
+              const docRows = [
+                ...(emp.passport_no          ?[{icon:CreditCard,l:'Passport No',          v:emp.passport_no,         mono:true }]:[]),
+                ...(emp.uid_number           ?[{icon:CreditCard,l:'UID Number',            v:emp.uid_number,          mono:true }]:[]),
+                ...(emp.visa_file_no         ?[{icon:CreditCard,l:'Visa File No',          v:emp.visa_file_no,        mono:true }]:[]),
+                ...(emp.email_id             ?[{icon:User,      l:'Email',                 v:emp.email_id,            mono:false}]:[]),
+                ...(emp.emirates_issuing_visa?[{icon:User,      l:'Emirates Issuing Visa', v:emp.emirates_issuing_visa,mono:false}]:[]),
+                ...((emp.beneficiary_first_name||emp.beneficiary_last_name)?[{icon:User,l:'Beneficiary',v:[emp.beneficiary_first_name,emp.beneficiary_middle_name,emp.beneficiary_last_name].filter(Boolean).join(' '),mono:false}]:[]),
+              ]
+
+              return (
+                <>
+                  {/* Expiry strip */}
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:12 }}>
+                    {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].map(([l,d])=>{
+                      const info=expiry(d)
+                      return (
+                        <div key={l} style={{ textAlign:'center', padding:'10px 8px', borderRadius:12, background:info?.bg||'var(--bg-alt)', border:`1px solid ${info?.bc||'var(--border)'}` }}>
+                          <div style={{ fontSize:10, fontWeight:800, color:info?.c||'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>{l}</div>
+                          <div style={{ fontSize:12, color:info?.c||'var(--text-muted)', fontWeight:700 }}>{info?.label||'N/A'}</div>
+                          {d && <div style={{ fontSize:9.5, color:info?.c||'var(--text-muted)', opacity:0.7, marginTop:2 }}>{d.slice(0,10)}</div>}
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Two columns for work + personal */}
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:0 }}>
+                    <SectionCard title="Work Info" accentColor={sc}>
+                      {workRows.map((r,i)=><FieldRow key={r.l} icon={r.icon} label={r.l} value={r.v} mono={r.mono} last={i===workRows.length-1}/>)}
+                    </SectionCard>
+                    <SectionCard title="Personal" accentColor="#10B981">
+                      {personalRows.map((r,i)=><FieldRow key={r.l} icon={r.icon} label={r.l} value={r.v} mono={r.mono} last={i===personalRows.length-1}/>)}
+                    </SectionCard>
+                  </div>
+
+                  {/* Documents — only if any filled */}
+                  {docRows.length > 0 && (
+                    <SectionCard title="Documents & Additional" accentColor="#2563EB">
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr' }}>
+                        {docRows.map((r,i)=><FieldRow key={r.l} icon={r.icon} label={r.l} value={r.v} mono={r.mono} last={i===docRows.length-1}/>)}
+                      </div>
+                    </SectionCard>
+                  )}
+
+                  {/* Salary formula */}
+                  <div style={{ background:'var(--purple-bg)', border:'1px solid var(--purple-border)', borderRadius:12, padding:'11px 14px', marginBottom:12 }}>
+                    <div style={{ fontSize:10, fontWeight:800, color:'#7C3AED', letterSpacing:'0.07em', textTransform:'uppercase', marginBottom:5 }}>Salary Formula</div>
+                    <div style={{ fontSize:13, color:'var(--text)', fontWeight:600 }}>
+                      {emp.project_type==='cret'
+                        ? `AED ${Number(emp.salary||0).toLocaleString()} + shipments × ${emp.per_shipment_rate||0.5}`
+                        : `AED ${Number(emp.salary||0).toLocaleString()} + hrs × ${emp.hourly_rate||3.85} + ${emp.performance_bonus||100} bonus`}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  {userRole !== 'accountant' && (
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                      <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center', borderRadius:12, padding:'11px' }}>
+                        <Pencil size={13}/> Edit Employee
+                      </button>
+                      <button onClick={onDelete} style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:'11px',borderRadius:12,background:'var(--red-bg)',border:'1px solid var(--red-border)',color:'var(--red)',fontWeight:700,fontSize:12.5,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
+                        <Trash2 size={13}/> Delete
+                      </button>
+                    </div>
+                  )}
+                </>
+              )
+            })()}
           </>
         )}
 
