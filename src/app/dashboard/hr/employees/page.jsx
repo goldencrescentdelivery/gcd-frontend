@@ -86,7 +86,7 @@ function CompletionRing({ pct, size=54, stroke=3 }) {
   const r   = (size - stroke) / 2
   const circ = 2 * Math.PI * r
   const dash = (pct / 100) * circ
-  const color = pct === 100 ? '#10B981' : pct >= 60 ? '#F59E0B' : '#E5E7EB'
+  const color = pct === 100 ? '#10B981' : pct >= 50 ? '#F59E0B' : '#EF4444'
   return (
     <svg width={size} height={size} style={{ position:'absolute', top:0, left:0, transform:'rotate(-90deg)', pointerEvents:'none' }}>
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--border)" strokeWidth={stroke}/>
@@ -971,7 +971,7 @@ function EmpCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole }
 
       <div style={{ display:'flex', alignItems:'center', gap:12 }}>
         {/* Avatar */}
-        <div style={{ width:44,height:44,borderRadius:13,background:`linear-gradient(135deg,${sbg},var(--card))`,border:`1.5px solid ${sbc}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:sc,flexShrink:0,position:'relative' }}>
+        <div style={{ width:44,height:44,borderRadius:13,background:`linear-gradient(135deg,${sbg},var(--card))`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:sc,flexShrink:0,position:'relative' }}>
           {emp.name?.slice(0,2).toUpperCase()}
           <CompletionRing pct={profileCompletion(emp)} size={44} stroke={3}/>
           <div style={{ position:'absolute',bottom:-1,right:-1,width:11,height:11,borderRadius:'50%',background:s.dot,border:'2px solid var(--card)' }}/>
