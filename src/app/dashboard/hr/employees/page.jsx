@@ -145,8 +145,21 @@ function EmpModal({ emp, onSave, onClose, mode }) {
     if (mode==='add'&&!form.id) return setErr('Employee ID required')
     setSaving(true); setErr(null)
     try {
-      const data = {...form, salary:Number(form.salary)||0, hourly_rate:Number(form.hourly_rate)||3.85,
-        per_shipment_rate:Number(form.per_shipment_rate)||0.5, performance_bonus:Number(form.performance_bonus)||100}
+      const safeDate = v => (v && /^\d{4}-\d{2}-\d{2}$/.test(v)) ? v : null
+      const data = {
+        ...form,
+        salary:             Number(form.salary)||0,
+        hourly_rate:        Number(form.hourly_rate)||3.85,
+        per_shipment_rate:  Number(form.per_shipment_rate)||0.5,
+        performance_bonus:  Number(form.performance_bonus)||100,
+        annual_leave_balance: Number(form.annual_leave_balance)||30,
+        dob:                safeDate(form.dob),
+        joined:             safeDate(form.joined),
+        visa_expiry:        safeDate(form.visa_expiry),
+        license_expiry:     safeDate(form.license_expiry),
+        iloe_expiry:        safeDate(form.iloe_expiry),
+        annual_leave_start: safeDate(form.annual_leave_start),
+      }
       const res = mode==='add' ? await empApi.create(data) : await empApi.update(form.id,data)
       if (mode==='add'&&form.login_email&&form.login_password) {
         const empId = res?.employee?.id||form.id
