@@ -105,7 +105,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
             if (item.type === 'section') {
               if (collapsed) return null
               return (
-                <div key={`section-${item.label}`} style={{ fontSize:9, fontWeight:700, color:'var(--text-muted)', letterSpacing:'0.1em', textTransform:'uppercase', padding:'14px 14px 4px', marginTop:2, opacity:0.7 }}>
+                <div key={`section-${item.label}`} style={{ fontSize:9, fontWeight:700, color:'var(--text-muted)', letterSpacing:'0.1em', textTransform:'uppercase', padding:'14px 14px 4px', marginTop:2 }}>
                   {item.label}
                 </div>
               )
