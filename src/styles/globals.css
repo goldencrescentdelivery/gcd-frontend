@@ -1,194 +1,506 @@
-/* ── Fonts (loaded via <link> in layout.jsx) ─────────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   GOLDEN CRESCENT OPERATIONS — Design System
+   Premium SaaS upgrade: layered shadows, crisp type, refined states
+   ───────────────────────────────────────────────────────────────── */
+
+/* ── Reset ───────────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { overflow-x:hidden; height:100%; }
-body { font-family:'Poppins',-apple-system,sans-serif; background:#F9FAFB; color:#111827; min-height:100vh; }
+
+/*
+ * Font smoothing — the single cheapest quality upgrade.
+ * Without this, Poppins renders with sub-pixel hinting that makes
+ * it look slightly blurry and heavy at smaller sizes.
+ * With antialiased rendering it looks crisp and premium.
+ */
+body {
+  font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
 #__next { height:100%; }
-* { font-family:'Poppins',-apple-system,sans-serif !important; }
-button { cursor:pointer; border:none; background:none; font-family:inherit; }
+/* Override must be specific enough without blanket !important on all elements */
+button, input, select, textarea, a {
+  font-family: 'Poppins', -apple-system, sans-serif;
+}
+button { cursor:pointer; border:none; background:none; }
 a { text-decoration:none; color:inherit; }
-input, select, textarea { font-family:inherit; }
 
 /* ── Scrollbar ───────────────────────────────────────────────── */
 ::-webkit-scrollbar { width:4px; height:4px; }
 ::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:#D1D5DB; border-radius:10px; }
+::-webkit-scrollbar-thumb { background:var(--border-med); border-radius:10px; }
+::-webkit-scrollbar-thumb:hover { background:var(--text-muted); }
 
-/* ── CSS Variables ───────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   DESIGN TOKENS
+   ─────────────────────────────────────────────────────────────
+
+   BEFORE: flat, clinical grays. Shadow: 0 1px 4px rgba(0,0,0,0.06) — too faint.
+   AFTER:  slightly warm neutrals (brand consistency) + layered shadow system.
+
+   Layered shadows are used by Linear, Stripe, Vercel. A single-layer
+   shadow looks flat. Two layers — one for ambient, one for direct —
+   gives the card genuine depth without looking heavy.
+   ───────────────────────────────────────────────────────────── */
 :root {
+  /* Brand */
   --gold:        #B8860B;
   --gold-light:  #D4A017;
   --gold-pale:   #FFFBEB;
-  --gold-border: #FDE68A;
-  --bg:          #F9FAFB;
-  --bg-alt:      #F3F4F6;
+  --gold-border: #F0D878;
+
+  /* Backgrounds — warm whites, not cold grays */
+  --bg:          #F8F7F4;   /* BEFORE: #F9FAFB (cold) → warm near-white */
+  --bg-alt:      #EFEDE8;   /* BEFORE: #F3F4F6 → warm hover fill */
+  --bg-hover:    rgba(0,0,0,0.03);
   --card:        #FFFFFF;
-  --border:      #F0F0EE;
-  --border-med:  #E5E7EB;
-  --text:        #111827;
-  --text-sub:    #6B7280;
-  --text-muted:  #9CA3AF;
-  --shadow:      0 1px 4px rgba(0,0,0,0.06);
-  --shadow-md:   0 4px 20px rgba(0,0,0,0.08);
-  --shadow-lg:   0 8px 32px rgba(0,0,0,0.10);
-  --radius:      14px;
-  --transition:  0.2s ease;
+
+  /* Borders — more visible without being heavy */
+  --border:      #E8E5DF;   /* BEFORE: #F0F0EE (too faint) → visible but warm */
+  --border-med:  #D4D0C8;   /* BEFORE: #E5E7EB → for inputs */
+  --border-strong: #C0BBB0; /* for active/focused states */
+
+  /* Text — true black hierarchy */
+  --text:        #0F0E0C;   /* BEFORE: #111827 (blue-tinted) → warm near-black */
+  --text-sub:    #5C5650;   /* BEFORE: #6B7280 → warm medium */
+  --text-muted:  #9C958C;   /* BEFORE: #9CA3AF → warm muted */
+
+  /*
+   * Shadow System — BEFORE: single-layer flat shadows
+   * AFTER: layered (ambient + direct) like Linear/Stripe
+   *
+   * --shadow:    everyday card
+   * --shadow-md: hover lift / floating elements
+   * --shadow-lg: modals, popups
+   * --shadow-xl: full-screen overlays
+   *
+   * The second layer (direct light) is always 60% opacity of the first.
+   * Using warm rgba(15,10,3,…) keeps shadows on-brand, not blue-gray.
+   */
+  --shadow:      0 1px 3px rgba(15,10,3,0.07), 0 1px 2px rgba(15,10,3,0.04);
+  --shadow-md:   0 4px 12px rgba(15,10,3,0.08), 0 2px 4px rgba(15,10,3,0.05);
+  --shadow-lg:   0 16px 32px rgba(15,10,3,0.10), 0 4px 8px rgba(15,10,3,0.05);
+  --shadow-xl:   0 32px 64px rgba(15,10,3,0.12), 0 8px 16px rgba(15,10,3,0.06);
+  /* Gold-tinted shadow for primary CTAs */
+  --shadow-gold: 0 2px 8px rgba(184,134,11,0.22), 0 1px 3px rgba(184,134,11,0.12);
+  --shadow-gold-lg: 0 8px 24px rgba(184,134,11,0.28), 0 4px 8px rgba(184,134,11,0.14);
+
+  /* Border radius — consistent scale */
+  --radius-sm:   8px;
+  --radius:      12px;   /* BEFORE: 14px → tighter, more Linear-like */
+  --radius-md:   16px;
+  --radius-lg:   20px;
+
+  /* Semantic colors — unchanged (they work) */
   --green:  #10B981; --green-bg:  #F0FDF4; --green-border: #A7F3D0;
   --red:    #EF4444; --red-bg:    #FEF2F2; --red-border:   #FECACA;
   --amber:  #F59E0B; --amber-bg:  #FFFBEB; --amber-border: #FDE68A;
   --blue:   #2563EB; --blue-bg:   #EFF6FF; --blue-border:  #BFDBFE;
   --purple: #7C3AED; --purple-bg: #F5F3FF; --purple-border:#DDD6FE;
-  --surface: rgba(255,255,255,0.62);
-  --border-glass: rgba(255,255,255,0.7);
-  --shadow-glass: 0 4px 32px rgba(0,0,0,0.07);
+
+  /* Glass (used in payroll hero, etc.) */
+  --surface:       rgba(255,255,255,0.65);
+  --border-glass:  rgba(255,255,255,0.72);
+  --shadow-glass:  0 4px 24px rgba(15,10,3,0.07);
+
+  /* Timing — deliberate, not random */
+  --t-fast:   120ms cubic-bezier(0.2,0,0,1);   /* micro: hover fills */
+  --t-base:   200ms cubic-bezier(0.2,0,0,1);   /* base: most transitions */
+  --t-slow:   300ms cubic-bezier(0.2,0,0,1);   /* slow: panels, modals */
+  --t-spring: 400ms cubic-bezier(0.16,1,0.3,1); /* spring: entrances */
 }
 
 /* ── Animations ─────────────────────────────────────────────── */
-@keyframes fadeIn  { from{opacity:0}               to{opacity:1} }
-@keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-@keyframes spin    { to{transform:rotate(360deg)} }
-@keyframes shimmer { 0%{background-position:-400% 0} 100%{background-position:400% 0} }
-@keyframes fadeUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-@keyframes up      { from{opacity:0;transform:translateY(8px)}  to{opacity:1;transform:translateY(0)} }
-@keyframes pulse-dot{ 0%,100%{opacity:1} 50%{opacity:0.4} }
-/* logoPulse — used by the loading spinner logo in dashboard/layout.jsx */
-@keyframes logoPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.75;transform:scale(1.05)} }
-/* slideInBottom — used by .emp-detail-panel mobile bottom sheet */
+@keyframes fadeIn      { from{opacity:0}                                     to{opacity:1} }
+@keyframes fadeUp      { from{opacity:0;transform:translateY(12px)}          to{opacity:1;transform:translateY(0)} }
+@keyframes slideUp     { from{opacity:0;transform:translateY(8px)}           to{opacity:1;transform:translateY(0)} }
+@keyframes up          { from{opacity:0;transform:translateY(6px)}           to{opacity:1;transform:translateY(0)} }
+@keyframes spin        { to{transform:rotate(360deg)} }
+@keyframes shimmer     { 0%{background-position:-400% 0} 100%{background-position:400% 0} }
+@keyframes countUp     { from{opacity:0;transform:scale(0.88) translateY(4px)} to{opacity:1;transform:scale(1) translateY(0)} }
+@keyframes pulse-dot   { 0%,100%{opacity:1} 50%{opacity:0.35} }
+@keyframes logoPulse   { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.72;transform:scale(1.04)} }
 @keyframes slideInBottom { from{transform:translateY(100%)} to{transform:translateY(0)} }
+@keyframes popIn       { from{opacity:0;transform:scale(0.94)} to{opacity:1;transform:scale(1)} }
 
 /* ── Dashboard Shell ─────────────────────────────────────────── */
 .dashboard-shell { display:flex; height:100vh; overflow:hidden; background:var(--bg); }
 
-/* ── Sidebar ─────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   SIDEBAR
+   BEFORE: active item = solid amber background block (heavy/filled).
+   AFTER:  gradient from subtle gold left→transparent + inset left
+           shadow indicator. This is the Linear/Vercel approach —
+           the "pill" suggests position without screaming.
+   ───────────────────────────────────────────────────────────── */
 .sidebar {
-  width:240px; min-width:240px; height:100vh;
-  background:var(--card); border-right:1px solid var(--border);
-  display:flex; flex-direction:column;
-  overflow-y:auto; overflow-x:hidden;
-  transition:width 0.2s ease, min-width 0.2s ease, transform 0.3s ease;
-  z-index:100; flex-shrink:0;
+  width: 232px; min-width: 232px; height: 100vh;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow-y: auto; overflow-x: hidden;
+  transition: width var(--t-slow), min-width var(--t-slow), transform var(--t-slow);
+  z-index: 100; flex-shrink: 0;
 }
-.sidebar.collapsed { width:64px; min-width:64px; }
-.sidebar-logo { padding:18px 16px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
-.sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); z-index:99; }
+.sidebar.collapsed { width:60px; min-width:60px; }
+.sidebar-logo {
+  padding: 16px 14px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.36);
+  backdrop-filter: blur(6px) saturate(1.4);
+  z-index: 99;
+}
+
+/* ── Nav items ───────────────────────────────────────────────── */
+/*
+ * BEFORE: .nav-item.active { background:var(--amber-bg); color:var(--gold); font-weight:700; }
+ *   → Heavy filled block. Every active item screams.
+ *
+ * AFTER: Gradient (strong left → transparent right) + inset shadow acts as
+ *   a left-edge accent. The gradient draws the eye to the left edge where
+ *   the indicator is, then fades out so the rest of the sidebar stays clean.
+ *   box-shadow: inset 2.5px 0 0 — this follows border-radius perfectly.
+ */
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 11px;
+  border-radius: var(--radius-sm);
+  margin: 1px 7px;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-sub);
+  transition: background var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+  text-decoration: none; white-space: nowrap; overflow: hidden; cursor: pointer;
+  position: relative;
+}
+.nav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+.nav-item.active {
+  /* Gradient: 9% gold at left → 3% at right — creates implied left border feeling */
+  background: linear-gradient(90deg, rgba(184,134,11,0.09) 0%, rgba(184,134,11,0.025) 100%);
+  color: #7A5800;           /* darker gold — better readability than pure #B8860B */
+  font-weight: 600;
+  /* Inset shadow = left accent indicator, follows border-radius automatically */
+  box-shadow: inset 2.5px 0 0 rgba(184,134,11,0.75);
+}
+.nav-item.active:hover {
+  background: linear-gradient(90deg, rgba(184,134,11,0.13) 0%, rgba(184,134,11,0.04) 100%);
+}
+
+.nav-label { transition: opacity var(--t-base), max-width var(--t-base); }
+.sidebar.collapsed .nav-label { opacity:0; max-width:0; overflow:hidden; }
+.sidebar.collapsed .nav-item  { justify-content:center; padding:9px; }
+.sidebar.collapsed .nav-item.active { box-shadow:none; background:rgba(184,134,11,0.09); }
+
+/* Section labels — BEFORE: 9px, 0.7 opacity (too faint to read)
+   AFTER: 9px but full opacity with a lighter dedicated color */
+.nav-section-label {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--text-muted);
+  padding: 16px 14px 5px;
+  white-space: nowrap; overflow: hidden;
+  opacity: 1; /* was 0.7 — use color instead of opacity for predictability */
+}
+.sidebar.collapsed .nav-section-label { opacity:0; }
 
 /* ── Main area ───────────────────────────────────────────────── */
 .main-area { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
 
 /* ── Topbar ──────────────────────────────────────────────────── */
+/*
+ * BEFORE: height 58px, flat white, border only.
+ * AFTER:  56px (tighter), very subtle bottom shadow instead of just border.
+ *   The shadow creates more sense of depth/layering between topbar and content.
+ */
 .topbar {
-  height:58px; min-height:58px; background:var(--card);
-  border-bottom:1px solid var(--border);
-  display:flex; align-items:center; padding:0 20px; gap:12px;
-  z-index:50; flex-shrink:0;
+  height: 56px; min-height: 56px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(15,10,3,0.03); /* reinforces the border subtly */
+  display: flex; align-items: center; padding: 0 20px; gap: 12px;
+  z-index: 50; flex-shrink: 0;
 }
 
 /* ── Page content ────────────────────────────────────────────── */
-.page-content { flex:1; overflow-y:auto; overflow-x:hidden; padding:22px 24px; background:var(--bg); }
-
-/* ── Nav items ───────────────────────────────────────────────── */
-.nav-item {
-  display:flex; align-items:center; gap:10px; padding:8px 12px;
-  border-radius:10px; margin:1px 8px; font-size:13px; font-weight:500;
-  color:var(--text-sub); transition:all 0.15s ease; text-decoration:none;
-  white-space:nowrap; overflow:hidden; cursor:pointer;
+.page-content {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 22px 24px;
+  background: var(--bg);
 }
-.nav-item:hover  { background:var(--bg-alt); color:var(--text); }
-.nav-item.active { background:var(--amber-bg); color:var(--gold); font-weight:700; }
-.nav-label { transition:opacity 0.2s, max-width 0.2s; }
-.sidebar.collapsed .nav-label { opacity:0; max-width:0; overflow:hidden; }
-.sidebar.collapsed .nav-item  { justify-content:center; padding:10px; }
-.nav-section-label {
-  font-size:9.5px; font-weight:700; letter-spacing:0.1em;
-  text-transform:uppercase; color:var(--text-muted);
-  padding:14px 20px 5px; white-space:nowrap; overflow:hidden;
-}
-.sidebar.collapsed .nav-section-label { opacity:0; }
 
-/* ── Cards ───────────────────────────────────────────────────── */
-.card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
-.stat-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; transition:all 0.2s; }
-.stat-card:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+/* ─────────────────────────────────────────────────────────────
+   CARDS
+   BEFORE: border: 1px solid #F0F0EE (barely visible), shadow: flat 4px blur.
+   AFTER:  visible border (warm gray) + layered shadow. Card should feel
+           like a real surface, not a div with a box outline.
+   ───────────────────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  transition: box-shadow var(--t-base), transform var(--t-base);
+}
+.stat-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
 
 /* ── Glass ───────────────────────────────────────────────────── */
 .glass {
-  background:var(--surface);
-  backdrop-filter:blur(20px) saturate(180%);
-  -webkit-backdrop-filter:blur(20px) saturate(180%);
-  border:1px solid var(--border-glass);
-  box-shadow:var(--shadow-glass);
+  background: var(--surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-glass);
 }
 
-/* ── Buttons ─────────────────────────────────────────────────── */
-.btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; border:none; font-family:inherit; }
-.btn-primary { background:linear-gradient(135deg,#B8860B,#D4A017); color:white; box-shadow:0 2px 8px rgba(184,134,11,0.3); }
-.btn-primary:hover { box-shadow:0 4px 16px rgba(184,134,11,0.4); transform:translateY(-1px); }
-.btn-primary:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
-.btn-secondary { background:var(--bg-alt); border:1px solid var(--border-med); color:var(--text-sub); }
-.btn-secondary:hover { color:var(--text); border-color:var(--gold); }
-.btn-ghost { background:none; color:var(--text-sub); border-radius:8px; padding:7px; }
-.btn-ghost:hover { background:var(--bg-alt); }
-.btn-icon { width:34px; height:34px; padding:0; justify-content:center; border-radius:8px; }
+/* ─────────────────────────────────────────────────────────────
+   BUTTONS
+   BEFORE: .btn-primary had a gradient + 0.3 opacity shadow (too subtle).
+   AFTER:  gold shadow uses the new --shadow-gold token. Hover lifts more
+           confidently. Active state pushes in (gives physical press feel).
+   ───────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px; /* pill shape retained */
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: all var(--t-base);
+  border: none; font-family: inherit;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #B8860B 0%, #D4A017 100%);
+  color: white;
+  box-shadow: var(--shadow-gold);
+}
+.btn-primary:hover  { box-shadow:var(--shadow-gold-lg); transform:translateY(-1px); }
+.btn-primary:active { box-shadow:var(--shadow-gold);    transform:translateY(0); }
+.btn-primary:disabled { opacity:0.55; cursor:not-allowed; transform:none; box-shadow:none; }
 
-/* ── Inputs ──────────────────────────────────────────────────── */
-.input { width:100%; padding:9px 12px; border-radius:10px; border:1.5px solid var(--border-med); background:var(--bg); color:var(--text); font-size:13px; outline:none; transition:border-color 0.15s; }
-.input:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,134,11,0.1); }
-.input-label { display:block; font-size:10.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:5px; }
+.btn-secondary {
+  background: var(--card);
+  border: 1px solid var(--border-med);
+  color: var(--text-sub);
+}
+.btn-secondary:hover { color:var(--text); border-color:var(--border-strong); background:var(--bg-alt); }
+.btn-secondary:active { transform:translateY(1px); }
+
+.btn-ghost { background:none; color:var(--text-sub); border-radius:var(--radius-sm); padding:7px; }
+.btn-ghost:hover { background:var(--bg-hover); color:var(--text); }
+.btn-icon { width:32px; height:32px; padding:0; justify-content:center; border-radius:var(--radius-sm); }
+
+/* ─────────────────────────────────────────────────────────────
+   INPUTS
+   BEFORE: border 1.5px #E5E7EB, focus adds gold ring.
+   AFTER:  warmer border, slightly tighter radius, focus ring is more
+           distinct (wider, correct gold opacity).
+   ───────────────────────────────────────────────────────────── */
+.input {
+  width: 100%; padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-med);
+  background: var(--card);
+  color: var(--text); font-size: 13px;
+  outline: none;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(184,134,11,0.12);
+}
+.input::placeholder { color: var(--text-muted); }
+
+.input-label {
+  display: block;
+  font-size: 10.5px; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 5px;
+}
 
 /* ── Badges ──────────────────────────────────────────────────── */
-.badge { display:inline-flex; align-items:center; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.01em;
+}
 .badge-success { color:var(--green); background:var(--green-bg); }
-.badge-warning { color:var(--amber); background:var(--amber-bg); }
+.badge-warning { color:#92700F;      background:var(--amber-bg); } /* darker amber for readability */
 .badge-danger  { color:var(--red);   background:var(--red-bg);   }
 .badge-info    { color:var(--blue);  background:var(--blue-bg);  }
 
-/* ── Modal ───────────────────────────────────────────────────── */
-.modal-overlay { position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px; }
-.modal { background:var(--card); border-radius:18px; width:100%; max-width:480px; padding:24px; box-shadow:var(--shadow-lg); border:1px solid var(--border); max-height:90vh; overflow-y:auto; }
+/* ─────────────────────────────────────────────────────────────
+   MODAL
+   BEFORE: border-radius 18px, flat shadow-lg.
+   AFTER:  radius 16px (more precise), xl shadow + entrance animation.
+           Modals should feel like they drop in, not just appear.
+   ───────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.38);
+  backdrop-filter: blur(6px) saturate(1.4);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.15s ease;
+}
+.modal {
+  background: var(--card);
+  border-radius: var(--radius-md);
+  width: 100%; max-width: 480px;
+  padding: 24px;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border);
+  max-height: 90vh; overflow-y: auto;
+  animation: fadeUp 0.2s cubic-bezier(0.16,1,0.3,1);
+}
 
 /* ── Table ───────────────────────────────────────────────────── */
 .data-table { width:100%; border-collapse:collapse; }
-.data-table thead th { background:var(--bg-alt); padding:9px 12px; text-align:left; font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--border); }
-.data-table tbody td { padding:11px 12px; font-size:13px; color:var(--text); border-bottom:1px solid var(--border); }
+.data-table thead th {
+  background: var(--bg);
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 10.5px; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  border-bottom: 1px solid var(--border);
+}
+.data-table tbody td {
+  padding: 11px 12px;
+  font-size: 13px; color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+.data-table tbody tr {
+  transition: background var(--t-fast);
+}
 .data-table tbody tr:hover td { background:var(--bg-alt); }
 .data-table tbody tr:last-child td { border-bottom:none; }
 
-/* ── Skeleton ────────────────────────────────────────────────── */
-/* .sk and .skeleton are identical — share one rule to avoid duplication */
-.sk, .skeleton { background:linear-gradient(90deg,var(--bg-alt) 25%,var(--border) 50%,var(--bg-alt) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:8px; }
+/* ─────────────────────────────────────────────────────────────
+   SKELETON
+   BEFORE: animation 1.4s — slow, noticeable, feels like loading.
+   AFTER:  1.2s, slightly faster. The warm color matches the background.
+   ───────────────────────────────────────────────────────────── */
+.sk, .skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-alt) 25%,
+    var(--border) 50%,
+    var(--bg-alt) 75%
+  );
+  background-size: 300% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
 
-/* ── Tabs ────────────────────────────────────────────────────── */
-.tabs { display:flex; gap:4px; background:var(--bg-alt); padding:4px; border-radius:12px; border:1px solid var(--border); }
-.tab-btn { padding:7px 16px; border-radius:9px; font-size:12.5px; font-weight:500; color:var(--text-sub); cursor:pointer; border:none; background:none; transition:all 0.15s; font-family:inherit; white-space:nowrap; }
-.tab-btn.active { background:var(--card); color:var(--gold); font-weight:700; box-shadow:var(--shadow); }
+/* ─────────────────────────────────────────────────────────────
+   TABS
+   BEFORE: amber background on active, hard switch.
+   AFTER:  white card with shadow (tab appears to lift off its track).
+           Gold text is the indicator, not a background block.
+   ───────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex; gap: 3px;
+  background: var(--bg-alt);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.tab-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12.5px; font-weight: 500;
+  color: var(--text-sub);
+  cursor: pointer; border: none; background: none;
+  transition: all var(--t-fast);
+  font-family: inherit; white-space: nowrap;
+}
+.tab-btn:hover:not(.active) { color:var(--text); background:rgba(0,0,0,0.04); }
+.tab-btn.active {
+  background: var(--card);
+  color: var(--gold);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15,10,3,0.08), 0 1px 2px rgba(15,10,3,0.04);
+}
 
 /* ── Mobile bottom nav ───────────────────────────────────────── */
-.mobile-bottomnav { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--border); z-index:90; box-shadow:0 -2px 12px rgba(0,0,0,0.06); }
-.mobile-bottomnav a { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:9px 4px 13px; color:var(--text-muted); font-size:10px; font-weight:500; gap:3px; transition:color 0.15s; }
+.mobile-bottomnav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  z-index: 90;
+  box-shadow: 0 -4px 16px rgba(15,10,3,0.06);
+}
+.mobile-bottomnav a {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 9px 4px 13px;
+  color: var(--text-muted);
+  font-size: 10px; font-weight: 500; gap: 3px;
+  transition: color var(--t-fast);
+}
 .mobile-bottomnav a.active { color:var(--gold); font-weight:700; }
 
-/* ── Analytics / grid helpers ────────────────────────────────── */
-.fade-up  { animation:fadeUp  0.45s cubic-bezier(0.16,1,0.3,1) both; }
-.fade-up-1{ animation:fadeUp  0.45s 0.05s cubic-bezier(0.16,1,0.3,1) both; }
-.fade-up-2{ animation:fadeUp  0.45s 0.10s cubic-bezier(0.16,1,0.3,1) both; }
-.kpi-val  { animation:countUp 0.5s  cubic-bezier(0.34,1.56,0.64,1) both; }
-@keyframes countUp { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
+/* ── Animation utility classes ───────────────────────────────── */
+.fade-up   { animation: fadeUp  0.4s cubic-bezier(0.16,1,0.3,1) both; }
+.fade-up-1 { animation: fadeUp  0.4s 0.04s cubic-bezier(0.16,1,0.3,1) both; }
+.fade-up-2 { animation: fadeUp  0.4s 0.08s cubic-bezier(0.16,1,0.3,1) both; }
+.fade-up-3 { animation: fadeUp  0.4s 0.12s cubic-bezier(0.16,1,0.3,1) both; }
+.kpi-val   { animation: countUp 0.45s cubic-bezier(0.16,1,0.3,1) both; }
+.fade      { animation: up 0.25s ease both; }
+.pop-in    { animation: popIn 0.2s cubic-bezier(0.16,1,0.3,1) both; }
 
-.fade { animation:up 0.3s ease both; }
+/* ── Scroll utilities ────────────────────────────────────────── */
 .no-scroll::-webkit-scrollbar { display:none; }
 .no-scroll { scrollbar-width:none; }
 .poc-tabs::-webkit-scrollbar { display:none; }
 
+/* ── Layout helpers ──────────────────────────────────────────── */
 .mob  { display:none !important; }
 .desk { display:grid; }
 .mob.kpi-wrap { display:none !important; }
-
-.two-col-glass  { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.three-col-glass{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
-
-/* ── Misc ────────────────────────────────────────────────────── */
 .hide-mobile { }
-.collapsible-body { overflow:hidden; transition:max-height 0.3s ease; }
+.collapsible-body { overflow:hidden; transition:max-height var(--t-slow); }
 #mobile-menu-btn { display:none; }
+
+.two-col-glass   { display:grid; grid-template-columns:1fr 1fr;       gap:14px; }
+.three-col-glass { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+
+/* ── Overview page grids ─────────────────────────────────────── */
+.four-kpi-grid      { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.exp-emp-grid       { display:grid; grid-template-columns:1.4fr 1fr;     gap:16px; }
+.sim-kpi-grid       { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.quick-actions-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; }
+
+/* ── Employees page ──────────────────────────────────────────── */
+.emp-stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.emp-backdrop   { display:none; }
+.emp-detail-panel { width:272px; flex-shrink:0; }
 
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width:1024px) {
@@ -198,9 +510,33 @@ input, select, textarea { font-family:inherit; }
   .sidebar-overlay { display:block; }
   .page-content { padding:18px 16px 90px; }
   .mobile-bottomnav { display:flex; justify-content:space-around; }
+  .four-kpi-grid    { grid-template-columns:repeat(2,1fr) !important; }
+  .exp-emp-grid     { grid-template-columns:1fr !important; }
+  .quick-actions-grid { grid-template-columns:repeat(4,1fr) !important; }
 }
 @media (max-width:900px) {
   .three-col-glass { grid-template-columns:1fr 1fr !important; }
+}
+@media (max-width:768px) {
+  .emp-backdrop {
+    display: block;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.38);
+    backdrop-filter: blur(6px);
+    z-index: 120;
+    animation: fadeIn 0.18s ease;
+  }
+  .emp-detail-panel {
+    position: fixed; bottom:0; left:0; right:0;
+    width: 100% !important; max-height: 88vh;
+    overflow-y: auto; z-index: 130;
+    border-radius: 20px 20px 0 0;
+    animation: slideInBottom 0.3s cubic-bezier(0.16,1,0.3,1);
+    -webkit-overflow-scrolling: touch;
+  }
+  .emp-detail-panel > div { position:static !important; }
+  .emp-detail-panel > div > div:first-child { border-radius:20px 20px 0 0 !important; }
+  .emp-stats-grid { grid-template-columns:1fr 1fr !important; }
 }
 @media (max-width:640px) {
   .mob       { display:flex !important; }
@@ -209,80 +545,12 @@ input, select, textarea { font-family:inherit; }
   .hide-mobile { display:none !important; }
   .page-content { padding:14px 12px 90px; }
   .modal { padding:18px; }
-  .two-col-glass  { grid-template-columns:1fr !important; }
-  .three-col-glass{ grid-template-columns:1fr !important; }
-}
-
-/* ── Overview page grids ─────────────────────────────────────── */
-.four-kpi-grid    { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-.exp-emp-grid     { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; }
-.sim-kpi-grid     { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-.quick-actions-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; }
-
-@media (max-width:1024px) {
-  .four-kpi-grid    { grid-template-columns:repeat(2,1fr) !important; }
-  .exp-emp-grid     { grid-template-columns:1fr !important; }
-  .quick-actions-grid { grid-template-columns:repeat(4,1fr) !important; }
-}
-@media (max-width:640px) {
-  .four-kpi-grid    { grid-template-columns:1fr 1fr !important; }
-  .sim-kpi-grid     { grid-template-columns:1fr 1fr !important; }
+  .two-col-glass   { grid-template-columns:1fr !important; }
+  .three-col-glass { grid-template-columns:1fr !important; }
+  .four-kpi-grid   { grid-template-columns:1fr 1fr !important; }
+  .sim-kpi-grid    { grid-template-columns:1fr 1fr !important; }
   .quick-actions-grid { grid-template-columns:repeat(3,1fr) !important; }
 }
-
-/* ── Employees page ──────────────────────────────────────────── */
-.emp-stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-
-/* Detail panel — side panel on desktop */
-.emp-backdrop { display:none; }
-
-.emp-detail-panel {
-  width: 272px;
-  flex-shrink: 0;
-}
-
-/* Mobile — full-screen overlay */
-@media (max-width: 768px) {
-  /* Hide backdrop by default, show on mobile when panel open */
-  .emp-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(4px);
-    z-index: 120;
-    animation: fadeIn 0.2s ease;
-  }
-
-  .emp-detail-panel {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100% !important;
-    max-height: 88vh;
-    overflow-y: auto;
-    z-index: 130;
-    border-radius: 20px 20px 0 0;
-    animation: slideInBottom 0.3s cubic-bezier(0.16,1,0.3,1);
-    /* Ensure it scrolls independently */
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Inner sticky becomes static on mobile */
-  .emp-detail-panel > div {
-    position: static !important;
-  }
-
-  /* Round the drawer top on mobile */
-  .emp-detail-panel > div > div:first-child {
-    border-radius: 20px 20px 0 0 !important;
-  }
-
-  /* Stats 2-col on mobile */
-  .emp-stats-grid { grid-template-columns: 1fr 1fr !important; }
-}
-
-@media (max-width: 480px) {
-  .emp-stats-grid { grid-template-columns: 1fr 1fr !important; }
+@media (max-width:480px) {
+  .emp-stats-grid { grid-template-columns:1fr 1fr !important; }
 }

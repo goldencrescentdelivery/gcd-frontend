@@ -92,9 +92,9 @@ export default function Topbar({ onMenuClick }) {
 
       {/* Right side — combined user + sign-out pill */}
       <div style={{ display:'flex', alignItems:'center', gap:0, flexShrink:0, background:'var(--card)', border:'1px solid var(--border)', borderRadius:28, boxShadow:'0 1px 4px rgba(0,0,0,0.06)', overflow:'hidden' }}>
-        {/* Avatar */}
-        <div style={{ width:34, height:34, margin:'4px 0 4px 4px', borderRadius:20, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>
-          {role.e}
+        {/* Avatar — initials, not emoji */}
+        <div style={{ width:34, height:34, margin:'4px 0 4px 4px', borderRadius:20, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, color:'#fff', letterSpacing:'-0.02em', flexShrink:0, userSelect:'none' }}>
+          {user?.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || '--'}
         </div>
         {/* Name + role */}
         <div className="hide-mobile" style={{ padding:'0 10px 0 8px' }}>
