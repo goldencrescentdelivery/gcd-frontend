@@ -947,20 +947,16 @@ export default function AdminsPage() {
         {/* Stats */}
         <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:10 }}>
           {[
-            { l:'Total',    v:total,   c:'var(--text)', bg:'var(--bg-alt)',   bc:'var(--border)',     icon:Shield      },
-            { l:'Active',   v:active,  c:'#10B981',    bg:'#F0FDF4',         bc:'#A7F3D0',           icon:CheckCircle2 },
-            { l:'On Leave', v:onLeave, c:'#F59E0B',    bg:'#FFFBEB',         bc:'#FDE68A',           icon:Calendar     },
-            { l:'Alerts',   v:alerts,  c:'#EF4444',    bg:'var(--red-bg)',   bc:'var(--red-border)', icon:AlertCircle  },
-          ].map(s=>{
-            const Icon=s.icon
-            return (
-              <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:13, padding:'14px 12px', textAlign:'center' }}>
-                <Icon size={20} color={s.c} style={{ margin:'0 auto 8px', display:'block' }}/>
-                <div style={{ fontWeight:900, fontSize:22, color:s.c, letterSpacing:'-0.04em', lineHeight:1 }}>{s.v}</div>
-                <div style={{ fontSize:10.5, color:s.c, fontWeight:600, marginTop:4, opacity:0.8 }}>{s.l}</div>
-              </div>
-            )
-          })}
+            { l:'Total',    v:total,   c:'var(--text)', bg:'var(--bg-alt)',   bc:'var(--border)'     },
+            { l:'Active',   v:active,  c:'#10B981',    bg:'#F0FDF4',         bc:'#A7F3D0'           },
+            { l:'On Leave', v:onLeave, c:'#F59E0B',    bg:'#FFFBEB',         bc:'#FDE68A'           },
+            { l:'Alerts',   v:alerts,  c:'#EF4444',    bg:'var(--red-bg)',   bc:'var(--red-border)' },
+          ].map(s=>(
+            <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:13, padding:'14px 12px', textAlign:'center' }}>
+              <div style={{ fontWeight:900, fontSize:22, color:s.c, letterSpacing:'-0.04em', lineHeight:1 }}>{s.v}</div>
+              <div style={{ fontSize:10.5, color:s.c, fontWeight:600, marginTop:4, opacity:0.8 }}>{s.l}</div>
+            </div>
+          ))}
         </div>
 
         {/* Search */}
