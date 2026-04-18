@@ -50,6 +50,10 @@ input, select, textarea { font-family:inherit; }
 @keyframes fadeUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 @keyframes up      { from{opacity:0;transform:translateY(8px)}  to{opacity:1;transform:translateY(0)} }
 @keyframes pulse-dot{ 0%,100%{opacity:1} 50%{opacity:0.4} }
+/* logoPulse — used by the loading spinner logo in dashboard/layout.jsx */
+@keyframes logoPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.75;transform:scale(1.05)} }
+/* slideInBottom — used by .emp-detail-panel mobile bottom sheet */
+@keyframes slideInBottom { from{transform:translateY(100%)} to{transform:translateY(0)} }
 
 /* ── Dashboard Shell ─────────────────────────────────────────── */
 .dashboard-shell { display:flex; height:100vh; overflow:hidden; background:var(--bg); }
@@ -149,8 +153,8 @@ input, select, textarea { font-family:inherit; }
 .data-table tbody tr:last-child td { border-bottom:none; }
 
 /* ── Skeleton ────────────────────────────────────────────────── */
-.sk { background:linear-gradient(90deg,var(--bg-alt) 25%,var(--border) 50%,var(--bg-alt) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:8px; }
-.skeleton { background:linear-gradient(90deg,var(--bg-alt) 25%,var(--border) 50%,var(--bg-alt) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:8px; }
+/* .sk and .skeleton are identical — share one rule to avoid duplication */
+.sk, .skeleton { background:linear-gradient(90deg,var(--bg-alt) 25%,var(--border) 50%,var(--bg-alt) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:8px; }
 
 /* ── Tabs ────────────────────────────────────────────────────── */
 .tabs { display:flex; gap:4px; background:var(--bg-alt); padding:4px; border-radius:12px; border:1px solid var(--border); }

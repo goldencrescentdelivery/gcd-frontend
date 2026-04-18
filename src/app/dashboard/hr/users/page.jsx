@@ -2,8 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Plus, X, Pencil, Trash2, Eye, EyeOff, RefreshCw, Search, Shield, User, Mail, Lock, Building2, CheckCircle, XCircle, KeyRound, AlertCircle } from 'lucide-react'
 
-const _raw = process.env.NEXT_PUBLIC_API_URL
-const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
+import { API } from '@/lib/api'
 
 const ALL_ROLES = ['admin','general_manager','hr','accountant','poc','driver']
 

@@ -10,8 +10,7 @@ import {
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
-const _raw = process.env.NEXT_PUBLIC_API_URL
-const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
+import { API } from '@/lib/api'
 
 const CATEGORIES = [
   { v:'Parking',            c:'#F59E0B', I:ParkingCircle },

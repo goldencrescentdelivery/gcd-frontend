@@ -4,8 +4,7 @@ import { empApi } from '@/lib/api'
 import { differenceInDays, parseISO } from 'date-fns'
 import { AlertTriangle, X, ExternalLink, Trash2, Plus, Search, RefreshCw, ChevronRight } from 'lucide-react'
 
-const _raw = process.env.NEXT_PUBLIC_API_URL
-const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
+import { API } from '@/lib/api'
 
 // Google Drive picker config — set your Client ID here
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''

@@ -1,7 +1,12 @@
 // API base URL — reads from env or falls back to localhost
-// Ensure the URL always has a protocol (Vercel env vars sometimes omit https://)
+// Ensure the URL always has a protocol (Railway env vars sometimes omit https://)
 const _raw = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
 const BASE = _raw.startsWith('http') ? _raw : `https://${_raw}`
+
+// Named export used by page components that do raw fetch() calls.
+// Previously every page duplicated the same two-line URL derivation; now
+// they import this one export and the logic lives in exactly one place.
+export const API = BASE
 
 function getToken() {
   if (typeof window === 'undefined') return null

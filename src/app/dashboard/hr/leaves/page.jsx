@@ -4,8 +4,7 @@ import { leaveApi, empApi } from '@/lib/api'
 import { Check, X, Clock, Plus, Calendar, ChevronRight, AlertCircle } from 'lucide-react'
 
 const TYPE_COLORS = { Annual:'#B8860B', Sick:'#1D6FA4', Emergency:'#C0392B', Unpaid:'#6B5D4A', Other:'#A89880' }
-const _raw = process.env.NEXT_PUBLIC_API_URL
-const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
+import { API } from '@/lib/api'
 function hdr() { return { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
 
 function StageChip({ label, status }) {

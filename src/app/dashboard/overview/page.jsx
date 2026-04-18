@@ -8,8 +8,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-const _raw = process.env.NEXT_PUBLIC_API_URL
-const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
+import { API } from '@/lib/api'
 const SC  = { DDB1:'#F59E0B', DXE6:'#38BDF8' }
 function hdr() { return { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
 function fmt(n) { return Number(n||0).toLocaleString() }
@@ -89,12 +88,18 @@ export default function OverviewPage() {
     setLoading(true)
     const month = new Date().toISOString().slice(0,7)
     try {
-      const [sumData, chartData, expData, simData] = await Promise.all([
+      // Promise.allSettled lets individual endpoint failures be handled
+      // gracefully — a single slow or down API won't blank the whole page.
+      const [sumRes, chartRes, expRes, simRes] = await Promise.allSettled([
         fetch(`${API}/api/analytics/summary`,                     {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/analytics/deliveries-chart?months=6`,   {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/expenses?month=${month}`,               {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/sims/stats`,                            {headers:hdr()}).then(r=>r.json()),
       ])
+      const sumData   = sumRes.status   === 'fulfilled' ? sumRes.value   : {}
+      const chartData = chartRes.status === 'fulfilled' ? chartRes.value : {}
+      const expData   = expRes.status   === 'fulfilled' ? expRes.value   : {}
+      const simData   = simRes.status   === 'fulfilled' ? simRes.value   : {}
       setSummary(sumData)
       setChart(chartData.chart || [])
       setExpenses(expData.expenses || [])

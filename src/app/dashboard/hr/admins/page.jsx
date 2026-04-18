@@ -8,8 +8,7 @@ import {
 } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
 
-const _raw = process.env.NEXT_PUBLIC_API_URL
-const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
+import { API } from '@/lib/api'
 const STATIONS = ['DDB1','DXE6']
 
 const ADMIN_ROLE_OPTIONS = ['Manager','HR','Accountant','POC','Admin','Operations Manager','Fleet Manager','POC Supervisor','Finance Manager']

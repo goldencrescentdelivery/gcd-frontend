@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { empApi } from '@/lib/api'
+import { empApi, API } from '@/lib/api'
 import { useSocket } from '@/lib/socket'
 import { Search, Plus, X, Pencil, Trash2, ChevronRight, Shield, Clock, Phone, Globe, Star, User, Building2, CreditCard, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
@@ -74,7 +74,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
       const res  = mode === 'add' ? await empApi.create(data) : await empApi.update(form.id, data)
       if (mode === 'add' && form.login_email && form.login_password) {
         const empId = res?.employee?.id || form.id
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/employees/${empId}/create-user`, {
+        await fetch(`${API}/api/employees/${empId}/create-user`, {
           method:'POST',
           headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` },
           body: JSON.stringify({ email: form.login_email, password: form.login_password })

@@ -2,8 +2,7 @@
 import React, { useState } from 'react'
 import { HardDrive, Download, RefreshCw, CheckCircle, AlertCircle, Database } from 'lucide-react'
 
-const _raw = process.env.NEXT_PUBLIC_API_URL
-const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
+import { API } from '@/lib/api'
 function hdr() { return { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
 
 export default function BackupPage() {

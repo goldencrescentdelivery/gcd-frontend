@@ -3,8 +3,7 @@ import React, { useState } from 'react'
 import { useAuth } from '@/lib/auth'
 import { Lock, Eye, EyeOff, CheckCircle, ShieldCheck, KeyRound } from 'lucide-react'
 
-const _raw = process.env.NEXT_PUBLIC_API_URL
-const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
+import { API } from '@/lib/api'
 
 const ROLE_LABELS = {
   admin: 'Admin', general_manager: 'Manager', hr: 'HR',

@@ -11,8 +11,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts'
 
-const _raw = process.env.NEXT_PUBLIC_API_URL
-const API = _raw && !_raw.startsWith("http") ? `https://${_raw}` : (_raw || "http://localhost:4000")
+import { API } from '@/lib/api'
 const APP_VERSION = '2.4.0'
 
 const MONTHS = Array.from({length:12},(_,i)=>{
