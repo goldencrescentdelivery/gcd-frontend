@@ -22,8 +22,8 @@ function fmtAED(n) { return `AED ${fmt(n)}` }
 function Tip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background:'white', border:'1px solid #E5E7EB', borderRadius:10, padding:'8px 12px', boxShadow:'0 4px 20px rgba(0,0,0,0.1)', fontSize:12, fontFamily:'Poppins,sans-serif' }}>
-      <div style={{ fontWeight:700, color:'#6B7280', marginBottom:4 }}>{label}</div>
+    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:10, padding:'8px 12px', boxShadow:'var(--shadow-md)', fontSize:12, fontFamily:'Poppins,sans-serif' }}>
+      <div style={{ fontWeight:700, color:'var(--text-muted)', marginBottom:4 }}>{label}</div>
       {payload.map(p => (
         <div key={p.dataKey} style={{ color:p.color, fontWeight:600, display:'flex', gap:10, justifyContent:'space-between' }}>
           <span>{p.name}</span><strong>{typeof p.value==='number'&&p.value>999?fmt(p.value):p.value}</strong>
@@ -54,7 +54,7 @@ function KPI({ icon:Icon, label, value, color, loading, delay=0, trend, sub }) {
   return (
     <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, padding:'16px', position:'relative', overflow:'hidden', transition:'all 0.2s' }}
       onMouseEnter={e=>{e.currentTarget.style.boxShadow='var(--shadow-md)';e.currentTarget.style.transform='translateY(-2px)'}}
-      onMouseLeave={e=>{e.currentTarget.style.boxShadow='none';e.currentTarget.style.transform='none'}}>
+      onMouseLeave={e=>{e.currentTarget.style.boxShadow='var(--shadow)';e.currentTarget.style.transform='none'}}>
       <div style={{ position:'absolute', right:-10, bottom:-10, width:60, height:60, borderRadius:'50%', background:`${color}12`, filter:'blur(8px)', pointerEvents:'none' }}/>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
         <div style={{ width:36, height:36, borderRadius:10, background:`${color}15`, display:'flex', alignItems:'center', justifyContent:'center' }}>
