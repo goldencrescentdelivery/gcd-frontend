@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/lib/auth'
 import { useSearchParams } from 'next/navigation'
 import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone, ArrowLeftRight, CheckSquare, History, Contact } from 'lucide-react'
+import ConfirmDialog from '@/components/ConfirmDialog'
 
 import { API } from '@/lib/api'
 const CYCLES  = ['A','B','C','Beset','MR','FM','Rescue']
@@ -528,8 +529,9 @@ function DAsTab({ stationEmps, sims }) {
 
 // ── SIM Section ───────────────────────────────────────────────
 function SimSection({ sims, emps, station, onRefresh }) {
-  const [modal,  setModal]  = useState(null)
-  const [search, setSearch] = useState('')
+  const [modal,       setModal]       = useState(null)
+  const [search,      setSearch]      = useState('')
+  const [confirmDlg,  setConfirmDlg]  = useState(null)
 
   const SC = {
     available:{c:'#2E7D52',bg:'#ECFDF5',bc:'#A7F3D0',l:'Available'},
@@ -544,10 +546,17 @@ function SimSection({ sims, emps, station, onRefresh }) {
     s.emp_name?.toLowerCase().includes(search.toLowerCase())
   )
 
-  async function handleDelete(id) {
-    if (!confirm('Delete this SIM?')) return
-    await fetch(`${API}/api/sims/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } })
-    onRefresh()
+  function handleDelete(id, simNumber) {
+    setConfirmDlg({
+      title: 'Delete SIM card?',
+      message: `SIM ${simNumber} will be permanently removed. Any assigned DA will lose their work number.`,
+      confirmLabel: 'Delete', danger: true,
+      onConfirm: async () => {
+        setConfirmDlg(null)
+        await fetch(`${API}/api/sims/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } })
+        onRefresh()
+      },
+    })
   }
 
   return (
@@ -600,7 +609,7 @@ function SimSection({ sims, emps, station, onRefresh }) {
                 <span style={{fontSize:11,fontWeight:700,color:sc.c,background:sc.bg,border:`1px solid ${sc.bc}`,borderRadius:20,padding:'2px 10px'}}>{sc.l}</span>
                 <div style={{display:'flex',gap:5}}>
                   <button onClick={()=>setModal({type:'edit',sim})} style={{padding:'4px 10px',borderRadius:7,background:'#F5F4F1',border:'none',cursor:'pointer',fontSize:11,color:'#6B5D4A',fontWeight:600,fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:4}}><Pencil size={11}/> Edit</button>
-                  <button onClick={()=>handleDelete(sim.id)} style={{padding:'4px 8px',borderRadius:7,background:'#FEF2F2',border:'none',cursor:'pointer',color:'#C0392B',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif'}}><Trash2 size={11}/></button>
+                  <button onClick={()=>handleDelete(sim.id, sim.sim_number||sim.phone_number||'—')} style={{padding:'4px 8px',borderRadius:7,background:'#FEF2F2',border:'none',cursor:'pointer',color:'#C0392B',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif'}}><Trash2 size={11}/></button>
                 </div>
               </div>
             </div>
@@ -621,6 +630,15 @@ function SimSection({ sims, emps, station, onRefresh }) {
 
       {modal?.type==='add'  && <SimModal emps={emps} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);onRefresh()}}/>}
       {modal?.type==='edit' && <SimModal sim={modal.sim} emps={emps} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);onRefresh()}}/>}
+      <ConfirmDialog
+        open={!!confirmDlg}
+        title={confirmDlg?.title}
+        message={confirmDlg?.message}
+        confirmLabel={confirmDlg?.confirmLabel}
+        danger={confirmDlg?.danger ?? true}
+        onConfirm={confirmDlg?.onConfirm}
+        onCancel={() => setConfirmDlg(null)}
+      />
     </div>
   )
 }
@@ -858,6 +876,10 @@ export default function POCPage() {
   const [search,       setSearch]       = useState('')
   const [bulkLoading,  setBulkLoading]  = useState(false)
   const [showLeaveHistory, setShowLeaveHistory] = useState(false)
+  // Replaces window.confirm() throughout this page
+  const [confirmDlg,   setConfirmDlg]  = useState(null) // { title, message, confirmLabel, danger, onConfirm }
+  // Staged leave action — requires explicit confirm before firing
+  const [pendingLeave, setPendingLeave] = useState(null) // { id, action, name }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -890,28 +912,57 @@ export default function POCPage() {
     await fetch(`${API}/api/leaves/${id}/status`,{method:'PATCH',headers:hdr(),body:JSON.stringify({status})})
     load()
   }
-  async function deleteAtt(id) {
-    if (!confirm('Remove this attendance record?')) return
-    await fetch(`${API}/api/attendance/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}})
-    load()
+  function deleteAtt(id) {
+    setConfirmDlg({
+      title: 'Remove attendance record?',
+      message: 'This will delete the attendance entry for this DA on the selected date.',
+      confirmLabel: 'Remove', danger: true,
+      onConfirm: async () => {
+        setConfirmDlg(null)
+        await fetch(`${API}/api/attendance/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}})
+        load()
+      },
+    })
   }
-  async function deleteAnn(id) {
-    if (!confirm('Delete announcement?')) return
-    await fetch(`${API}/api/poc/announcements/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}})
-    load()
+  function deleteAnn(id) {
+    setConfirmDlg({
+      title: 'Delete announcement?',
+      message: 'This notice will be removed for all stations immediately.',
+      confirmLabel: 'Delete', danger: true,
+      onConfirm: async () => {
+        setConfirmDlg(null)
+        await fetch(`${API}/api/poc/announcements/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}})
+        load()
+      },
+    })
   }
-  async function handleBulkPresent() {
+  function handleBulkPresent() {
     const unlogged = filtEmp.filter(e => !att.find(a => a.emp_id === e.id))
-    if (unlogged.length === 0) return alert('All DAs already have attendance for this date.')
-    if (!confirm(`Mark ${unlogged.length} DA(s) as Present — Cycle A (5h)?`)) return
-    setBulkLoading(true)
-    try {
-      await fetch(`${API}/api/attendance/bulk`, {
-        method:'POST', headers:hdr(),
-        body:JSON.stringify({ records: unlogged.map(e => ({ emp_id:e.id, date, status:'present', cycle:'A', cycle_hours:'5' })) })
+    if (unlogged.length === 0) {
+      setConfirmDlg({
+        title: 'All DAs already logged',
+        message: 'Every DA on this station already has an attendance record for this date.',
+        confirmLabel: 'OK', cancelLabel: null, danger: false,
+        onConfirm: () => setConfirmDlg(null),
       })
-      load()
-    } catch(e) { alert('Bulk log failed') } finally { setBulkLoading(false) }
+      return
+    }
+    setConfirmDlg({
+      title: `Mark ${unlogged.length} DA${unlogged.length !== 1 ? 's' : ''} as Present?`,
+      message: `Cycle A · 5 hours. This will create attendance records for ${unlogged.length} DA${unlogged.length !== 1 ? 's' : ''} who haven't been logged yet today.`,
+      confirmLabel: 'Mark Present', danger: false,
+      onConfirm: async () => {
+        setConfirmDlg(null)
+        setBulkLoading(true)
+        try {
+          await fetch(`${API}/api/attendance/bulk`, {
+            method:'POST', headers:hdr(),
+            body:JSON.stringify({ records: unlogged.map(e => ({ emp_id:e.id, date, status:'present', cycle:'A', cycle_hours:'5' })) })
+          })
+          load()
+        } catch { /* silent — load() will reflect actual state */ } finally { setBulkLoading(false) }
+      },
+    })
   }
 
   async function assignVehicle(vId,eId) {
@@ -1282,8 +1333,14 @@ export default function POCPage() {
                 </div>
                 {!showLeaveHistory && (
                   <div style={{padding:'10px 14px',background:'var(--bg-alt)',borderTop:'1px solid var(--border)',display:'flex',gap:8}}>
-                    <button className="btn btn-success" style={{flex:1,justifyContent:'center',borderRadius:12}} onClick={()=>handleLeave(l.id,'approved')}><CheckCircle size={14}/> Approve</button>
-                    <button className="btn btn-danger"  style={{flex:1,justifyContent:'center',borderRadius:12}} onClick={()=>handleLeave(l.id,'rejected')}><XCircle size={14}/> Reject</button>
+                    <button
+                      style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'8px 0',borderRadius:12,border:'1px solid #A7F3D0',background:'#F0FDF4',color:'#10B981',fontWeight:700,fontSize:12.5,cursor:'pointer',fontFamily:'inherit'}}
+                      onClick={()=>setPendingLeave({id:l.id,action:'approved',name:l.emp_name||'this employee'})}
+                    ><CheckCircle size={14}/> Approve</button>
+                    <button
+                      style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'8px 0',borderRadius:12,border:'1px solid #FECACA',background:'#FEF2F2',color:'#EF4444',fontWeight:700,fontSize:12.5,cursor:'pointer',fontFamily:'inherit'}}
+                      onClick={()=>setPendingLeave({id:l.id,action:'rejected',name:l.emp_name||'this employee'})}
+                    ><XCircle size={14}/> Reject</button>
                   </div>
                 )}
               </div>
@@ -1342,6 +1399,33 @@ export default function POCPage() {
       {modal?.type==='vehicle-edit'&&<VehicleModal vehicle={modal.vehicle} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal==='delivery'&&<DeliveryModal date={date} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal?.type==='delivery-edit'&&<DeliveryModal date={date} station={station} existing={modal.delivery} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
+
+      {/* Generic confirm dialog — replaces all window.confirm() calls */}
+      <ConfirmDialog
+        open={!!confirmDlg}
+        title={confirmDlg?.title}
+        message={confirmDlg?.message}
+        confirmLabel={confirmDlg?.confirmLabel}
+        cancelLabel={confirmDlg?.cancelLabel ?? 'Cancel'}
+        danger={confirmDlg?.danger ?? true}
+        onConfirm={confirmDlg?.onConfirm}
+        onCancel={() => setConfirmDlg(null)}
+      />
+
+      {/* Leave approve / reject confirmation */}
+      <ConfirmDialog
+        open={!!pendingLeave}
+        title={pendingLeave?.action === 'approved' ? 'Approve leave request?' : 'Reject leave request?'}
+        message={`${pendingLeave?.action === 'approved' ? 'Approve' : 'Reject'} the leave request for ${pendingLeave?.name}? This decision will be visible to the employee immediately.`}
+        confirmLabel={pendingLeave?.action === 'approved' ? 'Yes, approve' : 'Yes, reject'}
+        danger={pendingLeave?.action === 'rejected'}
+        onConfirm={async () => {
+          const { id, action } = pendingLeave
+          setPendingLeave(null)
+          await handleLeave(id, action)
+        }}
+        onCancel={() => setPendingLeave(null)}
+      />
     </div>
   )
 }

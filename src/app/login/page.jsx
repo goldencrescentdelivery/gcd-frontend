@@ -5,14 +5,20 @@ import { useAuth } from '@/lib/auth'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 
 export default function LoginPage() {
-  const { login, loading, error } = useAuth()
+  const { login, loading, error: authError } = useAuth()
   const router = useRouter()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw]     = useState(false)
+  // Hide the auth error banner as soon as the user starts editing their
+  // credentials — a stale "Invalid credentials" message while they're
+  // already correcting the mistake is confusing and feels broken.
+  const [dismissed, setDismissed] = useState(false)
+  const error = dismissed ? null : authError
 
   async function handleSubmit(e) {
     e.preventDefault()
+    setDismissed(false)
     const result = await login(email, password)
     if (result.ok) {
       if (result.role === 'driver') router.replace('/driver')
@@ -20,6 +26,9 @@ export default function LoginPage() {
       else router.replace('/dashboard/overview')
     }
   }
+
+  function handleEmailChange(e) { setEmail(e.target.value); setDismissed(true) }
+  function handlePasswordChange(e) { setPassword(e.target.value); setDismissed(true) }
 
   return (
     <>
@@ -155,9 +164,10 @@ export default function LoginPage() {
                   type="email"
                   placeholder="you@goldencrescent.ae"
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
                   required
                   autoComplete="email"
+                  autoFocus
                 />
               </div>
 
@@ -171,7 +181,7 @@ export default function LoginPage() {
                     type={showPw ? 'text' : 'password'}
                     placeholder="••••••••••"
                     value={password}
-                    onChange={e => setPassword(e.target.value)}
+                    onChange={handlePasswordChange}
                     required
                     autoComplete="current-password"
                     style={{ paddingRight:46 }}

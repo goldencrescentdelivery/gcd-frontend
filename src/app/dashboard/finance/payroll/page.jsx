@@ -6,6 +6,7 @@ import {
   Plus, X, Download, Check, Search, Wallet, TrendingUp,
   FileText, AlertCircle, Users, ChevronDown, ChevronUp, BarChart2
 } from 'lucide-react'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
@@ -421,7 +422,7 @@ function DeductionModal({ employees, month, onSave, onClose }) {
 }
 
 /* ── Payroll Card ── */
-function PayrollCard({ slip, onMarkPaid, onEditSalary, onRemoveDed, onRemoveBonus, month, index }) {
+function PayrollCard({ slip, onMarkPaid, markingPaid, onEditSalary, onRemoveDed, onRemoveBonus, month, index }) {
   const [open, setOpen] = useState(false)
   const net    = Number(slip.net_pay||(Number(slip.base_salary)+Number(slip.bonus_total||0)-Number(slip.deduction_total||0)))
   const isPaid = slip.payroll_status === 'paid'
@@ -483,8 +484,14 @@ function PayrollCard({ slip, onMarkPaid, onEditSalary, onRemoveDed, onRemoveBonu
             <button onClick={()=>exportCSV(null,month,slip)} style={{ padding:'6px 12px',borderRadius:9,background:'rgba(255,255,255,0.8)',border:'1px solid rgba(0,0,0,0.1)',fontSize:11.5,fontWeight:600,color:'#10B981',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:4 }}>
               <Download size={11}/> CSV
             </button>
-            {!isPaid&&<button onClick={()=>onMarkPaid(slip)} style={{ padding:'6px 14px',borderRadius:9,background:'linear-gradient(135deg,#10B981,#22C55E)',border:'none',fontSize:11.5,fontWeight:700,color:'white',cursor:'pointer',fontFamily:'Poppins,sans-serif',marginLeft:'auto',display:'flex',alignItems:'center',gap:4 }}>
-              <Check size={11}/> Mark Paid
+            {!isPaid&&<button
+              onClick={()=>!markingPaid&&onMarkPaid(slip)}
+              disabled={markingPaid}
+              style={{ padding:'6px 14px',borderRadius:9,background:'linear-gradient(135deg,#10B981,#22C55E)',border:'none',fontSize:11.5,fontWeight:700,color:'white',cursor:markingPaid?'not-allowed':'pointer',fontFamily:'Poppins,sans-serif',marginLeft:'auto',display:'flex',alignItems:'center',gap:4,opacity:markingPaid?0.65:1,transition:'opacity 0.15s' }}>
+              {markingPaid
+                ? <><span style={{width:10,height:10,border:'2px solid rgba(255,255,255,0.4)',borderTopColor:'#fff',borderRadius:'50%',display:'inline-block',animation:'spin 0.7s linear infinite'}}/> Saving…</>
+                : <><Check size={11}/> Mark Paid</>
+              }
             </button>}
           </div>
 
@@ -500,7 +507,7 @@ function PayrollCard({ slip, onMarkPaid, onEditSalary, onRemoveDed, onRemoveBonu
                   </div>
                   <div style={{ display:'flex',gap:8,alignItems:'center' }}>
                     <span style={{ fontWeight:800,color:'#10B981',fontSize:13 }}>+AED {fmt(b.amount)}</span>
-                    <button onClick={()=>onRemoveBonus(b.id)} style={{ width:20,height:20,borderRadius:5,background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.2)',color:'#EF4444',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontFamily:'Poppins,sans-serif' }}>×</button>
+                    <button onClick={()=>onRemoveBonus(b.id, b.type)} style={{ width:20,height:20,borderRadius:5,background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.2)',color:'#EF4444',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontFamily:'Poppins,sans-serif' }}>×</button>
                   </div>
                 </div>
               ))}
@@ -522,7 +529,7 @@ function PayrollCard({ slip, onMarkPaid, onEditSalary, onRemoveDed, onRemoveBonu
                     </div>
                     <div style={{ display:'flex',gap:8,alignItems:'center',flexShrink:0 }}>
                       <span style={{ fontWeight:800,color:'#EF4444',fontSize:13 }}>-AED {fmt(d.amount)}</span>
-                      <button onClick={()=>onRemoveDed(d.id)} style={{ width:20,height:20,borderRadius:5,background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.2)',color:'#EF4444',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontFamily:'Poppins,sans-serif' }}>×</button>
+                      <button onClick={()=>onRemoveDed(d.id, dt?.l||d.type)} style={{ width:20,height:20,borderRadius:5,background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.2)',color:'#EF4444',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontFamily:'Poppins,sans-serif' }}>×</button>
                     </div>
                   </div>
                 )
@@ -537,12 +544,14 @@ function PayrollCard({ slip, onMarkPaid, onEditSalary, onRemoveDed, onRemoveBonu
 
 /* ── Main Page ── */
 export default function PayrollPage() {
-  const [payroll,   setPayroll]   = useState([])
-  const [employees, setEmployees] = useState([])
-  const [loading,   setLoading]   = useState(true)
-  const [month,     setMonth]     = useState(MONTHS[0])
-  const [modal,     setModal]     = useState(null)
-  const [search,    setSearch]    = useState('')
+  const [payroll,     setPayroll]     = useState([])
+  const [employees,   setEmployees]   = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [month,       setMonth]       = useState(MONTHS[0])
+  const [modal,       setModal]       = useState(null)
+  const [search,      setSearch]      = useState('')
+  const [confirmDlg,  setConfirmDlg]  = useState(null) // replaces window.confirm()
+  const [markingPaid, setMarkingPaid] = useState(new Set()) // IDs currently being marked paid
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -556,19 +565,68 @@ export default function PayrollPage() {
   useEffect(()=>{load()},[load])
   useSocket({'payroll:deduction_added':load,'payroll:bonus_added':load,'payroll:paid':load})
 
-  async function markPaid(slip) {
-    if (!confirm(`Mark ${slip.name} as PAID for ${month}?`)) return
-    try { await payrollApi.markPaid(slip.id,month); load() } catch(e){alert(e.message)}
+  function markPaid(slip) {
+    setConfirmDlg({
+      title: `Mark ${slip.name} as paid?`,
+      message: `This will record ${slip.name}'s salary for ${month} as paid. The payslip will be locked.`,
+      confirmLabel: 'Mark Paid', danger: false,
+      onConfirm: async () => {
+        setConfirmDlg(null)
+        setMarkingPaid(s => new Set(s).add(slip.id))
+        try { await payrollApi.markPaid(slip.id, month); load() } catch(e) { console.error(e) }
+        finally { setMarkingPaid(s => { const n=new Set(s); n.delete(slip.id); return n }) }
+      },
+    })
   }
-  async function markAllPaid() {
-    const unpaid = payroll.filter(p=>p.payroll_status!=='paid')
-    if (!unpaid.length) return alert('All already paid')
-    if (!confirm(`Mark ALL ${unpaid.length} as paid for ${month}?`)) return
-    await Promise.all(unpaid.map(s=>payrollApi.markPaid(s.id,month))); load()
+  function markAllPaid() {
+    const unpaid = payroll.filter(p => p.payroll_status !== 'paid')
+    if (!unpaid.length) {
+      setConfirmDlg({
+        title: 'All employees already paid',
+        message: `Every employee has been marked as paid for ${month}.`,
+        confirmLabel: 'OK', danger: false,
+        onConfirm: () => setConfirmDlg(null),
+      })
+      return
+    }
+    setConfirmDlg({
+      title: `Mark all ${unpaid.length} employees as paid?`,
+      message: `This will lock payslips for all ${unpaid.length} unpaid employees for ${month}. This cannot be undone.`,
+      confirmLabel: `Pay All (${unpaid.length})`, danger: false,
+      onConfirm: async () => {
+        setConfirmDlg(null)
+        const ids = unpaid.map(s => s.id)
+        setMarkingPaid(new Set(ids))
+        await Promise.all(unpaid.map(s => payrollApi.markPaid(s.id, month)))
+        setMarkingPaid(new Set())
+        load()
+      },
+    })
   }
-  async function removeDed(id) { try { await payrollApi.removeDeduction(id); load() } catch(e){alert(e.message)} }
-  async function removeBonus(id) {
-    try { await fetch(`${API}/api/payroll/bonuses/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}}); load() } catch(e){alert(e.message)}
+  function removeDed(id, label) {
+    setConfirmDlg({
+      title: 'Remove deduction?',
+      message: label ? `Remove "${label}" deduction from this payslip?` : 'Remove this deduction?',
+      confirmLabel: 'Remove', danger: true,
+      onConfirm: async () => {
+        setConfirmDlg(null)
+        try { await payrollApi.removeDeduction(id); load() } catch(e) { console.error(e) }
+      },
+    })
+  }
+  function removeBonus(id, label) {
+    setConfirmDlg({
+      title: 'Remove bonus?',
+      message: label ? `Remove "${label}" addition from this payslip?` : 'Remove this bonus?',
+      confirmLabel: 'Remove', danger: true,
+      onConfirm: async () => {
+        setConfirmDlg(null)
+        try {
+          await fetch(`${API}/api/payroll/bonuses/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}})
+          load()
+        } catch(e) { console.error(e) }
+      },
+    })
   }
 
   const filtered    = payroll.filter(s=>!search||s.name?.toLowerCase().includes(search.toLowerCase())||s.id?.toLowerCase().includes(search.toLowerCase()))
@@ -708,6 +766,7 @@ export default function PayrollPage() {
         ) : filtered.map((slip,i)=>(
           <PayrollCard key={slip.id||slip.emp_id} slip={slip} month={month} index={i}
             onMarkPaid={markPaid}
+            markingPaid={markingPaid.has(slip.id)}
             onEditSalary={s=>setModal({type:'salary',emp:s})}
             onRemoveDed={removeDed}
             onRemoveBonus={removeBonus}/>
@@ -722,6 +781,16 @@ export default function PayrollPage() {
       {modal==='bonus'        && <BonusModal     employees={employees} month={month} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal==='deduction'    && <DeductionModal employees={employees} month={month} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal?.type==='salary' && <SalaryModal    emp={modal.emp}       onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
+
+      <ConfirmDialog
+        open={!!confirmDlg}
+        title={confirmDlg?.title}
+        message={confirmDlg?.message}
+        confirmLabel={confirmDlg?.confirmLabel}
+        danger={confirmDlg?.danger ?? false}
+        onConfirm={confirmDlg?.onConfirm}
+        onCancel={() => setConfirmDlg(null)}
+      />
     </div>
   )
 }
