@@ -40,7 +40,7 @@ const EMPTY = {
   salary:'', joined:'', phone:'', work_number:'', nationality:'',
   visa_expiry:'', license_expiry:'', iloe_expiry:'',
   station_code:'DDB1', avatar:'👔', emirates_id:'',
-  annual_leave_balance:30, annual_leave_start:''
+  annual_leave_balance:30, annual_leave_start:'', insurance_url:''
 }
 
 function hdr() { return { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
@@ -73,6 +73,7 @@ function AdminModal({ emp, onSave, onClose, mode }) {
     license_expiry:     emp.license_expiry?.slice(0,10)||'',
     iloe_expiry:        emp.iloe_expiry?.slice(0,10)||'',
     annual_leave_start: emp.annual_leave_start?.slice(0,10)||'',
+    insurance_url:      emp.insurance_url||'',
   } : EMPTY)
   const [saving, setSaving] = useState(false)
   const [err,    setErr]    = useState(null)
@@ -173,10 +174,21 @@ function AdminModal({ emp, onSave, onClose, mode }) {
           )}
 
           {tab==='docs' && (
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13 }}>
-              {inp('Visa Expiry','visa_expiry','date')}
-              {inp('License / ID Expiry','license_expiry','date')}
-              {inp('ILOE Expiry','iloe_expiry','date')}
+            <div style={{ display:'flex', flexDirection:'column', gap:13 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13 }}>
+                {inp('Visa Expiry','visa_expiry','date')}
+                {inp('License / ID Expiry','license_expiry','date')}
+                {inp('ILOE Expiry','iloe_expiry','date')}
+              </div>
+              <div>
+                <Lbl>Insurance Card (Google Drive URL)</Lbl>
+                <input className="input" type="url" value={form.insurance_url||''} autoComplete="off" spellCheck={false}
+                  placeholder="https://drive.google.com/file/d/…/view"
+                  onChange={e=>set('insurance_url',e.target.value)}/>
+                <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:5 }}>
+                  Paste the Google Drive sharing link for this staff member's insurance card.
+                </div>
+              </div>
             </div>
           )}
         </div>
