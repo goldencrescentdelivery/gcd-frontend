@@ -7,7 +7,7 @@ import { leaveApi } from '@/lib/api'
 import {
   LogOut, Calendar, Bell, Plus, Car, Wallet,
   BarChart2, Home, ChevronRight, Check, X, Clock,
-  TrendingUp, Shield, Package
+  TrendingUp, Shield, Package, FileText, ExternalLink, ZoomIn
 } from 'lucide-react'
 
 import { API } from '@/lib/api'
@@ -83,6 +83,89 @@ function Pill({ label, color }) {
 /* ── Section card ── */
 function Card({ children, style }) {
   return <div style={{ background:'#FFF',borderRadius:16,border:'1px solid #F0F0EE',padding:'16px',boxShadow:'0 1px 4px rgba(0,0,0,0.05)',...style }}>{children}</div>
+}
+
+/* ── Google Drive URL → embeddable preview URL ── */
+function toEmbedUrl(url) {
+  if (!url) return null
+  // https://drive.google.com/file/d/FILE_ID/view?... → /preview
+  const m = url.match(/\/file\/d\/([^/]+)/)
+  if (m) return `https://drive.google.com/file/d/${m[1]}/preview`
+  // https://drive.google.com/open?id=FILE_ID
+  const m2 = url.match(/[?&]id=([^&]+)/)
+  if (m2) return `https://drive.google.com/file/d/${m2[1]}/preview`
+  return url
+}
+
+/* ── Insurance Tab ── */
+function InsuranceTab({ profile }) {
+  const [zoomed, setZoomed] = useState(false)
+  const embedUrl = toEmbedUrl(profile?.insurance_url)
+
+  if (!embedUrl) {
+    return (
+      <div className="fade" style={{ display:'flex', flexDirection:'column', gap:12 }}>
+        <h2 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>Insurance Card</h2>
+        <Card style={{ textAlign:'center', padding:'40px 20px' }}>
+          <div style={{ width:56, height:56, borderRadius:16, background:'#EFF6FF', border:'1px solid #BFDBFE', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px' }}>
+            <Shield size={24} color="#2563EB"/>
+          </div>
+          <div style={{ fontWeight:700, fontSize:15, color:'#111', marginBottom:6 }}>No insurance card on file</div>
+          <div style={{ fontSize:13, color:'#9CA3AF', lineHeight:1.6 }}>
+            Your insurance card hasn't been uploaded yet.<br/>Please contact your station admin.
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="fade" style={{ display:'flex', flexDirection:'column', gap:12 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <h2 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>Insurance Card</h2>
+        <div style={{ display:'flex', gap:8 }}>
+          <button
+            onClick={() => setZoomed(true)}
+            style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 12px', borderRadius:20, background:'#EFF6FF', border:'1px solid #BFDBFE', color:'#2563EB', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+            <ZoomIn size={13}/> Full Screen
+          </button>
+          <a href={profile?.insurance_url} target="_blank" rel="noreferrer"
+            style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 12px', borderRadius:20, background:'#FFFBEB', border:'1px solid #FDE68A', color:'#B8860B', fontWeight:600, fontSize:12, fontFamily:'Poppins,sans-serif' }}>
+            <ExternalLink size={13}/> Open
+          </a>
+        </div>
+      </div>
+
+      {/* Card viewer */}
+      <Card style={{ padding:0, overflow:'hidden', borderRadius:16 }}>
+        <iframe
+          src={embedUrl}
+          width="100%" height="480"
+          allow="autoplay"
+          style={{ border:'none', display:'block' }}
+          title="Insurance Card"
+        />
+      </Card>
+
+      {/* Full-screen viewer */}
+      {zoomed && (
+        <div
+          onClick={() => setZoomed(false)}
+          style={{ position:'fixed', inset:0, zIndex:500, background:'rgba(0,0,0,0.92)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16 }}>
+          <button onClick={() => setZoomed(false)}
+            style={{ position:'absolute', top:16, right:16, width:36, height:36, borderRadius:'50%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'white' }}>
+            <X size={16}/>
+          </button>
+          <iframe
+            src={embedUrl}
+            style={{ width:'100%', maxWidth:700, height:'85vh', border:'none', borderRadius:12 }}
+            allow="autoplay"
+            title="Insurance Card Full"
+          />
+        </div>
+      )}
+    </div>
+  )
 }
 
 /* ── Main ── */
@@ -170,6 +253,7 @@ export default function DriverPortal() {
     {id:'leaves',label:'Leaves',icon:Calendar},
     {id:'perf',label:'Performance',icon:BarChart2},
     {id:'vehicle',label:'Vehicle',icon:Car},
+    {id:'insurance',label:'Insurance',icon:Shield},
     {id:'notices',label:'Notices',icon:Bell},
   ]
 
@@ -479,6 +563,11 @@ export default function DriverPortal() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* INSURANCE */}
+        {tab==='insurance' && (
+          <InsuranceTab profile={profile} />
         )}
 
         {/* NOTICES */}

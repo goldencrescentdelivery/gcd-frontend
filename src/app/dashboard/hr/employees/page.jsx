@@ -34,7 +34,8 @@ const EMPTY = {
   sub_group_name:'', beneficiary_first_name:'', beneficiary_middle_name:'',
   beneficiary_last_name:'', father_family_name:'', dob:'', gender:'',
   marital_status:'', uid_number:'', emirates_issuing_visa:'',
-  residential_location:'', work_location:'', passport_no:'', email_id:'', visa_file_no:''
+  residential_location:'', work_location:'', passport_no:'', email_id:'', visa_file_no:'',
+  insurance_url:''
 }
 
 function hdr() { return { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
@@ -131,6 +132,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
     passport_no:              emp.passport_no||'',
     email_id:                 emp.email_id||'',
     visa_file_no:             emp.visa_file_no||'',
+    insurance_url:            emp.insurance_url||'',
     login_email:'', login_password:''
   } : EMPTY)
   const [saving, setSaving] = useState(false)
@@ -297,10 +299,21 @@ function EmpModal({ emp, onSave, onClose, mode }) {
           )}
 
           {tab==='docs' && (
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13 }}>
-              {inp('Visa Expiry','visa_expiry','date')}
-              {inp('License Expiry','license_expiry','date')}
-              {inp('ILOE Expiry','iloe_expiry','date')}
+            <div style={{ display:'flex', flexDirection:'column', gap:13 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13 }}>
+                {inp('Visa Expiry','visa_expiry','date')}
+                {inp('License Expiry','license_expiry','date')}
+                {inp('ILOE Expiry','iloe_expiry','date')}
+              </div>
+              <div>
+                <Lbl>Insurance Card (Google Drive URL)</Lbl>
+                <input className="input" type="url" value={form.insurance_url||''} autoComplete="off" spellCheck={false}
+                  placeholder="https://drive.google.com/file/d/…/view"
+                  onChange={e=>set('insurance_url',e.target.value)}/>
+                <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:5 }}>
+                  Paste the Google Drive sharing link. The DA will see their insurance card in the portal.
+                </div>
+              </div>
             </div>
           )}
 
@@ -1158,7 +1171,7 @@ export default function EmployeesPage() {
       {/* Detail popup */}
       {selected && (
         <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setSelected(null)}>
-          <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:820, height:'92vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'var(--shadow-lg)', border:'1px solid var(--border)' }}>
+          <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:1100, height:'92vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'var(--shadow-lg)', border:'1px solid var(--border)' }}>
             <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
               onSelectEmployee={id=>{ const t=employees.find(e=>e.id===id); if(t) setSelected(t) }}/>
           </div>

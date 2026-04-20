@@ -608,19 +608,21 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
   // ── User-only entry (no employee profile yet) ──────────────────
   if (!emp.hasProfile) {
     return (
-      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', boxShadow:'var(--shadow-md)', display:'flex', flexDirection:'column', height:'100%' }}>
-        <div style={{ background:`linear-gradient(135deg,${rc.bg},var(--card))`, padding:'20px 16px 14px', position:'relative', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
-          <button onClick={onClose} style={{ position:'absolute', top:12, right:12, width:26, height:26, borderRadius:8, background:'var(--card)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <X size={13} color="var(--text-sub)"/>
+      <div style={{ background:'var(--card)', borderRadius:20, overflow:'hidden', display:'flex', flexDirection:'column', height:'100%' }}>
+        <div style={{ background:`linear-gradient(120deg,${rc.bg} 0%,var(--card) 60%)`, padding:'22px 24px 18px', position:'relative', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+          <button onClick={onClose} style={{ position:'absolute',top:14,right:16,width:28,height:28,borderRadius:9,background:'var(--card)',border:'1px solid var(--border)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
+            <X size={14} color="var(--text-sub)"/>
           </button>
-          <div style={{ textAlign:'center' }}>
-            <div style={{ width:54, height:54, borderRadius:16, background:'var(--card)', border:`2px solid ${rc.bc}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:900, color:rc.c, margin:'0 auto 10px', boxShadow:`0 4px 12px ${rc.c}18` }}>
+          <div style={{ display:'flex', alignItems:'center', gap:20 }}>
+            <div style={{ width:72,height:72,borderRadius:20,background:`linear-gradient(135deg,${rc.bg},${rc.bc})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:900,color:rc.c,boxShadow:`0 6px 20px ${rc.c}28` }}>
               {emp.name?.slice(0,2).toUpperCase()}
             </div>
-            <div style={{ fontWeight:800, fontSize:14, color:'var(--text)', marginBottom:4 }}>{emp.name}</div>
-            <div style={{ display:'flex', gap:5, justifyContent:'center', flexWrap:'wrap' }}>
-              <span style={{ fontSize:11, fontWeight:700, color:rc.c, background:rc.bg, border:`1px solid ${rc.bc}`, borderRadius:20, padding:'2px 9px' }}>{emp.role}</span>
-              {emp.station_code && <span style={{ fontSize:11, fontWeight:700, color:'var(--text-sub)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:20, padding:'2px 9px' }}>{emp.station_code}</span>}
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:900,fontSize:18,color:'var(--text)',letterSpacing:'-0.02em',marginBottom:4 }}>{emp.name}</div>
+              <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                <span style={{ fontSize:11,fontWeight:700,color:rc.c,background:rc.bg,border:`1.5px solid ${rc.bc}`,borderRadius:20,padding:'3px 10px' }}>{emp.role}</span>
+                {emp.station_code && <span style={{ fontSize:11,fontWeight:700,color:'var(--text-sub)',background:'var(--bg-alt)',border:'1px solid var(--border)',borderRadius:20,padding:'3px 10px' }}>{emp.station_code}</span>}
+              </div>
             </div>
           </div>
         </div>
@@ -659,22 +661,39 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
   ]
 
   return (
-    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden', boxShadow:'var(--shadow-md)', display:'flex', flexDirection:'column', height:'100%' }}>
-      {/* Centered header — matches DAs style */}
-      <div style={{ background:`linear-gradient(135deg,${rc.bg},var(--card))`, padding:'20px 16px 14px', position:'relative', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
-        <button onClick={onClose} style={{ position:'absolute', top:12, right:12, width:26, height:26, borderRadius:8, background:'var(--card)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <X size={13} color="var(--text-sub)"/>
+    <div style={{ background:'var(--card)', borderRadius:20, overflow:'hidden', display:'flex', flexDirection:'column', height:'100%' }}>
+      {/* Horizontal header — same layout as DA DetailDrawer */}
+      <div style={{ background:`linear-gradient(120deg,${rc.bg} 0%,var(--card) 60%)`, padding:'22px 24px 18px', position:'relative', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+        <button onClick={onClose} style={{ position:'absolute',top:14,right:16,width:28,height:28,borderRadius:9,background:'var(--card)',border:'1px solid var(--border)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'var(--shadow-sm)' }}>
+          <X size={14} color="var(--text-sub)"/>
         </button>
-        <div style={{ textAlign:'center' }}>
-          <div style={{ width:54, height:54, borderRadius:16, background:'var(--card)', border:`2px solid ${rc.bc}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:900, color:rc.c, margin:'0 auto 10px', boxShadow:`0 4px 12px ${rc.c}18` }}>
-            {emp.name?.slice(0,2).toUpperCase()}
+        <div style={{ display:'flex', alignItems:'center', gap:20 }}>
+          {/* Avatar */}
+          <div style={{ position:'relative', flexShrink:0 }}>
+            <div style={{ width:72,height:72,borderRadius:20,background:`linear-gradient(135deg,${rc.bg},${rc.bc})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:900,color:rc.c,boxShadow:`0 6px 20px ${rc.c}28` }}>
+              {emp.name?.slice(0,2).toUpperCase()}
+            </div>
+            {/* status dot */}
+            <div style={{ position:'absolute',bottom:2,right:2,width:13,height:13,borderRadius:'50%',background:s.dot,border:'2.5px solid var(--card)',boxShadow:`0 0 0 2px ${s.dot}40` }}/>
           </div>
-          <div style={{ fontWeight:800, fontSize:14, color:'var(--text)', marginBottom:2 }}>{emp.name}</div>
-          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:10 }}>{emp.dept}</div>
-          <div style={{ display:'flex', gap:5, justifyContent:'center', flexWrap:'wrap' }}>
-            <span style={{ fontSize:11, fontWeight:700, color:s.c, background:s.bg, border:`1px solid ${s.bc}`, borderRadius:20, padding:'2px 9px' }}>{s.l}</span>
-            <span style={{ fontSize:11, fontWeight:700, color:rc.c, background:rc.bg, border:`1px solid ${rc.bc}`, borderRadius:20, padding:'2px 9px' }}>{emp.role}</span>
-            {emp.station_code && <span style={{ fontSize:11, fontWeight:700, color:'var(--text-sub)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:20, padding:'2px 9px' }}>{emp.station_code}</span>}
+          {/* Name + meta */}
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontWeight:900,fontSize:18,color:'var(--text)',letterSpacing:'-0.02em',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{emp.name}</div>
+            <div style={{ fontSize:12.5,color:'var(--text-muted)',marginBottom:10 }}>{emp.dept} · <span style={{ fontFamily:'monospace',fontSize:12 }}>{emp.id}</span></div>
+            <div style={{ display:'flex',gap:6,flexWrap:'wrap',alignItems:'center' }}>
+              <span style={{ fontSize:11,fontWeight:700,color:s.c,background:s.bg,border:`1.5px solid ${s.bc}`,borderRadius:20,padding:'3px 10px' }}>{s.l}</span>
+              <span style={{ fontSize:11,fontWeight:700,color:rc.c,background:rc.bg,border:`1.5px solid ${rc.bc}`,borderRadius:20,padding:'3px 10px' }}>{emp.role}</span>
+              {emp.station_code && <span style={{ fontSize:11,fontWeight:700,color:'var(--text-sub)',background:'var(--bg-alt)',border:'1px solid var(--border)',borderRadius:20,padding:'3px 10px' }}>{emp.station_code}</span>}
+            </div>
+          </div>
+          {/* Actions */}
+          <div style={{ display:'flex', gap:8, flexShrink:0 }}>
+            <button onClick={onEdit} style={{ padding:'7px 14px',borderRadius:10,background:'var(--bg-alt)',border:'1px solid var(--border)',cursor:'pointer',fontSize:12.5,color:'var(--text-sub)',fontWeight:600,display:'flex',alignItems:'center',gap:5,fontFamily:'Poppins,sans-serif' }}>
+              <Pencil size={13}/> Edit
+            </button>
+            <button onClick={onDelete} style={{ padding:'7px 10px',borderRadius:10,background:'var(--red-bg)',border:'1px solid var(--red-border)',cursor:'pointer',color:'var(--red)',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif' }}>
+              <Trash2 size={13}/>
+            </button>
           </div>
         </div>
       </div>
@@ -1005,21 +1024,14 @@ export default function AdminsPage() {
         )}
       </div>
 
-      {/* Detail panel */}
+      {/* Detail popup — same modal pattern as DA employees page */}
       {selected && (
-        isMobile ? (
-          <div style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'flex-end' }} onClick={e=>e.target===e.currentTarget&&setSelected(null)}>
-            <div style={{ width:'100%', maxHeight:'90vh', overflowY:'auto', borderRadius:'20px 20px 0 0', background:'var(--card)' }}>
-              <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
-                onCreateProfile={u=>setModal({mode:'add',emp:{name:u.name,role:u.role,station_code:u.station_code},linkUserId:u.userId})}/>
-            </div>
-          </div>
-        ) : (
-          <div style={{ width:288, flexShrink:0, position:'sticky', top:0, height:'calc(100vh - 130px)' }}>
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setSelected(null)}>
+          <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:820, height:'92vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'var(--shadow-lg)', border:'1px solid var(--border)' }}>
             <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
               onCreateProfile={u=>setModal({mode:'add',emp:{name:u.name,role:u.role,station_code:u.station_code},linkUserId:u.userId})}/>
           </div>
-        )
+        </div>
       )}
 
       {/* Modal */}
