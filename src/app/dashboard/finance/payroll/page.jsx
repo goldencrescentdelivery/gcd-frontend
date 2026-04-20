@@ -59,11 +59,41 @@ const GlassTip = ({ active, payload, label }) => {
   )
 }
 
-/* ── Beautiful Payslip ── */
+/* ── Payslip — formal document matching GCD template ── */
 function generatePayslip(slip, month) {
-  const net = Number(slip.net_pay||(Number(slip.base_salary)+Number(slip.bonus_total||0)-Number(slip.deduction_total||0)))
-  const isPaid = slip.payroll_status === 'paid'
-  const roleLabel = ROLE_CFG[slip.role]?.l || slip.role || 'Staff'
+  const fmtN = n => Number(n||0).toLocaleString('en-AE',{minimumFractionDigits:2,maximumFractionDigits:2})
+
+  // Bonus breakdown
+  const bonuses    = slip.bonuses    || []
+  const deductions = slip.deductions || []
+  const incentive  = bonuses.filter(b=>b.type==='kpi').reduce((s,b)=>s+Number(b.amount),0)
+  const perfBonus  = bonuses.filter(b=>b.type==='performance').reduce((s,b)=>s+Number(b.amount),0)
+  const otherBon   = bonuses.filter(b=>b.type==='other')
+  // Last 'other' bonus = month bonus; preceding ones = other addition
+  const monthBonus    = otherBon.length ? Number(otherBon[otherBon.length-1].amount) : 0
+  const otherAddition = otherBon.slice(0,-1).reduce((s,b)=>s+Number(b.amount),0)
+  const monthBonusLabel = otherBon.length && otherBon[otherBon.length-1].description
+    ? otherBon[otherBon.length-1].description
+    : new Date(month+'-01').toLocaleString('en-US',{month:'long'})+' Bonus'
+
+  // Deduction breakdown
+  const cashAdv    = deductions.filter(d=>d.type==='cash_variance').reduce((s,d)=>s+Number(d.amount),0)
+  const trafficFine= deductions.filter(d=>d.type==='traffic_fine').reduce((s,d)=>s+Number(d.amount),0)
+  const absentDays = deductions.filter(d=>d.type==='iloe_fee'||d.type==='iloe_fine').reduce((s,d)=>s+Number(d.amount),0)
+  const otherDed   = deductions.filter(d=>d.type==='other').reduce((s,d)=>s+Number(d.amount),0)
+
+  const base         = Number(slip.base_salary||0)
+  const hourlyRate   = Number(slip.hourly_rate||3.85)
+  const totalAdd     = base + Number(slip.bonus_total||0)
+  const totalDed     = Number(slip.deduction_total||0)
+  const net          = Number(slip.net_pay||(totalAdd - totalDed))
+  const isPaid       = slip.payroll_status === 'paid'
+  const paidOn       = slip.paid_on ? new Date(slip.paid_on).toLocaleDateString('en-GB') : '—'
+  const monthShort   = new Date(month+'-01').toLocaleString('en-US',{month:'short',year:'2-digit'}).replace(' ','-')
+  const roleLabel    = {driver:'Delivery Associate',admin:'Admin',hr:'HR Manager',poc:'POC',accountant:'Accountant',manager:'Manager',general_manager:'General Manager'}[slip.role] || slip.role || 'Staff'
+  const logoUrl      = window.location.origin + '/logo.webp'
+
+  const row = (l1,v1,l2,v2) => `<tr><td class="lbl">${l1}</td><td class="val">${fmtN(v1)}</td><td class="lbl">${l2}</td><td class="val">${fmtN(v2)}</td></tr>`
 
   const html = `<!DOCTYPE html>
 <html>
@@ -71,136 +101,110 @@ function generatePayslip(slip, month) {
 <meta charset="UTF-8"/>
 <title>Payslip — ${slip.name} — ${month}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:'Poppins',Arial,sans-serif;background:#F5EDD8;padding:16px;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;}
-  .slip{background:white;width:100%;max-width:680px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.15);}
-  
+  body{font-family:Arial,sans-serif;background:#fff;padding:32px;font-size:11px;color:#000;}
+  .wrap{max-width:700px;margin:0 auto;}
+
   /* Header */
-  .header{background:linear-gradient(135deg,#0F0C07 0%,#1E1608 50%,#2C1F0A 100%);padding:28px 32px 24px;position:relative;overflow:hidden;}
-  .header::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(212,160,23,0.2) 0%,transparent 70%);}
-  .header::after{content:'';position:absolute;left:-20px;bottom:-30px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,0.12) 0%,transparent 70%);}
-  .header-grid{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;position:relative;}
-  .logo-box{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#B8860B,#D4A017);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:white;letter-spacing:0.05em;box-shadow:0 4px 16px rgba(184,134,11,0.4);}
-  .company-name{font-weight:900;font-size:16px;color:white;letter-spacing:-0.02em;margin-bottom:4px;}
-  .company-sub{font-size:10.5px;color:rgba(255,255,255,0.45);line-height:1.6;}
-  .slip-badge{text-align:right;}
-  .slip-title{font-size:13px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:0.1em;text-transform:uppercase;}
-  .slip-month{font-size:22px;font-weight:900;color:#D4A017;letter-spacing:-0.03em;margin:4px 0;}
-  .status-pill{display:inline-block;padding:4px 14px;border-radius:20px;font-size:10.5px;font-weight:700;background:${isPaid?'rgba(52,211,153,0.2)':'rgba(251,146,60,0.2)'};color:${isPaid?'#34D399':'#FB923C'};border:1px solid ${isPaid?'rgba(52,211,153,0.4)':'rgba(251,146,60,0.4)'};}
+  .hdr{display:flex;align-items:center;gap:16px;margin-bottom:6px;}
+  .hdr img{width:72px;height:auto;}
+  .hdr-text{flex:1;}
+  .co-name{font-size:16px;font-weight:bold;text-transform:uppercase;text-align:center;letter-spacing:0.02em;}
+  .co-addr{font-size:10px;text-align:center;margin-top:3px;color:#333;}
+  .slip-title{text-align:center;font-size:13px;font-style:italic;font-weight:bold;border-top:2px solid #000;border-bottom:2px solid #000;padding:4px 0;margin:8px 0 10px;}
 
-  /* Employee info band */
-  .info-band{background:#FAFAF8;border-bottom:1px solid #EAE6DE;padding:18px 32px;}
-  .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-  .info-item .label{font-size:9.5px;font-weight:700;color:#A89880;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;}
-  .info-item .value{font-size:13.5px;font-weight:700;color:#1A1612;}
-  .role-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;background:${ROLE_CFG[slip.role]?.bg||'rgba(100,116,139,0.1)'};color:${ROLE_CFG[slip.role]?.c||'#64748B'};border:1px solid ${ROLE_CFG[slip.role]?.c||'#64748B'}33;}
+  /* Info table */
+  .info-tbl{width:100%;border-collapse:collapse;margin-bottom:10px;}
+  .info-tbl td{border:1px solid #000;padding:5px 8px;}
+  .info-tbl .key{font-weight:bold;width:18%;}
+  .info-tbl .data{width:32%;}
 
-  /* Earnings/Deductions */
-  .body{padding:24px 32px;}
-  .section-title{font-size:10px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-  .section-title::after{content:'';flex:1;height:1px;background:#EAE6DE;}
-  .line-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F5F4F1;}
-  .line-row:last-child{border-bottom:none;}
-  .line-label{font-size:12.5px;color:#6B5D4A;}
-  .line-amount{font-size:13px;font-weight:700;}
-  .green{color:#10B981;}
-  .red{color:#EF4444;}
-  .tables{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
-  
-  /* Net pay hero */
-  .net-row{background:linear-gradient(135deg,#0F0C07,#2C1F0A);border-radius:14px;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
-  .net-label{font-size:13px;font-weight:600;color:rgba(255,255,255,0.6);letter-spacing:0.04em;text-transform:uppercase;}
-  .net-amount{font-size:28px;font-weight:900;color:#D4A017;letter-spacing:-0.04em;}
+  /* Earn/Ded table */
+  .main-tbl{width:100%;border-collapse:collapse;margin-bottom:0;}
+  .main-tbl td,.main-tbl th{border:1px solid #000;padding:5px 8px;}
+  .main-tbl th{background:#d9d9d9;font-weight:bold;text-align:center;font-size:11px;}
+  .lbl{width:22%;color:#000;}
+  .val{width:28%;text-align:right;font-weight:bold;}
+  .total-row td{font-weight:bold;background:#f0f0f0;}
+  .net-row td{font-weight:bold;font-size:12px;}
 
   /* Footer */
-  .sig-section{border-top:1px solid #EAE6DE;padding:16px 32px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
-  .sig-box{text-align:center;}
-  .sig-line{border-top:1.5px solid #C4B49A;padding-top:6px;margin-top:30px;font-size:10px;color:#A89880;}
-  .footer-note{text-align:center;padding:10px 32px 16px;font-size:9.5px;color:#C4B49A;}
-  .made-with{text-align:center;font-size:9px;color:#D4C4A8;padding-bottom:12px;}
+  .footer{margin-top:20px;font-size:11px;}
+  .footer-grid{display:flex;justify-content:space-between;align-items:flex-end;margin-top:32px;}
+  .sig-line{border-top:1px solid #000;padding-top:4px;min-width:180px;text-align:center;font-size:10px;}
+  .cb{display:inline-block;width:12px;height:12px;border:1px solid #000;vertical-align:middle;margin-right:3px;text-align:center;line-height:12px;font-size:9px;}
 
   @media print{
-    body{background:white !important;padding:0 !important;margin:0;}
-    .slip{box-shadow:none !important;border-radius:0 !important;width:100% !important;max-width:100% !important;}
-    .header{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;background:linear-gradient(135deg,#0F0C07 0%,#1E1608 50%,#2C1F0A 100%) !important;}
-    .net-row{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;background:linear-gradient(135deg,#0F0C07,#2C1F0A) !important;}
-    .info-band{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
-    *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+    body{padding:10px;}
+    @page{margin:15mm;}
   }
-  /* Force color printing */
-  html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 </style>
 </head>
 <body>
-<div class="slip">
-  <div class="header">
-    <div class="header-grid">
-      <div class="logo-box">GCD</div>
-      <div>
-        <div class="company-name">GOLDEN CRESCENT DELIVERY SERVICES LLC</div>
-        <div class="company-sub">Burjuman Business Tower, Dubai, UAE&nbsp;&nbsp;|&nbsp;&nbsp;TRN: 104563584200003</div>
-      </div>
-      <div class="slip-badge">
-        <div class="slip-title">Salary Slip</div>
-        <div class="slip-month">${month}</div>
-        <span class="status-pill">${isPaid?'✓ PAID':'PENDING'}</span>
-      </div>
+<div class="wrap">
+  <!-- Header -->
+  <div class="hdr">
+    <img src="${logoUrl}" alt="GCD Logo" onerror="this.style.display='none'"/>
+    <div class="hdr-text">
+      <div class="co-name">Golden Crescent Delivery Services</div>
+      <div class="co-addr">Burjuman Business Tower, 18th floor, office #1868</div>
     </div>
   </div>
+  <div class="slip-title">Salary Slip</div>
 
-  <div class="info-band">
-    <div class="info-grid">
-      <div class="info-item"><div class="label">Employee Name</div><div class="value">${slip.name}</div></div>
-      <div class="info-item"><div class="label">Employee ID</div><div class="value">${slip.id}</div></div>
-      <div class="info-item"><div class="label">Designation</div><div class="value"><span class="role-badge">${roleLabel}</span></div></div>
-      <div class="info-item"><div class="label">Station</div><div class="value">${slip.station_code||'—'}</div></div>
-      <div class="info-item"><div class="label">Project Type</div><div class="value">${(slip.project_type||'Pulser').toUpperCase()}</div></div>
-      <div class="info-item"><div class="label">Pay Period</div><div class="value">${new Date(month+'-01').toLocaleString('en-AE',{month:'long',year:'numeric'})}</div></div>
+  <!-- Employee info -->
+  <table class="info-tbl">
+    <tr>
+      <td class="key">Employee ID</td><td class="data">${slip.id}</td>
+      <td class="key">Employee Name</td><td class="data">${slip.name}</td>
+    </tr>
+    <tr>
+      <td class="key">Designation</td><td class="data">${roleLabel}</td>
+      <td class="key">Salary Period</td><td class="data">${monthShort}</td>
+    </tr>
+  </table>
+
+  <!-- Earnings / Deductions -->
+  <table class="main-tbl">
+    <tr>
+      <th colspan="2">Earnings</th>
+      <th colspan="2">Deductions</th>
+    </tr>
+    ${row('Basic Salary',base,'Cash Advance',cashAdv)}
+    ${row('Rate Per Hour',hourlyRate,'Traffic Fine',trafficFine)}
+    ${row('Total Working Hrs',0,'Absent Days',absentDays)}
+    ${row('Incentive',incentive,'Other',otherDed)}
+    ${row('Performance Bonus',perfBonus,'Pending Deductions',0)}
+    ${row('Other Addition',otherAddition,'Carry Forwarded',0)}
+    <tr>
+      <td class="lbl">${monthBonusLabel}</td><td class="val">${fmtN(monthBonus)}</td>
+      <td></td><td></td>
+    </tr>
+    <tr class="total-row">
+      <td>TOTAL ADDITION</td><td style="text-align:right;font-weight:bold;">${fmtN(totalAdd)}</td>
+      <td>TOTAL DEDUCTION</td><td style="text-align:right;font-weight:bold;">${fmtN(totalDed)}</td>
+    </tr>
+    <tr class="net-row">
+      <td colspan="2" style="text-align:center;font-weight:bold;">Net Salary</td>
+      <td colspan="2" style="text-align:center;font-weight:bold;">${fmtN(net)}</td>
+    </tr>
+  </table>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>
+      Salary paid by &nbsp;
+      <span class="cb">${isPaid?'✓':''}</span> Cash &nbsp;&nbsp;&nbsp;
+      <span class="cb">${isPaid?'✓':''}</span> Bank account
+    </div>
+    <div style="margin-top:6px;">Date of amount paid: &nbsp; ${paidOn}</div>
+    <div class="footer-grid">
+      <div></div>
+      <div class="sig-line">Employee Signature</div>
     </div>
   </div>
-
-  <div class="body">
-    <div class="tables">
-      <div>
-        <div class="section-title" style="color:#10B981;">Earnings</div>
-        <div class="line-row"><span class="line-label">Base Salary</span><span class="line-amount">AED ${fmt(slip.base_salary)}</span></div>
-        ${(slip.bonuses||[]).map(b=>`<div class="line-row"><span class="line-label">${b.type||'Bonus'}${b.description?' — '+b.description:''}</span><span class="line-amount green">+AED ${fmt(b.amount)}</span></div>`).join('')}
-        <div class="line-row" style="background:#F0FDF4;border-radius:8px;padding:8px 10px;margin-top:8px;">
-          <span class="line-label" style="font-weight:700;color:#1A1612;">Gross Amount</span>
-          <span class="line-amount" style="color:#10B981;">AED ${fmt(Number(slip.base_salary)+Number(slip.bonus_total||0))}</span>
-        </div>
-      </div>
-      <div>
-        <div class="section-title" style="color:#EF4444;">Deductions</div>
-        ${(slip.deductions||[]).length===0?`<div class="line-row"><span class="line-label" style="color:#A89880;">No deductions</span><span class="line-amount">AED 0</span></div>`:
-          (slip.deductions||[]).map(d=>`<div class="line-row"><span class="line-label">${DED_TYPES.find(t=>t.v===d.type)?.l||d.type}${d.description?' — '+d.description:''}</span><span class="line-amount red">-AED ${fmt(d.amount)}</span></div>`).join('')}
-        <div class="line-row" style="background:#FEF2F2;border-radius:8px;padding:8px 10px;margin-top:8px;">
-          <span class="line-label" style="font-weight:700;color:#1A1612;">Total Deductions</span>
-          <span class="line-amount red">-AED ${fmt(slip.deduction_total||0)}</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="net-row">
-      <div>
-        <div class="net-label">Net Salary</div>
-        ${isPaid&&slip.paid_on?`<div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:3px;">Paid on ${slip.paid_on?.slice(0,10)}</div>`:''}
-      </div>
-      <div class="net-amount">AED ${fmt(net)}</div>
-    </div>
-
-    <div class="sig-section">
-      <div class="sig-box"><div class="sig-line">Employee Signature</div></div>
-      <div class="sig-box"><div class="sig-line">HR Manager</div></div>
-      <div class="sig-box"><div class="sig-line">Authorized By</div></div>
-    </div>
-  </div>
-
-  <div class="footer-note">This is a computer-generated salary slip. Golden Crescent Delivery Services LLC — ${month} — v${APP_VERSION}</div>
-  <div class="made-with">Made with ❤️ by Waleed</div>
 </div>
-<script>document.fonts.ready.then(()=>setTimeout(()=>window.print(),500))</script>
+<script>window.onload=function(){setTimeout(function(){window.print()},600)}</script>
 </body>
 </html>`
 
