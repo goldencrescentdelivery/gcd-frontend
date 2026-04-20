@@ -355,7 +355,14 @@ function DeliveryModal({ date, station, existing, onSave, onClose }) {
     if (!form.total) return alert('Total required')
     setSaving(true)
     try {
-      const res=await fetch(`${API}/api/deliveries`,{method:'POST',headers:hdr(),body:JSON.stringify({...form,station_code:station,date,total:parseInt(form.total),attempted:parseInt(form.attempted)||0,successful:parseInt(form.successful)||0,returned:parseInt(form.returned)||0})})
+      // If editing an existing record by ID use PUT, otherwise POST (upsert by station+date)
+      const isIdEdit = existing?.id && existing?.date !== date
+      const url    = isIdEdit ? `${API}/api/deliveries/${existing.id}` : `${API}/api/deliveries`
+      const method = isIdEdit ? 'PUT' : 'POST'
+      const body   = isIdEdit
+        ? {...form,total:parseInt(form.total),attempted:parseInt(form.attempted)||0,successful:parseInt(form.successful)||0,returned:parseInt(form.returned)||0}
+        : {...form,station_code:station,date,total:parseInt(form.total),attempted:parseInt(form.attempted)||0,successful:parseInt(form.successful)||0,returned:parseInt(form.returned)||0}
+      const res=await fetch(url,{method,headers:hdr(),body:JSON.stringify(body)})
       if (!res.ok) throw new Error((await res.json()).error)
       onSave()
     } catch(e){alert(e.message)} finally{setSaving(false)}
@@ -887,7 +894,7 @@ export default function POCPage() {
       const h = { headers:{ Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
       const [a,e,an,lv,v,asgn,d,s,hv] = await Promise.all([
         fetch(`${API}/api/attendance?date=${date}`,h).then(r=>r.json()),
-        fetch(`${API}/api/employees`,h).then(r=>r.json()),  // fetch all, filter client-side
+        fetch(`${API}/api/employees`,h).then(r=>r.json()),  // backend filters by station for POC role
         fetch(`${API}/api/poc/announcements`,h).then(r=>r.json()),
         fetch(`${API}/api/leaves?stage=all`,h).then(r=>r.json()),
         fetch(`${API}/api/vehicles?station_code=${station}`,h).then(r=>r.json()),
@@ -920,6 +927,18 @@ export default function POCPage() {
       onConfirm: async () => {
         setConfirmDlg(null)
         await fetch(`${API}/api/attendance/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}})
+        load()
+      },
+    })
+  }
+  function deleteDelivery(id) {
+    setConfirmDlg({
+      title: 'Delete delivery log?',
+      message: 'This delivery record will be permanently removed.',
+      confirmLabel: 'Delete', danger: true,
+      onConfirm: async () => {
+        setConfirmDlg(null)
+        await fetch(`${API}/api/deliveries/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${localStorage.getItem('gcd_token')}`}})
         load()
       },
     })
@@ -1213,19 +1232,23 @@ export default function POCPage() {
             )}
 
             {/* Recent history */}
-            {delivs.filter(d=>d.date!==date).slice(0,7).map((d,i)=>{
+            {delivs.filter(d=>d.date!==date).slice(0,14).map((d,i)=>{
               const sr = d.total > 0 ? Math.round(d.successful / d.total * 100) : null
               return (
-                <div key={d.id||i} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:14,padding:'13px 15px',display:'flex',alignItems:'center',gap:14}}>
-                  <div style={{fontWeight:700,fontSize:13,color:'var(--text)',minWidth:88}}>{d.date}</div>
-                  <div style={{flex:1,display:'flex',gap:12,flexWrap:'wrap'}}>
+                <div key={d.id||i} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:14,padding:'11px 14px',display:'flex',alignItems:'center',gap:12}}>
+                  <div style={{fontWeight:700,fontSize:12.5,color:'var(--text)',minWidth:86}}>{d.date}</div>
+                  <div style={{flex:1,display:'flex',gap:10,flexWrap:'wrap'}}>
                     <span style={{fontSize:12,color:'var(--text-sub)'}}><strong style={{color:'var(--text)'}}>{d.total}</strong> total</span>
                     <span style={{fontSize:12,color:'#2E7D52'}}><strong>{d.successful}</strong> ✓</span>
                     <span style={{fontSize:12,color:'#C0392B'}}><strong>{d.returned}</strong> returned</span>
                   </div>
                   {sr !== null && (
-                    <span style={{fontSize:12,fontWeight:800,color:sr>=90?'#2E7D52':sr>=70?'#B45309':'#C0392B',background:sr>=90?'#ECFDF5':sr>=70?'#FFFBEB':'#FEF2F2',padding:'3px 9px',borderRadius:20,border:`1px solid ${sr>=90?'#A7F3D0':sr>=70?'#FCD34D':'#FCA5A5'}`}}>{sr}%</span>
+                    <span style={{fontSize:12,fontWeight:800,color:sr>=90?'#2E7D52':sr>=70?'#B45309':'#C0392B',background:sr>=90?'#ECFDF5':sr>=70?'#FFFBEB':'#FEF2F2',padding:'3px 8px',borderRadius:20,border:`1px solid ${sr>=90?'#A7F3D0':sr>=70?'#FCD34D':'#FCA5A5'}`}}>{sr}%</span>
                   )}
+                  <div style={{display:'flex',gap:5,flexShrink:0}}>
+                    <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setModal({type:'delivery-edit',delivery:{...d,date:d.date}})} title="Edit"><Pencil size={12}/></button>
+                    <button className="btn btn-ghost btn-icon btn-sm" style={{color:'#C0392B'}} onClick={()=>deleteDelivery(d.id)} title="Delete"><Trash2 size={12}/></button>
+                  </div>
                 </div>
               )
             })}
