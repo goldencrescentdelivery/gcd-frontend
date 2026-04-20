@@ -59,90 +59,40 @@ const GlassTip = ({ active, payload, label }) => {
   )
 }
 
-/* ── Payslip — formal document matching GCD template ── */
-function generatePayslip(slip, month) {
+/* ── Shared payslip data extractor ── */
+function slipData(slip, month) {
   const fmtN = n => Number(n||0).toLocaleString('en-AE',{minimumFractionDigits:2,maximumFractionDigits:2})
-
-  // Bonus breakdown
   const bonuses    = slip.bonuses    || []
   const deductions = slip.deductions || []
   const incentive  = bonuses.filter(b=>b.type==='kpi').reduce((s,b)=>s+Number(b.amount),0)
   const perfBonus  = bonuses.filter(b=>b.type==='performance').reduce((s,b)=>s+Number(b.amount),0)
   const otherBon   = bonuses.filter(b=>b.type==='other')
-  // Last 'other' bonus = month bonus; preceding ones = other addition
   const monthBonus    = otherBon.length ? Number(otherBon[otherBon.length-1].amount) : 0
   const otherAddition = otherBon.slice(0,-1).reduce((s,b)=>s+Number(b.amount),0)
   const monthBonusLabel = otherBon.length && otherBon[otherBon.length-1].description
     ? otherBon[otherBon.length-1].description
     : new Date(month+'-01').toLocaleString('en-US',{month:'long'})+' Bonus'
-
-  // Deduction breakdown
   const cashAdv    = deductions.filter(d=>d.type==='cash_variance').reduce((s,d)=>s+Number(d.amount),0)
   const trafficFine= deductions.filter(d=>d.type==='traffic_fine').reduce((s,d)=>s+Number(d.amount),0)
   const absentDays = deductions.filter(d=>d.type==='iloe_fee'||d.type==='iloe_fine').reduce((s,d)=>s+Number(d.amount),0)
   const otherDed   = deductions.filter(d=>d.type==='other').reduce((s,d)=>s+Number(d.amount),0)
-
-  const base         = Number(slip.base_salary||0)
-  const hourlyRate   = Number(slip.hourly_rate||3.85)
-  const totalAdd     = base + Number(slip.bonus_total||0)
-  const totalDed     = Number(slip.deduction_total||0)
-  const net          = Number(slip.net_pay||(totalAdd - totalDed))
-  const isPaid       = slip.payroll_status === 'paid'
-  const paidOn       = slip.paid_on ? new Date(slip.paid_on).toLocaleDateString('en-GB') : '—'
-  const monthShort   = new Date(month+'-01').toLocaleString('en-US',{month:'short',year:'2-digit'}).replace(' ','-')
-  const roleLabel    = {driver:'Delivery Associate',admin:'Admin',hr:'HR Manager',poc:'POC',accountant:'Accountant',manager:'Manager',general_manager:'General Manager'}[slip.role] || slip.role || 'Staff'
-  const logoUrl      = window.location.origin + '/logo.webp'
-
+  const base       = Number(slip.base_salary||0)
+  const hourlyRate = Number(slip.hourly_rate||3.85)
+  const totalAdd   = base + Number(slip.bonus_total||0)
+  const totalDed   = Number(slip.deduction_total||0)
+  const net        = Number(slip.net_pay||(totalAdd - totalDed))
+  const isPaid     = slip.payroll_status === 'paid'
+  const paidOn     = slip.paid_on ? new Date(slip.paid_on).toLocaleDateString('en-GB') : '—'
+  const monthShort = new Date(month+'-01').toLocaleString('en-US',{month:'short',year:'2-digit'}).replace(' ','-')
+  const roleLabel  = {driver:'Delivery Associate',admin:'Admin',hr:'HR Manager',poc:'POC',accountant:'Accountant',manager:'Manager',general_manager:'General Manager'}[slip.role] || slip.role || 'Staff'
   const row = (l1,v1,l2,v2) => `<tr><td class="lbl">${l1}</td><td class="val">${fmtN(v1)}</td><td class="lbl">${l2}</td><td class="val">${fmtN(v2)}</td></tr>`
+  return { fmtN, incentive, perfBonus, monthBonus, otherAddition, monthBonusLabel, cashAdv, trafficFine, absentDays, otherDed, base, hourlyRate, totalAdd, totalDed, net, isPaid, paidOn, monthShort, roleLabel, row }
+}
 
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8"/>
-<title>Payslip — ${slip.name} — ${month}</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:Arial,sans-serif;background:#fff;padding:32px;font-size:11px;color:#000;}
-  .wrap{max-width:700px;margin:0 auto;}
-
-  /* Header */
-  .hdr{display:flex;align-items:center;gap:16px;margin-bottom:6px;}
-  .hdr img{width:72px;height:auto;}
-  .hdr-text{flex:1;}
-  .co-name{font-size:16px;font-weight:bold;text-transform:uppercase;text-align:center;letter-spacing:0.02em;}
-  .co-addr{font-size:10px;text-align:center;margin-top:3px;color:#333;}
-  .slip-title{text-align:center;font-size:13px;font-style:italic;font-weight:bold;border-top:2px solid #000;border-bottom:2px solid #000;padding:4px 0;margin:8px 0 10px;}
-
-  /* Info table */
-  .info-tbl{width:100%;border-collapse:collapse;margin-bottom:10px;}
-  .info-tbl td{border:1px solid #000;padding:5px 8px;}
-  .info-tbl .key{font-weight:bold;width:18%;}
-  .info-tbl .data{width:32%;}
-
-  /* Earn/Ded table */
-  .main-tbl{width:100%;border-collapse:collapse;margin-bottom:0;}
-  .main-tbl td,.main-tbl th{border:1px solid #000;padding:5px 8px;}
-  .main-tbl th{background:#d9d9d9;font-weight:bold;text-align:center;font-size:11px;}
-  .lbl{width:22%;color:#000;}
-  .val{width:28%;text-align:right;font-weight:bold;}
-  .total-row td{font-weight:bold;background:#f0f0f0;}
-  .net-row td{font-weight:bold;font-size:12px;}
-
-  /* Footer */
-  .footer{margin-top:20px;font-size:11px;}
-  .footer-grid{display:flex;justify-content:space-between;align-items:flex-end;margin-top:32px;}
-  .sig-line{border-top:1px solid #000;padding-top:4px;min-width:180px;text-align:center;font-size:10px;}
-  .cb{display:inline-block;width:12px;height:12px;border:1px solid #000;vertical-align:middle;margin-right:3px;text-align:center;line-height:12px;font-size:9px;}
-
-  @media print{
-    body{padding:10px;}
-    @page{margin:15mm;}
-  }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <!-- Header -->
+/* ── Single slip inner HTML (no <html>/<body> wrapper) ── */
+function slipInnerHtml(slip, month, logoUrl) {
+  const { fmtN, incentive, perfBonus, monthBonus, otherAddition, monthBonusLabel, cashAdv, trafficFine, absentDays, otherDed, base, hourlyRate, totalAdd, totalDed, net, isPaid, paidOn, monthShort, roleLabel, row } = slipData(slip, month)
+  return `
   <div class="hdr">
     <img src="${logoUrl}" alt="GCD Logo" onerror="this.style.display='none'"/>
     <div class="hdr-text">
@@ -151,8 +101,6 @@ function generatePayslip(slip, month) {
     </div>
   </div>
   <div class="slip-title">Salary Slip</div>
-
-  <!-- Employee info -->
   <table class="info-tbl">
     <tr>
       <td class="key">Employee ID</td><td class="data">${slip.id}</td>
@@ -163,23 +111,15 @@ function generatePayslip(slip, month) {
       <td class="key">Salary Period</td><td class="data">${monthShort}</td>
     </tr>
   </table>
-
-  <!-- Earnings / Deductions -->
   <table class="main-tbl">
-    <tr>
-      <th colspan="2">Earnings</th>
-      <th colspan="2">Deductions</th>
-    </tr>
+    <tr><th colspan="2">Earnings</th><th colspan="2">Deductions</th></tr>
     ${row('Basic Salary',base,'Cash Advance',cashAdv)}
     ${row('Rate Per Hour',hourlyRate,'Traffic Fine',trafficFine)}
     ${row('Total Working Hrs',0,'Absent Days',absentDays)}
     ${row('Incentive',incentive,'Other',otherDed)}
     ${row('Performance Bonus',perfBonus,'Pending Deductions',0)}
     ${row('Other Addition',otherAddition,'Carry Forwarded',0)}
-    <tr>
-      <td class="lbl">${monthBonusLabel}</td><td class="val">${fmtN(monthBonus)}</td>
-      <td></td><td></td>
-    </tr>
+    <tr><td class="lbl">${monthBonusLabel}</td><td class="val">${fmtN(monthBonus)}</td><td></td><td></td></tr>
     <tr class="total-row">
       <td>TOTAL ADDITION</td><td style="text-align:right;font-weight:bold;">${fmtN(totalAdd)}</td>
       <td>TOTAL DEDUCTION</td><td style="text-align:right;font-weight:bold;">${fmtN(totalDed)}</td>
@@ -189,24 +129,125 @@ function generatePayslip(slip, month) {
       <td colspan="2" style="text-align:center;font-weight:bold;">${fmtN(net)}</td>
     </tr>
   </table>
-
-  <!-- Footer -->
   <div class="footer">
-    <div>
-      Salary paid by &nbsp;
-      <span class="cb">${isPaid?'✓':''}</span> Cash &nbsp;&nbsp;&nbsp;
-      <span class="cb">${isPaid?'✓':''}</span> Bank account
-    </div>
-    <div style="margin-top:6px;">Date of amount paid: &nbsp; ${paidOn}</div>
+    <div>Salary paid by &nbsp;<span class="cb">${isPaid?'✓':''}</span> Cash &nbsp;&nbsp;&nbsp;<span class="cb">${isPaid?'✓':''}</span> Bank account</div>
+    <div style="margin-top:4px;">Date of amount paid: &nbsp; ${paidOn}</div>
     <div class="footer-grid">
       <div></div>
       <div class="sig-line">Employee Signature</div>
     </div>
-  </div>
-</div>
+  </div>`
+}
+
+/* ── Single payslip — opens its own tab and prints ── */
+function generatePayslip(slip, month) {
+  const logoUrl = window.location.origin + '/logo.webp'
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"/>
+<title>Payslip — ${slip.name} — ${month}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:Arial,sans-serif;background:#fff;padding:28px;font-size:11px;color:#000;}
+  .wrap{max-width:700px;margin:0 auto;}
+  .hdr{display:flex;align-items:center;gap:16px;margin-bottom:6px;}
+  .hdr img{width:72px;height:auto;}
+  .hdr-text{flex:1;}
+  .co-name{font-size:16px;font-weight:bold;text-transform:uppercase;text-align:center;letter-spacing:0.02em;}
+  .co-addr{font-size:10px;text-align:center;margin-top:3px;color:#333;}
+  .slip-title{text-align:center;font-size:13px;font-style:italic;font-weight:bold;border-top:2px solid #000;border-bottom:2px solid #000;padding:4px 0;margin:8px 0 10px;}
+  .info-tbl{width:100%;border-collapse:collapse;margin-bottom:10px;}
+  .info-tbl td{border:1px solid #000;padding:5px 8px;}
+  .info-tbl .key{font-weight:bold;width:18%;}
+  .info-tbl .data{width:32%;}
+  .main-tbl{width:100%;border-collapse:collapse;margin-bottom:0;}
+  .main-tbl td,.main-tbl th{border:1px solid #000;padding:5px 8px;}
+  .main-tbl th{background:#d9d9d9;font-weight:bold;text-align:center;font-size:11px;}
+  .lbl{width:22%;color:#000;}
+  .val{width:28%;text-align:right;font-weight:bold;}
+  .total-row td{font-weight:bold;background:#f0f0f0;}
+  .net-row td{font-weight:bold;font-size:12px;}
+  .footer{margin-top:20px;font-size:11px;}
+  .footer-grid{display:flex;justify-content:space-between;align-items:flex-end;margin-top:32px;}
+  .sig-line{border-top:1px solid #000;padding-top:4px;min-width:180px;text-align:center;font-size:10px;}
+  .cb{display:inline-block;width:12px;height:12px;border:1px solid #000;vertical-align:middle;margin-right:3px;text-align:center;line-height:12px;font-size:9px;}
+  @media print{body{padding:8px;}@page{size:A4;margin:12mm;}}
+</style></head>
+<body><div class="wrap">${slipInnerHtml(slip, month, logoUrl)}</div>
 <script>window.onload=function(){setTimeout(function(){window.print()},600)}</script>
-</body>
-</html>`
+</body></html>`
+  const w = window.open('','_blank')
+  w.document.write(html)
+  w.document.close()
+}
+
+/* ── All payslips — 2 per A4 page, single tab, prints as PDF ── */
+function generateAllPayslips(slips, month) {
+  const logoUrl = window.location.origin + '/logo.webp'
+
+  // Group into pairs
+  const pages = []
+  for (let i = 0; i < slips.length; i += 2) {
+    pages.push(slips.slice(i, i + 2))
+  }
+
+  const pagesHtml = pages.map((pair, pi) => `
+    <div class="page${pi === pages.length - 1 ? ' last' : ''}">
+      <div class="slip">${slipInnerHtml(pair[0], month, logoUrl)}</div>
+      ${pair[1]
+        ? `<div class="sep"></div><div class="slip">${slipInnerHtml(pair[1], month, logoUrl)}</div>`
+        : '<div class="slip empty"></div>'
+      }
+    </div>`).join('\n')
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"/>
+<title>All Payslips — ${month}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:Arial,sans-serif;background:#fff;font-size:10px;color:#000;}
+
+  .page{display:flex;flex-direction:column;height:277mm;padding:8mm;page-break-after:always;}
+  .page.last{page-break-after:avoid;}
+  .slip{flex:1;min-height:0;overflow:hidden;padding:5mm;border:1px solid #ccc;}
+  .slip.empty{border:none;}
+  .sep{height:4mm;flex-shrink:0;}
+
+  .hdr{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+  .hdr img{width:52px;height:auto;}
+  .hdr-text{flex:1;}
+  .co-name{font-size:12px;font-weight:bold;text-transform:uppercase;text-align:center;letter-spacing:0.02em;}
+  .co-addr{font-size:8.5px;text-align:center;margin-top:2px;color:#333;}
+  .slip-title{text-align:center;font-size:10.5px;font-style:italic;font-weight:bold;border-top:1.5px solid #000;border-bottom:1.5px solid #000;padding:3px 0;margin:5px 0 7px;}
+
+  .info-tbl{width:100%;border-collapse:collapse;margin-bottom:7px;}
+  .info-tbl td{border:1px solid #000;padding:3px 6px;font-size:9.5px;}
+  .info-tbl .key{font-weight:bold;width:18%;}
+  .info-tbl .data{width:32%;}
+
+  .main-tbl{width:100%;border-collapse:collapse;}
+  .main-tbl td,.main-tbl th{border:1px solid #000;padding:3px 6px;font-size:9.5px;}
+  .main-tbl th{background:#d9d9d9;font-weight:bold;text-align:center;}
+  .lbl{width:22%;color:#000;}
+  .val{width:28%;text-align:right;font-weight:bold;}
+  .total-row td{font-weight:bold;background:#f0f0f0;}
+  .net-row td{font-weight:bold;font-size:10px;}
+
+  .footer{margin-top:10px;font-size:9.5px;}
+  .footer-grid{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;}
+  .sig-line{border-top:1px solid #000;padding-top:3px;min-width:140px;text-align:center;font-size:8.5px;}
+  .cb{display:inline-block;width:10px;height:10px;border:1px solid #000;vertical-align:middle;margin-right:2px;text-align:center;line-height:10px;font-size:8px;}
+
+  @media print{
+    body{background:#fff;}
+    @page{size:A4 portrait;margin:0;}
+    .page{page-break-after:always;}
+    .page.last{page-break-after:avoid;}
+  }
+</style></head>
+<body>
+${pagesHtml}
+<script>window.onload=function(){setTimeout(function(){window.print()},800)}</script>
+</body></html>`
 
   const w = window.open('','_blank')
   w.document.write(html)
@@ -746,7 +787,7 @@ export default function PayrollPage() {
         <button onClick={()=>exportCSV(payroll,month)} style={{ padding:'8px 14px',borderRadius:20,background:'rgba(255,255,255,0.7)',border:'1.5px solid rgba(0,0,0,0.1)',fontSize:12,fontWeight:600,color:'#6B5D4A',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
           <Download size={13}/> Export CSV
         </button>
-        <button onClick={()=>{ filtered.forEach(s=>generatePayslip(s,month)) }} style={{ padding:'8px 14px',borderRadius:20,background:'rgba(29,111,164,0.1)',border:'1.5px solid rgba(29,111,164,0.3)',fontSize:12,fontWeight:600,color:'#1D6FA4',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
+        <button onClick={()=>generateAllPayslips(filtered,month)} style={{ padding:'8px 14px',borderRadius:20,background:'rgba(29,111,164,0.1)',border:'1.5px solid rgba(29,111,164,0.3)',fontSize:12,fontWeight:600,color:'#1D6FA4',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
           <FileText size={13}/> All Payslips
         </button>
         <button onClick={()=>setModal('bonus')} style={{ padding:'8px 14px',borderRadius:20,background:'rgba(16,185,129,0.1)',border:'1.5px solid rgba(16,185,129,0.3)',fontSize:12,fontWeight:600,color:'#10B981',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
