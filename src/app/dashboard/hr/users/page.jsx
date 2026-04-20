@@ -201,11 +201,11 @@ function UserCard({ u, onEdit, onDelete, onToggle, index }) {
             </button>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#A89880', marginBottom:4 }}>
-            <Mail size={11}/> <span style={{ fontFamily:'monospace' }}>{u.email}</span>
+            <Mail size={11}/> <span style={{ fontFamily:'inherit' }}>{u.email}</span>
           </div>
           {u.emp_id && (
             <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11.5, color:'#6B5D4A' }}>
-              <Building2 size={11}/> <span style={{ fontFamily:'monospace' }}>{u.emp_id}</span>
+              <Building2 size={11}/> <span style={{ fontFamily:'inherit' }}>{u.emp_id}</span>
             </div>
           )}
         </div>
@@ -241,7 +241,7 @@ function UserCard({ u, onEdit, onDelete, onToggle, index }) {
       <div style={{ marginTop:10, paddingTop:10, borderTop:'1px solid #F5F4F1', display:'flex', alignItems:'center', gap:8 }}>
         <KeyRound size={12} color="#C4B49A"/>
         <span style={{ fontSize:11, color:'#A89880', flex:1 }}>Password</span>
-        <span style={{ fontFamily:'monospace', fontSize:12, color:'#C4B49A', letterSpacing:'0.12em' }}>••••••••</span>
+        <span style={{ fontFamily:'inherit', fontSize:12, color:'#C4B49A', letterSpacing:'0.12em' }}>••••••••</span>
         <button onClick={()=>onEdit(u)} style={{ padding:'3px 10px', borderRadius:7, background:'#FDF6E3', border:'1px solid #F0D78C', cursor:'pointer', fontSize:11, color:'#B8860B', fontWeight:600, fontFamily:'Poppins,sans-serif' }}>
           Change
         </button>

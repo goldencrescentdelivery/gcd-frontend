@@ -297,7 +297,7 @@ function WorkNumberAssigner({ emp, onSaved, userRole }) {
 
       {step===0 && mode==='view' && (
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <span style={{ fontSize:13, fontWeight:700, color:emp.work_number?'var(--text)':'var(--text-muted)', fontFamily:emp.work_number?'monospace':'inherit' }}>
+          <span style={{ fontSize:13, fontWeight:700, color:emp.work_number?'var(--text)':'var(--text-muted)', fontFamily:'inherit' }}>
             {emp.work_number||'Not assigned'}
           </span>
           {canEdit && (
@@ -322,7 +322,7 @@ function WorkNumberAssigner({ emp, onSaved, userRole }) {
           : sims.map(s => (
             <div key={s.id} onClick={()=>tryAssign(s.phone_number)}
               style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 10px', borderRadius:8, cursor:'pointer', marginBottom:4, background: s.emp_id===emp.id?'#F0FDF4':'var(--card)', border:`1px solid ${s.emp_id===emp.id?'#A7F3D0':'var(--border)'}`, transition:'background 0.15s' }}>
-              <span style={{ fontFamily:'monospace', fontSize:12.5, color:'var(--text)', fontWeight:600 }}>{s.phone_number}</span>
+              <span style={{ fontFamily:'inherit', fontSize:12.5, color:'var(--text)', fontWeight:600 }}>{s.phone_number}</span>
               <span style={{ fontSize:10.5, color:s.emp_id===emp.id?'#10B981':'var(--text-muted)' }}>{s.emp_id===emp.id?'Current':'Available'}</span>
             </div>
           ))}
@@ -338,7 +338,7 @@ function WorkNumberAssigner({ emp, onSaved, userRole }) {
             <div key={h.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'1px solid var(--border)', fontSize:11 }}>
               <div>
                 <span style={{ fontWeight:700, color:ACTION_COLOR[h.action]||'var(--text)', background:ACTION_BG[h.action]||'var(--bg-alt)', borderRadius:4, padding:'1px 6px', fontSize:10 }}>{h.action}</span>
-                <span style={{ marginLeft:6, fontFamily:'monospace', color:'var(--text)' }}>{h.phone_number}</span>
+                <span style={{ marginLeft:6, fontFamily:'inherit', color:'var(--text)' }}>{h.phone_number}</span>
               </div>
               <span style={{ color:'var(--text-muted)', fontSize:10 }}>{h.performed_at?.slice(0,10)}</span>
             </div>
@@ -691,7 +691,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
           {/* Name + meta */}
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ fontWeight:900,fontSize:18,color:'var(--text)',letterSpacing:'-0.02em',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{emp.name}</div>
-            <div style={{ fontSize:12.5,color:'var(--text-muted)',marginBottom:10 }}>{emp.dept} · <span style={{ fontFamily:'monospace',fontSize:12 }}>{emp.id}</span></div>
+            <div style={{ fontSize:12.5,color:'var(--text-muted)',marginBottom:10 }}>{emp.dept} · <span style={{ fontFamily:'inherit',fontSize:12 }}>{emp.id}</span></div>
             <div style={{ display:'flex',gap:6,flexWrap:'wrap',alignItems:'center' }}>
               <span style={{ fontSize:11,fontWeight:700,color:s.c,background:s.bg,border:`1.5px solid ${s.bc}`,borderRadius:20,padding:'3px 10px' }}>{s.l}</span>
               <span style={{ fontSize:11,fontWeight:700,color:rc.c,background:rc.bg,border:`1.5px solid ${rc.bc}`,borderRadius:20,padding:'3px 10px' }}>{emp.role}</span>
@@ -740,7 +740,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
                   <div key={row.l} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 10px', borderRadius:9, background:'var(--bg-alt)' }}>
                     <Icon size={12} color="var(--text-muted)" style={{ flexShrink:0 }}/>
                     <span style={{ fontSize:11.5, color:'var(--text-muted)', flex:1 }}>{row.l}</span>
-                    <span style={{ fontSize:12, color:'var(--text)', fontWeight:600, fontFamily:row.mono?'monospace':'Poppins,sans-serif', maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{row.v}</span>
+                    <span style={{ fontSize:12, color:'var(--text)', fontWeight:600, fontFamily:'inherit', maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{row.v}</span>
                   </div>
                 )
               })}
@@ -798,7 +798,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
             <WorkNumberAssigner emp={emp} onSaved={onRefresh} userRole={userRole}/>
             <div style={{ marginTop:10, padding:'10px 12px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10 }}>
               <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:6 }}>Personal Phone</div>
-              <div style={{ fontSize:13, fontWeight:600, color:'var(--text)', fontFamily:'monospace' }}>{emp.phone||'—'}</div>
+              <div style={{ fontSize:13, fontWeight:600, color:'var(--text)', fontFamily:'inherit' }}>{emp.phone||'—'}</div>
             </div>
           </div>
         )}
@@ -841,7 +841,7 @@ function AdminCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole
           </div>
           <div style={{ fontSize:11,color:'var(--text-muted)',marginTop:2,display:'flex',gap:5,alignItems:'center' }}>
             {emp.hasProfile ? (
-              <><span style={{ fontFamily:'monospace' }}>{emp.id}</span>
+              <><span style={{ fontFamily:'inherit' }}>{emp.id}</span>
               {emp.work_number&&<><span>·</span><span style={{ color:'var(--text-sub)' }}>{emp.work_number}</span></>}</>
             ) : (
               <span style={{ color:'var(--text-muted)' }}>{emp.email}</span>

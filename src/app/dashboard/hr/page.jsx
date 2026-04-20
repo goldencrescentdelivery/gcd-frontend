@@ -263,7 +263,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
             <div key={row.label} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom:'1px solid #F5F4F1' }}>
               <span style={{ fontSize:14, width:20, textAlign:'center', flexShrink:0 }}>{row.icon}</span>
               <span style={{ fontSize:11.5, color:'#A89880', flex:1 }}>{row.label}</span>
-              <span style={{ fontSize:12, color:'#1A1612', fontWeight:600, fontFamily:row.mono?'monospace':'inherit', textAlign:'right', maxWidth:130, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{row.value}</span>
+              <span style={{ fontSize:12, color:'#1A1612', fontWeight:600, fontFamily:'inherit', textAlign:'right', maxWidth:130, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{row.value}</span>
             </div>
           ))}
 
@@ -335,9 +335,9 @@ function EmpCard({ emp, onClick, onEdit, onDelete, index }) {
             <span style={{ fontWeight:700, fontSize:14, color:'#1A1612', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{emp.name}</span>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-            <span style={{ fontSize:10.5, color:'#A89880', fontFamily:'monospace' }}>{emp.id}</span>
+            <span style={{ fontSize:10.5, color:'#A89880', fontFamily:'inherit' }}>{emp.id}</span>
             {emp.amazon_id && <span style={{ fontSize:10.5, color:'#C4B49A' }}>·</span>}
-            {emp.amazon_id && <span style={{ fontSize:10.5, color:'#6B5D4A', fontFamily:'monospace' }}>{emp.amazon_id}</span>}
+            {emp.amazon_id && <span style={{ fontSize:10.5, color:'#6B5D4A', fontFamily:'inherit' }}>{emp.amazon_id}</span>}
           </div>
         </div>
 

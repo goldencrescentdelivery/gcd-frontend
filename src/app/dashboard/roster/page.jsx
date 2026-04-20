@@ -247,7 +247,7 @@ export default function RosterPage() {
                   </div>
                   <div style={{minWidth:0}}>
                     <div style={{fontWeight:700,fontSize:12,color:'#1A1612',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{emp.name}</div>
-                    <div style={{fontSize:10,color:'#A89880',marginTop:1,fontFamily:'monospace'}}>{emp.id}</div>
+                    <div style={{fontSize:10,color:'#A89880',marginTop:1,fontFamily:'inherit'}}>{emp.id}</div>
                   </div>
                 </div>
                 {weekDates.map(date=>(

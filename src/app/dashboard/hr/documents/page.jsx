@@ -346,7 +346,7 @@ export default function DocumentsPage() {
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontWeight:700, fontSize:14, color:'#1A1612' }}>{emp.name}</div>
                     <div style={{ fontSize:11, color:'#A89880', marginTop:1, display:'flex', gap:6, alignItems:'center' }}>
-                      <span style={{ fontFamily:'monospace' }}>{emp.id}</span>
+                      <span style={{ fontFamily:'inherit' }}>{emp.id}</span>
                       {emp.station_code && <span style={{ background:'#FDF6E3', color:'#B8860B', fontWeight:700, padding:'1px 6px', borderRadius:5, fontSize:10 }}>{emp.station_code}</span>}
                     </div>
                   </div>

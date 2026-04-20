@@ -169,7 +169,7 @@ export default function CompliancePage() {
                       <div style={{ fontSize:13, color:'#6B5D4A', fontWeight:500, marginBottom:5 }}>{fine.violation}</div>
                       <div style={{ display:'flex', gap:12, flexWrap:'wrap', fontSize:11.5, color:'#A89880' }}>
                         <span>📅 {fine.date?.slice(0,10)}</span>
-                        {fine.reference&&<span style={{ fontFamily:'monospace' }}>Ref: {fine.reference}</span>}
+                        {fine.reference&&<span style={{ fontFamily:'inherit' }}>Ref: {fine.reference}</span>}
                         {fine.paid_on&&<span style={{ color:'#2E7D52' }}>✓ Settled {fine.paid_on?.slice(0,10)}</span>}
                       </div>
                     </div>

@@ -362,7 +362,7 @@ export default function OfficePage() {
                       </div>
                       <div style={{ fontWeight:800, fontSize:15, color:'var(--text)', marginBottom:5 }}>{doc.name}</div>
                       <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
-                        {doc.document_number && <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>No. <strong style={{ color:'var(--text)', fontFamily:'monospace' }}>{doc.document_number}</strong></span>}
+                        {doc.document_number && <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>No. <strong style={{ color:'var(--text)', fontFamily:'inherit' }}>{doc.document_number}</strong></span>}
                         {doc.issued_by       && <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>By <strong style={{ color:'var(--text)' }}>{doc.issued_by}</strong></span>}
                         {doc.issue_date      && <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>Issued <strong style={{ color:'var(--text)' }}>{doc.issue_date.slice(0,10)}</strong></span>}
                         {doc.expiry_date     && <span style={{ fontSize:11.5, color:exp?.c||'var(--text-muted)' }}>Expires <strong>{doc.expiry_date.slice(0,10)}</strong></span>}

@@ -453,7 +453,7 @@ function WorkNumberAssigner({ emp, onSaved, userRole, onSelectEmployee }) {
       {/* ── View mode ── */}
       {step===0 && mode==='view' && (
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <span style={{ fontSize:13, fontWeight:700, color:emp.work_number?'var(--text)':'var(--text-muted)', fontFamily:emp.work_number?'monospace':'inherit' }}>
+          <span style={{ fontSize:13, fontWeight:700, color:emp.work_number?'var(--text)':'var(--text-muted)', fontFamily:'inherit' }}>
             {emp.work_number||'Not assigned'}
           </span>
           {canEdit && (
@@ -486,7 +486,7 @@ function WorkNumberAssigner({ emp, onSaved, userRole, onSelectEmployee }) {
                     background: s.emp_id===emp.id ? 'var(--green-bg)' : 'var(--card)',
                     border: `1px solid ${s.emp_id===emp.id ? 'var(--green)' : 'var(--border)'}`,
                     cursor:'pointer', textAlign:'left', fontFamily:'Poppins,sans-serif' }}>
-                  <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:'var(--text)' }}>{s.phone_number}</span>
+                  <span style={{ fontSize:13, fontWeight:700, fontFamily:'inherit', color:'var(--text)' }}>{s.phone_number}</span>
                   <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                     {s.emp_id===emp.id && <span style={{ fontSize:10, color:'var(--green)', fontWeight:700 }}>Current</span>}
                     <span style={{ fontSize:10, color:'var(--text-muted)' }}>{s.carrier}</span>
@@ -512,7 +512,7 @@ function WorkNumberAssigner({ emp, onSaved, userRole, onSelectEmployee }) {
                 <div key={h.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 8px', borderRadius:7, background:'var(--card)', border:'1px solid var(--border)' }}>
                   <div>
                     <span style={{ fontSize:10, fontWeight:700, color:ACTION_COLOR[h.action], background:ACTION_BG[h.action], borderRadius:4, padding:'1px 6px', marginRight:6, textTransform:'capitalize' }}>{h.action}</span>
-                    <span style={{ fontSize:11, fontFamily:'monospace', color:'var(--text)' }}>{h.phone_number}</span>
+                    <span style={{ fontSize:11, fontFamily:'inherit', color:'var(--text)' }}>{h.phone_number}</span>
                   </div>
                   <span style={{ fontSize:10, color:'var(--text-muted)' }}>{new Date(h.performed_at).toLocaleDateString()}</span>
                 </div>
@@ -600,7 +600,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
           {/* Name + meta */}
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ fontWeight:900,fontSize:18,color:'var(--text)',letterSpacing:'-0.02em',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{emp.name}</div>
-            <div style={{ fontSize:12.5,color:'var(--text-muted)',marginBottom:10 }}>{emp.role} · <span style={{ fontFamily:'monospace',fontSize:12 }}>{emp.id}</span></div>
+            <div style={{ fontSize:12.5,color:'var(--text-muted)',marginBottom:10 }}>{emp.role} · <span style={{ fontFamily:'inherit',fontSize:12 }}>{emp.id}</span></div>
             <div style={{ display:'flex',gap:6,flexWrap:'wrap',alignItems:'center' }}>
               <span style={{ fontSize:11,fontWeight:700,color:s.c,background:s.bg,border:`1.5px solid ${s.bc}`,borderRadius:20,padding:'3px 10px' }}>{s.l}</span>
               <span style={{ fontSize:11,fontWeight:700,color:sc,background:sbg,border:`1.5px solid ${sbc}`,borderRadius:20,padding:'3px 10px' }}>{emp.station_code||'DDB1'}</span>
@@ -679,7 +679,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                       <Icon size={12} color="var(--text-muted)"/>
                     </div>
                     <span style={{ fontSize:12, color:'var(--text-muted)', flex:1, minWidth:0 }}>{label}</span>
-                    <span style={{ fontSize:12.5, color: value==='—'?'var(--text-muted)':'var(--text)', fontWeight: value==='—'?400:600, fontFamily:mono?'monospace':'Poppins,sans-serif', maxWidth:220, wordBreak:'break-all', textAlign:'right' }}>{value}</span>
+                    <span style={{ fontSize:12.5, color: value==='—'?'var(--text-muted)':'var(--text)', fontWeight: value==='—'?400:600, fontFamily:'Poppins,sans-serif', maxWidth:220, wordBreak:'break-all', textAlign:'right' }}>{value}</span>
                   </div>
                 )
               }
@@ -819,7 +819,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
             <WorkNumberAssigner emp={emp} onSaved={onRefresh} userRole={userRole} onSelectEmployee={onSelectEmployee}/>
             <div style={{ marginTop:10, padding:'10px 12px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10 }}>
               <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:6 }}>Personal Phone</div>
-              <div style={{ fontSize:13, fontWeight:600, color:'var(--text)', fontFamily:'monospace' }}>{emp.phone||'—'}</div>
+              <div style={{ fontSize:13, fontWeight:600, color:'var(--text)', fontFamily:'inherit' }}>{emp.phone||'—'}</div>
             </div>
           </div>
         )}
@@ -848,7 +848,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                           <Truck size={19} color="#10B981"/>
                         </div>
                         <div style={{ flex:1,minWidth:0 }}>
-                          <div style={{ fontWeight:800,fontSize:16,color:'var(--text)',fontFamily:'monospace' }}>{cur.plate||'—'}</div>
+                          <div style={{ fontWeight:800,fontSize:16,color:'var(--text)',fontFamily:'inherit' }}>{cur.plate||'—'}</div>
                           <div style={{ fontSize:11,color:'var(--text-muted)',marginTop:2 }}>
                             Since {new Date(cur.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'})}
                           </div>
@@ -885,7 +885,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                                 <span style={{ fontSize:10,fontWeight:700,color:isRecv?'#10B981':'#EF4444',background:isRecv?'#F0FDF4':'#FEF2F2',borderRadius:5,padding:'1px 7px',textTransform:'uppercase' }}>
                                   {h.type}
                                 </span>
-                                <span style={{ fontWeight:700,fontSize:12.5,color:'var(--text)',fontFamily:'monospace' }}>{h.plate||'—'}</span>
+                                <span style={{ fontWeight:700,fontSize:12.5,color:'var(--text)',fontFamily:'inherit' }}>{h.plate||'—'}</span>
                               </div>
                               <span style={{ fontSize:10.5,color:'var(--text-muted)',flexShrink:0 }}>
                                 {new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'})}
@@ -917,7 +917,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                           <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center' }}>
                             <div style={{ display:'flex',alignItems:'center',gap:7 }}>
                               <span style={{ fontSize:10,fontWeight:700,color:'#2563EB',background:'#EFF6FF',borderRadius:5,padding:'1px 7px',textTransform:'uppercase' }}>POC</span>
-                              <span style={{ fontWeight:700,fontSize:12.5,color:'var(--text)',fontFamily:'monospace' }}>{a.plate||a.vehicle_plate||'—'}</span>
+                              <span style={{ fontWeight:700,fontSize:12.5,color:'var(--text)',fontFamily:'inherit' }}>{a.plate||a.vehicle_plate||'—'}</span>
                             </div>
                             <span style={{ fontSize:10.5,color:'var(--text-muted)',flexShrink:0 }}>
                               {a.date ? new Date(a.date).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'}) : '—'}
@@ -993,7 +993,7 @@ function EmpCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole }
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontWeight:700,fontSize:13.5,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{emp.name}</div>
           <div style={{ fontSize:11,color:'var(--text-muted)',marginTop:2,display:'flex',gap:5,alignItems:'center' }}>
-            <span style={{ fontFamily:'monospace' }}>{emp.id}</span>
+            <span style={{ fontFamily:'inherit' }}>{emp.id}</span>
             {emp.work_number&&<><span>·</span><span style={{ color:'var(--text-sub)' }}>{emp.work_number}</span></>}
           </div>
         </div>

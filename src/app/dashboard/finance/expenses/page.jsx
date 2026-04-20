@@ -513,7 +513,7 @@ export default function ExpensesPage() {
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:10, paddingTop:8, borderTop:'1px solid rgba(0,0,0,0.05)' }}>
                     <div style={{ fontSize:11, color:'#A89880' }}>
                       {exp.date?.slice(0,10)} · {exp.month}
-                      {exp.emp_id && <span style={{ marginLeft:6, fontFamily:'monospace', fontSize:10 }}>{exp.emp_id}</span>}
+                      {exp.emp_id && <span style={{ marginLeft:6, fontFamily:'inherit', fontSize:10 }}>{exp.emp_id}</span>}
                     </div>
                     <div style={{ display:'flex', gap:6 }}>
                       {canEdit && (<>

@@ -272,18 +272,18 @@ export default function AttendancePage() {
                         <span style={{ fontSize:16 }}>{att.avatar}</span>
                         <div>
                           <div style={{ fontWeight:600, color:'#1A1612', fontSize:13 }}>{att.name}</div>
-                          <div style={{ fontSize:10, color:'#C4B49A', fontFamily:'monospace' }}>{att.emp_id}</div>
+                          <div style={{ fontSize:10, color:'#C4B49A', fontFamily:'inherit' }}>{att.emp_id}</div>
                         </div>
                       </div>
                     </td>
                     <td><span style={{ fontSize:11, fontWeight:700, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:5, padding:'1px 6px' }}>{att.station_code||'—'}</span></td>
                     <td><span className={`badge ${STATUS_BADGE[att.status]||'badge-muted'}`}>{att.status?.replace('_',' ')}</span></td>
                     <td>{att.cycle ? <span style={{ fontSize:12, fontWeight:700, color:'#6B5D4A', background:'#F5F4F1', borderRadius:5, padding:'2px 8px' }}>{att.cycle}{att.is_rescue?' 🆘':''}</span> : '—'}</td>
-                    <td style={{ fontFamily:'monospace', fontWeight:600, color:'#1D6FA4' }}>{att.cycle_hours ? `${att.cycle_hours}h` : '—'}</td>
-                    <td style={{ fontFamily:'monospace', fontSize:12 }}>{att.hourly_rate ? `${att.hourly_rate}/hr` : '—'}</td>
-                    <td style={{ fontFamily:'monospace', fontWeight:700, color:'#2E7D52' }}>{att.earnings ? `AED ${parseFloat(att.earnings).toFixed(2)}` : '—'}</td>
-                    <td className="hide-mobile" style={{ fontFamily:'monospace', fontSize:12, color:'#6B5D4A' }}>{att.check_in||'—'}</td>
-                    <td className="hide-mobile" style={{ fontFamily:'monospace', fontSize:12, color:'#A89880' }}>{att.check_out||'—'}</td>
+                    <td style={{ fontFamily:'inherit', fontWeight:600, color:'#1D6FA4' }}>{att.cycle_hours ? `${att.cycle_hours}h` : '—'}</td>
+                    <td style={{ fontFamily:'inherit', fontSize:12 }}>{att.hourly_rate ? `${att.hourly_rate}/hr` : '—'}</td>
+                    <td style={{ fontFamily:'inherit', fontWeight:700, color:'#2E7D52' }}>{att.earnings ? `AED ${parseFloat(att.earnings).toFixed(2)}` : '—'}</td>
+                    <td className="hide-mobile" style={{ fontFamily:'inherit', fontSize:12, color:'#6B5D4A' }}>{att.check_in||'—'}</td>
+                    <td className="hide-mobile" style={{ fontFamily:'inherit', fontSize:12, color:'#A89880' }}>{att.check_out||'—'}</td>
                     <td>
                       {att.status==='present' && att.check_in && !att.check_out && userRole !== 'accountant' && (
                         <button className="btn btn-secondary btn-sm" onClick={()=>handleCheckout(att)}>Check Out</button>

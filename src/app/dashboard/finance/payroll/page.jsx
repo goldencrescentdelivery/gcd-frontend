@@ -449,7 +449,7 @@ function PayrollCard({ slip, onMarkPaid, markingPaid, onEditSalary, onRemoveDed,
               {slip.station_code && <span style={{ fontSize:9.5, fontWeight:700, color:'#B8860B', background:'rgba(184,134,11,0.1)', borderRadius:20, padding:'2px 8px' }}>{slip.station_code}</span>}
               {slip.project_type && <span style={{ fontSize:9.5, fontWeight:600, color:'#7C3AED', background:'rgba(124,58,237,0.08)', borderRadius:20, padding:'2px 8px' }}>{slip.project_type.toUpperCase()}</span>}
             </div>
-            <div style={{ fontSize:11, color:'#A89880', fontFamily:'monospace' }}>{slip.id}</div>
+            <div style={{ fontSize:11, color:'#A89880', fontFamily:'inherit' }}>{slip.id}</div>
           </div>
           <div style={{ textAlign:'right', flexShrink:0 }}>
             <div style={{ fontWeight:900, fontSize:18, color:isPaid?'#10B981':'#B8860B', letterSpacing:'-0.03em' }}>AED {fmt(net)}</div>
@@ -525,7 +525,7 @@ function PayrollCard({ slip, onMarkPaid, markingPaid, onEditSalary, onRemoveDed,
                     <div style={{ flex:1,marginRight:10 }}>
                       <div style={{ fontSize:12,fontWeight:600,color:dt?.c||'#EF4444' }}>{dt?.l||d.type}</div>
                       {d.description&&<div style={{ fontSize:10.5,color:'#6B5D4A',marginTop:1 }}>{d.description}</div>}
-                      {d.reference&&<div style={{ fontSize:10,color:'#C4B49A',fontFamily:'monospace',marginTop:1 }}>Ref: {d.reference}</div>}
+                      {d.reference&&<div style={{ fontSize:10,color:'#C4B49A',fontFamily:'inherit',marginTop:1 }}>Ref: {d.reference}</div>}
                     </div>
                     <div style={{ display:'flex',gap:8,alignItems:'center',flexShrink:0 }}>
                       <span style={{ fontWeight:800,color:'#EF4444',fontSize:13 }}>-AED {fmt(d.amount)}</span>

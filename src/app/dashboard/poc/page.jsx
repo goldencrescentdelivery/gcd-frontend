@@ -37,7 +37,7 @@ function DriverSearch({ employees, value, onChange, placeholder='Search driver�
             <div style={{ width:32, height:32, borderRadius:9, background:'var(--amber-bg)', border:'1px solid var(--gold-border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{selected.avatar||'👤'}</div>
             <div>
               <div style={{ fontSize:13, fontWeight:700, color:'var(--text)' }}>{selected.name}</div>
-              <div style={{ fontSize:10.5, color:'var(--text-muted)', fontFamily:'monospace' }}>{selected.id}</div>
+              <div style={{ fontSize:10.5, color:'var(--text-muted)', fontFamily:'inherit' }}>{selected.id}</div>
             </div>
           </div>
         ) : (
@@ -64,7 +64,7 @@ function DriverSearch({ employees, value, onChange, placeholder='Search driver�
                 <div style={{ width:32, height:32, borderRadius:9, background:'var(--amber-bg)', border:`1px solid ${value===e.id?'var(--gold)':'var(--gold-border)'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{e.avatar||'👤'}</div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:13, fontWeight:600, color:'var(--text)' }}>{e.name}</div>
-                  <div style={{ fontSize:10.5, color:'var(--text-muted)', fontFamily:'monospace' }}>{e.id}</div>
+                  <div style={{ fontSize:10.5, color:'var(--text-muted)', fontFamily:'inherit' }}>{e.id}</div>
                 </div>
                 {value===e.id && <CheckCircle size={15} color="var(--gold)"/>}
               </div>
@@ -598,10 +598,10 @@ function SimSection({ sims, emps, station, onRefresh }) {
                 <Smartphone size={18} color={sc.c}/>
               </div>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontWeight:700,fontSize:13,color:'var(--text)',fontFamily:'monospace'}}>{sim.phone_number||sim.sim_number}</div>
+                <div style={{fontWeight:700,fontSize:13,color:'var(--text)',fontFamily:'inherit'}}>{sim.phone_number||sim.sim_number}</div>
                 <div style={{fontSize:11,color:'#A89880',marginTop:2,display:'flex',gap:5,flexWrap:'wrap'}}>
                   <span>{sim.carrier}</span>
-                  {sim.phone_number&&<><span>·</span><span style={{fontFamily:'monospace',fontSize:10}}>{sim.sim_number}</span></>}
+                  {sim.phone_number&&<><span>·</span><span style={{fontFamily:'inherit',fontSize:10}}>{sim.sim_number}</span></>}
                   {sim.monthly_cost>0&&<><span>·</span><span style={{color:'#7C3AED',fontWeight:600}}>AED {sim.monthly_cost}/mo</span></>}
                 </div>
               </div>
@@ -684,7 +684,7 @@ function WorkNumModal({ emp, station, sims, onSave, onClose }) {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
           <div>
             <h3 style={{ fontWeight:800, fontSize:16, color:'var(--text)' }}>Assign Work Number</h3>
-            <p style={{ fontSize:12, color:'#A89880', marginTop:2 }}>{emp.name}{emp.work_number && <span style={{ marginLeft:8, fontFamily:'monospace', color:'#B8860B' }}>({emp.work_number})</span>}</p>
+            <p style={{ fontSize:12, color:'#A89880', marginTop:2 }}>{emp.name}{emp.work_number && <span style={{ marginLeft:8, fontFamily:'inherit', color:'#B8860B' }}>({emp.work_number})</span>}</p>
           </div>
           <button onClick={onClose} style={{ width:28, height:28, borderRadius:8, background:'#F5F4F1', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={13}/></button>
         </div>
@@ -735,7 +735,7 @@ function WorkNumModal({ emp, station, sims, onSave, onClose }) {
                       background: s.emp_id===emp.id ? '#F0FDF4' : '#FAFAF8',
                       border: `1.5px solid ${s.emp_id===emp.id ? '#A7F3D0' : '#EAE6DE'}`,
                       cursor:'pointer', textAlign:'left' }}>
-                    <span style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:'var(--text)' }}>{s.phone_number}</span>
+                    <span style={{ fontSize:13, fontWeight:700, fontFamily:'inherit', color:'var(--text)' }}>{s.phone_number}</span>
                     <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                       {s.emp_id===emp.id && <span style={{ fontSize:10, fontWeight:700, color:'#10B981' }}>Current</span>}
                       <span style={{ fontSize:10, color:'#A89880' }}>{s.carrier}</span>
@@ -1097,7 +1097,7 @@ export default function POCPage() {
                   {/* Info */}
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontWeight:700,fontSize:14,color:'var(--text)'}}>{emp.name}</div>
-                    <div style={{fontSize:11,color:'#A89880',fontFamily:'monospace',marginTop:1}}>{emp.id}</div>
+                    <div style={{fontSize:11,color:'#A89880',fontFamily:'inherit',marginTop:1}}>{emp.id}</div>
                   </div>
                   {/* Status */}
                   <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:5,flexShrink:0}}>
