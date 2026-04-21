@@ -381,7 +381,11 @@ a { text-decoration:none; color:inherit; }
 }
 
 /* ── Table ───────────────────────────────────────────────────── */
+/* Give any table container horizontal scroll — prevents layout blow-out */
+.card > .table-scroll,
+.card > div > .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
 .data-table { width:100%; border-collapse:collapse; }
+@media (max-width:768px) { .data-table { min-width:520px; } }
 .data-table thead th {
   background: var(--bg);
   padding: 9px 12px;
@@ -449,6 +453,9 @@ a { text-decoration:none; color:inherit; }
   box-shadow: 0 1px 3px rgba(15,10,3,0.08), 0 1px 2px rgba(15,10,3,0.04);
 }
 
+/* ── Sidebar collapse button — hide on mobile ────────────────── */
+.sidebar-collapse-btn { display:flex; }
+
 /* ── Mobile bottom nav ───────────────────────────────────────── */
 .mobile-bottomnav {
   display: none;
@@ -504,17 +511,53 @@ a { text-decoration:none; color:inherit; }
 .emp-backdrop   { display:none; }
 .emp-detail-panel { width:272px; flex-shrink:0; }
 
+/* ── Attendance page ─────────────────────────────────────────── */
+.attendance-kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+
+/* ── Table overflow wrapper ──────────────────────────────────── */
+/* Any div wrapping a data table gets auto-scroll on mobile */
+.table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.card .table-scroll { margin:-0px; }
+
+/* ── Responsive utility classes ─────────────────────────────── */
+/* Use these classes on wrapper divs to get responsive grid/flex */
+.r-grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.r-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.r-grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+.r-flex   { display:flex; gap:12px; flex-wrap:wrap; }
+.r-row    { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+/* Page-level header row */
+.page-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.page-header-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+/* Scrollable table wrapper — prevents horizontal overflow on mobile */
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; width:100%; }
+
+/* Document / record card */
+.doc-card          { background:var(--card); border-radius:16px; overflow:hidden; display:flex; align-items:stretch; box-shadow:var(--shadow); transition:box-shadow 0.2s; }
+.doc-card-body     { flex:1; padding:14px 18px; display:flex; align-items:center; gap:16px; min-width:0; }
+.doc-card-actions  { display:flex; gap:6px; flex-shrink:0; align-items:center; flex-wrap:wrap; }
+
+/* Award banner */
+.award-banner-inner { display:flex; align-items:stretch; }
+.award-img          { width:130px; overflow:hidden; flex-shrink:0; }
+
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width:1024px) {
   #mobile-menu-btn { display:flex !important; }
   .sidebar { position:fixed; top:0; left:0; height:100%; transform:translateX(-100%); width:240px !important; min-width:240px !important; }
   .sidebar.mobile-open { transform:translateX(0); }
   .sidebar-overlay { display:block; }
+  .sidebar-collapse-btn { display:none !important; }
   .page-content { padding:18px 16px 90px; }
   .mobile-bottomnav { display:flex; justify-content:space-around; }
-  .four-kpi-grid    { grid-template-columns:repeat(2,1fr) !important; }
-  .exp-emp-grid     { grid-template-columns:1fr !important; }
+  .four-kpi-grid      { grid-template-columns:repeat(2,1fr) !important; }
+  .exp-emp-grid       { grid-template-columns:1fr !important; }
   .quick-actions-grid { grid-template-columns:repeat(4,1fr) !important; }
+  .r-grid-4              { grid-template-columns:repeat(2,1fr) !important; }
+  .r-grid-3              { grid-template-columns:repeat(2,1fr) !important; }
+  .attendance-kpi-grid   { grid-template-columns:repeat(3,1fr) !important; }
 }
 @media (max-width:900px) {
   .three-col-glass { grid-template-columns:1fr 1fr !important; }
@@ -539,6 +582,11 @@ a { text-decoration:none; color:inherit; }
   .emp-detail-panel > div { position:static !important; }
   .emp-detail-panel > div > div:first-child { border-radius:20px 20px 0 0 !important; }
   .emp-stats-grid { grid-template-columns:1fr 1fr !important; }
+  .award-img      { width:90px !important; }
+
+  /* Document card: stack actions below content */
+  .doc-card-body { flex-direction:column; align-items:flex-start; gap:10px; }
+  .doc-card-actions { width:100%; justify-content:flex-start; border-top:1px solid var(--border); padding-top:10px; }
 }
 @media (max-width:640px) {
   .mob       { display:flex !important; }
@@ -546,13 +594,46 @@ a { text-decoration:none; color:inherit; }
   .desk      { display:none !important; }
   .hide-mobile { display:none !important; }
   .page-content { padding:14px 12px 90px; }
-  .modal { padding:18px; }
+  .modal { padding:18px; max-height:95vh; }
   .two-col-glass   { grid-template-columns:1fr !important; }
   .three-col-glass { grid-template-columns:1fr !important; }
   .four-kpi-grid   { grid-template-columns:1fr 1fr !important; }
   .sim-kpi-grid    { grid-template-columns:1fr 1fr !important; }
   .quick-actions-grid { grid-template-columns:repeat(3,1fr) !important; }
+  .r-grid-4  { grid-template-columns:1fr 1fr !important; }
+  .r-grid-3  { grid-template-columns:1fr 1fr !important; }
+  .r-grid-2  { grid-template-columns:1fr !important; }
+  .attendance-kpi-grid { grid-template-columns:repeat(2,1fr) !important; }
+
+  /* Page header stacks on small phones */
+  .page-header { flex-direction:column; align-items:flex-start; }
+  .page-header-actions { width:100%; }
+
+  /* Office events — single col */
+  .events-grid { grid-template-columns:1fr !important; }
+
+  /* Award banner compact */
+  .award-img { display:none !important; }
+  .award-banner-inner { flex-direction:column; }
+
+  /* Tabs — allow horizontal scroll */
+  .tabs { overflow-x:auto; flex-wrap:nowrap; }
+
+  /* Stat numbers smaller */
+  .stat-num { font-size:22px !important; }
+
+  /* Modal full screen on tiny phones */
+  .modal-overlay { padding:0; align-items:flex-end; }
+  .modal { border-radius:20px 20px 0 0; max-height:95vh; }
+
+  /* Topbar title smaller */
+  .topbar-title { font-size:14px !important; }
+
+  /* Table cells clip */
+  .data-table tbody td, .data-table thead th { padding:8px 10px; font-size:12px; }
 }
 @media (max-width:480px) {
   .emp-stats-grid { grid-template-columns:1fr 1fr !important; }
+  .r-grid-3  { grid-template-columns:1fr !important; }
+  .quick-actions-grid { grid-template-columns:repeat(2,1fr) !important; }
 }

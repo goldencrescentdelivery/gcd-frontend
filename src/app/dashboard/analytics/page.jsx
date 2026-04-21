@@ -217,7 +217,7 @@ function AdminDashboard({ summary, chart, loading, leaves, onApproveLeave, simSt
       {/* Expenses */}
       <Card>
         <SH title="Expenses This Month" sub={`${fmtAED(totalExp)} total · ${pendingExp} pending`} href="/dashboard/finance/expenses"/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:16 }}>
+        <div className="r-grid-4" style={{ gap:10, marginBottom:16 }}>
           {[{l:'Total Spent',v:fmtAED(totalExp),c:'var(--text)'},{l:'Approved',v:fmtAED(approvedExp),c:'#10B981'},{l:'Pending',v:pendingExp,c:'#F59E0B'},{l:'Categories',v:byCat.length,c:'#A78BFA'}].map(s=>(
             <div key={s.l} style={{ textAlign:'center', padding:'12px 8px', borderRadius:12, background:'var(--bg-alt)', border:'1px solid var(--border)' }}>
               <div style={{ fontWeight:900, fontSize:17, color:s.c, letterSpacing:'-0.02em' }}>{s.v}</div>

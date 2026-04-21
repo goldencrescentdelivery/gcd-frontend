@@ -59,9 +59,9 @@ function AwardBanner({ onDismiss }) {
         <X size={13}/>
       </button>
 
-      <div style={{ display:'flex', alignItems:'stretch', gap:0, position:'relative', zIndex:1 }}>
+      <div className="award-banner-inner" style={{ position:'relative', zIndex:1 }}>
         {/* Award image */}
-        <div
+        <div className="award-img"
           onClick={() => setExpanded(p => !p)}
           style={{ flexShrink:0, width: expanded ? 0 : 130, overflow:'hidden', cursor:'pointer', transition:'width 0.4s ease' }}>
           <img

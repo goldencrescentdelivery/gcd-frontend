@@ -201,7 +201,7 @@ export default function RosterPage() {
       </div>
 
       {/* Coverage summary */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:6}}>
+      <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch'}}><div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:6,minWidth:420}}>
         {shiftCounts.map((d,i)=>{
           const isToday = d.date===today
           return (
@@ -212,7 +212,7 @@ export default function RosterPage() {
             </div>
           )
         })}
-      </div>
+      </div></div>
 
       {/* Roster grid */}
       {loading ? (

@@ -78,7 +78,7 @@ export default function Topbar({ onMenuClick }) {
 
       {/* Title */}
       <div style={{ flex:1, minWidth:0 }}>
-        <div style={{ fontWeight:700, fontSize:16, color:'var(--text)', letterSpacing:'-0.01em', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{title}</div>
+        <div className="topbar-title" style={{ fontWeight:700, fontSize:16, color:'var(--text)', letterSpacing:'-0.01em', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{title}</div>
         <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>
           {new Date().toLocaleDateString('en-AE',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
         </div>

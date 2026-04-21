@@ -233,7 +233,7 @@ export default function AttendancePage() {
       </div>
 
       {/* KPIs */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:12 }}>
+      <div className="attendance-kpi-grid" style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:12 }}>
         {[
           { l:'Present',   v:present,                   c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0' },
           { l:'Absent',    v:absent,                    c:'#C0392B', bg:'#FEF2F2', bc:'#FCA5A5' },

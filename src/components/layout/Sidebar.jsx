@@ -79,7 +79,8 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
             </div>
             {/* Collapse toggle — desktop only */}
             <button onClick={() => setCollapsed(p => !p)}
-              style={{ flexShrink:0, width:26, height:26, borderRadius:8, border:'1px solid var(--border)', background:'var(--bg-alt)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'var(--text-muted)' }}
+              className="sidebar-collapse-btn"
+              style={{ flexShrink:0, width:26, height:26, borderRadius:8, border:'1px solid var(--border)', background:'var(--bg-alt)', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'var(--text-muted)' }}
               title={collapsed?'Expand':'Collapse'}>
               {collapsed ? <ChevronRight size={13}/> : <ChevronLeft size={13}/>}
             </button>

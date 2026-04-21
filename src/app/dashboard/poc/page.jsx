@@ -1041,7 +1041,7 @@ export default function POCPage() {
             style={{background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:10,padding:'7px 10px',color:'white',fontSize:12,outline:'none',cursor:'pointer'}}/>
         </div>
         {/* Stats row */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,position:'relative'}}>
+        <div className="r-grid-4" style={{gap:8,position:'relative'}}>
           {[
             {l:'Present', v:present,   c:'#4ADE80', bg:'rgba(74,222,128,0.15)'},
             {l:'Absent',  v:absent,    c:'#F87171', bg:'rgba(248,113,113,0.15)'},

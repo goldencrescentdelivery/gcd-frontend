@@ -258,12 +258,12 @@ export default function OfficePage() {
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
       {/* ── Header ── */}
-      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
+      <div className="page-header">
         <div>
           <h1 style={{ fontWeight:900, fontSize:22, color:'var(--text)', margin:0, letterSpacing:'-0.03em' }}>Office Profile</h1>
           <p style={{ fontSize:12.5, color:'var(--text-muted)', marginTop:4 }}>Company documents, licenses &amp; upcoming events</p>
         </div>
-        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+        <div className="page-header-actions">
           <button onClick={load} title="Refresh" style={{ width:36, height:36, borderRadius:10, background:'var(--card)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
             <RefreshCw size={14} color="var(--text-muted)"/>
           </button>
@@ -281,7 +281,7 @@ export default function OfficePage() {
       </div>
 
       {/* ── Stats — no icons, just numbers ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
+      <div className="r-grid-4">
         {[
           { l:'Total Documents',    v:docs.length,       c:'var(--text)',  bg:'var(--bg-alt)', bc:'var(--border)' },
           { l:'Expired',           v:expired.length,     c:'#DC2626',      bg:'#FEF2F2',       bc:'#FECACA'       },
@@ -340,38 +340,41 @@ export default function OfficePage() {
               const exp = expiry(doc.expiry_date)
               const fileUrl = driveViewUrl(doc.file_url)
               return (
-                <div key={doc.id} style={{ background:'var(--card)', border:`1px solid ${exp&&exp.d<=30?exp.bc:'var(--border)'}`, borderRadius:16, overflow:'hidden', display:'flex', alignItems:'stretch', boxShadow:'var(--shadow-sm)', transition:'box-shadow 0.2s' }}
+                <div key={doc.id} className="doc-card" style={{ border:`1px solid ${exp&&exp.d<=30?exp.bc:'var(--border)'}` }}
                   onMouseEnter={e=>e.currentTarget.style.boxShadow='var(--shadow-md)'}
-                  onMouseLeave={e=>e.currentTarget.style.boxShadow='var(--shadow-sm)'}>
+                  onMouseLeave={e=>e.currentTarget.style.boxShadow='var(--shadow)'}>
 
                   {/* Left accent */}
                   <div style={{ width:5, background:cat.color, flexShrink:0 }}/>
 
                   {/* Content */}
-                  <div style={{ flex:1, padding:'14px 18px', display:'flex', alignItems:'center', gap:18, minWidth:0 }}>
-                    {/* Emoji */}
-                    <div style={{ width:48, height:48, borderRadius:14, background:cat.bg, border:`1px solid ${cat.bc}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>
-                      {cat.emoji}
-                    </div>
+                  <div className="doc-card-body">
+                    {/* Top row: emoji + info */}
+                    <div style={{ display:'flex', alignItems:'center', gap:14, flex:1, minWidth:0, width:'100%' }}>
+                      {/* Emoji */}
+                      <div style={{ width:46, height:46, borderRadius:14, background:cat.bg, border:`1px solid ${cat.bc}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>
+                        {cat.emoji}
+                      </div>
 
-                    {/* Main info */}
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
-                        <span style={{ fontSize:10, fontWeight:800, color:cat.color, textTransform:'uppercase', letterSpacing:'0.07em', background:cat.bg, border:`1px solid ${cat.bc}`, borderRadius:6, padding:'1px 8px' }}>{cat.l}</span>
-                        {exp && <span style={{ fontSize:10.5, fontWeight:700, color:exp.c, background:exp.bg, border:`1px solid ${exp.bc}`, borderRadius:20, padding:'1px 9px' }}>{exp.label}</span>}
+                      {/* Main info */}
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
+                          <span style={{ fontSize:10, fontWeight:800, color:cat.color, textTransform:'uppercase', letterSpacing:'0.07em', background:cat.bg, border:`1px solid ${cat.bc}`, borderRadius:6, padding:'1px 8px' }}>{cat.l}</span>
+                          {exp && <span style={{ fontSize:10.5, fontWeight:700, color:exp.c, background:exp.bg, border:`1px solid ${exp.bc}`, borderRadius:20, padding:'1px 9px' }}>{exp.label}</span>}
+                        </div>
+                        <div style={{ fontWeight:800, fontSize:15, color:'var(--text)', marginBottom:4 }}>{doc.name}</div>
+                        <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+                          {doc.document_number && <span style={{ fontSize:11, color:'var(--text-muted)' }}>No. <strong style={{ color:'var(--text)', fontFamily:'inherit' }}>{doc.document_number}</strong></span>}
+                          {doc.issued_by       && <span style={{ fontSize:11, color:'var(--text-muted)' }}>By <strong style={{ color:'var(--text)' }}>{doc.issued_by}</strong></span>}
+                          {doc.issue_date      && <span style={{ fontSize:11, color:'var(--text-muted)' }}>Issued <strong style={{ color:'var(--text)' }}>{doc.issue_date.slice(0,10)}</strong></span>}
+                          {doc.expiry_date     && <span style={{ fontSize:11, color:exp?.c||'var(--text-muted)' }}>Expires <strong>{doc.expiry_date.slice(0,10)}</strong></span>}
+                        </div>
+                        {doc.notes && <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:4, fontStyle:'italic' }}>{doc.notes}</div>}
                       </div>
-                      <div style={{ fontWeight:800, fontSize:15, color:'var(--text)', marginBottom:5 }}>{doc.name}</div>
-                      <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
-                        {doc.document_number && <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>No. <strong style={{ color:'var(--text)', fontFamily:'inherit' }}>{doc.document_number}</strong></span>}
-                        {doc.issued_by       && <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>By <strong style={{ color:'var(--text)' }}>{doc.issued_by}</strong></span>}
-                        {doc.issue_date      && <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>Issued <strong style={{ color:'var(--text)' }}>{doc.issue_date.slice(0,10)}</strong></span>}
-                        {doc.expiry_date     && <span style={{ fontSize:11.5, color:exp?.c||'var(--text-muted)' }}>Expires <strong>{doc.expiry_date.slice(0,10)}</strong></span>}
-                      </div>
-                      {doc.notes && <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:4, fontStyle:'italic' }}>{doc.notes}</div>}
                     </div>
 
                     {/* Action buttons */}
-                    <div style={{ display:'flex', gap:6, flexShrink:0, alignItems:'center' }}>
+                    <div className="doc-card-actions">
                       {fileUrl ? (
                         <>
                           <a href={fileUrl} target="_blank" rel="noreferrer"
@@ -422,7 +425,7 @@ export default function OfficePage() {
             <div style={{ fontSize:12.5, color:'var(--text-muted)', marginTop:4 }}>Track renewals, meetings, deadlines and payments</div>
           </div>
         ) : (
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+          <div className="events-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
             {/* Upcoming */}
             <div>
               <div style={{ fontSize:11, fontWeight:800, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:12, display:'flex', alignItems:'center', gap:6 }}>

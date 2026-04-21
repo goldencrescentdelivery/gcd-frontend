@@ -715,7 +715,7 @@ export default function PayrollPage() {
         <div style={{ position:'absolute', right:-30, top:-30, width:180, height:180, borderRadius:'50%', background:'radial-gradient(circle,rgba(212,160,23,0.15) 0%,transparent 70%)', pointerEvents:'none'}}/>
         <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:4 }}>Net Payroll — {month}</div>
         <div style={{ fontWeight:900, fontSize:28, letterSpacing:'-0.04em', color:'#D4A017', marginBottom:14 }}>AED {fmt(totalNet)}</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
+        <div className="r-grid-4" style={{ gap:8 }}>
           {[
             {l:'Base',       v:`${fmt(totalBase)}`,  c:'rgba(255,255,255,0.9)'},
             {l:'+ Bonuses',  v:`${fmt(totalBonus)}`, c:'#34D399'},
