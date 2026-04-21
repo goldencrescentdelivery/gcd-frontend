@@ -140,9 +140,9 @@ function InsuranceTab({ profile }) {
       <Card style={{ padding:0, overflow:'hidden', borderRadius:16 }}>
         <iframe
           src={embedUrl}
-          width="100%" height="480"
+          width="100%"
           allow="autoplay"
-          style={{ border:'none', display:'block' }}
+          style={{ border:'none', display:'block', height:'min(480px, 60vh)' }}
           title="Insurance Card"
         />
       </Card>
@@ -258,28 +258,39 @@ export default function DriverPortal() {
   ]
 
   return (
-    <div style={{ minHeight:'100vh',background:'#F9FAFB',fontFamily:'Poppins,sans-serif',paddingBottom:76 }}>
+    <div style={{ minHeight:'100vh',background:'#F9FAFB',fontFamily:'Poppins,sans-serif',paddingBottom:'calc(68px + env(safe-area-inset-bottom, 0px))' }}>
+      <style>{`
+        @media (max-width:380px) {
+          .dp-nav-label { font-size:7.5px !important; }
+          .dp-salary    { font-size:22px !important; }
+          .dp-action-label { font-size:11px !important; }
+        }
+        @media (max-width:340px) {
+          .dp-nav-icon  { display:none !important; }
+          .dp-nav-label { font-size:9px !important; }
+        }
+      `}</style>
 
       {/* ── HEADER ── */}
-      <div style={{ background:'#FFF',borderBottom:'1px solid #F0F0EE',padding:'14px 16px',position:'sticky',top:0,zIndex:50,boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
-        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',maxWidth:500,margin:'0 auto' }}>
-          <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-            <div style={{ width:38,height:38,borderRadius:11,background:'linear-gradient(135deg,#B8860B,#D4A017)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:15,color:'#FFF' }}>
+      <div style={{ background:'#FFF',borderBottom:'1px solid #F0F0EE',padding:'12px 14px',position:'sticky',top:0,zIndex:50,boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
+        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',maxWidth:520,margin:'0 auto',gap:8 }}>
+          <div style={{ display:'flex',alignItems:'center',gap:9,minWidth:0,flex:1 }}>
+            <div style={{ width:36,height:36,borderRadius:10,background:'linear-gradient(135deg,#B8860B,#D4A017)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:14,color:'#FFF',flexShrink:0 }}>
               {user.name?.slice(0,1).toUpperCase()}
             </div>
-            <div>
-              <div style={{ fontWeight:700,fontSize:14,color:'#111',lineHeight:1.2 }}>{user.name}</div>
-              <div style={{ fontSize:11,color:'#9CA3AF',marginTop:1 }}>Driver · {user.station_code||'—'}{grade?` · ${grade.label}`:''}</div>
+            <div style={{ minWidth:0 }}>
+              <div style={{ fontWeight:700,fontSize:14,color:'#111',lineHeight:1.2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{user.name}</div>
+              <div style={{ fontSize:10.5,color:'#9CA3AF',marginTop:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>Driver · {user.station_code||'—'}{grade?` · ${grade.label}`:''}</div>
             </div>
           </div>
-          <button onClick={signOut} style={{ display:'flex',alignItems:'center',gap:5,padding:'7px 13px',borderRadius:20,background:'#FEF2F2',border:'1px solid #FECACA',color:'#EF4444',fontWeight:600,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>
-            <LogOut size={12}/> Sign Out
+          <button onClick={signOut} style={{ display:'flex',alignItems:'center',gap:4,padding:'7px 11px',borderRadius:20,background:'#FEF2F2',border:'1px solid #FECACA',color:'#EF4444',fontWeight:600,fontSize:11.5,cursor:'pointer',fontFamily:'Poppins,sans-serif',flexShrink:0 }}>
+            <LogOut size={12}/> <span>Out</span>
           </button>
         </div>
       </div>
 
       {/* ── CONTENT ── */}
-      <div style={{ maxWidth:500,margin:'0 auto',padding:'14px 14px' }}>
+      <div style={{ maxWidth:520,margin:'0 auto',padding:'12px 12px' }}>
 
         {/* HOME */}
         {tab==='home' && (
@@ -287,12 +298,12 @@ export default function DriverPortal() {
 
             {/* Salary summary */}
             <Card style={{ background:'linear-gradient(135deg,#1C1208,#2C1F0A)',border:'none' }}>
-              <div style={{ fontSize:10.5,color:'rgba(255,255,255,0.45)',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6 }}>This Month · {new Date().toLocaleString('en-AE',{month:'long',year:'numeric'})}</div>
-              <div style={{ fontWeight:900,fontSize:30,color:'#D4A017',letterSpacing:'-0.04em',marginBottom:4 }}>{fmtA(net)}</div>
-              <div style={{ display:'flex',gap:12 }}>
-                <span style={{ fontSize:12,color:'rgba(255,255,255,0.5)' }}>Base {fmtA(payroll?.base_salary||0)}</span>
-                {Number(payroll?.bonus_total)>0&&<span style={{ fontSize:12,color:'#34D399' }}>+{fmtA(payroll.bonus_total)}</span>}
-                {Number(payroll?.deduction_total)>0&&<span style={{ fontSize:12,color:'#F87171' }}>-{fmtA(payroll.deduction_total)}</span>}
+              <div style={{ fontSize:10,color:'rgba(255,255,255,0.45)',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:5 }}>This Month · {new Date().toLocaleString('en-AE',{month:'long',year:'numeric'})}</div>
+              <div className="dp-salary" style={{ fontWeight:900,fontSize:26,color:'#D4A017',letterSpacing:'-0.04em',marginBottom:4,lineHeight:1.1 }}>{fmtA(net)}</div>
+              <div style={{ display:'flex',gap:8,flexWrap:'wrap' }}>
+                <span style={{ fontSize:11.5,color:'rgba(255,255,255,0.5)' }}>Base {fmtA(payroll?.base_salary||0)}</span>
+                {Number(payroll?.bonus_total)>0&&<span style={{ fontSize:11.5,color:'#34D399' }}>+{fmtA(payroll.bonus_total)}</span>}
+                {Number(payroll?.deduction_total)>0&&<span style={{ fontSize:11.5,color:'#F87171' }}>-{fmtA(payroll.deduction_total)}</span>}
               </div>
               <div style={{ marginTop:8 }}>
                 <span style={{ fontSize:11,fontWeight:600,color:payroll?.payroll_status==='paid'?'#34D399':'#FB923C',background:payroll?.payroll_status==='paid'?'rgba(52,211,153,0.15)':'rgba(251,146,60,0.15)',padding:'3px 10px',borderRadius:20 }}>
@@ -339,20 +350,20 @@ export default function DriverPortal() {
             )}
 
             {/* Quick actions */}
-            <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10 }}>
+            <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:8 }}>
               {[
-                {l:'Apply Leave',    icon:Calendar,  c:'#F59E0B', bg:'#FFFBEB', action:()=>setLeaveModal(true)},
-                {l:'Receive Vehicle', icon:Car,       c:'#2563EB', bg:'#EFF6FF', action:()=>setHvModal('received')},
-                {l:'My Payslips',    icon:Wallet,    c:'#10B981', bg:'#F0FDF4', action:()=>setTab('pay')},
-                {l:'Performance',    icon:BarChart2, c:'#7C3AED', bg:'#F5F3FF', action:()=>setTab('perf')},
+                {l:'Apply Leave',     icon:Calendar,  c:'#F59E0B', bg:'#FFFBEB', action:()=>setLeaveModal(true)},
+                {l:'Receive Vehicle', icon:Car,        c:'#2563EB', bg:'#EFF6FF', action:()=>setHvModal('received')},
+                {l:'My Payslips',     icon:Wallet,     c:'#10B981', bg:'#F0FDF4', action:()=>setTab('pay')},
+                {l:'Performance',     icon:BarChart2,  c:'#7C3AED', bg:'#F5F3FF', action:()=>setTab('perf')},
               ].map(a=>{
                 const Icon=a.icon
                 return (
-                  <button key={a.l} onClick={a.action} style={{ display:'flex',alignItems:'center',gap:10,padding:'13px 14px',borderRadius:14,background:a.bg,border:`1px solid ${a.c}20`,cursor:'pointer',fontFamily:'Poppins,sans-serif',textAlign:'left',width:'100%' }}>
-                    <div style={{ width:36,height:36,borderRadius:10,background:`${a.c}18`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
-                      <Icon size={17} color={a.c}/>
+                  <button key={a.l} onClick={a.action} style={{ display:'flex',alignItems:'center',gap:8,padding:'12px 12px',borderRadius:14,background:a.bg,border:`1px solid ${a.c}20`,cursor:'pointer',fontFamily:'Poppins,sans-serif',textAlign:'left',width:'100%' }}>
+                    <div style={{ width:32,height:32,borderRadius:9,background:`${a.c}18`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                      <Icon size={15} color={a.c}/>
                     </div>
-                    <span style={{ fontWeight:600,fontSize:13,color:a.c }}>{a.l}</span>
+                    <span style={{ fontWeight:600,fontSize:12.5,color:a.c,lineHeight:1.3 }}>{a.l}</span>
                   </button>
                 )
               })}
@@ -593,14 +604,14 @@ export default function DriverPortal() {
       </div>
 
       {/* ── BOTTOM NAV ── */}
-      <nav style={{ position:'fixed',bottom:0,left:0,right:0,background:'#FFF',borderTop:'1px solid #F0F0EE',display:'flex',zIndex:100,boxShadow:'0 -2px 12px rgba(0,0,0,0.06)' }}>
+      <nav style={{ position:'fixed',bottom:0,left:0,right:0,background:'#FFF',borderTop:'1px solid #F0F0EE',display:'flex',zIndex:100,boxShadow:'0 -2px 12px rgba(0,0,0,0.06)',paddingBottom:'env(safe-area-inset-bottom,0px)' }}>
         {TABS.map(t=>{
           const Icon=t.icon
           const active=tab===t.id
           return (
-            <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'9px 2px 12px',border:'none',background:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif',transition:'color 0.15s' }}>
-              <Icon size={19} color={active?'#B8860B':'#9CA3AF'} strokeWidth={active?2.5:1.8}/>
-              <span style={{ fontSize:9.5,fontWeight:active?700:500,color:active?'#B8860B':'#9CA3AF',marginTop:3 }}>{t.label}</span>
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'8px 1px 10px',border:'none',background:active?'#FFFBEB':'none',cursor:'pointer',fontFamily:'Poppins,sans-serif',transition:'all 0.15s',minWidth:0 }}>
+              <span className="dp-nav-icon"><Icon size={18} color={active?'#B8860B':'#9CA3AF'} strokeWidth={active?2.5:1.8}/></span>
+              <span className="dp-nav-label" style={{ fontSize:8.5,fontWeight:active?700:500,color:active?'#B8860B':'#9CA3AF',marginTop:2,lineHeight:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'100%',padding:'0 1px' }}>{t.label}</span>
             </button>
           )
         })}
