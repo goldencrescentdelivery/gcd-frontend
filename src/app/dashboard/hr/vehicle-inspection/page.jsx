@@ -174,8 +174,6 @@ function InspectionModal({ vehicles, editInspection, onSave, onClose }) {
   const [vehicleId,     setVehicleId]     = useState(editInspection?.vehicle_id || '')
   const [date,          setDate]          = useState(editInspection?.inspection_date?.slice(0,10) || today)
   const [inspectorName, setInspectorName] = useState(editInspection?.inspector_name || '')
-  const [approvedBy,    setApprovedBy]    = useState(editInspection?.approved_by_name || '')
-  const [approvedDate,  setApprovedDate]  = useState(editInspection?.approved_by_date?.slice(0,10) || '')
   const [sections,      setSections]      = useState(
     editInspection?.sections
       ? (typeof editInspection.sections === 'string' ? JSON.parse(editInspection.sections) : editInspection.sections)
@@ -193,11 +191,9 @@ function InspectionModal({ vehicles, editInspection, onSave, onClose }) {
     setSaving(true); setErr(null)
     try {
       const body = {
-        vehicle_id:       vehicleId,
-        inspection_date:  date,
-        inspector_name:   inspectorName || null,
-        approved_by_name: approvedBy   || null,
-        approved_by_date: approvedDate || null,
+        vehicle_id:      vehicleId,
+        inspection_date: date,
+        inspector_name:  inspectorName || null,
         sections,
         additional_notes: addlNotes || null,
         status: 'completed',
@@ -268,11 +264,6 @@ function InspectionModal({ vehicles, editInspection, onSave, onClose }) {
               </div>
             </div>
 
-            {/* Instructions */}
-            <div style={{ background: 'white', border: '1px dashed var(--border-med)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              <strong style={{ color: 'var(--text)' }}>Instructions:</strong> Carefully review each item and mark the corresponding checkbox to indicate compliance or note any observations.
-              Use the "Observations / Notes" section to provide additional details, corrective actions, and any required follow-up.
-            </div>
           </div>
 
           {/* Sections */}
@@ -298,23 +289,6 @@ function InspectionModal({ vehicles, editInspection, onSave, onClose }) {
               style={{ width: '100%', resize: 'vertical', fontSize: 12.5 }}
               placeholder="Insert any additional notes or vehicle inspection observations made during the inspection…"
             />
-          </div>
-
-          {/* Approval */}
-          <div style={{ background: 'var(--bg-alt)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', marginBottom: 8 }}>
-            <div style={{ fontWeight: 800, fontSize: 12.5, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>
-              Approved By
-            </div>
-            <div className="modal-two-col">
-              <div>
-                <label className="input-label">Name</label>
-                <input className="input" value={approvedBy} onChange={e => setApprovedBy(e.target.value)} placeholder="Approver name"/>
-              </div>
-              <div>
-                <label className="input-label">Date</label>
-                <input type="date" className="input" value={approvedDate} onChange={e => setApprovedDate(e.target.value)}/>
-              </div>
-            </div>
           </div>
 
           {err && (
@@ -350,7 +324,7 @@ function printInspection(insp) {
   }
 
   const sectionsHtml = SECTIONS.map(section => {
-    const data = secs[section.key] || { items: [], observations: '' }
+    const data = secs[section.key] || { items: [] }
     const rows = section.items.map((item, idx) => `
       <tr>
         <td class="item-cell">${item}</td>
@@ -362,10 +336,6 @@ function printInspection(insp) {
         <table class="check-table">
           <tbody>${rows}</tbody>
         </table>
-        <div class="obs-row">
-          <div class="obs-label">Observations / Notes /<br>Corrective actions, if any:</div>
-          <div class="obs-box">${data.observations || ''}</div>
-        </div>
       </div>`
   }).join('')
 
@@ -427,31 +397,16 @@ function printInspection(insp) {
   </div>
 </div>
 
-<div class="instructions">
-  <strong>Instructions:</strong> This checklist is designed to conduct a comprehensive inspection of the vehicle to assess its safety and overall condition.
-  Carefully review each item and mark the corresponding checkbox to indicate compliance or note any observations and areas for improvement.
-  Use the "Notes/Observations" section to provide additional details, corrective actions, and any required follow-up.
-</div>
-
 ${sectionsHtml}
 
-<div class="addl-title">Additional Notes / Observations</div>
-<div class="addl-box">${insp.additional_notes || ''}</div>
+${insp.additional_notes ? `<div class="addl-title">Additional Notes / Observations</div><div class="addl-box">${insp.additional_notes}</div>` : ''}
 
-<div class="sign-grid">
-  <div class="sign-block">
-    <h3>Statement of Inspection</h3>
-    <p class="statement">I hereby certify that I have conducted the above vehicle inspection and that the vehicle has been thoroughly inspected for safety and compliance. Any identified issues have been documented, and necessary corrective actions have been recommended.</p>
-    <div class="sign-row"><span class="sign-label">Inspector's Name</span><span class="sign-line">${insp.inspector_name || ''}</span></div>
-    <div class="sign-row"><span class="sign-label">Date</span><span class="sign-line">${fmt(insp.inspection_date)}</span></div>
-    <div class="sign-row"><span class="sign-label">Signature</span><div class="sign-box"></div></div>
-  </div>
-  <div class="sign-block">
-    <h3>Approved By</h3>
-    <div class="sign-row"><span class="sign-label">Name</span><span class="sign-line">${insp.approved_by_name || ''}</span></div>
-    <div class="sign-row"><span class="sign-label">Date</span><span class="sign-line">${insp.approved_by_date ? fmt(insp.approved_by_date) : ''}</span></div>
-    <div class="sign-row"><span class="sign-label">Signature</span><div class="sign-box"></div></div>
-  </div>
+<div class="sign-block" style="max-width:420px;margin-top:12px">
+  <h3>Statement of Inspection</h3>
+  <p class="statement">I hereby certify that I have conducted the above vehicle inspection and that the vehicle has been thoroughly inspected for safety and compliance. Any identified issues have been documented, and necessary corrective actions have been recommended.</p>
+  <div class="sign-row"><span class="sign-label">Inspector's Name</span><span class="sign-line">${insp.inspector_name || ''}</span></div>
+  <div class="sign-row"><span class="sign-label">Date</span><span class="sign-line">${fmt(insp.inspection_date)}</span></div>
+  <div class="sign-row"><span class="sign-label">Signature</span><div class="sign-box"></div></div>
 </div>
 
 </body>
@@ -512,20 +467,13 @@ function ViewModal({ inspection, onClose, onEdit, onDelete }) {
         {/* Body */}
         <div style={{ flex:1, overflowY:'auto', padding:'20px 24px' }}>
 
-          {/* Inspector / Approver */}
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:20 }}>
-            <div style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10, padding:'12px 14px' }}>
+          {/* Inspector */}
+          {inspection.inspector_name && (
+            <div style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10, padding:'12px 14px', marginBottom:20 }}>
               <div style={{ fontSize:10.5, color:'var(--text-muted)', marginBottom:4 }}>Inspector</div>
-              <div style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>{inspection.inspector_name || '—'}</div>
+              <div style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>{inspection.inspector_name}</div>
             </div>
-            <div style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10, padding:'12px 14px' }}>
-              <div style={{ fontSize:10.5, color:'var(--text-muted)', marginBottom:4 }}>Approved By</div>
-              <div style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>
-                {inspection.approved_by_name || '—'}
-                {inspection.approved_by_date ? <span style={{ fontSize:11, fontWeight:400, color:'var(--text-muted)', marginLeft:6 }}>{fmt(inspection.approved_by_date)}</span> : null}
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* Sections (read-only) */}
           {SECTIONS.map(section => {
@@ -599,13 +547,14 @@ export default function VehicleInspectionPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [vRes, iRes] = await Promise.all([
-        vehicleApi.list(),
-        vehicleInspectionApi.list(),
-      ])
+      const vRes = await vehicleApi.list()
       setVehicles(vRes.vehicles || [])
+    } catch(e) { console.error('vehicles:', e) }
+    try {
+      const iRes = await vehicleInspectionApi.list()
       setInspections(iRes.inspections || [])
-    } catch(e) { console.error(e) } finally { setLoading(false) }
+    } catch(e) { console.error('inspections:', e) }
+    setLoading(false)
   }, [])
 
   useEffect(() => { load() }, [load])
