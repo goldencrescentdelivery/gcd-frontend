@@ -115,14 +115,14 @@ function Radio({ value, current, onChange, label, color }) {
       <div
         onClick={() => onChange(value)}
         style={{
-          width: 17, height: 17, borderRadius: 4,
+          width: 18, height: 18, borderRadius: '50%',
           border: `2px solid ${on ? color : 'var(--border-med)'}`,
           background: on ? color : 'transparent',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'all 0.15s', flexShrink: 0,
+          transition: 'all 0.15s', flexShrink: 0, cursor: 'pointer',
         }}
       >
-        {on && <div style={{ width:7, height:7, borderRadius:2, background:'white' }}/>}
+        {on && <div style={{ width:7, height:7, borderRadius:'50%', background:'white' }}/>}
       </div>
       <span style={{ fontSize: 11.5, color: on ? color : 'var(--text-muted)', fontWeight: on ? 700 : 400 }}>
         {label}
@@ -138,7 +138,6 @@ function SectionBlock({ section, data, onChange }) {
     items[idx] = val
     onChange({ ...data, items })
   }
-  const setObs = v => onChange({ ...data, observations: v })
 
   return (
     <div style={{ marginBottom: 24 }}>
@@ -163,20 +162,6 @@ function SectionBlock({ section, data, onChange }) {
           </div>
         </div>
       ))}
-
-      <div style={{ display: 'flex', gap: 12, marginTop: 10, alignItems: 'flex-start' }}>
-        <span style={{ fontSize: 11.5, color: 'var(--text-muted)', minWidth: 140, paddingTop: 6, lineHeight: 1.4 }}>
-          Observations / Notes /<br/>Corrective actions, if any:
-        </span>
-        <textarea
-          value={data.observations || ''}
-          onChange={e => setObs(e.target.value)}
-          rows={3}
-          className="input"
-          style={{ flex: 1, resize: 'vertical', fontSize: 12.5 }}
-          placeholder="Enter any observations…"
-        />
-      </div>
     </div>
   )
 }
@@ -567,12 +552,6 @@ function ViewModal({ inspection, onClose, onEdit, onDelete }) {
                     </div>
                   )
                 })}
-                {data.observations && (
-                  <div style={{ display:'flex', gap:10, marginTop:8 }}>
-                    <span style={{ fontSize:11, color:'var(--text-muted)', minWidth:130, paddingTop:3 }}>Observations:</span>
-                    <span style={{ fontSize:12, color:'var(--text)', lineHeight:1.5 }}>{data.observations}</span>
-                  </div>
-                )}
               </div>
             )
           })}
