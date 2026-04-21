@@ -548,7 +548,7 @@ export default function VehicleInspectionPage() {
     setLoading(true)
     try {
       const vRes = await vehicleApi.list()
-      setVehicles(vRes.vehicles || [])
+      setVehicles((vRes.vehicles || []).filter(v => v.status !== 'sold'))
     } catch(e) { console.error('vehicles:', e) }
     try {
       const iRes = await vehicleInspectionApi.list()
