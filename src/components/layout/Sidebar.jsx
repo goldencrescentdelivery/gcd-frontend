@@ -10,7 +10,7 @@ import {
   FileText, Wallet, Receipt, ChevronDown, Banknote,
   ShieldCheck, Radio, HardDrive, KeyRound, ChevronLeft, ChevronRight,
   Settings, Trophy, AlertTriangle, Calendar, Zap, LayoutDashboard,
-  Truck, Smartphone, Shield, Package, Bell, Building2,
+  Truck, Smartphone, Shield, Package, Bell, Building2, ClipboardCheck,
 } from 'lucide-react'
 
 
@@ -18,7 +18,7 @@ const ICONS = {
   BarChart3, Users, DollarSign, UserCircle, Clock, CalendarOff,
   FileText, Wallet, Receipt, ShieldCheck, Radio, HardDrive, KeyRound,
   Settings, Trophy, AlertTriangle, Calendar, Zap, LayoutDashboard,
-  Truck, Smartphone, Shield, Package, Bell, Banknote, Building2,
+  Truck, Smartphone, Shield, Package, Bell, Banknote, Building2, ClipboardCheck,
 }
 
 const ROLE_LABELS = {

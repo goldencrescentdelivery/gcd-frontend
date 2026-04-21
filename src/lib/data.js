@@ -26,7 +26,8 @@ export const NAV = [
   { label:'Attendance',   href:'/dashboard/hr/attendance', icon:'Clock',       roles:['admin','general_manager','hr'] },
   { label:'Leaves',       href:'/dashboard/hr/leaves',     icon:'CalendarOff', roles:['admin','general_manager','hr'], alertKey:'leaves' },
   { label:'Documents',    href:'/dashboard/hr/documents',  icon:'FileText',    roles:['admin','hr'] },
-  { label:'Compliance',   href:'/dashboard/hr/compliance', icon:'ShieldCheck', roles:['admin','hr'] },
+  { label:'Compliance',          href:'/dashboard/hr/compliance',          icon:'ShieldCheck',    roles:['admin','hr'] },
+  { label:'Vehicle Inspections', href:'/dashboard/hr/vehicle-inspection', icon:'ClipboardCheck', roles:['admin','general_manager','hr'] },
   { label:'User Accounts',href:'/dashboard/hr/users',      icon:'KeyRound',    roles:['admin'] },
 
   // ── Finance ───────────────────────────────────────────────────

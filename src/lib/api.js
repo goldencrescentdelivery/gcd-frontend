@@ -134,6 +134,15 @@ export const deliveriesApi = {
   summary: (months=6) => api.get(`/api/deliveries/monthly-summary?months=${months}`),
 }
 
+// Vehicle Inspections
+export const vehicleInspectionApi = {
+  list:   (params={}) => api.get(`/api/vehicle-inspections?${new URLSearchParams(params)}`),
+  get:    (id)        => api.get(`/api/vehicle-inspections/${id}`),
+  create: (data)      => api.post('/api/vehicle-inspections', data),
+  update: (id, data)  => api.put(`/api/vehicle-inspections/${id}`, data),
+  delete: (id)        => api.delete(`/api/vehicle-inspections/${id}`),
+}
+
 // Vehicles
 export const vehicleApi = {
   list:        (params={}) => api.get(`/api/vehicles?${new URLSearchParams(params)}`),
