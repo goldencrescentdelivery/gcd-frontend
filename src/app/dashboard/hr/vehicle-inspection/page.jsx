@@ -243,10 +243,21 @@ function InspectionModal({ vehicles, editInspection, onSave, onClose }) {
                 <label className="input-label">Vehicle *</label>
                 <select className="input" value={vehicleId} onChange={e => setVehicleId(e.target.value)}>
                   <option value="">— Select vehicle —</option>
-                  {vehicles.map(v => (
-                    <option key={v.id} value={v.id}>
-                      {v.plate}{v.make ? ` · ${v.make}` : ''}{v.model ? ` ${v.model}` : ''}{v.year ? ` (${v.year})` : ''}
-                    </option>
+                  {Object.entries(
+                    vehicles.reduce((acc, v) => {
+                      const sc = v.station_code || 'Unknown'
+                      if (!acc[sc]) acc[sc] = []
+                      acc[sc].push(v)
+                      return acc
+                    }, {})
+                  ).map(([sc, svs]) => (
+                    <optgroup key={sc} label={`Station ${sc}`}>
+                      {svs.map(v => (
+                        <option key={v.id} value={v.id}>
+                          {v.plate}{v.make ? ` · ${v.make}` : ''}{v.model ? ` ${v.model}` : ''}{v.year ? ` (${v.year})` : ''}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>
@@ -540,6 +551,7 @@ export default function VehicleInspectionPage() {
   const [showModal,    setShowModal]    = useState(false)
   const [editInsp,     setEditInsp]     = useState(null)
   const [viewInsp,     setViewInsp]     = useState(null)
+  const [filterStation,setFilterStation] = useState('')
   const [filterVehicle,setFilterVehicle]= useState('')
   const [search,       setSearch]       = useState('')
   const [deleting,     setDeleting]     = useState(null)
@@ -559,7 +571,15 @@ export default function VehicleInspectionPage() {
 
   useEffect(() => { load() }, [load])
 
+  const stations = [...new Set(vehicles.map(v => v.station_code).filter(Boolean))].sort()
+
+  // Vehicles scoped to the selected station (used in modal dropdown + page filter)
+  const stationVehicles = filterStation
+    ? vehicles.filter(v => v.station_code === filterStation)
+    : vehicles
+
   const filtered = inspections.filter(i => {
+    if (filterStation && i.station_code !== filterStation) return false
     if (filterVehicle && i.vehicle_id !== filterVehicle) return false
     if (search) {
       const q = search.toLowerCase()
@@ -632,6 +652,17 @@ export default function VehicleInspectionPage() {
             style={{ paddingLeft:32, fontSize:12.5 }}
           />
         </div>
+        {stations.length > 1 && (
+          <select
+            className="input"
+            value={filterStation}
+            onChange={e => { setFilterStation(e.target.value); setFilterVehicle('') }}
+            style={{ minWidth:160, fontSize:12.5 }}
+          >
+            <option value="">All Stations</option>
+            {stations.map(sc => <option key={sc} value={sc}>{sc}</option>)}
+          </select>
+        )}
         <select
           className="input"
           value={filterVehicle}
@@ -639,7 +670,7 @@ export default function VehicleInspectionPage() {
           style={{ minWidth:200, fontSize:12.5 }}
         >
           <option value="">All Vehicles</option>
-          {vehicles.map(v => (
+          {stationVehicles.map(v => (
             <option key={v.id} value={v.id}>
               {v.plate}{v.make ? ` · ${v.make}` : ''}{v.model ? ` ${v.model}` : ''}
             </option>
@@ -770,7 +801,7 @@ export default function VehicleInspectionPage() {
       {/* Modals */}
       {showModal && (
         <InspectionModal
-          vehicles={vehicles}
+          vehicles={stationVehicles}
           editInspection={editInsp}
           onSave={handleSave}
           onClose={() => { setShowModal(false); setEditInsp(null) }}
