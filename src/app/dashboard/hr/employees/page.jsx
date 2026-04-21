@@ -239,7 +239,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
           )}
 
           {tab==='identity' && (
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13 }}>
+            <div className="modal-two-col">
               {mode==='add' && inp('Employee ID *','id','text','DA001')}
               {inp('Full Name *','name','text','Mohammed Al Rashid')}
               {inp('Phone Number','phone','tel','+971 50 XXX XXXX')}
@@ -251,7 +251,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
           )}
 
           {tab==='personal' && (
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13 }}>
+            <div className="modal-two-col">
               {inp('Sub Group Name','sub_group_name')}
               {inp('Passport No','passport_no','text','A1234567')}
               {inp('Email ID','email_id','email','name@example.com')}
@@ -268,7 +268,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
           )}
 
           {tab==='work' && (
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13 }}>
+            <div className="modal-two-col">
               {sel('Role *','role',['Driver','HR Manager','Finance Mgr','Accountant','Dispatcher','General Manager','Admin','POC','Other'])}
               {sel('Department *','dept',['Operations','HR','Finance','Admin','Other'])}
               {sel('Station','station_code',['DDB1','DXE6'])}
@@ -276,7 +276,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
               <div style={{ gridColumn:'span 2' }}>
                 <div style={{ background:'var(--purple-bg)', border:'1px solid var(--purple-border)', borderRadius:12, padding:'14px 16px' }}>
                   <label style={{ fontSize:11, fontWeight:800, letterSpacing:'0.06em', textTransform:'uppercase', color:'#7C3AED', marginBottom:10, display:'block' }}>Project & Salary Type</label>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:12 }}>
+                  <div className="modal-proj-col" style={{ marginBottom:12 }}>
                     {[{v:'pulser',l:'Pulser',d:'Base + Hours × Rate + Bonus'},{v:'cret',l:'CRET',d:'Base + Shipments × Rate'}].map(p=>(
                       <button key={p.v} onClick={e=>{e.stopPropagation();set('project_type',p.v)}} type="button"
                         style={{ padding:'11px', borderRadius:10, border:`2px solid ${form.project_type===p.v?'#7C3AED':'var(--border)'}`, background:form.project_type===p.v?'var(--purple-bg)':'var(--card)', cursor:'pointer', textAlign:'left', transition:'all 0.15s' }}>
@@ -285,7 +285,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
                       </button>
                     ))}
                   </div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                  <div className="modal-proj-col">
                     {inp('Base Salary (AED)','salary','number','3800')}
                     {form.project_type==='pulser' ? inp('Hourly Rate','hourly_rate','number','3.85') : inp('Per Shipment Rate','per_shipment_rate','number','0.5')}
                     {form.project_type==='pulser' && inp('Performance Bonus','performance_bonus','number','100')}
@@ -300,7 +300,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
 
           {tab==='docs' && (
             <div style={{ display:'flex', flexDirection:'column', gap:13 }}>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13 }}>
+              <div className="modal-two-col">
                 {inp('Visa Expiry','visa_expiry','date')}
                 {inp('License Expiry','license_expiry','date')}
                 {inp('ILOE Expiry','iloe_expiry','date')}
@@ -322,7 +322,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
               <div style={{ background:'var(--amber-bg)', border:'1px solid var(--amber-border)', borderRadius:10, padding:'12px 14px', fontSize:12.5, color:'#92400E' }}>
                 <strong>Optional:</strong> Creates a driver portal login for this DA.
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13 }}>
+              <div className="modal-two-col">
                 {inp('Login Email','login_email','email','da@goldencrescent.ae')}
                 {inp('Login Password','login_password','password','Min 6 characters')}
               </div>
@@ -674,12 +674,12 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
               }
               function FieldRow({ icon:Icon, label, value, mono=false, last=false }) {
                 return (
-                  <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 14px', borderBottom:last?'none':'1px solid var(--border)' }}>
-                    <div style={{ width:26, height:26, borderRadius:8, background:'var(--card)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      <Icon size={12} color="var(--text-muted)"/>
+                  <div style={{ display:'flex', alignItems:'flex-start', gap:8, padding:'8px 12px', borderBottom:last?'none':'1px solid var(--border)' }}>
+                    <div style={{ width:24, height:24, borderRadius:7, background:'var(--card)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1 }}>
+                      <Icon size={11} color="var(--text-muted)"/>
                     </div>
-                    <span style={{ fontSize:12, color:'var(--text-muted)', flex:1, minWidth:0 }}>{label}</span>
-                    <span style={{ fontSize:12.5, color: value==='—'?'var(--text-muted)':'var(--text)', fontWeight: value==='—'?400:600, fontFamily:'Poppins,sans-serif', maxWidth:220, wordBreak:'break-all', textAlign:'right' }}>{value}</span>
+                    <span style={{ fontSize:11.5, color:'var(--text-muted)', minWidth:0, flexShrink:0, paddingTop:3, lineHeight:1.3 }}>{label}</span>
+                    <span style={{ fontSize:12, color: value==='—'?'var(--text-muted)':'var(--text)', fontWeight: value==='—'?400:600, fontFamily:'Poppins,sans-serif', wordBreak:'break-word', textAlign:'right', flex:1, minWidth:0, lineHeight:1.4 }}>{value}</span>
                   </div>
                 )
               }
@@ -725,8 +725,8 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                     })}
                   </div>
 
-                  {/* Two columns for work + personal */}
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:0 }}>
+                  {/* Two columns for work + personal — collapses to 1 on mobile */}
+                  <div className="detail-two-col" style={{ marginBottom:0 }}>
                     <SectionCard title="Work Info" accentColor={sc}>
                       {workRows.map((r,i)=><FieldRow key={r.l} icon={r.icon} label={r.l} value={r.v} mono={r.mono} last={i===workRows.length-1}/>)}
                     </SectionCard>
@@ -738,7 +738,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                   {/* Documents — only if any filled */}
                   {docRows.length > 0 && (
                     <SectionCard title="Documents & Additional" accentColor="#2563EB">
-                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr' }}>
+                      <div className="detail-docs-col">
                         {docRows.map((r,i)=><FieldRow key={r.l} icon={r.icon} label={r.l} value={r.v} mono={r.mono} last={i===docRows.length-1}/>)}
                       </div>
                     </SectionCard>
@@ -756,7 +756,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
 
                   {/* Actions */}
                   {userRole !== 'accountant' && (
-                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                    <div className="detail-act-col">
                       <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center', borderRadius:12, padding:'11px' }}>
                         <Pencil size={13}/> Edit Employee
                       </button>
