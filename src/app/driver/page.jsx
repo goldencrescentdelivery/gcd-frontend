@@ -9,6 +9,7 @@ import {
   BarChart2, Home, ChevronRight, Check, X, Clock,
   TrendingUp, Shield, Package, FileText, ExternalLink, ZoomIn
 } from 'lucide-react'
+import { useSocket } from '@/lib/socket'
 
 import { API } from '@/lib/api'
 const APP_VERSION = '2.4.0'
@@ -186,6 +187,9 @@ export default function DriverPortal() {
   const [asgHistory,   setAsgHistory]   = useState([])     // full assignment history
   const [leaveModal,   setLeaveModal]   = useState(false)
   const [hvModal,      setHvModal]      = useState(null) // null | 'received' | 'returned'
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount,   setUnreadCount]   = useState(0)
+  const [toast,         setToast]         = useState(null)
 
   function signOut() {
     try { logout() } catch(e) {}
@@ -218,6 +222,11 @@ export default function DriverPortal() {
     const today = new Date().toISOString().slice(0,10)
     fetch(`${API}/api/leaves`,{headers:hdr}).then(r=>r.json()).then(d=>setLeaves(d.leaves||[])).catch(()=>{})
     fetch(`${API}/api/poc/announcements?station_code=${user.station_code}`,{headers:hdr}).then(r=>r.json()).then(d=>setNotices(d.announcements||[])).catch(()=>{})
+    fetch(`${API}/api/notifications`,{headers:hdr}).then(r=>r.json()).then(d=>{
+      const list=d.notifications||[]
+      setNotifications(list)
+      setUnreadCount(list.filter(n=>!n.read).length)
+    }).catch(()=>{})
     fetch(`${API}/api/handovers`,{headers:hdr}).then(r=>r.json()).then(d=>{
       const list=d.handovers||[]
       setHandovers(list)
@@ -233,6 +242,26 @@ export default function DriverPortal() {
         setTodayAsgn(list.find(a=>a.date?.slice(0,10)===today)||null)
       }).catch(()=>{})
   }, [user, authLoading, router])
+
+  // Real-time notification listener
+  useSocket({
+    'notification:new': (notif) => {
+      setNotifications(p => [{ ...notif, read: false }, ...p])
+      setUnreadCount(c => c + 1)
+      setToast(notif)
+      setTimeout(() => setToast(null), 4500)
+    }
+  })
+
+  function openNotices() {
+    setTab('notices')
+    if (unreadCount > 0) {
+      setUnreadCount(0)
+      setNotifications(p => p.map(n => ({ ...n, read: true })))
+      const token = localStorage.getItem('gcd_token')
+      fetch(`${API}/api/notifications/read-all`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } }).catch(()=>{})
+    }
+  }
 
   if (!user||loading) return (
     <div style={{ minHeight:'100vh',background:'#FFF',display:'flex',alignItems:'center',justifyContent:'center' }}>
@@ -270,6 +299,18 @@ export default function DriverPortal() {
           .dp-nav-label { font-size:9px !important; }
         }
       `}</style>
+
+      {/* ── TOAST ── */}
+      {toast && (
+        <div onClick={openNotices} style={{ position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',zIndex:200,maxWidth:340,width:'calc(100% - 32px)',background:'#1C1208',borderRadius:14,padding:'12px 14px',boxShadow:'0 8px 30px rgba(0,0,0,0.25)',cursor:'pointer',animation:'slideUp 0.3s ease',display:'flex',gap:10,alignItems:'flex-start' }}>
+          <div style={{ width:32,height:32,borderRadius:9,background:'linear-gradient(135deg,#B8860B,#D4A017)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}><Bell size={15} color="#FFF"/></div>
+          <div style={{ minWidth:0 }}>
+            <div style={{ fontWeight:700,fontSize:12.5,color:'#FFF',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{toast.title}</div>
+            <div style={{ fontSize:11.5,color:'rgba(255,255,255,0.6)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{toast.body}</div>
+          </div>
+          <button onClick={e=>{e.stopPropagation();setToast(null)}} style={{ background:'none',border:'none',cursor:'pointer',color:'rgba(255,255,255,0.4)',padding:2,flexShrink:0 }}><X size={14}/></button>
+        </div>
+      )}
 
       {/* ── HEADER ── */}
       <div style={{ background:'#FFF',borderBottom:'1px solid #F0F0EE',padding:'12px 14px',position:'sticky',top:0,zIndex:50,boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
@@ -608,9 +649,15 @@ export default function DriverPortal() {
         {TABS.map(t=>{
           const Icon=t.icon
           const active=tab===t.id
+          const isNotices=t.id==='notices'
           return (
-            <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'8px 1px 10px',border:'none',background:active?'#FFFBEB':'none',cursor:'pointer',fontFamily:'Poppins,sans-serif',transition:'all 0.15s',minWidth:0 }}>
-              <span className="dp-nav-icon"><Icon size={18} color={active?'#B8860B':'#9CA3AF'} strokeWidth={active?2.5:1.8}/></span>
+            <button key={t.id} onClick={isNotices?openNotices:()=>setTab(t.id)} style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'8px 1px 10px',border:'none',background:active?'#FFFBEB':'none',cursor:'pointer',fontFamily:'Poppins,sans-serif',transition:'all 0.15s',minWidth:0 }}>
+              <span className="dp-nav-icon" style={{ position:'relative' }}>
+                <Icon size={18} color={active?'#B8860B':'#9CA3AF'} strokeWidth={active?2.5:1.8}/>
+                {isNotices && unreadCount>0 && (
+                  <span style={{ position:'absolute',top:-4,right:-5,minWidth:14,height:14,borderRadius:7,background:'#EF4444',color:'#FFF',fontSize:8,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 3px',lineHeight:1 }}>{unreadCount>9?'9+':unreadCount}</span>
+                )}
+              </span>
               <span className="dp-nav-label" style={{ fontSize:8.5,fontWeight:active?700:500,color:active?'#B8860B':'#9CA3AF',marginTop:2,lineHeight:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'100%',padding:'0 1px' }}>{t.label}</span>
             </button>
           )
