@@ -41,6 +41,18 @@ const ROLE_CFG = {
   poc:             {l:'POC',             c:'#B8860B', bg:'rgba(184,134,11,0.1)'},
   driver:          {l:'Driver',          c:'#64748B', bg:'rgba(100,116,139,0.1)'},
 }
+function resolveRole(roleStr) {
+  if (!roleStr) return ROLE_CFG.driver
+  const r = roleStr.toLowerCase().trim()
+  if (r === 'admin') return ROLE_CFG.admin
+  if (r === 'general manager' || r === 'general_manager' || r === 'gm') return ROLE_CFG.general_manager
+  if (r === 'manager' || r === 'dispatcher') return ROLE_CFG.manager
+  if (r === 'hr' || r === 'hr manager') return ROLE_CFG.hr
+  if (r === 'accountant' || r === 'finance mgr') return ROLE_CFG.accountant
+  if (r === 'poc') return ROLE_CFG.poc
+  if (r === 'driver') return ROLE_CFG.driver
+  return ROLE_CFG.driver
+}
 
 function hdr() { return { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
 function fmt(n) { return Number(n||0).toLocaleString('en-AE',{minimumFractionDigits:0,maximumFractionDigits:0}) }
@@ -471,7 +483,7 @@ function PayrollCard({ slip, onMarkPaid, markingPaid, onEditSalary, onRemoveDed,
   const [open, setOpen] = useState(false)
   const net    = Number(slip.net_pay||(Number(slip.base_salary)+Number(slip.bonus_total||0)-Number(slip.deduction_total||0)))
   const isPaid = slip.payroll_status === 'paid'
-  const role   = ROLE_CFG[slip.role] || ROLE_CFG.driver
+  const role   = resolveRole(slip.role)
 
   return (
     <div style={{ background:'rgba(255,255,255,0.65)', backdropFilter:'blur(16px)', border:`1.5px solid ${isPaid?'rgba(52,211,153,0.3)':'rgba(255,255,255,0.7)'}`, borderRadius:16, overflow:'hidden', animation:`slideUp 0.4s ${index*0.04}s ease both`, boxShadow:'0 2px 12px rgba(0,0,0,0.05)', transition:'box-shadow 0.2s' }}
