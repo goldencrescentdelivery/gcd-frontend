@@ -173,8 +173,7 @@ export default function LeavesPage() {
                   </div>
                   {/* Stage pipeline */}
                   <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                    <StageChip label="Manager" status={l.mgr_status||'pending'}/>
-                    <StageChip label="Overall" status={l.status||'pending'}/>
+                    <StageChip label={l.mgr_name || 'Manager'} status={l.mgr_status||'pending'}/>
                   </div>
                 </div>
               </div>
