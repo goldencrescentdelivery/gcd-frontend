@@ -76,7 +76,7 @@ export default function LeavesPage() {
   const [leaves,    setLeaves]    = useState([])
   const [employees, setEmployees] = useState([])
   const [loading,   setLoading]   = useState(true)
-  const [stage,     setStage]     = useState('pending')
+  const [stage,     setStage]     = useState('all')
   const [modal,     setModal]     = useState(false)
   const [userRole,  setUserRole]  = useState(null)
 
@@ -103,10 +103,12 @@ export default function LeavesPage() {
 
   const pendingCount = leaves.filter(l => l.mgr_status==='pending').length
 
-  const STAGES = [
-    { v:'pending', l:'Action Required', count:pendingCount },
-    { v:'all',     l:'All Leaves',      count:null },
-  ]
+  const STAGES = userRole === 'admin'
+    ? [{ v:'all', l:'All Leaves', count:null }]
+    : [
+        { v:'pending', l:'Action Required', count:pendingCount },
+        { v:'all',     l:'All Leaves',      count:null },
+      ]
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16, animation:'slideUp 0.35s ease' }}>
@@ -135,7 +137,7 @@ export default function LeavesPage() {
             </button>
           ))}
         </div>
-        {userRole !== 'accountant' && (
+        {userRole !== 'accountant' && userRole !== 'admin' && (
           <button className="btn btn-primary btn-sm" onClick={()=>setModal(true)} style={{ borderRadius:20 }}>
             <Plus size={13}/> New Request
           </button>

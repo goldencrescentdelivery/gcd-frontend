@@ -43,11 +43,12 @@ export const NAV = [
     roles:['admin','general_manager','poc'],
     children:[
       { label:'Attendance', href:'/dashboard/poc?tab=attendance', icon:'Clock'                        },
+      { label:'DAs',        href:'/dashboard/poc?tab=das',        icon:'UserCircle'                   },
       { label:'Fleet',      href:'/dashboard/poc?tab=fleet',      icon:'Truck',      alertKey:'fleet' },
-      { label:'SIM Cards',  href:'/dashboard/poc?tab=sims',       icon:'Smartphone', alertKey:'sims'  },
-      // Leaves hidden from admin — they manage leaves from HR section above
-      { label:'Leaves',     href:'/dashboard/poc?tab=leaves',     icon:'CalendarOff', alertKey:'leaves', roles:['general_manager','poc'] },
       { label:'Deliveries', href:'/dashboard/poc?tab=deliveries', icon:'Package'                      },
+      { label:'Handovers',  href:'/dashboard/poc?tab=handovers',  icon:'Zap'                         },
+      { label:'SIM Cards',  href:'/dashboard/poc?tab=sims',       icon:'Smartphone', alertKey:'sims'  },
+      { label:'Leaves',     href:'/dashboard/poc?tab=leaves',     icon:'CalendarOff', alertKey:'leaves' },
       { label:'Notices',    href:'/dashboard/poc?tab=notices',    icon:'Bell'                         },
     ]
   },
