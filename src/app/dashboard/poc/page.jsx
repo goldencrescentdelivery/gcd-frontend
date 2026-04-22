@@ -1003,8 +1003,8 @@ export default function POCPage() {
   const absent   = att.filter(a=>a.status==='absent').length
   const earnings = att.reduce((s,a)=>s+parseFloat(a.earnings||0),0)
   const active   = vehs.filter(v=>v.status==='active').length
-  const pendingLeaves  = leaves.filter(l => l.poc_status === 'pending')
-  const historyLeaves  = leaves.filter(l => l.poc_status !== 'pending')
+  const pendingLeaves  = leaves.filter(l => l.mgr_status === 'pending')
+  const historyLeaves  = leaves.filter(l => l.mgr_status !== 'pending')
 
   const stationEmps = emps.filter(e => e.station_code === station)
   const filtEmp  = stationEmps.filter(e=>!search||e.name.toLowerCase().includes(search.toLowerCase())||e.id.toLowerCase().includes(search.toLowerCase()))
@@ -1303,7 +1303,7 @@ export default function POCPage() {
                 background:!showLeaveHistory?'var(--card)':'transparent',
                 color:!showLeaveHistory?'#B8860B':'var(--text-muted)',
                 boxShadow:!showLeaveHistory?'0 1px 4px rgba(0,0,0,0.1)':'none'}}>
-              Pending ({pendingLeaves.length})
+              Awaiting Manager ({pendingLeaves.length})
             </button>
             <button onClick={()=>setShowLeaveHistory(true)}
               style={{flex:1,padding:'8px 12px',borderRadius:9,border:'none',cursor:'pointer',fontWeight:600,fontSize:12,transition:'all 0.2s',display:'flex',alignItems:'center',justifyContent:'center',gap:5,
@@ -1320,8 +1320,8 @@ export default function POCPage() {
             </div>
           )}
           {(showLeaveHistory ? historyLeaves : pendingLeaves).map((l,i)=>{
-            const isApproved = l.poc_status==='approved'
-            const isRejected = l.poc_status==='rejected'
+            const isApproved = l.status==='approved'
+            const isRejected = l.status==='rejected'
             return (
               <div key={l.id} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,overflow:'hidden',animation:`slideUp 0.3s ${i*0.05}s ease both`}}>
                 <div style={{padding:'14px 16px'}}>
@@ -1341,7 +1341,7 @@ export default function POCPage() {
                         {isApproved?'Approved':isRejected?'Rejected':'Pending'}
                       </span>
                     ) : (
-                      <span style={{fontSize:11,fontWeight:700,color:'#B45309',background:'#FFFBEB',border:'1px solid #FCD34D',padding:'3px 10px',borderRadius:20}}>Pending Review</span>
+                      <span style={{fontSize:11,fontWeight:700,color:'#B45309',background:'#FFFBEB',border:'1px solid #FCD34D',padding:'3px 10px',borderRadius:20}}>Awaiting Manager</span>
                     )}
                   </div>
                   <div style={{display:'flex',gap:6,alignItems:'center',fontSize:12,color:'var(--text-sub)',marginBottom:l.reason?8:0}}>
@@ -1355,15 +1355,8 @@ export default function POCPage() {
                   )}
                 </div>
                 {!showLeaveHistory && (
-                  <div style={{padding:'10px 14px',background:'var(--bg-alt)',borderTop:'1px solid var(--border)',display:'flex',gap:8}}>
-                    <button
-                      style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'8px 0',borderRadius:12,border:'1px solid #A7F3D0',background:'#F0FDF4',color:'#10B981',fontWeight:700,fontSize:12.5,cursor:'pointer',fontFamily:'inherit'}}
-                      onClick={()=>setPendingLeave({id:l.id,action:'approved',name:l.emp_name||'this employee'})}
-                    ><CheckCircle size={14}/> Approve</button>
-                    <button
-                      style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'8px 0',borderRadius:12,border:'1px solid #FECACA',background:'#FEF2F2',color:'#EF4444',fontWeight:700,fontSize:12.5,cursor:'pointer',fontFamily:'inherit'}}
-                      onClick={()=>setPendingLeave({id:l.id,action:'rejected',name:l.emp_name||'this employee'})}
-                    ><XCircle size={14}/> Reject</button>
+                  <div style={{padding:'8px 14px',background:'var(--bg-alt)',borderTop:'1px solid var(--border)',fontSize:11.5,color:'var(--text-muted)',fontStyle:'italic'}}>
+                    Pending manager approval — no action required from you
                   </div>
                 )}
               </div>
@@ -1435,20 +1428,6 @@ export default function POCPage() {
         onCancel={() => setConfirmDlg(null)}
       />
 
-      {/* Leave approve / reject confirmation */}
-      <ConfirmDialog
-        open={!!pendingLeave}
-        title={pendingLeave?.action === 'approved' ? 'Approve leave request?' : 'Reject leave request?'}
-        message={`${pendingLeave?.action === 'approved' ? 'Approve' : 'Reject'} the leave request for ${pendingLeave?.name}? This decision will be visible to the employee immediately.`}
-        confirmLabel={pendingLeave?.action === 'approved' ? 'Yes, approve' : 'Yes, reject'}
-        danger={pendingLeave?.action === 'rejected'}
-        onConfirm={async () => {
-          const { id, action } = pendingLeave
-          setPendingLeave(null)
-          await handleLeave(id, action)
-        }}
-        onCancel={() => setPendingLeave(null)}
-      />
     </div>
   )
 }

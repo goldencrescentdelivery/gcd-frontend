@@ -101,10 +101,7 @@ export default function LeavesPage() {
     load()
   }
 
-  const pendingCount = leaves.filter(l => {
-    if (userRole==='admin') return l.hr_status==='approved' && (l.mgr_status==='pending'||!l.mgr_status)
-    return l.poc_status==='approved' && l.hr_status==='pending'
-  }).length
+  const pendingCount = leaves.filter(l => l.mgr_status==='pending').length
 
   const STAGES = [
     { v:'pending', l:'Action Required', count:pendingCount },
@@ -118,7 +115,7 @@ export default function LeavesPage() {
       <div style={{ background:'linear-gradient(135deg,#F8F7FF,#F0EFFF)', border:'1px solid #DDD6FE', borderRadius:14, padding:'14px 18px' }}>
         <div style={{ fontWeight:700, fontSize:13, color:'#7C3AED', marginBottom:6, display:'flex', alignItems:'center', gap:6 }}><AlertCircle size={14}/> Leave Approval Workflow</div>
         <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-          {['DA applies','POC reviews','HR / Manager approves','Admin final approval','Done'].map((s,i,arr) => (
+          {['DA applies','Manager approves / rejects','Done'].map((s,i,arr) => (
             <React.Fragment key={s}>
               <span style={{ fontSize:11.5, fontWeight:600, color:'#7C3AED', background:'rgba(124,58,237,0.08)', padding:'3px 10px', borderRadius:20 }}>{s}</span>
               {i<arr.length-1 && <ChevronRight size={13} color="#A89880"/>}
@@ -174,27 +171,17 @@ export default function LeavesPage() {
                   </div>
                   {/* Stage pipeline */}
                   <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                    <StageChip label="POC" status={l.poc_status}/>
-                    <StageChip label="HR/GM" status={l.hr_status==='approved'?'approved':l.hr_status==='rejected'?'rejected':l.gm_status==='approved'?'approved':l.hr_status}/>
-                    <StageChip label="Admin" status={l.mgr_status||'waiting'}/>
+                    <StageChip label="Manager" status={l.mgr_status||'pending'}/>
+                    <StageChip label="Overall" status={l.status||'pending'}/>
                   </div>
                 </div>
               </div>
 
-              {/* Action bar — HR/GM action */}
-              {(userRole==='hr'||userRole==='general_manager') && l.poc_status==='approved' && l.hr_status==='pending' && (
-                <div style={{ background:'linear-gradient(135deg,#EFF6FF,#F0F9FF)', borderTop:'1px solid #BFDBFE', padding:'10px 16px', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-                  <span style={{ fontSize:12, color:'#1D6FA4', fontWeight:600, flex:1 }}>POC approved — your action needed</span>
-                  <button onClick={()=>action(l.id,'approved','hr')} style={{ padding:'7px 18px', borderRadius:20, background:'linear-gradient(135deg,#2E7D52,#22C55E)', border:'none', color:'white', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Approve</button>
-                  <button onClick={()=>action(l.id,'rejected','hr')} style={{ padding:'7px 18px', borderRadius:20, background:'#FEF2F2', border:'1px solid #FCA5A5', color:'#C0392B', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Reject</button>
-                </div>
-              )}
-
-              {/* Action bar — Admin final */}
-              {userRole==='admin' && l.hr_status==='approved' && (l.mgr_status==='pending'||!l.mgr_status) && (
+              {/* Action bar — Manager approves/rejects */}
+              {userRole==='manager' && l.mgr_status==='pending' && (
                 <div style={{ background:'linear-gradient(135deg,#FDF6E3,#FFFBEB)', borderTop:'1px solid #F0D78C', padding:'10px 16px', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-                  <span style={{ fontSize:12, color:'#B8860B', fontWeight:700, flex:1 }}>HR/Manager approved — Admin final approval required</span>
-                  <button onClick={()=>action(l.id,'approved','manager')} style={{ padding:'7px 18px', borderRadius:20, background:'linear-gradient(135deg,#B8860B,#D4A017)', border:'none', color:'white', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Final Approve</button>
+                  <span style={{ fontSize:12, color:'#B8860B', fontWeight:700, flex:1 }}>Awaiting your decision</span>
+                  <button onClick={()=>action(l.id,'approved','manager')} style={{ padding:'7px 18px', borderRadius:20, background:'linear-gradient(135deg,#2E7D52,#22C55E)', border:'none', color:'white', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Approve</button>
                   <button onClick={()=>action(l.id,'rejected','manager')} style={{ padding:'7px 18px', borderRadius:20, background:'#FEF2F2', border:'1px solid #FCA5A5', color:'#C0392B', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Reject</button>
                 </div>
               )}
