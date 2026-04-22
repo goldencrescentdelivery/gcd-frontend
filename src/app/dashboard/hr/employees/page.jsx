@@ -201,6 +201,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
   const previewSalary = () => {
     const base=Number(form.salary||0), rate=Number(form.hourly_rate||3.85)
     const perf=Number(form.performance_bonus||100), perShip=Number(form.per_shipment_rate||0.5)
+    if (form.project_type==='office') return `AED ${base} (fixed salary)`
     return form.project_type==='cret'
       ? `AED ${base} + shipments × ${perShip}`
       : `AED ${base} + hours × ${rate} + ${perf} bonus`
@@ -277,7 +278,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
                 <div style={{ background:'var(--purple-bg)', border:'1px solid var(--purple-border)', borderRadius:12, padding:'14px 16px' }}>
                   <label style={{ fontSize:11, fontWeight:800, letterSpacing:'0.06em', textTransform:'uppercase', color:'#7C3AED', marginBottom:10, display:'block' }}>Project & Salary Type</label>
                   <div className="modal-proj-col" style={{ marginBottom:12 }}>
-                    {[{v:'pulser',l:'Pulser',d:'Base + Hours × Rate + Bonus'},{v:'cret',l:'CRET',d:'Base + Shipments × Rate'}].map(p=>(
+                    {[{v:'pulser',l:'Pulser',d:'Base + Hours × Rate + Bonus'},{v:'cret',l:'CRET',d:'Base + Shipments × Rate'},{v:'office',l:'Office',d:'Fixed Base Salary'}].map(p=>(
                       <button key={p.v} onClick={e=>{e.stopPropagation();set('project_type',p.v)}} type="button"
                         style={{ padding:'11px', borderRadius:10, border:`2px solid ${form.project_type===p.v?'#7C3AED':'var(--border)'}`, background:form.project_type===p.v?'var(--purple-bg)':'var(--card)', cursor:'pointer', textAlign:'left', transition:'all 0.15s' }}>
                         <div style={{ fontWeight:700, fontSize:13, color:form.project_type===p.v?'#7C3AED':'var(--text)' }}>{p.l}</div>
@@ -287,10 +288,11 @@ function EmpModal({ emp, onSave, onClose, mode }) {
                   </div>
                   <div className="modal-proj-col">
                     {inp('Base Salary (AED)','salary','number','3800')}
-                    {form.project_type==='pulser' ? inp('Hourly Rate','hourly_rate','number','3.85') : inp('Per Shipment Rate','per_shipment_rate','number','0.5')}
+                    {form.project_type==='pulser' && inp('Hourly Rate','hourly_rate','number','3.85')}
+                    {form.project_type==='cret' && inp('Per Shipment Rate','per_shipment_rate','number','0.5')}
                     {form.project_type==='pulser' && inp('Performance Bonus','performance_bonus','number','100')}
                   </div>
-                  <div style={{ marginTop:10, background:form.project_type==='pulser'?'var(--green-bg)':'var(--blue-bg)', borderRadius:9, padding:'8px 12px', fontSize:12, color:form.project_type==='pulser'?'var(--green)':'var(--blue)', fontWeight:600 }}>
+                  <div style={{ marginTop:10, background:form.project_type==='office'?'var(--amber-bg)':form.project_type==='pulser'?'var(--green-bg)':'var(--blue-bg)', borderRadius:9, padding:'8px 12px', fontSize:12, color:form.project_type==='office'?'#92400E':form.project_type==='pulser'?'var(--green)':'var(--blue)', fontWeight:600 }}>
                     Formula: {previewSalary()}
                   </div>
                 </div>
@@ -748,7 +750,9 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
                   <div style={{ background:'var(--purple-bg)', border:'1px solid var(--purple-border)', borderRadius:12, padding:'11px 14px', marginBottom:12 }}>
                     <div style={{ fontSize:10, fontWeight:800, color:'#7C3AED', letterSpacing:'0.07em', textTransform:'uppercase', marginBottom:5 }}>Salary Formula</div>
                     <div style={{ fontSize:13, color:'var(--text)', fontWeight:600 }}>
-                      {emp.project_type==='cret'
+                      {emp.project_type==='office'
+                        ? `AED ${Number(emp.salary||0).toLocaleString()} (fixed salary)`
+                        : emp.project_type==='cret'
                         ? `AED ${Number(emp.salary||0).toLocaleString()} + shipments × ${emp.per_shipment_rate||0.5}`
                         : `AED ${Number(emp.salary||0).toLocaleString()} + hrs × ${emp.hourly_rate||3.85} + ${emp.performance_bonus||100} bonus`}
                     </div>
