@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/lib/auth'
 import { useSearchParams } from 'next/navigation'
-import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone, ArrowLeftRight, CheckSquare, History, Contact } from 'lucide-react'
+import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone, ArrowLeftRight, CheckSquare, History, Contact, Upload, Download, FileText } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
 
 import { API } from '@/lib/api'
@@ -565,6 +565,200 @@ function DAsTab({ stationEmps, sims }) {
   )
 }
 
+// ── SIM Bulk Upload Modal ─────────────────────────────────────
+function SimBulkModal({ station, onClose, onSave }) {
+  const [rows,    setRows]    = useState([])
+  const [stage,   setStage]   = useState('upload') // upload | preview | result
+  const [result,  setResult]  = useState(null)
+  const [saving,  setSaving]  = useState(false)
+  const [err,     setErr]     = useState(null)
+  const fileRef = useRef(null)
+
+  const TEMPLATE_HEADERS = 'sim_number,phone_number,carrier,status,station_code,monthly_cost,notes'
+  const TEMPLATE_EXAMPLE = '8964050XXXXXXXX,+971501234567,Du,available,DDB1,50,Work SIM'
+
+  function downloadTemplate() {
+    const csv  = `${TEMPLATE_HEADERS}\n${TEMPLATE_EXAMPLE}\n`
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a'); a.href = url; a.download = 'sim_upload_template.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function parseCSV(text) {
+    const lines = text.trim().split(/\r?\n/).filter(Boolean)
+    if (lines.length < 2) return []
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
+    return lines.slice(1).map((line, i) => {
+      const vals = line.split(',').map(v => v.trim())
+      const obj  = {}
+      headers.forEach((h, j) => { obj[h] = vals[j] || '' })
+      obj._row = i + 2
+      obj._ok  = !!obj.sim_number
+      return obj
+    })
+  }
+
+  function handleFile(e) {
+    setErr(null)
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.name.endsWith('.csv')) { setErr('Please upload a .csv file'); return }
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const parsed = parseCSV(ev.target.result)
+      if (!parsed.length) { setErr('No data rows found. Check your CSV format.'); return }
+      setRows(parsed)
+      setStage('preview')
+    }
+    reader.readAsText(file)
+  }
+
+  async function handleUpload() {
+    const valid = rows.filter(r => r._ok)
+    if (!valid.length) { setErr('No valid rows to upload'); return }
+    setSaving(true); setErr(null)
+    try {
+      const payload = valid.map(r => ({
+        sim_number:   r.sim_number,
+        phone_number: r.phone_number || null,
+        carrier:      r.carrier || 'Du',
+        status:       r.status || 'available',
+        station_code: r.station_code || station || null,
+        monthly_cost: parseFloat(r.monthly_cost) || 0,
+        notes:        r.notes || null,
+      }))
+      const res  = await fetch(`${API}/api/sims/bulk`, {
+        method: 'POST', headers: hdr(), body: JSON.stringify({ sims: payload })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setResult(data)
+      setStage('result')
+    } catch(e) { setErr(e.message) } finally { setSaving(false) }
+  }
+
+  const invalidRows = rows.filter(r => !r._ok)
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal" style={{ maxWidth: 560 }}>
+        {/* Header */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+          <div>
+            <h3 style={{ fontWeight:900, fontSize:16, color:'var(--text)' }}>Bulk Upload SIM Cards</h3>
+            <p style={{ fontSize:11.5, color:'#A89880', marginTop:2 }}>{station} Station</p>
+          </div>
+          <button onClick={onClose} style={{ width:30, height:30, borderRadius:9, background:'#F5F4F1', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
+        </div>
+
+        {err && <div style={{ background:'#FEF2F2', border:'1px solid #FCA5A5', borderRadius:9, padding:'9px 12px', fontSize:12.5, color:'#C0392B', marginBottom:12 }}>{err}</div>}
+
+        {/* Stage: upload */}
+        {stage === 'upload' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div style={{ background:'#FAFAF8', border:'1.5px dashed #D4C9B8', borderRadius:12, padding:'28px 24px', textAlign:'center' }}>
+              <Upload size={32} style={{ margin:'0 auto 10px', display:'block', color:'#C4B49A' }}/>
+              <div style={{ fontWeight:700, fontSize:14, color:'var(--text)', marginBottom:4 }}>Upload CSV file</div>
+              <div style={{ fontSize:12, color:'#A89880', marginBottom:16 }}>
+                Columns: sim_number, phone_number, carrier, status, station_code, monthly_cost, notes
+              </div>
+              <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{ display:'none' }}/>
+              <button className="btn btn-primary" onClick={() => fileRef.current?.click()} style={{ justifyContent:'center', marginBottom:10 }}>
+                <FileText size={14}/> Choose CSV File
+              </button>
+              <div style={{ fontSize:11.5, color:'#A89880' }}>Max 500 rows per upload</div>
+            </div>
+            <button onClick={downloadTemplate} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:10, background:'#F5F4F1', border:'1px solid #EAE6DE', cursor:'pointer', fontSize:12.5, fontWeight:600, color:'#6B5D4A', fontFamily:'Poppins,sans-serif' }}>
+              <Download size={13}/> Download Template CSV
+            </button>
+          </div>
+        )}
+
+        {/* Stage: preview */}
+        {stage === 'preview' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            <div style={{ display:'flex', gap:8 }}>
+              {[
+                { l:'Total rows',  v:rows.length,       c:'#1A1612', bg:'#FAFAF8', bc:'#EAE6DE' },
+                { l:'Valid',       v:rows.filter(r=>r._ok).length, c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0' },
+                { l:'Invalid',     v:invalidRows.length, c: invalidRows.length ? '#C0392B':'#A89880', bg: invalidRows.length ? '#FEF2F2':'#F5F4F1', bc: invalidRows.length ? '#FCA5A5':'#EAE6DE' },
+              ].map(s => (
+                <div key={s.l} style={{ flex:1, textAlign:'center', padding:'10px 6px', borderRadius:10, background:s.bg, border:`1px solid ${s.bc}` }}>
+                  <div style={{ fontWeight:900, fontSize:20, color:s.c }}>{s.v}</div>
+                  <div style={{ fontSize:10.5, color:s.c, fontWeight:600, marginTop:2 }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+            {invalidRows.length > 0 && (
+              <div style={{ background:'#FEF2F2', border:'1px solid #FCA5A5', borderRadius:9, padding:'9px 12px', fontSize:12, color:'#C0392B' }}>
+                <strong>Invalid rows (missing SIM number):</strong> rows {invalidRows.map(r=>r._row).join(', ')}. These will be skipped.
+              </div>
+            )}
+            <div style={{ maxHeight:240, overflowY:'auto', borderRadius:10, border:'1px solid #EAE6DE' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11.5 }}>
+                <thead>
+                  <tr style={{ background:'#F5F4F1', position:'sticky', top:0 }}>
+                    {['#','SIM Number','Phone','Carrier','Status','Station'].map(h => (
+                      <th key={h} style={{ padding:'7px 10px', textAlign:'left', fontWeight:700, color:'#6B5D4A', borderBottom:'1px solid #EAE6DE', whiteSpace:'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r, i) => (
+                    <tr key={i} style={{ background: r._ok ? 'transparent' : '#FEF2F2', borderBottom:'1px solid #F5F4F1' }}>
+                      <td style={{ padding:'6px 10px', color:'#A89880' }}>{r._row}</td>
+                      <td style={{ padding:'6px 10px', fontWeight:700, color: r._ok ? 'var(--text)' : '#C0392B' }}>{r.sim_number || '—'}</td>
+                      <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.phone_number || '—'}</td>
+                      <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.carrier || 'Du'}</td>
+                      <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.status || 'available'}</td>
+                      <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.station_code || station || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ display:'flex', gap:8, marginTop:4 }}>
+              <button onClick={() => { setStage('upload'); setRows([]); if(fileRef.current) fileRef.current.value='' }} className="btn btn-secondary" style={{ flex:1, justifyContent:'center' }}>Back</button>
+              <button onClick={handleUpload} disabled={saving || !rows.filter(r=>r._ok).length} className="btn btn-primary" style={{ flex:2, justifyContent:'center' }}>
+                {saving ? 'Uploading…' : `Upload ${rows.filter(r=>r._ok).length} SIMs`}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Stage: result */}
+        {stage === 'result' && result && (
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div style={{ textAlign:'center', padding:'20px 0' }}>
+              <CheckCircle size={40} style={{ margin:'0 auto 12px', display:'block', color:'#2E7D52' }}/>
+              <div style={{ fontWeight:800, fontSize:17, color:'var(--text)', marginBottom:6 }}>Upload Complete</div>
+            </div>
+            <div style={{ display:'flex', gap:8 }}>
+              {[
+                { l:'Inserted', v:result.inserted, c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0' },
+                { l:'Skipped (dup)', v:result.skipped, c:'#B8860B', bg:'#FDF6E3', bc:'#F0D78C' },
+                { l:'Errors', v:result.errors?.length||0, c: result.errors?.length ? '#C0392B':'#A89880', bg: result.errors?.length ? '#FEF2F2':'#F5F4F1', bc: result.errors?.length ? '#FCA5A5':'#EAE6DE' },
+              ].map(s => (
+                <div key={s.l} style={{ flex:1, textAlign:'center', padding:'10px 6px', borderRadius:10, background:s.bg, border:`1px solid ${s.bc}` }}>
+                  <div style={{ fontWeight:900, fontSize:20, color:s.c }}>{s.v}</div>
+                  <div style={{ fontSize:10.5, color:s.c, fontWeight:600, marginTop:2 }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+            {result.errors?.length > 0 && (
+              <div style={{ background:'#FEF2F2', border:'1px solid #FCA5A5', borderRadius:9, padding:'9px 12px', fontSize:11.5, color:'#C0392B', maxHeight:100, overflowY:'auto' }}>
+                {result.errors.map((e,i) => <div key={i}>Row {e.row}: {e.sim_number} — {e.error}</div>)}
+              </div>
+            )}
+            <button onClick={() => { onSave(); onClose() }} className="btn btn-primary" style={{ justifyContent:'center' }}>Done</button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── SIM Section ───────────────────────────────────────────────
 function SimSection({ sims, emps, station, onRefresh }) {
   const [modal,       setModal]       = useState(null)
@@ -617,6 +811,9 @@ function SimSection({ sims, emps, station, onRefresh }) {
           <Search size={13} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#C4B49A',pointerEvents:'none'}}/>
           <input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search SIM, phone, DA…" style={{paddingLeft:34,borderRadius:20}}/>
         </div>
+        <button className="btn btn-secondary" onClick={()=>setModal({type:'bulk'})} style={{borderRadius:20,padding:'9px 14px',gap:5}}>
+          <Upload size={14}/> Bulk
+        </button>
         <button className="btn btn-primary" onClick={()=>setModal({type:'add'})} style={{borderRadius:20,padding:'9px 16px'}}>
           <Plus size={14}/> Add SIM
         </button>
@@ -668,6 +865,7 @@ function SimSection({ sims, emps, station, onRefresh }) {
 
       {modal?.type==='add'  && <SimModal emps={emps} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);onRefresh()}}/>}
       {modal?.type==='edit' && <SimModal sim={modal.sim} emps={emps} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);onRefresh()}}/>}
+      {modal?.type==='bulk' && <SimBulkModal station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);onRefresh()}}/>}
       <ConfirmDialog
         open={!!confirmDlg}
         title={confirmDlg?.title}
