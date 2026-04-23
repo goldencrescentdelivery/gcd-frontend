@@ -566,7 +566,7 @@ function DAsTab({ stationEmps, sims }) {
 }
 
 // ── SIM Bulk Upload Modal ─────────────────────────────────────
-function SimBulkModal({ station, onClose, onSave }) {
+function SimBulkModal({ station, emps, onClose, onSave }) {
   const [rows,    setRows]    = useState([])
   const [stage,   setStage]   = useState('upload') // upload | preview | result
   const [result,  setResult]  = useState(null)
@@ -574,8 +574,8 @@ function SimBulkModal({ station, onClose, onSave }) {
   const [err,     setErr]     = useState(null)
   const fileRef = useRef(null)
 
-  const TEMPLATE_HEADERS = 'sim_number,phone_number,carrier,status,station_code,monthly_cost,notes'
-  const TEMPLATE_EXAMPLE = '8964050XXXXXXXX,+971501234567,Du,available,DDB1,50,Work SIM'
+  const TEMPLATE_HEADERS = 'sim_number,phone_number,carrier,status,station_code,monthly_cost,notes,emp_id'
+  const TEMPLATE_EXAMPLE = '8964050XXXXXXXX,+971501234567,Du,available,DDB1,50,Work SIM,E001'
 
   function downloadTemplate() {
     const csv  = `${TEMPLATE_HEADERS}\n${TEMPLATE_EXAMPLE}\n`
@@ -661,7 +661,7 @@ function SimBulkModal({ station, onClose, onSave }) {
               <Upload size={32} style={{ margin:'0 auto 10px', display:'block', color:'#C4B49A' }}/>
               <div style={{ fontWeight:700, fontSize:14, color:'var(--text)', marginBottom:4 }}>Upload CSV file</div>
               <div style={{ fontSize:12, color:'#A89880', marginBottom:16 }}>
-                Columns: sim_number, phone_number, carrier, status, station_code, monthly_cost, notes
+                Columns: sim_number, phone_number, carrier, status, station_code, monthly_cost, notes, <strong>emp_id</strong>
               </div>
               <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{ display:'none' }}/>
               <button className="btn btn-primary" onClick={() => fileRef.current?.click()} style={{ justifyContent:'center', marginBottom:10 }}>
@@ -699,22 +699,28 @@ function SimBulkModal({ station, onClose, onSave }) {
               <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11.5 }}>
                 <thead>
                   <tr style={{ background:'#F5F4F1', position:'sticky', top:0 }}>
-                    {['#','SIM Number','Phone','Carrier','Status','Station'].map(h => (
+                    {['#','SIM Number','Phone','Carrier','Status','Station','Assign To'].map(h => (
                       <th key={h} style={{ padding:'7px 10px', textAlign:'left', fontWeight:700, color:'#6B5D4A', borderBottom:'1px solid #EAE6DE', whiteSpace:'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r, i) => (
-                    <tr key={i} style={{ background: r._ok ? 'transparent' : '#FEF2F2', borderBottom:'1px solid #F5F4F1' }}>
-                      <td style={{ padding:'6px 10px', color:'#A89880' }}>{r._row}</td>
-                      <td style={{ padding:'6px 10px', fontWeight:700, color: r._ok ? 'var(--text)' : '#C0392B' }}>{r.sim_number || '—'}</td>
-                      <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.phone_number || '—'}</td>
-                      <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.carrier || 'Du'}</td>
-                      <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.status || 'available'}</td>
-                      <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.station_code || station || '—'}</td>
-                    </tr>
-                  ))}
+                  {rows.map((r, i) => {
+                    const empId = (r.emp_id||'').trim()
+                    const matchedEmp = empId ? (emps||[]).find(e => e.id?.toLowerCase()===empId.toLowerCase() || e.name?.toLowerCase()===empId.toLowerCase()) : null
+                    const empDisplay = empId ? (matchedEmp ? matchedEmp.name : <span style={{color:'#C0392B'}}>Not found: {empId}</span>) : '—'
+                    return (
+                      <tr key={i} style={{ background: r._ok ? 'transparent' : '#FEF2F2', borderBottom:'1px solid #F5F4F1' }}>
+                        <td style={{ padding:'6px 10px', color:'#A89880' }}>{r._row}</td>
+                        <td style={{ padding:'6px 10px', fontWeight:700, color: r._ok ? 'var(--text)' : '#C0392B' }}>{r.sim_number || '—'}</td>
+                        <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.phone_number || '—'}</td>
+                        <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.carrier || 'Du'}</td>
+                        <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.status || 'available'}</td>
+                        <td style={{ padding:'6px 10px', color:'#6B5D4A' }}>{r.station_code || station || '—'}</td>
+                        <td style={{ padding:'6px 10px', color: matchedEmp ? '#2E7D52' : empId ? '#C0392B' : '#A89880', fontWeight: matchedEmp ? 700 : 400 }}>{empDisplay}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -865,7 +871,7 @@ function SimSection({ sims, emps, station, onRefresh }) {
 
       {modal?.type==='add'  && <SimModal emps={emps} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);onRefresh()}}/>}
       {modal?.type==='edit' && <SimModal sim={modal.sim} emps={emps} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);onRefresh()}}/>}
-      {modal?.type==='bulk' && <SimBulkModal station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);onRefresh()}}/>}
+      {modal?.type==='bulk' && <SimBulkModal station={station} emps={emps} onClose={()=>setModal(null)} onSave={()=>{setModal(null);onRefresh()}}/>}
       <ConfirmDialog
         open={!!confirmDlg}
         title={confirmDlg?.title}
