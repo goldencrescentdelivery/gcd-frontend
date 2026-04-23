@@ -798,7 +798,7 @@ function WorkNumModal({ emp, station, sims, onSave, onClose }) {
   )
 }
 
-// ── Vehicle Card with History ─────────────────────────────────
+// ── Vehicle Card ──────────────────────────────────────────────
 function VehicleCard({ v, asgn, isDown, sc, sb, date, station, emps, onEdit, onDelete, onAssign }) {
   const [showHistory, setShowHistory] = useState(false)
   const [history,     setHistory]     = useState([])
@@ -806,79 +806,98 @@ function VehicleCard({ v, asgn, isDown, sc, sb, date, station, emps, onEdit, onD
 
   async function loadHistory() {
     if (history.length > 0) { setShowHistory(p=>!p); return }
-    setShowHistory(true)
-    setHistLoading(true)
+    setShowHistory(true); setHistLoading(true)
     try {
       const r = await fetch(`${API}/api/vehicles/assignments/history?vehicle_id=${v.id}&limit=30`, { headers: hdr() })
-      const d = await r.json()
-      setHistory(d.history || [])
-    } catch(e) { setHistory([]) } finally { setHistLoading(false) }
+      setHistory((await r.json()).history || [])
+    } catch { setHistory([]) } finally { setHistLoading(false) }
   }
 
+  const assignedEmp = asgn?.emp_id ? emps.find(e => e.id === asgn.emp_id) : null
+  const assignedInitials = assignedEmp ? assignedEmp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() : null
+
   return (
-    <div style={{background:'#FFF', border:`1px solid ${isDown?'#FCA5A5':'#EAE6DE'}`, borderRadius:16}}>
+    <div style={{background:'var(--card)',borderRadius:18,overflow:'hidden',border:`1px solid ${isDown?`${sc}40`:'var(--border)'}`,boxShadow:isDown?`0 0 0 1px ${sc}20`:'none',transition:'box-shadow 0.2s'}}
+      onMouseEnter={e=>e.currentTarget.style.boxShadow=`0 6px 20px rgba(0,0,0,0.08)`}
+      onMouseLeave={e=>e.currentTarget.style.boxShadow=isDown?`0 0 0 1px ${sc}20`:'none'}>
+
+      {/* Status strip */}
+      <div style={{height:4,background:sc}}/>
+
       <div style={{padding:'14px 16px'}}>
-        {/* Header row */}
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+        {/* Header */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{width:42,height:42,borderRadius:12,background:sb,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <div style={{width:44,height:44,borderRadius:14,background:sb,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
               <Truck size={20} color={sc}/>
             </div>
             <div>
-              <div style={{fontWeight:800,fontSize:15,color:'var(--text)',letterSpacing:'0.04em'}}>{v.plate}</div>
-              <div style={{fontSize:12,color:'#A89880',marginTop:1}}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
+              <div style={{fontWeight:900,fontSize:16,color:'var(--text)',letterSpacing:'0.03em',lineHeight:1.1}}>{v.plate}</div>
+              <div style={{fontSize:11.5,color:'var(--text-muted)',marginTop:2}}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
             </div>
           </div>
-          <div style={{display:'flex',gap:6,alignItems:'center'}}>
-            <span style={{fontSize:11,fontWeight:700,color:sc,background:sb,padding:'3px 10px',borderRadius:20}}>{v.status}</span>
-            <button className="btn btn-ghost btn-icon btn-sm" onClick={onEdit}><Pencil size={13}/></button>
-            <button className="btn btn-ghost btn-icon btn-sm" style={{color:'#EF4444'}} onClick={onDelete}><Trash2 size={13}/></button>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <span style={{fontSize:10.5,fontWeight:700,color:sc,background:sb,padding:'3px 10px',borderRadius:20,border:`1px solid ${sc}30`,textTransform:'capitalize'}}>{v.status}</span>
+            {v.station_code&&<span style={{fontSize:9.5,fontWeight:700,color:'#B8860B',background:'#FDF6E3',border:'1px solid #F0D78C',borderRadius:6,padding:'2px 7px'}}>{v.station_code}</span>}
+            <button className="btn btn-ghost btn-icon btn-sm" onClick={onEdit} title="Edit"><Pencil size={13}/></button>
+            <button className="btn btn-ghost btn-icon btn-sm" style={{color:'#EF4444'}} onClick={onDelete} title="Delete"><Trash2 size={13}/></button>
           </div>
         </div>
 
-        {/* Grounded reason */}
+        {/* Grounded banner */}
         {isDown&&v.grounded_reason&&(
-          <div style={{background:'#FEF2F2',border:'1px solid #FCA5A5',borderRadius:10,padding:'8px 12px',fontSize:12,color:'#C0392B',marginBottom:10,display:'flex',gap:6,alignItems:'flex-start'}}>
+          <div style={{background:`${sc}10`,border:`1px solid ${sc}40`,borderRadius:10,padding:'8px 12px',fontSize:12,color:sc,marginBottom:12,display:'flex',gap:6,alignItems:'flex-start'}}>
             <AlertTriangle size={13} style={{flexShrink:0,marginTop:1}}/> {v.grounded_reason}{v.grounded_since?` · since ${v.grounded_since.slice(0,10)}`:''}
           </div>
         )}
 
-        {/* Assign DA */}
+        {/* Currently assigned DA chip */}
+        {assignedEmp ? (
+          <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',background:'rgba(46,125,82,0.07)',border:'1px solid rgba(46,125,82,0.2)',borderRadius:10,marginBottom:12}}>
+            <div style={{width:28,height:28,borderRadius:8,background:'rgba(46,125,82,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:11,color:'#2E7D52',flexShrink:0}}>{assignedInitials}</div>
+            <div style={{minWidth:0}}>
+              <div style={{fontSize:12,fontWeight:700,color:'#2E7D52',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{assignedEmp.name}</div>
+              <div style={{fontSize:10,color:'rgba(46,125,82,0.7)'}}>Assigned today</div>
+            </div>
+          </div>
+        ) : (
+          <div style={{display:'flex',alignItems:'center',gap:6,padding:'7px 10px',background:'var(--bg-alt)',border:'1px dashed var(--border-med)',borderRadius:10,marginBottom:12}}>
+            <div style={{width:24,height:24,borderRadius:6,background:'var(--border)',display:'flex',alignItems:'center',justifyContent:'center'}}><Users size={11} color="var(--text-muted)"/></div>
+            <span style={{fontSize:11.5,color:'var(--text-muted)',fontStyle:'italic'}}>Unassigned today</span>
+          </div>
+        )}
+
+        {/* Assign dropdown */}
         <div style={{marginBottom:10}}>
-          <label className="input-label" style={{marginBottom:6}}>Assigned DA — {date}</label>
+          <div style={{fontSize:10,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>Assign DA — {date}</div>
           <DriverSearch employees={emps.filter(e=>e.station_code===station)} value={asgn?.emp_id||''} onChange={onAssign} placeholder="— Unassigned —"/>
         </div>
 
         {/* History toggle */}
         <button onClick={loadHistory}
-          style={{display:'flex',alignItems:'center',gap:6,width:'100%',padding:'7px 10px',borderRadius:10,background:showHistory?'#F5F4F1':'transparent',border:'1px solid #EAE6DE',cursor:'pointer',fontFamily:'Poppins,sans-serif',fontSize:12,fontWeight:600,color:'#A89880',transition:'all 0.15s'}}>
-          <History size={13}/>
-          Assignment History
-          <ChevronDown size={13} style={{marginLeft:'auto',transition:'transform 0.2s',transform:showHistory?'rotate(180deg)':'none'}}/>
+          style={{display:'flex',alignItems:'center',gap:6,width:'100%',padding:'8px 12px',borderRadius:10,background:showHistory?'var(--bg-alt)':'transparent',border:'1px solid var(--border)',cursor:'pointer',fontFamily:'Poppins,sans-serif',fontSize:12,fontWeight:600,color:'var(--text-muted)',transition:'all 0.15s'}}>
+          <History size={12}/> Assignment History
+          <ChevronDown size={12} style={{marginLeft:'auto',transition:'transform 0.2s',transform:showHistory?'rotate(180deg)':'none'}}/>
         </button>
       </div>
 
       {/* History panel */}
       {showHistory && (
-        <div style={{borderTop:'1px solid #EAE6DE',padding:'12px 16px',background:'#FAFAF9',borderRadius:'0 0 16px 16px'}}>
+        <div style={{borderTop:'1px solid var(--border)',padding:'12px 16px',background:'var(--bg-alt)',borderRadius:'0 0 18px 18px'}}>
           {histLoading ? (
-            <div style={{textAlign:'center',padding:'12px 0',color:'#A89880',fontSize:12}}>Loading…</div>
+            <div style={{textAlign:'center',padding:'12px 0',color:'var(--text-muted)',fontSize:12}}>Loading…</div>
           ) : history.length === 0 ? (
-            <div style={{textAlign:'center',padding:'12px 0',color:'#A89880',fontSize:12}}>No assignment history yet</div>
+            <div style={{textAlign:'center',padding:'12px 0',color:'var(--text-muted)',fontSize:12}}>No assignment history yet</div>
           ) : (
-            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+            <div style={{display:'flex',flexDirection:'column',gap:5}}>
               {history.map(h=>(
-                <div key={h.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',borderRadius:10,background:'#FFF',border:'1px solid #EAE6DE'}}>
-                  <div style={{width:7,height:7,borderRadius:'50%',background:h.emp_id?'#10B981':'#D1D5DB',flexShrink:0}}/>
+                <div key={h.id} style={{display:'flex',alignItems:'center',gap:9,padding:'7px 10px',borderRadius:9,background:'var(--card)',border:'1px solid var(--border)'}}>
+                  <div style={{width:6,height:6,borderRadius:'50%',background:h.emp_id?'#10B981':'#D1D5DB',flexShrink:0}}/>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:12.5,fontWeight:700,color:'#111',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                      {h.driver_name || '— Unassigned —'}
-                    </div>
-                    <div style={{fontSize:10.5,color:'#A89880',marginTop:1}}>{h.date?.slice(0,10)}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{h.driver_name||'— Unassigned —'}</div>
+                    <div style={{fontSize:10,color:'var(--text-muted)',marginTop:1}}>{h.date?.slice(0,10)}</div>
                   </div>
-                  <span style={{fontSize:10,color:'#B8860B',background:'#FDF6E3',border:'1px solid #F0D78C',borderRadius:6,padding:'2px 7px',flexShrink:0,fontWeight:600}}>
-                    {h.station_code}
-                  </span>
+                  <span style={{fontSize:9.5,color:'#B8860B',background:'#FDF6E3',border:'1px solid #F0D78C',borderRadius:5,padding:'2px 6px',flexShrink:0,fontWeight:700}}>{h.station_code}</span>
                 </div>
               ))}
             </div>
