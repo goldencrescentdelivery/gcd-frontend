@@ -768,7 +768,7 @@ function WorkNumModal({ emp, station, sims, onSave, onClose }) {
 }
 
 // ── Vehicle Card with History ─────────────────────────────────
-function VehicleCard({ v, asgn, isDown, sc, sb, date, station, emps, onEdit, onAssign }) {
+function VehicleCard({ v, asgn, isDown, sc, sb, date, station, emps, onEdit, onDelete, onAssign }) {
   const [showHistory, setShowHistory] = useState(false)
   const [history,     setHistory]     = useState([])
   const [histLoading, setHistLoading] = useState(false)
@@ -801,6 +801,7 @@ function VehicleCard({ v, asgn, isDown, sc, sb, date, station, emps, onEdit, onA
           <div style={{display:'flex',gap:6,alignItems:'center'}}>
             <span style={{fontSize:11,fontWeight:700,color:sc,background:sb,padding:'3px 10px',borderRadius:20}}>{v.status}</span>
             <button className="btn btn-ghost btn-icon btn-sm" onClick={onEdit}><Pencil size={13}/></button>
+            <button className="btn btn-ghost btn-icon btn-sm" style={{color:'#EF4444'}} onClick={onDelete}><Trash2 size={13}/></button>
           </div>
         </div>
 
@@ -1175,6 +1176,17 @@ export default function POCPage() {
               <VehicleCard key={v.id} v={v} asgn={asgn} isDown={isDown} sc={sc} sb={sb}
                 date={date} station={station} emps={emps}
                 onEdit={()=>setModal({type:'vehicle-edit',vehicle:v})}
+                onDelete={()=>setConfirmDlg({
+                  title:'Delete vehicle?',
+                  message:`Remove ${v.plate}${v.make?' ('+v.make+(v.model?' '+v.model:'')+')'  :''} permanently? This cannot be undone.`,
+                  confirmLabel:'Delete',
+                  danger:true,
+                  onConfirm:async()=>{
+                    setConfirmDlg(null)
+                    await fetch(`${API}/api/vehicles/${v.id}`,{method:'DELETE',headers:hdr()})
+                    load()
+                  }
+                })}
                 onAssign={eId=>assignVehicle(v.id,eId)}/>
             )
           })}
