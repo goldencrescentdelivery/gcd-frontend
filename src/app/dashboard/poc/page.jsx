@@ -408,8 +408,9 @@ function SimModal({ sim, emps, station, onSave, onClose }) {
     notes: sim?.notes||'',
     monthly_cost: sim?.monthly_cost||'',
   })
-  const [saving, setSaving] = useState(false)
-  const [err, setErr] = useState(null)
+  const [saving,  setSaving]  = useState(false)
+  const [err,     setErr]     = useState(null)
+  const [confirm, setConfirm] = useState(null) // { empName, existingNumber }
   const set = (k,v) => setForm(p=>({...p,[k]:v}))
 
   function handleEmpChange(v) {
@@ -417,9 +418,8 @@ function SimModal({ sim, emps, station, onSave, onClose }) {
     set('status', v ? 'assigned' : 'available')
   }
 
-  async function handleSave() {
-    if (!form.sim_number) return setErr('SIM number required')
-    setSaving(true); setErr(null)
+  async function doSave() {
+    setSaving(true); setErr(null); setConfirm(null)
     try {
       const body = { ...form, station_code: station, monthly_cost: parseFloat(form.monthly_cost)||0 }
       const url    = isEdit ? `${API}/api/sims/${sim.id}` : `${API}/api/sims`
@@ -429,6 +429,21 @@ function SimModal({ sim, emps, station, onSave, onClose }) {
       if (!res.ok) throw new Error(data.error)
       onSave()
     } catch(e) { setErr(e.message) } finally { setSaving(false) }
+  }
+
+  function handleSave() {
+    if (!form.sim_number) return setErr('SIM number required')
+    // Check if selected employee already has a different work number
+    if (form.emp_id) {
+      const selectedEmp = (emps||[]).find(e => e.id === form.emp_id)
+      const existingNumber = selectedEmp?.work_number
+      const currentPhone   = form.phone_number || sim?.phone_number
+      if (existingNumber && existingNumber !== currentPhone) {
+        setConfirm({ empName: selectedEmp.name, existingNumber })
+        return
+      }
+    }
+    doSave()
   }
 
   const STATUSES = [
@@ -476,10 +491,28 @@ function SimModal({ sim, emps, station, onSave, onClose }) {
           <div><label className="input-label">Notes</label>
             <input className="input" value={form.notes} onChange={e=>set('notes',e.target.value)} placeholder="Any notes…"/></div>
         </div>
-        <div style={{display:'flex',gap:10,marginTop:18}}>
-          <button onClick={onClose} className="btn btn-secondary" style={{flex:1,justifyContent:'center'}}>Cancel</button>
-          <button onClick={handleSave} disabled={saving} className="btn btn-primary" style={{flex:2,justifyContent:'center'}}>{saving?'Saving…':isEdit?'Save':'Add SIM'}</button>
-        </div>
+        {confirm ? (
+          <div style={{marginTop:18,background:'#FFFBEB',border:'1.5px solid #FDE68A',borderRadius:12,padding:'14px 15px'}}>
+            <div style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:12}}>
+              <AlertTriangle size={18} color="#B45309" style={{flexShrink:0,marginTop:1}}/>
+              <div>
+                <div style={{fontWeight:700,fontSize:13,color:'#92400E',marginBottom:3}}>Replace existing number?</div>
+                <div style={{fontSize:12.5,color:'#92400E'}}>
+                  <strong>{confirm.empName}</strong> already has <strong>{confirm.existingNumber}</strong> assigned as their work number. Saving will replace it.
+                </div>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>setConfirm(null)} className="btn btn-secondary" style={{flex:1,justifyContent:'center',fontSize:12}}>Cancel</button>
+              <button onClick={doSave} disabled={saving} className="btn btn-primary" style={{flex:2,justifyContent:'center',fontSize:12,background:'#B45309',borderColor:'#B45309'}}>{saving?'Saving…':'Yes, replace it'}</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{display:'flex',gap:10,marginTop:18}}>
+            <button onClick={onClose} className="btn btn-secondary" style={{flex:1,justifyContent:'center'}}>Cancel</button>
+            <button onClick={handleSave} disabled={saving} className="btn btn-primary" style={{flex:2,justifyContent:'center'}}>{saving?'Saving…':isEdit?'Save':'Add SIM'}</button>
+          </div>
+        )}
       </div>
     </div>
   )
