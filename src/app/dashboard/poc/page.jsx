@@ -897,7 +897,7 @@ export default function POCPage() {
         fetch(`${API}/api/employees`,h).then(r=>r.json()),  // backend filters by station for POC role
         fetch(`${API}/api/poc/announcements`,h).then(r=>r.json()),
         fetch(`${API}/api/leaves?stage=all`,h).then(r=>r.json()),
-        fetch(`${API}/api/vehicles?station_code=${station}`,h).then(r=>r.json()),
+        fetch(`${API}/api/vehicles`,h).then(r=>r.json()),
         fetch(`${API}/api/vehicles/assignments?date=${date}&station_code=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/deliveries?station=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/sims?station_code=${station}`,h).then(r=>r.json()),
