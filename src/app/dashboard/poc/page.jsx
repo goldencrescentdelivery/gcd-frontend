@@ -486,6 +486,22 @@ function SimModal({ sim, emps, station, onSave, onClose }) {
 }
 
 // ── DAs Tab ───────────────────────────────────────────────────
+function DAAvatar({ emp }) {
+  const [broken, setBroken] = useState(false)
+  const initials = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+  if (emp.avatar && !broken) {
+    return <img src={emp.avatar} alt="" onError={()=>setBroken(true)}
+      style={{width:48,height:48,borderRadius:14,objectFit:'cover',flexShrink:0,border:'2px solid var(--border-med)'}}/>
+  }
+  const COLORS = ['#B8860B','#1D6FA4','#2E7D52','#7C3AED','#C0392B','#0F766E']
+  const color  = COLORS[emp.name.charCodeAt(0) % COLORS.length]
+  return (
+    <div style={{width:48,height:48,borderRadius:14,background:`${color}18`,border:`2px solid ${color}33`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontWeight:800,fontSize:16,color}}>
+      {initials}
+    </div>
+  )
+}
+
 function DAsTab({ stationEmps, sims }) {
   const [q, setQ] = useState('')
   const filtered = stationEmps.filter(e =>
@@ -493,43 +509,58 @@ function DAsTab({ stationEmps, sims }) {
   )
   return (
     <div style={{display:'flex',flexDirection:'column',gap:12}}>
-      <div style={{position:'relative'}}>
-        <Search size={13} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)',pointerEvents:'none'}}/>
-        <input className="input" value={q} onChange={e=>setQ(e.target.value)} placeholder="Search by name or ID…" style={{paddingLeft:34,borderRadius:20}}/>
+      {/* Search + count */}
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <div style={{position:'relative',flex:1}}>
+          <Search size={13} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)',pointerEvents:'none'}}/>
+          <input className="input" value={q} onChange={e=>setQ(e.target.value)} placeholder="Search by name or ID…" style={{paddingLeft:34,borderRadius:20}}/>
+        </div>
+        <span style={{fontSize:12,fontWeight:700,color:'var(--text-muted)',whiteSpace:'nowrap',flexShrink:0}}>{filtered.length} DA{filtered.length!==1?'s':''}</span>
       </div>
-      {filtered.length===0&&(
+
+      {filtered.length===0 && (
         <div style={{textAlign:'center',padding:50,color:'var(--text-muted)',fontSize:13}}>No drivers found</div>
       )}
-      {filtered.map((emp,i)=>{
-        const workSim = sims.find(s=>s.emp_id===emp.id)
-        const initials = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
-        return (
-          <div key={emp.id} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,padding:'14px 16px',animation:`slideUp 0.3s ${i*0.05}s ease both`,display:'flex',alignItems:'center',gap:14}}>
-            {/* Avatar */}
-            {emp.avatar
-              ? <img src={emp.avatar} alt={emp.name} style={{width:44,height:44,borderRadius:'50%',objectFit:'cover',flexShrink:0,border:'2px solid var(--border-med)'}}/>
-              : <div style={{width:44,height:44,borderRadius:'50%',background:'linear-gradient(135deg,#FDF6E3,#FEF9F0)',border:'2px solid var(--gold-border)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontWeight:800,fontSize:15,color:'#B8860B'}}>{initials}</div>
-            }
-            {/* Info */}
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontWeight:700,fontSize:14,color:'var(--text)',marginBottom:4,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{emp.name}</div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:'4px 12px'}}>
-                <span style={{fontSize:11,color:'var(--text-muted)'}}><span style={{fontWeight:600,color:'var(--text)'}}>ID:</span> {emp.id}</span>
-                <span style={{fontSize:11,color:'var(--text-muted)'}}><span style={{fontWeight:600,color:'var(--text)'}}>Nationality:</span> {emp.nationality||'—'}</span>
-              </div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:'4px 12px',marginTop:4}}>
-                <span style={{fontSize:11,color:'var(--text-muted)'}}><span style={{fontWeight:600,color:'var(--text)'}}>Personal:</span> {emp.phone||'—'}</span>
-                <span style={{fontSize:11,color:'var(--text-muted)'}}><span style={{fontWeight:600,color:'var(--text)'}}>Work SIM:</span> {workSim?.phone_number||'—'}</span>
-              </div>
-              {workSim?.sim_number&&(
-                <div style={{marginTop:4}}>
-                  <span style={{fontSize:10,color:'var(--text-muted)',background:'var(--bg-alt)',padding:'2px 8px',borderRadius:10,border:'1px solid var(--border)'}}>SIM# {workSim.sim_number}</span>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:10}}>
+        {filtered.map((emp,i)=>{
+          const workSim = sims.find(s=>s.emp_id===emp.id)
+          return (
+            <div key={emp.id} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,padding:'14px',animation:`slideUp 0.25s ${Math.min(i,10)*0.03}s ease both`,display:'flex',gap:12,alignItems:'flex-start',transition:'box-shadow 0.2s'}}
+              onMouseEnter={e=>e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'}
+              onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
+              <DAAvatar emp={emp}/>
+              <div style={{flex:1,minWidth:0}}>
+                {/* Name + station */}
+                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:5,flexWrap:'wrap'}}>
+                  <span style={{fontWeight:700,fontSize:13.5,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>{emp.name}</span>
+                  {emp.station_code&&<span style={{fontSize:9.5,fontWeight:700,color:'#B8860B',background:'#FDF6E3',border:'1px solid #F0D78C',borderRadius:6,padding:'1px 7px',flexShrink:0}}>{emp.station_code}</span>}
                 </div>
-              )}
+                {/* ID + nationality */}
+                <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:5}}>
+                  <span style={{fontSize:11,color:'var(--text-muted)',background:'var(--bg-alt)',padding:'2px 8px',borderRadius:6,border:'1px solid var(--border)'}}>{emp.id}</span>
+                  {emp.nationality&&<span style={{fontSize:11,color:'var(--text-muted)',background:'var(--bg-alt)',padding:'2px 8px',borderRadius:6,border:'1px solid var(--border)'}}>{emp.nationality}</span>}
+                </div>
+                {/* Phone + SIM */}
+                <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                  {emp.phone&&(
+                    <span style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'var(--text-muted)'}}>
+                      <span style={{fontSize:9,color:'var(--text-muted)',fontWeight:600,textTransform:'uppercase'}}>Personal</span>
+                      <span style={{fontWeight:600,color:'var(--text)',fontSize:11}}>{emp.phone}</span>
+                    </span>
+                  )}
+                  {workSim?.phone_number&&(
+                    <span style={{display:'flex',alignItems:'center',gap:4,fontSize:11}}>
+                      <span style={{fontSize:9,color:'#7C3AED',fontWeight:600,textTransform:'uppercase'}}>SIM</span>
+                      <span style={{fontWeight:600,color:'#7C3AED',fontSize:11}}>{workSim.phone_number}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -1014,7 +1045,7 @@ export default function POCPage() {
 
   const TABS = [
     {id:'attendance',label:'Attendance', icon:Users,          count:present},
-    {id:'das',       label:'DAs',        icon:Contact,        count:emps.length||null},
+    {id:'das',       label:'DAs',        icon:Contact,        count:stationEmps.length||null},
     {id:'fleet',     label:'Fleet',      icon:Truck,          count:active},
     {id:'deliveries',label:'Deliveries', icon:Package,        count:null},
     {id:'handovers', label:'Handovers',  icon:ArrowLeftRight, count:currentHandovers.length||null},
@@ -1391,7 +1422,7 @@ export default function POCPage() {
 
       {/* ── DAs ── */}
       {!loading && tab==='das' && (
-        <DAsTab stationEmps={emps} sims={sims}/>
+        <DAsTab stationEmps={stationEmps} sims={sims}/>
       )}
 
       {/* ── SIM CARDS ── */}
