@@ -14,6 +14,13 @@ import { useSocket } from '@/lib/socket'
 import { API } from '@/lib/api'
 const APP_VERSION = '2.4.0'
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4)
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const raw     = window.atob(base64)
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)))
+}
+
 const TYPE_COLORS = { Annual:'#B8860B', Sick:'#2563EB', Emergency:'#DC2626', Unpaid:'#6B7280', Other:'#6B7280' }
 const DED_LABELS  = { traffic_fine:'Traffic Fine', iloe_fee:'ILOE Fee', iloe_fine:'ILOE Fine', cash_variance:'Cash Variance', other:'Other' }
 
@@ -252,6 +259,44 @@ export default function DriverPortal() {
       setTimeout(() => setToast(null), 4500)
     }
   })
+
+  // Web push registration
+  useEffect(() => {
+    if (!user || user.role !== 'driver') return
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) return
+
+    async function registerPush() {
+      try {
+        const reg = await navigator.serviceWorker.register('/sw.js')
+        await navigator.serviceWorker.ready
+
+        // Ask for permission (only prompts once; subsequent calls are no-op)
+        const permission = await Notification.requestPermission()
+        if (permission !== 'granted') return
+
+        // Check if already subscribed
+        let sub = await reg.pushManager.getSubscription()
+        if (!sub) {
+          // Get VAPID public key from backend
+          const keyRes = await fetch(`${API}/api/notifications/vapid-public-key`)
+          const { key } = await keyRes.json()
+          if (!key) return
+          const appKey = urlBase64ToUint8Array(key)
+          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appKey })
+        }
+
+        // Send subscription to backend
+        const token = localStorage.getItem('gcd_token')
+        await fetch(`${API}/api/notifications/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(sub.toJSON()),
+        })
+      } catch(e) { /* push not available or denied — silent fail */ }
+    }
+
+    registerPush()
+  }, [user])
 
   function openNotices() {
     setTab('notices')

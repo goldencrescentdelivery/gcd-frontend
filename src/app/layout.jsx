@@ -16,6 +16,7 @@ export const metadata = {
     icon: '/logo.webp',
     apple: '/logo.webp',
   },
+  manifest: '/manifest.json',
 }
 
 export const viewport = {
