@@ -861,7 +861,8 @@ function VehicleCard({ v, asgn, isDown, sc, sb, date, station, emps, onEdit, onD
 // ── Main ──────────────────────────────────────────────────────
 export default function POCPage() {
   const { user }  = useAuth()
-  const station      = user?.station_code || 'DDB1'
+  const [station, setStation] = useState(user?.station_code || 'DDB1')
+  const canSwitchStation = user?.role === 'admin' || user?.role === 'general_manager'
   const searchParams = useSearchParams()
   const [tab,     setTab]     = useState(searchParams.get('tab') || 'attendance')
 
@@ -1037,6 +1038,16 @@ export default function POCPage() {
             </div>
             <div style={{fontWeight:900,fontSize:24,letterSpacing:'-0.03em',lineHeight:1.1}}>📍 {station}</div>
             <div style={{fontSize:12,color:'rgba(255,255,255,0.5)',marginTop:4}}>{date} · {emps.length} DAs assigned</div>
+            {canSwitchStation && (
+              <div style={{display:'flex',gap:6,marginTop:10}}>
+                {['DDB1','DXE6'].map(s=>(
+                  <button key={s} onClick={()=>setStation(s)}
+                    style={{padding:'5px 16px',borderRadius:20,border:`1.5px solid ${station===s?'#B8860B':'rgba(255,255,255,0.2)'}`,background:station===s?'rgba(184,134,11,0.3)':'rgba(255,255,255,0.07)',color:station===s?'#D4A017':'rgba(255,255,255,0.55)',fontWeight:station===s?700:500,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif',transition:'all 0.15s'}}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <input type="date" value={date} onChange={e=>setDate(e.target.value)}
             style={{background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:10,padding:'7px 10px',color:'white',fontSize:12,outline:'none',cursor:'pointer'}}/>
