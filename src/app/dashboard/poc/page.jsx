@@ -1292,8 +1292,8 @@ export default function POCPage() {
   const absent   = att.filter(a=>a.status==='absent').length
   const earnings = att.reduce((s,a)=>s+parseFloat(a.earnings||0),0)
   const active   = vehs.filter(v=>v.status==='active').length
-  const pendingLeaves  = leaves.filter(l => l.mgr_status === 'pending')
-  const historyLeaves  = leaves.filter(l => l.mgr_status !== 'pending')
+  const pendingLeaves  = leaves.filter(l => l.poc_status === 'pending')
+  const historyLeaves  = leaves.filter(l => l.poc_status !== 'pending')
 
   const stationEmps = emps.filter(e => e.station_code === station)
   const filtEmp  = stationEmps.filter(e=>!search||e.name.toLowerCase().includes(search.toLowerCase())||e.id.toLowerCase().includes(search.toLowerCase()))
@@ -1613,7 +1613,7 @@ export default function POCPage() {
                 background:!showLeaveHistory?'var(--card)':'transparent',
                 color:!showLeaveHistory?'#B8860B':'var(--text-muted)',
                 boxShadow:!showLeaveHistory?'0 1px 4px rgba(0,0,0,0.1)':'none'}}>
-              Awaiting Manager ({pendingLeaves.length})
+              Pending Review ({pendingLeaves.length})
             </button>
             <button onClick={()=>setShowLeaveHistory(true)}
               style={{flex:1,padding:'8px 12px',borderRadius:9,border:'none',cursor:'pointer',fontWeight:600,fontSize:12,transition:'all 0.2s',display:'flex',alignItems:'center',justifyContent:'center',gap:5,
@@ -1651,7 +1651,7 @@ export default function POCPage() {
                         {isApproved?'Approved':isRejected?'Rejected':'Pending'}
                       </span>
                     ) : (
-                      <span style={{fontSize:11,fontWeight:700,color:'#B45309',background:'#FFFBEB',border:'1px solid #FCD34D',padding:'3px 10px',borderRadius:20}}>Awaiting Manager</span>
+                      <span style={{fontSize:11,fontWeight:700,color:'#1D6FA4',background:'#EFF6FF',border:'1px solid #BFDBFE',padding:'3px 10px',borderRadius:20}}>Awaiting POC Review</span>
                     )}
                   </div>
                   <div style={{display:'flex',gap:6,alignItems:'center',fontSize:12,color:'var(--text-sub)',marginBottom:l.reason?8:0}}>
@@ -1665,8 +1665,10 @@ export default function POCPage() {
                   )}
                 </div>
                 {!showLeaveHistory && (
-                  <div style={{padding:'8px 14px',background:'var(--bg-alt)',borderTop:'1px solid var(--border)',fontSize:11.5,color:'var(--text-muted)',fontStyle:'italic'}}>
-                    Pending manager approval — no action required from you
+                  <div style={{background:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',borderTop:'1px solid #BFDBFE',padding:'10px 16px',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                    <span style={{fontSize:12,color:'#1D6FA4',fontWeight:700,flex:1}}>Awaiting your review</span>
+                    <button onClick={()=>handleLeave(l.id,'approved')} style={{padding:'7px 18px',borderRadius:20,background:'linear-gradient(135deg,#2E7D52,#22C55E)',border:'none',color:'white',fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif'}}>Approve</button>
+                    <button onClick={()=>handleLeave(l.id,'rejected')} style={{padding:'7px 18px',borderRadius:20,background:'#FEF2F2',border:'1px solid #FCA5A5',color:'#C0392B',fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif'}}>Reject</button>
                   </div>
                 )}
               </div>
