@@ -10,6 +10,7 @@ import {
   TrendingUp, Shield, Package, FileText, ExternalLink, ZoomIn
 } from 'lucide-react'
 import { useSocket } from '@/lib/socket'
+import { listenForSWReplay } from '@/lib/offline'
 
 import { API } from '@/lib/api'
 const APP_VERSION = '2.4.0'
@@ -269,6 +270,9 @@ export default function DriverPortal() {
       try {
         const reg = await navigator.serviceWorker.register('/sw.js')
         await navigator.serviceWorker.ready
+
+        // Listen for SW background-sync replay messages
+        listenForSWReplay()
 
         // Ask for permission (only prompts once; subsequent calls are no-op)
         const permission = await Notification.requestPermission()

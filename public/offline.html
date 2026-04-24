@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GCD — Offline</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 16px;
+      padding: 40px 32px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+    p  { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 24px; }
+    .badge {
+      display: inline-block;
+      background: #B8934A22;
+      color: #E8C97A;
+      border: 1px solid #B8934A55;
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 24px;
+    }
+    button {
+      background: linear-gradient(135deg, #B8934A, #E8C97A);
+      color: #0f1117;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 28px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">&#x1F4F6;</div>
+    <h1>You're offline</h1>
+    <p>No internet connection detected. Your actions will be saved and sent automatically when you're back online.</p>
+    <div class="badge" id="pending-badge">Checking queue…</div>
+    <br />
+    <button onclick="location.reload()">Try again</button>
+  </div>
+
+  <script>
+    function getPendingCount() {
+      try {
+        const q = JSON.parse(localStorage.getItem('gcd_offline_queue') || '[]')
+        return Array.isArray(q) ? q.length : 0
+      } catch { return 0 }
+    }
+
+    const count = getPendingCount()
+    const badge = document.getElementById('pending-badge')
+    badge.textContent = count > 0
+      ? `${count} action${count !== 1 ? 's' : ''} queued`
+      : 'No actions queued'
+  </script>
+</body>
+</html>
