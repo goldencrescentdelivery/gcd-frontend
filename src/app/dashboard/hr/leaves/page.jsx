@@ -103,8 +103,8 @@ export default function LeavesPage() {
 
   // Pending counts per role
   const pocPending   = leaves.filter(l => l.poc_status==='pending').length
-  const mgrPending   = leaves.filter(l => l.poc_status==='approved' && ['pending','waiting'].includes(l.hr_status)).length
-  const adminPending = leaves.filter(l => l.hr_status==='approved'  && ['pending','waiting'].includes(l.mgr_status)).length
+  const mgrPending   = leaves.filter(l => l.poc_status==='approved' && !['approved','rejected'].includes(l.hr_status)).length
+  const adminPending = leaves.filter(l => l.hr_status==='approved'  && !['approved','rejected'].includes(l.mgr_status)).length
 
   const pendingCount = userRole==='poc' ? pocPending : userRole==='manager' ? mgrPending : adminPending
 
@@ -195,7 +195,7 @@ export default function LeavesPage() {
               )}
 
               {/* Manager action bar */}
-              {userRole==='manager' && l.poc_status==='approved' && ['pending','waiting'].includes(l.hr_status) && (
+              {userRole==='manager' && l.poc_status==='approved' && !['approved','rejected'].includes(l.hr_status) && (
                 <div style={{ background:'linear-gradient(135deg,#FDF6E3,#FFFBEB)', borderTop:'1px solid #F0D78C', padding:'10px 16px', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
                   <span style={{ fontSize:12, color:'#B8860B', fontWeight:700, flex:1 }}>Awaiting your decision</span>
                   <button onClick={()=>action(l.id,'approved','hr')} style={{ padding:'7px 18px', borderRadius:20, background:'linear-gradient(135deg,#2E7D52,#22C55E)', border:'none', color:'white', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Approve</button>
@@ -204,7 +204,7 @@ export default function LeavesPage() {
               )}
 
               {/* Admin action bar */}
-              {(userRole==='admin'||userRole==='general_manager') && l.hr_status==='approved' && ['pending','waiting'].includes(l.mgr_status) && (
+              {(userRole==='admin'||userRole==='general_manager') && l.hr_status==='approved' && !['approved','rejected'].includes(l.mgr_status) && (
                 <div style={{ background:'linear-gradient(135deg,#F3F4F6,#E5E7EB)', borderTop:'1px solid #D1D5DB', padding:'10px 16px', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
                   <span style={{ fontSize:12, color:'#374151', fontWeight:700, flex:1 }}>Final approval required</span>
                   <button onClick={()=>action(l.id,'approved','manager')} style={{ padding:'7px 18px', borderRadius:20, background:'linear-gradient(135deg,#2E7D52,#22C55E)', border:'none', color:'white', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Approve</button>
