@@ -1443,44 +1443,46 @@ export default function POCPage() {
     <div style={{display:'flex',flexDirection:'column',gap:16,animation:'slideUp 0.3s ease'}}>
 
       {/* ── Station Hero Card ── */}
-      <div style={{background:'linear-gradient(135deg,#1A1612 0%,#2C1F0A 100%)',borderRadius:20,padding:'20px 18px',color:'white',position:'relative',overflow:'hidden'}}>
-        <div style={{position:'absolute',right:-20,top:-20,width:140,height:140,borderRadius:'50%',background:'rgba(184,134,11,0.12)'}}/>
-        <div style={{position:'absolute',right:30,bottom:-40,width:100,height:100,borderRadius:'50%',background:'rgba(184,134,11,0.07)'}}/>
-        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:16,position:'relative'}}>
-          <div>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-              <div style={{width:8,height:8,borderRadius:'50%',background:'#2E7D52',boxShadow:'0 0 0 3px rgba(46,125,82,0.3)',animation:'pulse-dot 2s infinite'}}/>
-              <span style={{fontSize:11,color:'rgba(255,255,255,0.6)',fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase'}}>Live Station</span>
-            </div>
-            <div style={{fontWeight:900,fontSize:24,letterSpacing:'-0.03em',lineHeight:1.1}}>📍 {station}</div>
-            <div style={{fontSize:12,color:'rgba(255,255,255,0.5)',marginTop:4}}>{date} · {emps.length} DAs assigned</div>
-            {canSwitchStation && (
-              <div style={{display:'flex',gap:6,marginTop:10}}>
-                {['DDB1','DXE6'].map(s=>(
-                  <button key={s} onClick={()=>setStation(s)}
-                    style={{padding:'5px 16px',borderRadius:20,border:`1.5px solid ${station===s?'#B8860B':'rgba(255,255,255,0.2)'}`,background:station===s?'rgba(184,134,11,0.3)':'rgba(255,255,255,0.07)',color:station===s?'#D4A017':'rgba(255,255,255,0.55)',fontWeight:station===s?700:500,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif',transition:'all 0.15s'}}>
-                    {s}
-                  </button>
-                ))}
+      <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:20,overflow:'hidden'}}>
+        {/* Top accent strip */}
+        <div style={{height:4,background:'linear-gradient(90deg,#B8860B,#D4A017,#B8860B)'}}/>
+        <div style={{padding:'18px 20px'}}>
+          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:16}}>
+            <div>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+                <div style={{width:8,height:8,borderRadius:'50%',background:'#2E7D52',boxShadow:'0 0 0 3px rgba(46,125,82,0.25)',animation:'pulse-dot 2s infinite'}}/>
+                <span style={{fontSize:10.5,color:'var(--text-muted)',fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase'}}>Live Station</span>
               </div>
-            )}
-          </div>
-          <input type="date" value={date} onChange={e=>setDate(e.target.value)}
-            style={{background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:10,padding:'7px 10px',color:'white',fontSize:12,outline:'none',cursor:'pointer'}}/>
-        </div>
-        {/* Stats row */}
-        <div className="r-grid-4" style={{gap:8,position:'relative'}}>
-          {[
-            {l:'Present', v:present,   c:'#4ADE80', bg:'rgba(74,222,128,0.15)'},
-            {l:'Absent',  v:absent,    c:'#F87171', bg:'rgba(248,113,113,0.15)'},
-            {l:'Vehicles',v:active,    c:'#FCD34D', bg:'rgba(252,211,77,0.15)'},
-            {l:'Earnings',v:`AED ${earnings.toFixed(0)}`,c:'#93C5FD',bg:'rgba(147,197,253,0.15)'},
-          ].map(s=>(
-            <div key={s.l} style={{background:s.bg,borderRadius:12,padding:'10px 8px',textAlign:'center',backdropFilter:'blur(10px)'}}>
-              <div style={{fontWeight:800,fontSize:s.l==='Earnings'?13:20,color:s.c,letterSpacing:'-0.02em',lineHeight:1.2}}>{s.v}</div>
-              <div style={{fontSize:9.5,color:'rgba(255,255,255,0.5)',fontWeight:600,marginTop:2,textTransform:'uppercase',letterSpacing:'0.05em'}}>{s.l}</div>
+              <div style={{fontWeight:900,fontSize:24,letterSpacing:'-0.03em',lineHeight:1.1,color:'var(--text)'}}>📍 {station}</div>
+              <div style={{fontSize:12,color:'var(--text-muted)',marginTop:4}}>{date} · {emps.length} DAs assigned</div>
+              {canSwitchStation && (
+                <div style={{display:'flex',gap:6,marginTop:10}}>
+                  {['DDB1','DXE6'].map(s=>(
+                    <button key={s} onClick={()=>setStation(s)}
+                      style={{padding:'5px 16px',borderRadius:20,border:`1.5px solid ${station===s?'#B8860B':'var(--border)'}`,background:station===s?'#FDF6E3':'var(--bg-alt)',color:station===s?'#B8860B':'var(--text-muted)',fontWeight:station===s?700:500,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif',transition:'all 0.15s'}}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
+            <input type="date" value={date} onChange={e=>setDate(e.target.value)}
+              style={{background:'var(--bg-alt)',border:'1px solid var(--border)',borderRadius:10,padding:'7px 10px',color:'var(--text)',fontSize:12,outline:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif'}}/>
+          </div>
+          {/* Stats row */}
+          <div className="r-grid-4" style={{gap:8}}>
+            {[
+              {l:'Present', v:present,  c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0'},
+              {l:'Absent',  v:absent,   c:'#C0392B', bg:'#FEF2F2', bc:'#FCA5A5'},
+              {l:'Vehicles',v:active,   c:'#B8860B', bg:'#FDF6E3', bc:'#F0D78C'},
+              {l:'Earnings',v:`AED ${earnings.toFixed(0)}`,c:'#1D6FA4',bg:'#EFF6FF',bc:'#BFDBFE'},
+            ].map(s=>(
+              <div key={s.l} style={{background:s.bg,border:`1px solid ${s.bc}`,borderRadius:12,padding:'10px 8px',textAlign:'center'}}>
+                <div style={{fontWeight:800,fontSize:s.l==='Earnings'?13:20,color:s.c,letterSpacing:'-0.02em',lineHeight:1.2}}>{s.v}</div>
+                <div style={{fontSize:9.5,color:s.c,opacity:0.7,fontWeight:600,marginTop:2,textTransform:'uppercase',letterSpacing:'0.05em'}}>{s.l}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
