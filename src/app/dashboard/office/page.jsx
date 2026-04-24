@@ -258,39 +258,46 @@ export default function OfficePage() {
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
       {/* ── Header ── */}
-      <div className="page-header">
-        <div>
-          <h1 style={{ fontWeight:900, fontSize:22, color:'var(--text)', margin:0, letterSpacing:'-0.03em' }}>Office Profile</h1>
-          <p style={{ fontSize:12.5, color:'var(--text-muted)', marginTop:4 }}>Company documents, licenses &amp; upcoming events</p>
-        </div>
-        <div className="page-header-actions">
-          <button onClick={load} title="Refresh" style={{ width:36, height:36, borderRadius:10, background:'var(--card)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <RefreshCw size={14} color="var(--text-muted)"/>
-          </button>
-          {canEdit && tab==='documents' && (
-            <button className="btn btn-primary" onClick={()=>setDocModal({mode:'add'})} style={{ borderRadius:24 }}>
-              <Plus size={14}/> Add Document
+      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:18, overflow:'hidden', boxShadow:'var(--shadow)' }}>
+        <div style={{ height:4, background:'linear-gradient(90deg,#B8934A,#E8C97A,#B8934A)' }}/>
+        <div className="page-header" style={{ padding:'18px 22px', margin:0 }}>
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
+              <span style={{ fontSize:24 }}>🏢</span>
+              <h1 style={{ fontWeight:900, fontSize:22, color:'var(--text)', margin:0, letterSpacing:'-0.03em' }}>Office Profile</h1>
+            </div>
+            <p style={{ fontSize:12.5, color:'var(--text-muted)', marginTop:0 }}>Company documents, licenses &amp; upcoming events</p>
+          </div>
+          <div className="page-header-actions">
+            <button onClick={load} title="Refresh" style={{ width:36, height:36, borderRadius:10, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <RefreshCw size={14} color="var(--text-muted)"/>
             </button>
-          )}
-          {tab==='events' && (
-            <button className="btn btn-primary" onClick={()=>setEvtModal({mode:'add'})} style={{ borderRadius:24 }}>
-              <Plus size={14}/> Add Event
-            </button>
-          )}
+            {canEdit && tab==='documents' && (
+              <button className="btn btn-primary" onClick={()=>setDocModal({mode:'add'})} style={{ borderRadius:24 }}>
+                <Plus size={14}/> Add Document
+              </button>
+            )}
+            {tab==='events' && (
+              <button className="btn btn-primary" onClick={()=>setEvtModal({mode:'add'})} style={{ borderRadius:24 }}>
+                <Plus size={14}/> Add Event
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ── Stats — no icons, just numbers ── */}
+      {/* ── Stats ── */}
       <div className="r-grid-4">
         {[
-          { l:'Total Documents',    v:docs.length,       c:'var(--text)',  bg:'var(--bg-alt)', bc:'var(--border)' },
-          { l:'Expired',           v:expired.length,     c:'#DC2626',      bg:'#FEF2F2',       bc:'#FECACA'       },
-          { l:'Expiring in 30 days',v:expiring30.length, c:'#D97706',      bg:'#FFFBEB',       bc:'#FDE68A'       },
-          { l:'Upcoming Events',   v:upcoming.length,    c:'#1D4ED8',      bg:'#EFF6FF',       bc:'#BFDBFE'       },
+          { l:'Total Documents',     v:docs.length,        c:'#1D4ED8', bg:'#EFF6FF', bc:'#BFDBFE', em:'📁' },
+          { l:'Expired',             v:expired.length,     c:'#DC2626', bg:'#FEF2F2', bc:'#FECACA', em:'⚠️' },
+          { l:'Expiring in 30 days', v:expiring30.length,  c:'#D97706', bg:'#FFFBEB', bc:'#FDE68A', em:'⏳' },
+          { l:'Upcoming Events',     v:upcoming.length,    c:'#047857', bg:'#F0FDF4', bc:'#A7F3D0', em:'📅' },
         ].map(s=>(
-          <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:14, padding:'16px 14px', textAlign:'center' }}>
-            <div style={{ fontWeight:900, fontSize:28, color:s.c, letterSpacing:'-0.04em', lineHeight:1 }}>{s.v}</div>
-            <div style={{ fontSize:11, color:s.c, fontWeight:600, marginTop:6, opacity:0.75 }}>{s.l}</div>
+          <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:16, padding:'18px 16px', textAlign:'center', boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize:22, marginBottom:6 }}>{s.em}</div>
+            <div style={{ fontWeight:900, fontSize:30, color:s.c, letterSpacing:'-0.04em', lineHeight:1 }}>{s.v}</div>
+            <div style={{ fontSize:11, color:s.c, fontWeight:600, marginTop:7, opacity:0.8 }}>{s.l}</div>
           </div>
         ))}
       </div>
@@ -352,7 +359,7 @@ export default function OfficePage() {
                     {/* Top row: emoji + info */}
                     <div style={{ display:'flex', alignItems:'center', gap:14, flex:1, minWidth:0, width:'100%' }}>
                       {/* Emoji */}
-                      <div style={{ width:46, height:46, borderRadius:14, background:cat.bg, border:`1px solid ${cat.bc}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>
+                      <div style={{ width:50, height:50, borderRadius:15, background:cat.bg, border:`1.5px solid ${cat.bc}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, flexShrink:0, boxShadow:'0 2px 6px rgba(0,0,0,0.06)' }}>
                         {cat.emoji}
                       </div>
 
@@ -363,11 +370,27 @@ export default function OfficePage() {
                           {exp && <span style={{ fontSize:10.5, fontWeight:700, color:exp.c, background:exp.bg, border:`1px solid ${exp.bc}`, borderRadius:20, padding:'1px 9px' }}>{exp.label}</span>}
                         </div>
                         <div style={{ fontWeight:800, fontSize:15, color:'var(--text)', marginBottom:4 }}>{doc.name}</div>
-                        <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-                          {doc.document_number && <span style={{ fontSize:11, color:'var(--text-muted)' }}>No. <strong style={{ color:'var(--text)', fontFamily:'inherit' }}>{doc.document_number}</strong></span>}
-                          {doc.issued_by       && <span style={{ fontSize:11, color:'var(--text-muted)' }}>By <strong style={{ color:'var(--text)' }}>{doc.issued_by}</strong></span>}
-                          {doc.issue_date      && <span style={{ fontSize:11, color:'var(--text-muted)' }}>Issued <strong style={{ color:'var(--text)' }}>{doc.issue_date.slice(0,10)}</strong></span>}
-                          {doc.expiry_date     && <span style={{ fontSize:11, color:exp?.c||'var(--text-muted)' }}>Expires <strong>{doc.expiry_date.slice(0,10)}</strong></span>}
+                        <div style={{ display:'flex', gap:5, flexWrap:'wrap', marginTop:2 }}>
+                          {doc.document_number && (
+                            <span style={{ fontSize:10.5, color:'var(--text-sub)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:6, padding:'2px 9px' }}>
+                              #{doc.document_number}
+                            </span>
+                          )}
+                          {doc.issued_by && (
+                            <span style={{ fontSize:10.5, color:'var(--text-sub)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:6, padding:'2px 9px' }}>
+                              {doc.issued_by}
+                            </span>
+                          )}
+                          {doc.issue_date && (
+                            <span style={{ fontSize:10.5, color:'var(--text-muted)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:6, padding:'2px 9px' }}>
+                              Issued {doc.issue_date.slice(0,10)}
+                            </span>
+                          )}
+                          {doc.expiry_date && (
+                            <span style={{ fontSize:10.5, color:'var(--text-muted)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:6, padding:'2px 9px' }}>
+                              Expires {doc.expiry_date.slice(0,10)}
+                            </span>
+                          )}
                         </div>
                         {doc.notes && <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:4, fontStyle:'italic' }}>{doc.notes}</div>}
                       </div>
