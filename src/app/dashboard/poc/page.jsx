@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/lib/auth'
 import { useSearchParams } from 'next/navigation'
-import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone, ArrowLeftRight, CheckSquare, History, Contact, Upload, Download, FileText } from 'lucide-react'
+import { Plus, X, Pencil, Trash2, Truck, Users, Package, Bell, Calendar, CheckCircle, XCircle, Search, ChevronDown, ChevronRight, AlertTriangle, MapPin, Clock, Smartphone, ArrowLeftRight, CheckSquare, History, Contact, Upload, Download, FileText, Phone, CreditCard, Briefcase } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
 
 import { API } from '@/lib/api'
@@ -535,7 +535,133 @@ function DAAvatar({ emp }) {
   )
 }
 
-function DAsTab({ stationEmps, sims }) {
+function InfoRow({ label, value, highlight, icon }) {
+  if (!value && value !== 0) return null
+  return (
+    <div style={{padding:'8px 12px',borderRadius:10,background:'var(--bg-alt)',border:'1px solid var(--border)'}}>
+      <div style={{fontSize:9.5,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:2}}>{label}</div>
+      <div style={{fontSize:12.5,fontWeight:700,color:highlight?'#7C3AED':'var(--text)',display:'flex',alignItems:'center',gap:5}}>{icon}{String(value)}</div>
+    </div>
+  )
+}
+
+function EmpDetailModal({ emp, sims, onClose }) {
+  const sim   = (sims||[]).find(s => s.emp_id === emp.id)
+  const today = new Date()
+
+  function daysDiff(dateStr) {
+    if (!dateStr) return null
+    return Math.ceil((new Date(dateStr) - today) / 86400000)
+  }
+
+  function ExpiryBadge({ label, date }) {
+    const days = daysDiff(date)
+    if (days === null) return null
+    const expired = days < 0
+    const soon    = !expired && days <= 30
+    const c  = expired ? '#C0392B' : soon ? '#B8860B' : '#2E7D52'
+    const bg = expired ? '#FEF2F2' : soon ? '#FDF6E3' : '#ECFDF5'
+    const bc = expired ? '#FCA5A5' : soon ? '#F0D78C' : '#A7F3D0'
+    return (
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 12px',borderRadius:10,background:bg,border:`1px solid ${bc}`,marginBottom:6}}>
+        <div style={{display:'flex',alignItems:'center',gap:6}}>
+          {(expired||soon) && <AlertTriangle size={11} color={c}/>}
+          <span style={{fontSize:12,color:'#6B5D4A',fontWeight:600}}>{label}</span>
+        </div>
+        <div style={{textAlign:'right'}}>
+          <span style={{fontSize:12,fontWeight:700,color:c}}>{date?.slice(0,10)||'—'}</span>
+          <span style={{fontSize:10,color:c,fontWeight:600,marginLeft:6}}>{expired?`${Math.abs(days)}d ago`:`${days}d left`}</span>
+        </div>
+      </div>
+    )
+  }
+
+  const STATUS_C = { active:{c:'#2E7D52',bg:'#ECFDF5',bc:'#A7F3D0'}, on_leave:{c:'#B8860B',bg:'#FDF6E3',bc:'#F0D78C'}, inactive:{c:'#C0392B',bg:'#FEF2F2',bc:'#FCA5A5'} }
+  const sc = STATUS_C[emp.status] || STATUS_C.active
+
+  return (
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{maxWidth:480,maxHeight:'90vh',overflowY:'auto',padding:0}}>
+        {/* Top bar */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'16px 20px',borderBottom:'1px solid var(--border)'}}>
+          <span style={{fontWeight:800,fontSize:15,color:'var(--text)'}}>Employee Profile</span>
+          <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={17}/></button>
+        </div>
+
+        <div style={{padding:'20px',display:'flex',flexDirection:'column',gap:16}}>
+          {/* Avatar + identity */}
+          <div style={{display:'flex',gap:14,alignItems:'center',padding:'16px',background:'var(--bg-alt)',borderRadius:16,border:'1px solid var(--border)'}}>
+            <DAAvatar emp={emp}/>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:800,fontSize:17,color:'var(--text)',marginBottom:6}}>{emp.name}</div>
+              <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                <span style={{fontSize:11,fontWeight:700,color:'#B8860B',background:'#FDF6E3',border:'1px solid #F0D78C',borderRadius:6,padding:'2px 8px'}}>{emp.id}</span>
+                {emp.station_code && <span style={{fontSize:11,fontWeight:700,color:'#1D6FA4',background:'#EFF6FF',border:'1px solid #BFDBFE',borderRadius:6,padding:'2px 8px'}}>{emp.station_code}</span>}
+                <span style={{fontSize:11,fontWeight:700,color:sc.c,background:sc.bg,border:`1px solid ${sc.bc}`,borderRadius:6,padding:'2px 8px',textTransform:'capitalize'}}>{emp.status?.replace('_',' ')}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Work info */}
+          <div>
+            <div style={{fontSize:10.5,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8,display:'flex',alignItems:'center',gap:5}}><Briefcase size={11}/> Work Info</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+              <InfoRow label="Role"       value={emp.role}/>
+              <InfoRow label="Department" value={emp.dept}/>
+              <InfoRow label="Nationality" value={emp.nationality}/>
+              <InfoRow label="Zone"       value={emp.zone}/>
+              {emp.project_type && <InfoRow label="Project" value={emp.project_type}/>}
+              {emp.joined       && <InfoRow label="Joined"  value={emp.joined?.slice(0,10)}/>}
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <div style={{fontSize:10.5,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8,display:'flex',alignItems:'center',gap:5}}><Phone size={11}/> Contact</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+              <InfoRow label="Personal"  value={emp.phone}      icon={<Phone size={11}/>}/>
+              <InfoRow label="Work SIM"  value={sim?.phone_number || emp.work_number} highlight icon={<Smartphone size={11}/>}/>
+            </div>
+          </div>
+
+          {/* IDs */}
+          {(emp.emirates_id||emp.amazon_id||emp.transporter_id) && (
+            <div>
+              <div style={{fontSize:10.5,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8,display:'flex',alignItems:'center',gap:5}}><CreditCard size={11}/> IDs</div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+                {emp.emirates_id    && <InfoRow label="Emirates ID"    value={emp.emirates_id}/>}
+                {emp.amazon_id      && <InfoRow label="Amazon ID"      value={emp.amazon_id}/>}
+                {emp.transporter_id && <InfoRow label="Transporter ID" value={emp.transporter_id}/>}
+              </div>
+            </div>
+          )}
+
+          {/* Document expiries */}
+          {(emp.visa_expiry||emp.license_expiry||emp.iloe_expiry) && (
+            <div>
+              <div style={{fontSize:10.5,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8,display:'flex',alignItems:'center',gap:5}}><Calendar size={11}/> Expiries</div>
+              <ExpiryBadge label="Visa"    date={emp.visa_expiry}/>
+              <ExpiryBadge label="License" date={emp.license_expiry}/>
+              <ExpiryBadge label="ILOE"    date={emp.iloe_expiry}/>
+            </div>
+          )}
+
+          {/* Leave & pay */}
+          <div>
+            <div style={{fontSize:10.5,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8,display:'flex',alignItems:'center',gap:5}}><Calendar size={11}/> Leave & Pay</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+              <InfoRow label="Leave Balance" value={emp.annual_leave_balance!=null?`${emp.annual_leave_balance} days`:null}/>
+              {emp.hourly_rate>0     && <InfoRow label="Hourly Rate"  value={`AED ${emp.hourly_rate}/hr`}/>}
+              {emp.per_shipment_rate>0 && <InfoRow label="Per Shipment" value={`AED ${emp.per_shipment_rate}`}/>}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DAsTab({ stationEmps, sims, onViewEmp }) {
   const [q, setQ] = useState('')
   const filtered = stationEmps.filter(e =>
     !q || e.name.toLowerCase().includes(q.toLowerCase()) || e.id.toLowerCase().includes(q.toLowerCase())
@@ -559,9 +685,9 @@ function DAsTab({ stationEmps, sims }) {
         {filtered.map((emp,i)=>{
           const workSim = sims.find(s=>s.emp_id===emp.id)
           return (
-            <div key={emp.id} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,padding:'14px',animation:`slideUp 0.25s ${Math.min(i,10)*0.03}s ease both`,display:'flex',gap:12,alignItems:'flex-start',transition:'box-shadow 0.2s'}}
-              onMouseEnter={e=>e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'}
-              onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
+            <div key={emp.id} onClick={()=>onViewEmp&&onViewEmp(emp)} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,padding:'14px',animation:`slideUp 0.25s ${Math.min(i,10)*0.03}s ease both`,display:'flex',gap:12,alignItems:'flex-start',transition:'box-shadow 0.2s,border-color 0.2s',cursor:'pointer'}}
+              onMouseEnter={e=>{e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)';e.currentTarget.style.borderColor='#B8860B66'}}
+              onMouseLeave={e=>{e.currentTarget.style.boxShadow='none';e.currentTarget.style.borderColor='var(--border)'}}>
               <DAAvatar emp={emp}/>
               <div style={{flex:1,minWidth:0}}>
                 {/* Name + station */}
@@ -866,7 +992,9 @@ function SimSection({ sims, emps, station, onRefresh }) {
       ) : filtered.map((sim,i)=>{
         const sc = SC[sim.status]||SC.available
         return (
-          <div key={sim.id} style={{background:'#FFF',border:`1.5px solid ${sc.bc}`,borderRadius:14,padding:'13px 15px',animation:`slideUp 0.3s ${i*0.04}s ease both`}}>
+          <div key={sim.id} onClick={()=>setModal({type:'edit',sim})} style={{background:'#FFF',border:`1.5px solid ${sc.bc}`,borderRadius:14,padding:'13px 15px',animation:`slideUp 0.3s ${i*0.04}s ease both`,cursor:'pointer',transition:'box-shadow 0.2s'}}
+            onMouseEnter={e=>e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'}
+            onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
             <div style={{display:'flex',alignItems:'center',gap:11}}>
               <div style={{width:42,height:42,borderRadius:12,background:sc.bg,border:`1px solid ${sc.bc}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                 <Smartphone size={18} color={sc.c}/>
@@ -882,8 +1010,8 @@ function SimSection({ sims, emps, station, onRefresh }) {
               <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:6,flexShrink:0}}>
                 <span style={{fontSize:11,fontWeight:700,color:sc.c,background:sc.bg,border:`1px solid ${sc.bc}`,borderRadius:20,padding:'2px 10px'}}>{sc.l}</span>
                 <div style={{display:'flex',gap:5}}>
-                  <button onClick={()=>setModal({type:'edit',sim})} style={{padding:'4px 10px',borderRadius:7,background:'#F5F4F1',border:'none',cursor:'pointer',fontSize:11,color:'#6B5D4A',fontWeight:600,fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:4}}><Pencil size={11}/> Edit</button>
-                  <button onClick={()=>handleDelete(sim.id, sim.sim_number||sim.phone_number||'—')} style={{padding:'4px 8px',borderRadius:7,background:'#FEF2F2',border:'none',cursor:'pointer',color:'#C0392B',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif'}}><Trash2 size={11}/></button>
+                  <button onClick={e=>{e.stopPropagation();setModal({type:'edit',sim})}} style={{padding:'4px 10px',borderRadius:7,background:'#F5F4F1',border:'none',cursor:'pointer',fontSize:11,color:'#6B5D4A',fontWeight:600,fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:4}}><Pencil size={11}/> Edit</button>
+                  <button onClick={e=>{e.stopPropagation();handleDelete(sim.id, sim.sim_number||sim.phone_number||'—')}} style={{padding:'4px 8px',borderRadius:7,background:'#FEF2F2',border:'none',cursor:'pointer',color:'#C0392B',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif'}}><Trash2 size={11}/></button>
                 </div>
               </div>
             </div>
@@ -1054,7 +1182,7 @@ function VehicleCard({ v, asgn, isDown, sc, sb, date, station, emps, onEdit, onD
   const assignedInitials = assignedEmp ? assignedEmp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() : null
 
   return (
-    <div style={{background:'var(--card)',borderRadius:18,overflow:'hidden',border:`1px solid ${isDown?`${sc}40`:'var(--border)'}`,boxShadow:isDown?`0 0 0 1px ${sc}20`:'none',transition:'box-shadow 0.2s'}}
+    <div onClick={onEdit} style={{background:'var(--card)',borderRadius:18,overflow:'hidden',border:`1px solid ${isDown?`${sc}40`:'var(--border)'}`,boxShadow:isDown?`0 0 0 1px ${sc}20`:'none',transition:'box-shadow 0.2s',cursor:'pointer'}}
       onMouseEnter={e=>e.currentTarget.style.boxShadow=`0 6px 20px rgba(0,0,0,0.08)`}
       onMouseLeave={e=>e.currentTarget.style.boxShadow=isDown?`0 0 0 1px ${sc}20`:'none'}>
 
@@ -1076,8 +1204,8 @@ function VehicleCard({ v, asgn, isDown, sc, sb, date, station, emps, onEdit, onD
           <div style={{display:'flex',alignItems:'center',gap:6}}>
             <span style={{fontSize:10.5,fontWeight:700,color:sc,background:sb,padding:'3px 10px',borderRadius:20,border:`1px solid ${sc}30`,textTransform:'capitalize'}}>{v.status}</span>
             {v.station_code&&<span style={{fontSize:9.5,fontWeight:700,color:'#B8860B',background:'#FDF6E3',border:'1px solid #F0D78C',borderRadius:6,padding:'2px 7px'}}>{v.station_code}</span>}
-            <button className="btn btn-ghost btn-icon btn-sm" onClick={onEdit} title="Edit"><Pencil size={13}/></button>
-            <button className="btn btn-ghost btn-icon btn-sm" style={{color:'#EF4444'}} onClick={onDelete} title="Delete"><Trash2 size={13}/></button>
+            <button className="btn btn-ghost btn-icon btn-sm" onClick={e=>{e.stopPropagation();onEdit()}} title="Edit"><Pencil size={13}/></button>
+            <button className="btn btn-ghost btn-icon btn-sm" style={{color:'#EF4444'}} onClick={e=>{e.stopPropagation();onDelete()}} title="Delete"><Trash2 size={13}/></button>
           </div>
         </div>
 
@@ -1174,6 +1302,7 @@ export default function POCPage() {
   const [showLeaveHistory, setShowLeaveHistory] = useState(false)
   // Replaces window.confirm() throughout this page
   const [confirmDlg,   setConfirmDlg]  = useState(null) // { title, message, confirmLabel, danger, onConfirm }
+  const [empDetail,    setEmpDetail]   = useState(null) // employee object for detail modal
   // Staged leave action — requires explicit confirm before firing
   const [pendingLeave, setPendingLeave] = useState(null) // { id, action, name }
 
@@ -1410,12 +1539,13 @@ export default function POCPage() {
             return (
               <div key={emp.id} style={{background:'#FFF',border:'1px solid #EAE6DE',borderRadius:16,overflow:'hidden',transition:'box-shadow 0.2s'}}>
                 <div style={{display:'flex',alignItems:'center',gap:12,padding:'14px 16px'}}>
-                  {/* Avatar */}
+                  {/* Avatar + Info — clickable to open employee detail */}
+                  <div onClick={()=>setEmpDetail(emp)} style={{display:'flex',alignItems:'center',gap:12,flex:1,minWidth:0,cursor:'pointer'}} title="View employee details">
                   <div style={{width:44,height:44,borderRadius:13,background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)',border:'1px solid #F0D78C',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{emp.avatar||'👤'}</div>
-                  {/* Info */}
-                  <div style={{flex:1,minWidth:0}}>
+                  <div style={{minWidth:0}}>
                     <div style={{fontWeight:700,fontSize:14,color:'var(--text)'}}>{emp.name}</div>
                     <div style={{fontSize:11,color:'#A89880',fontFamily:'inherit',marginTop:1}}>{emp.id}</div>
+                  </div>
                   </div>
                   {/* Status */}
                   <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:5,flexShrink:0}}>
@@ -1680,7 +1810,7 @@ export default function POCPage() {
 
       {/* ── DAs ── */}
       {!loading && tab==='das' && (
-        <DAsTab stationEmps={stationEmps} sims={sims}/>
+        <DAsTab stationEmps={stationEmps} sims={sims} onViewEmp={setEmpDetail}/>
       )}
 
       {/* ── SIM CARDS ── */}
@@ -1727,6 +1857,7 @@ export default function POCPage() {
       {modal?.type==='vehicle-edit'&&<VehicleModal vehicle={modal.vehicle} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal==='delivery'&&<DeliveryModal date={date} station={station} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal?.type==='delivery-edit'&&<DeliveryModal date={date} station={station} existing={modal.delivery} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
+      {empDetail && <EmpDetailModal emp={empDetail} sims={sims} onClose={()=>setEmpDetail(null)}/>}
 
       {/* Generic confirm dialog — replaces all window.confirm() calls */}
       <ConfirmDialog
