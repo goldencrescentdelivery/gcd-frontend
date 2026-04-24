@@ -263,7 +263,6 @@ export default function OfficePage() {
         <div className="page-header" style={{ padding:'18px 22px', margin:0 }}>
           <div>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
-              <span style={{ fontSize:24 }}>🏢</span>
               <h1 style={{ fontWeight:900, fontSize:22, color:'var(--text)', margin:0, letterSpacing:'-0.03em' }}>Office Profile</h1>
             </div>
             <p style={{ fontSize:12.5, color:'var(--text-muted)', marginTop:0 }}>Company documents, licenses &amp; upcoming events</p>
@@ -289,13 +288,12 @@ export default function OfficePage() {
       {/* ── Stats ── */}
       <div className="r-grid-4">
         {[
-          { l:'Total Documents',     v:docs.length,        c:'#1D4ED8', bg:'#EFF6FF', bc:'#BFDBFE', em:'📁' },
-          { l:'Expired',             v:expired.length,     c:'#DC2626', bg:'#FEF2F2', bc:'#FECACA', em:'⚠️' },
-          { l:'Expiring in 30 days', v:expiring30.length,  c:'#D97706', bg:'#FFFBEB', bc:'#FDE68A', em:'⏳' },
-          { l:'Upcoming Events',     v:upcoming.length,    c:'#047857', bg:'#F0FDF4', bc:'#A7F3D0', em:'📅' },
+          { l:'Total Documents',     v:docs.length,        c:'#1D4ED8', bg:'#EFF6FF', bc:'#BFDBFE' },
+          { l:'Expired',             v:expired.length,     c:'#DC2626', bg:'#FEF2F2', bc:'#FECACA' },
+          { l:'Expiring in 30 days', v:expiring30.length,  c:'#D97706', bg:'#FFFBEB', bc:'#FDE68A' },
+          { l:'Upcoming Events',     v:upcoming.length,    c:'#047857', bg:'#F0FDF4', bc:'#A7F3D0' },
         ].map(s=>(
           <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:16, padding:'18px 16px', textAlign:'center', boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
-            <div style={{ fontSize:22, marginBottom:6 }}>{s.em}</div>
             <div style={{ fontWeight:900, fontSize:30, color:s.c, letterSpacing:'-0.04em', lineHeight:1 }}>{s.v}</div>
             <div style={{ fontSize:11, color:s.c, fontWeight:600, marginTop:7, opacity:0.8 }}>{s.l}</div>
           </div>
