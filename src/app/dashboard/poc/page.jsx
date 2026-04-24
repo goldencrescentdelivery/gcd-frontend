@@ -1189,7 +1189,7 @@ export default function POCPage() {
         fetch(`${API}/api/vehicles`,h).then(r=>r.json()),
         fetch(`${API}/api/vehicles/assignments?date=${date}&station_code=${station}`,h).then(r=>r.json()),
         fetch(`${API}/api/deliveries?station=${station}`,h).then(r=>r.json()),
-        fetch(`${API}/api/sims?station_code=${station}`,h).then(r=>r.json()),
+        fetch(`${API}/api/sims`,h).then(r=>r.json()),
         fetch(`${API}/api/handovers/current?station_code=${station}`,h).then(r=>r.json()),
       ])
       // Backend enforces station for POC role — use all returned employees
