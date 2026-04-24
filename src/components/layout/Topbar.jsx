@@ -3,6 +3,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Menu, LogOut, Moon, Sun } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useEffect, useState } from 'react'
+import NotificationBell from '@/components/layout/NotificationBell'
 
 const PAGE_TITLES = {
   '/dashboard/overview':           'Overview',
@@ -89,6 +90,9 @@ export default function Topbar({ onMenuClick }) {
         style={{ color:'var(--text-sub)', flexShrink:0 }}>
         {dark ? <Sun size={17}/> : <Moon size={17}/>}
       </button>
+
+      {/* Notification bell */}
+      <NotificationBell userRole={user?.role}/>
 
       {/* Right side — combined user + sign-out pill */}
       <div style={{ display:'flex', alignItems:'center', gap:0, flexShrink:0, background:'var(--card)', border:'1px solid var(--border)', borderRadius:28, boxShadow:'0 1px 4px rgba(0,0,0,0.06)', overflow:'hidden' }}>
