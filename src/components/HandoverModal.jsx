@@ -4,6 +4,27 @@ import { X, Camera, Upload, Check, Car, Fuel, FileText, User } from 'lucide-reac
 
 import { API } from '@/lib/api'
 
+function compressImage(file, maxPx = 1280, quality = 0.82) {
+  return new Promise(resolve => {
+    const img = new Image()
+    const src = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(src)
+      let { width: w, height: h } = img
+      if (w > maxPx || h > maxPx) {
+        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx }
+        else       { w = Math.round(w * maxPx / h); h = maxPx }
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+      canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', quality)
+    }
+    img.onerror = () => { URL.revokeObjectURL(src); resolve(file) }
+    img.src = src
+  })
+}
+
 const FUEL_LEVELS = [
   { v:'empty',          l:'Empty',    pct:0   },
   { v:'quarter',        l:'1/4',      pct:25  },
@@ -80,6 +101,7 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
     setSaving(true); setErr(null)
 
     try {
+      const compressed = await Promise.all(photos.filter(Boolean).map(f => compressImage(f)))
       const fd = new FormData()
       fd.append('vehicle_id', isReturn ? vehicle.vehicle_id : vehicleId)
       fd.append('type', type)
@@ -87,7 +109,7 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
       fd.append('condition_note', note)
       if (odometer) fd.append('odometer', odometer)
       if (handoverTo) fd.append(isReturn ? 'handover_to' : 'handover_from', handoverTo)
-      photos.filter(Boolean).forEach(f => fd.append('photos', f))
+      compressed.forEach(f => fd.append('photos', f))
 
       const res = await fetch(`${API}/api/handovers`, {
         method: 'POST',
