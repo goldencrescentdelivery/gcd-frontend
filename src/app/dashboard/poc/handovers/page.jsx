@@ -211,7 +211,7 @@ export default function HandoversPage() {
   }
 
   return (
-    <div style={{ maxWidth:860, margin:'0 auto', padding:'0 0 40px' }}>
+    <div style={{ padding:'0 0 40px' }}>
 
       {/* Stats strip */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:16 }}>
