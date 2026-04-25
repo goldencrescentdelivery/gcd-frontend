@@ -17,7 +17,8 @@ export const NAV = [
 
   // ── Office ────────────────────────────────────────────────────
   { type:'section', label:'Office', roles:['admin','general_manager','hr','accountant'] },
-  { label:'Office Profile', href:'/dashboard/office', icon:'Building2', roles:['admin','general_manager','hr','accountant'] },
+  { label:'Office Profile', href:'/dashboard/office',         icon:'Building2',  roles:['admin','general_manager','hr','accountant'] },
+  { label:'Letters',        href:'/dashboard/office/letters', icon:'ScrollText', roles:['admin','general_manager','hr','accountant'] },
 
   // ── HR Management ─────────────────────────────────────────────
   { type:'section', label:'HR Management', roles:['admin','general_manager','hr','accountant'] },
