@@ -68,7 +68,8 @@ self.addEventListener('fetch', event => {
       fetch(request)
         .then(res => {
           if (res.ok) {
-            caches.open(API_CACHE).then(c => c.put(request, res.clone()))
+            const clone = res.clone()
+            caches.open(API_CACHE).then(c => c.put(request, clone))
           }
           return res
         })

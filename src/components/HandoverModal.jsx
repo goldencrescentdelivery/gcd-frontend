@@ -51,6 +51,7 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
   const [saving,     setSaving]     = useState(false)
   const [err,        setErr]        = useState(null)
   const [done,       setDone]       = useState(false)
+  const [photoWarn,  setPhotoWarn]  = useState(null)
 
   // Load only available (unassigned) vehicles at DA's station for "received" type
   useEffect(() => {
@@ -61,7 +62,7 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
         fetch(`${API}/api/vehicles${sc?`?station_code=${sc}`:''}`, { headers:hdr }).then(r=>r.json()),
         fetch(`${API}/api/handovers/current${sc?`?station_code=${sc}`:''}`, { headers:hdr }).then(r=>r.json()),
       ]).then(([vData, hData]) => {
-        const assigned = new Set((hData.handovers||[]).map(h=>h.vehicle_id))
+        const assigned = new Set((hData.current||[]).map(h=>h.vehicle_id))
         setVehicles((vData.vehicles||[]).filter(v => v.status==='active' && !assigned.has(v.id)))
       }).catch(()=>{})
     }
@@ -95,8 +96,9 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
+      if (data.photos_warning) setPhotoWarn(data.photos_warning)
       setDone(true)
-      setTimeout(() => { onSave() }, 1500)
+      setTimeout(() => { onSave() }, photoWarn ? 3000 : 1500)
     } catch(e) { setErr(e.message) } finally { setSaving(false) }
   }
 
@@ -110,6 +112,11 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
           {isReturn ? 'Vehicle Returned!' : 'Handover Recorded!'}
         </div>
         <div style={{ fontSize:13, color:'#A89880' }}>Record saved and accepted automatically</div>
+        {photoWarn && (
+          <div style={{ marginTop:14, background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, padding:'8px 12px', fontSize:11.5, color:'#92400E' }}>
+            ⚠️ {photoWarn}
+          </div>
+        )}
       </div>
     </div>
   )
