@@ -4,13 +4,21 @@ import { X, Camera, Upload, Check, Car, Fuel, FileText, User } from 'lucide-reac
 
 import { API } from '@/lib/api'
 
+function dataUrlToFile(dataUrl, name) {
+  const [header, b64] = dataUrl.split(',')
+  const mime = header.match(/:(.*?);/)[1]
+  const raw  = atob(b64)
+  const buf  = new Uint8Array(raw.length)
+  for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i)
+  return new File([buf], name, { type: mime })
+}
+
 function compressImage(file, maxBytes = 300 * 1024) {
   return new Promise(resolve => {
     const img = new Image()
     const src = URL.createObjectURL(file)
     img.onload = () => {
       URL.revokeObjectURL(src)
-      // Shrink to 1024px on the long edge
       let { width: w, height: h } = img
       const MAX_PX = 1024
       if (w >= h && w > MAX_PX) { h = Math.round(h * MAX_PX / w); w = MAX_PX }
@@ -19,22 +27,15 @@ function compressImage(file, maxBytes = 300 * 1024) {
       canvas.width = w; canvas.height = h
       canvas.getContext('2d').drawImage(img, 0, 0, w, h)
       const name = file.name.replace(/\.[^.]+$/, '.jpg')
-      let quality = 0.82
-      let attempts = 0
-      const attempt = () => {
-        canvas.toBlob(blob => {
-          if (!blob) return resolve(file)
-          attempts++
-          if (blob.size <= maxBytes || attempts >= 5) {
-            resolve(new File([blob], name, { type: 'image/jpeg' }))
-          } else {
-            // Proportionally estimate the quality needed, with a safety margin
-            quality = Math.max(0.2, quality * (maxBytes / blob.size) * 0.90)
-            attempt()
-          }
-        }, 'image/jpeg', quality)
+      // toDataURL is synchronous and honours quality on all browsers
+      for (let q = 0.85; q >= 0.15; q = Math.round((q - 0.1) * 100) / 100) {
+        const dataUrl  = canvas.toDataURL('image/jpeg', q)
+        const byteSize = Math.ceil((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4)
+        if (byteSize <= maxBytes || q <= 0.15) {
+          return resolve(dataUrlToFile(dataUrl, name))
+        }
       }
-      attempt()
+      resolve(dataUrlToFile(canvas.toDataURL('image/jpeg', 0.15), name))
     }
     img.onerror = () => { URL.revokeObjectURL(src); resolve(file) }
     img.src = src
