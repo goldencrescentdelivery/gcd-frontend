@@ -76,7 +76,7 @@ function buildLetterHTML(l, origin) {
     <div style="position:relative;min-height:120px;margin-bottom:6px">
       <!-- signature above name, left side -->
       <div style="display:inline-block">
-        <img src="${origin}/letterhead-signature.png"
+        <img src="${origin}/sign.png"
           style="height:78px;display:block;margin-bottom:2px;mix-blend-mode:screen"
           alt="" onerror="this.style.display='none'"/>
         <p style="margin:0 0 1px;font-size:15.5px;font-weight:700">Vardeep Singh Sodhi</p>
@@ -84,7 +84,7 @@ function buildLetterHTML(l, origin) {
         <p style="margin:0;font-size:11.5px;color:#777;font-family:Arial,sans-serif">Golden Crescent Delivery Services LLC</p>
       </div>
       <!-- stamp far right -->
-      <img src="${origin}/letterhead-stamp.png"
+      <img src="${origin}/stamp.png"
         style="position:absolute;right:20px;top:-10px;height:118px;mix-blend-mode:multiply"
         alt="" onerror="this.style.display='none'"/>
     </div>
