@@ -655,7 +655,7 @@ export default function DriverPortal() {
               ) : handovers.map((h,i)=>(
                 <Card key={h.id} style={{ marginBottom:6 }}>
                   <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4 }}>
-                    <span style={{ fontWeight:700,fontSize:15,color:'#111' }}>{h.plate||'—'}</span>
+                    <span style={{ fontWeight:700,fontSize:15,color:'#111' }}>{h.vehicle_plate||h.plate||'—'}</span>
                     <Pill label={h.type} color={h.type==='received'?'#10B981':'#EF4444'}/>
                   </div>
                   <div style={{ fontSize:12,color:'#9CA3AF' }}>{new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>

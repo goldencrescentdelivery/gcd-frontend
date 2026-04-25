@@ -1718,7 +1718,7 @@ export default function POCPage() {
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
-                      <span style={{fontWeight:800,fontSize:14,color:'var(--text)'}}>{h.plate||'—'}</span>
+                      <span style={{fontWeight:800,fontSize:14,color:'var(--text)'}}>{h.plate||h.vehicle_plate||'—'}</span>
                       <span style={{fontSize:10.5,fontWeight:700,color:isPickup?'#10B981':'#2563EB',background:isPickup?'#ECFDF5':'#EFF6FF',padding:'1px 8px',borderRadius:20}}>{isPickup?'Pickup':'Return'}</span>
                     </div>
                     <div style={{fontSize:12,color:'var(--text-sub)'}}>{h.emp_name||h.emp_id}</div>

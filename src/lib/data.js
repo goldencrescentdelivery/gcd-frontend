@@ -28,6 +28,7 @@ export const NAV = [
   { label:'Documents',    href:'/dashboard/hr/documents',  icon:'FileText',    roles:['admin','hr'] },
   { label:'Compliance',          href:'/dashboard/hr/compliance',          icon:'ShieldCheck',    roles:['admin','hr'] },
   { label:'Vehicle Inspections', href:'/dashboard/hr/vehicle-inspection', icon:'ClipboardCheck', roles:['admin','general_manager','hr'] },
+  { label:'Vehicle Handovers',   href:'/dashboard/hr/handovers',          icon:'ArrowLeftRight',  roles:['admin','general_manager','manager','poc'] },
   { label:'User Accounts',href:'/dashboard/hr/users',      icon:'KeyRound',    roles:['admin'] },
 
   // ── Finance ───────────────────────────────────────────────────

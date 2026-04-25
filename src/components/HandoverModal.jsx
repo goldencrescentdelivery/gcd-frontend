@@ -71,7 +71,11 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
   function removePhoto(i)    { setPhotos(p => { const n=[...p]; n[i]=null; return n }) }
 
   async function handleSubmit() {
-    if (!isReturn && !vehicleId) return setErr('Select a vehicle')
+    if (!isReturn && !vehicleId)          return setErr('Please select a vehicle')
+    if (photos.filter(Boolean).length === 0) return setErr('At least 1 photo is required')
+    if (!odometer || isNaN(Number(odometer)) || Number(odometer) <= 0)
+                                          return setErr('Odometer reading is required')
+    if (!handoverTo.trim())               return setErr(isReturn ? 'Handed-over-to name is required' : 'Received-from name is required')
     setSaving(true); setErr(null)
 
     try {
@@ -146,8 +150,8 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
 
           {/* Photos — 4 slots */}
           <div>
-            <label className="input-label" style={{ display:'flex', alignItems:'center', gap:6 }}><Camera size={12}/> Vehicle Photos (up to 4)</label>
-            <p style={{ fontSize:11, color:'#A89880', marginBottom:10 }}>Take photos of front, back, sides to document condition</p>
+            <label className="input-label" style={{ display:'flex', alignItems:'center', gap:6 }}><Camera size={12}/> Vehicle Photos <span style={{color:'#E53E3E'}}>*</span></label>
+            <p style={{ fontSize:11, color:'#A89880', marginBottom:10 }}>At least 1 photo required — front, back, sides</p>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
               {photos.map((f,i) => (
                 <PhotoSlot key={i} index={i} file={f} onSelect={setPhoto} onRemove={removePhoto}/>
@@ -174,14 +178,14 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
 
           {/* Odometer */}
           <div>
-            <label className="input-label">Odometer Reading (km)</label>
+            <label className="input-label">Odometer Reading (km) <span style={{color:'#E53E3E'}}>*</span></label>
             <input className="input" type="number" value={odometer} onChange={e=>setOdometer(e.target.value)} placeholder="e.g. 45230"/>
           </div>
 
           {/* Handover person */}
           <div>
             <label className="input-label" style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <User size={12}/> {isReturn ? 'Handed Over To' : 'Received From'}
+              <User size={12}/> {isReturn ? 'Handed Over To' : 'Received From'} <span style={{color:'#E53E3E'}}>*</span>
             </label>
             <input className="input" value={handoverTo} onChange={e=>setHandoverTo(e.target.value)} placeholder={isReturn ? 'POC name / station' : 'POC name / station'}/>
           </div>
