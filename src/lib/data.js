@@ -28,7 +28,6 @@ export const NAV = [
   { label:'Documents',    href:'/dashboard/hr/documents',  icon:'FileText',    roles:['admin','hr'] },
   { label:'Compliance',          href:'/dashboard/hr/compliance',          icon:'ShieldCheck',    roles:['admin','hr'] },
   { label:'Vehicle Inspections', href:'/dashboard/hr/vehicle-inspection', icon:'ClipboardCheck', roles:['admin','general_manager','hr'] },
-  { label:'Vehicle Handovers',   href:'/dashboard/hr/handovers',          icon:'ArrowLeftRight',  roles:['admin','general_manager','manager','poc'] },
   { label:'User Accounts',href:'/dashboard/hr/users',      icon:'KeyRound',    roles:['admin'] },
 
   // ── Finance ───────────────────────────────────────────────────
@@ -38,7 +37,8 @@ export const NAV = [
   { label:'Petty Cash', href:'/dashboard/finance/petty-cash', icon:'Banknote', roles:['admin','accountant','general_manager','hr','poc'] },
 
   // ── Operations ────────────────────────────────────────────────
-  { type:'section', label:'Operations', roles:['admin','general_manager','poc'] },
+  { type:'section', label:'Operations', roles:['admin','general_manager','poc','manager'] },
+  { label:'Vehicle Handovers', href:'/dashboard/poc/handovers', icon:'ArrowLeftRight', roles:['admin','general_manager','manager','poc'] },
   {
     label:'POC Station', href:'/dashboard/poc', icon:'Radio', alertKey:'poc',
     roles:['admin','general_manager','poc'],
