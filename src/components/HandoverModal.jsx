@@ -10,23 +10,26 @@ function compressImage(file, maxBytes = 300 * 1024) {
     const src = URL.createObjectURL(file)
     img.onload = () => {
       URL.revokeObjectURL(src)
+      // Shrink to 1024px on the long edge
       let { width: w, height: h } = img
-      const MAX_PX = 1200
+      const MAX_PX = 1024
       if (w >= h && w > MAX_PX) { h = Math.round(h * MAX_PX / w); w = MAX_PX }
-      else if (h > w && h > MAX_PX) { w = Math.round(w * MAX_PX / h); h = MAX_PX }
+      else if (h > MAX_PX)      { w = Math.round(w * MAX_PX / h); h = MAX_PX }
       const canvas = document.createElement('canvas')
       canvas.width = w; canvas.height = h
       canvas.getContext('2d').drawImage(img, 0, 0, w, h)
       const name = file.name.replace(/\.[^.]+$/, '.jpg')
-      let quality = 0.85
+      let quality = 0.82
+      let attempts = 0
       const attempt = () => {
         canvas.toBlob(blob => {
           if (!blob) return resolve(file)
-          if (blob.size <= maxBytes || quality <= 0.3) {
+          attempts++
+          if (blob.size <= maxBytes || attempts >= 5) {
             resolve(new File([blob], name, { type: 'image/jpeg' }))
           } else {
-            // Estimate quality needed to reach target in one more step
-            quality = Math.max(0.3, quality * (maxBytes / blob.size) * 0.92)
+            // Proportionally estimate the quality needed, with a safety margin
+            quality = Math.max(0.2, quality * (maxBytes / blob.size) * 0.90)
             attempt()
           }
         }, 'image/jpeg', quality)
