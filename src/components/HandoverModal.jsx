@@ -4,21 +4,34 @@ import { X, Camera, Upload, Check, Car, Fuel, FileText, User } from 'lucide-reac
 
 import { API } from '@/lib/api'
 
-function compressImage(file, maxPx = 1280, quality = 0.82) {
+function compressImage(file, maxBytes = 300 * 1024) {
   return new Promise(resolve => {
     const img = new Image()
     const src = URL.createObjectURL(file)
     img.onload = () => {
       URL.revokeObjectURL(src)
       let { width: w, height: h } = img
-      if (w > maxPx || h > maxPx) {
-        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx }
-        else       { w = Math.round(w * maxPx / h); h = maxPx }
-      }
+      const MAX_PX = 1200
+      if (w >= h && w > MAX_PX) { h = Math.round(h * MAX_PX / w); w = MAX_PX }
+      else if (h > w && h > MAX_PX) { w = Math.round(w * MAX_PX / h); h = MAX_PX }
       const canvas = document.createElement('canvas')
       canvas.width = w; canvas.height = h
       canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-      canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', quality)
+      const name = file.name.replace(/\.[^.]+$/, '.jpg')
+      let quality = 0.85
+      const attempt = () => {
+        canvas.toBlob(blob => {
+          if (!blob) return resolve(file)
+          if (blob.size <= maxBytes || quality <= 0.3) {
+            resolve(new File([blob], name, { type: 'image/jpeg' }))
+          } else {
+            // Estimate quality needed to reach target in one more step
+            quality = Math.max(0.3, quality * (maxBytes / blob.size) * 0.92)
+            attempt()
+          }
+        }, 'image/jpeg', quality)
+      }
+      attempt()
     }
     img.onerror = () => { URL.revokeObjectURL(src); resolve(file) }
     img.src = src
