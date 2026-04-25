@@ -80,34 +80,9 @@ function buildLetterHTML(l, origin) {
 </div>`
 }
 
-// ── Print HTML (table-based, header+footer repeat on every page) ─
+// ── Print HTML (fixed header+footer pin to top/bottom of every page) ─
 function buildPrintHTML(l, origin) {
   const bodyHtml = buildBodyHtml(l.body)
-
-  const HEADER = `
-    <div style="padding:28px 40px 16px;display:flex;align-items:center;gap:18px;border-bottom:2.5px solid #B8860B">
-      <img src="${origin}/logo.webp" style="height:58px;object-fit:contain" alt="" onerror="this.style.display='none'"/>
-      <div style="font-size:26px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:0.2px">
-        Golden Crescent <span style="font-style:italic;color:#B8860B;font-family:Georgia,serif">Delivery Services</span> LLC
-      </div>
-    </div>`
-
-  const FOOTER = `
-    <div style="padding:16px 40px;background:#f0ede6;border-top:2px solid #B8860B;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
-      <div>
-        <div style="font-size:8px;letter-spacing:2.5px;font-weight:700;color:#B8860B;font-family:Arial,sans-serif;text-transform:uppercase;margin-bottom:5px">ADDRESS</div>
-        <div style="font-size:10.5px;color:#444;line-height:1.55;font-family:Arial,sans-serif">Office 68, 18th Floor<br>Burjuman Business Tower, Dubai</div>
-      </div>
-      <div>
-        <div style="font-size:8px;letter-spacing:2.5px;font-weight:700;color:#B8860B;font-family:Arial,sans-serif;text-transform:uppercase;margin-bottom:5px">CONTACT</div>
-        <div style="font-size:10.5px;color:#444;line-height:1.55;font-family:Arial,sans-serif">Landline · 042 59 291<br>Mobile · +971 52 220 1435</div>
-      </div>
-      <div>
-        <div style="font-size:8px;letter-spacing:2.5px;font-weight:700;color:#B8860B;font-family:Arial,sans-serif;text-transform:uppercase;margin-bottom:5px">ONLINE</div>
-        <div style="font-size:10.5px;color:#444;line-height:1.55;font-family:Arial,sans-serif">vardeep@crescentdelivery.com<br>goldencrescent.ae</div>
-      </div>
-    </div>`
-
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -116,47 +91,71 @@ function buildPrintHTML(l, origin) {
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   @page{size:A4 portrait;margin:0}
-  body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a}
-  /* position:fixed repeats on every printed page */
+  body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;
+    font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a;width:794px}
+  /* watermark repeats on every page */
   .wm{position:fixed;top:-30%;left:-30%;width:160%;height:160%;
     background-image:url('${origin}/logo.webp');
     background-repeat:repeat;background-size:65px auto;
     transform:rotate(-18deg);opacity:0.033;pointer-events:none;z-index:0}
-  table.ltr{width:794px;border-collapse:collapse;table-layout:fixed;position:relative;z-index:1}
-  thead{display:table-header-group}
-  tfoot{display:table-footer-group}
-  tbody{display:table-row-group}
-  td{padding:0;vertical-align:top}
+  /* header fixed to top of every page */
+  .ph{position:fixed;top:0;left:0;width:794px;background:#fff;z-index:2}
+  /* footer fixed to bottom of every page */
+  .pf{position:fixed;bottom:0;left:0;width:794px;z-index:2}
+  /* content flows between header and footer */
+  .pc{margin-top:106px;margin-bottom:84px;padding:28px 40px 32px;position:relative;z-index:1}
 </style>
 </head>
 <body>
 <div class="wm"></div>
-<table class="ltr">
-  <thead><tr><td>${HEADER}</td></tr></thead>
-  <tfoot><tr><td>${FOOTER}</td></tr></tfoot>
-  <tbody><tr><td>
-    <div style="padding:28px 40px 32px;min-height:960px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;font-size:11.5px;font-family:Arial,sans-serif;color:#555">
-        <span style="font-weight:700;color:#333">Ref: ${l.ref_no || '—'}</span>
-        <span>${fmtDate(l.date)}</span>
-      </div>
-      ${l.subject ? `<div style="margin-bottom:14px"><p style="margin:0 0 6px;font-size:16px;font-weight:700">Re: ${l.subject}</p><div style="height:2px;width:240px;background:#B8860B;border-radius:1px"></div></div>` : ''}
-      <p style="margin:0 0 22px;font-weight:700;font-size:13.5px">${l.to_name || 'To Whom It May Concern'}</p>
-      <p style="margin:0 0 16px">${l.greeting || 'Dear Sir / Madam,'}</p>
-      <div style="margin-bottom:44px">${bodyHtml}</div>
-      <p style="margin:0 0 26px">With warm regards,</p>
-      <div style="position:relative;min-height:140px;margin-bottom:6px;width:100%">
-        <div style="display:inline-block">
-          <img src="${origin}/sign.png" style="height:78px;display:block;margin-bottom:2px;mix-blend-mode:screen" alt="" onerror="this.style.display='none'"/>
-          <p style="margin:0 0 1px;font-size:15.5px;font-weight:700">Vardeep Singh Sodhi</p>
-          <p style="margin:0 0 1px;font-size:12px;color:#555;font-family:Arial,sans-serif">Director</p>
-          <p style="margin:0;font-size:11.5px;color:#777;font-family:Arial,sans-serif">Golden Crescent Delivery Services LLC</p>
-        </div>
-        <img src="${origin}/stamp.png" style="position:absolute;right:0;top:0;height:118px;mix-blend-mode:multiply" alt="" onerror="this.style.display='none'"/>
-      </div>
+
+<div class="ph">
+  <div style="padding:28px 40px 16px;display:flex;align-items:center;gap:18px;border-bottom:2.5px solid #B8860B">
+    <img src="${origin}/logo.webp" style="height:58px;object-fit:contain" alt="" onerror="this.style.display='none'"/>
+    <div style="font-size:26px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:0.2px">
+      Golden Crescent <span style="font-style:italic;color:#B8860B;font-family:Georgia,serif">Delivery Services</span> LLC
     </div>
-  </td></tr></tbody>
-</table>
+  </div>
+</div>
+
+<div class="pf">
+  <div style="padding:16px 40px;background:#f0ede6;border-top:2px solid #B8860B;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+    <div>
+      <div style="font-size:8px;letter-spacing:2.5px;font-weight:700;color:#B8860B;font-family:Arial,sans-serif;text-transform:uppercase;margin-bottom:5px">ADDRESS</div>
+      <div style="font-size:10.5px;color:#444;line-height:1.55;font-family:Arial,sans-serif">Office 68, 18th Floor<br>Burjuman Business Tower, Dubai</div>
+    </div>
+    <div>
+      <div style="font-size:8px;letter-spacing:2.5px;font-weight:700;color:#B8860B;font-family:Arial,sans-serif;text-transform:uppercase;margin-bottom:5px">CONTACT</div>
+      <div style="font-size:10.5px;color:#444;line-height:1.55;font-family:Arial,sans-serif">Landline · 042 59 291<br>Mobile · +971 52 220 1435</div>
+    </div>
+    <div>
+      <div style="font-size:8px;letter-spacing:2.5px;font-weight:700;color:#B8860B;font-family:Arial,sans-serif;text-transform:uppercase;margin-bottom:5px">ONLINE</div>
+      <div style="font-size:10.5px;color:#444;line-height:1.55;font-family:Arial,sans-serif">vardeep@crescentdelivery.com<br>goldencrescent.ae</div>
+    </div>
+  </div>
+</div>
+
+<div class="pc">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;font-size:11.5px;font-family:Arial,sans-serif;color:#555">
+    <span style="font-weight:700;color:#333">Ref: ${l.ref_no || '—'}</span>
+    <span>${fmtDate(l.date)}</span>
+  </div>
+  ${l.subject ? `<div style="margin-bottom:14px"><p style="margin:0 0 6px;font-size:16px;font-weight:700">Re: ${l.subject}</p><div style="height:2px;width:240px;background:#B8860B;border-radius:1px"></div></div>` : ''}
+  <p style="margin:0 0 22px;font-weight:700;font-size:13.5px">${l.to_name || 'To Whom It May Concern'}</p>
+  <p style="margin:0 0 16px">${l.greeting || 'Dear Sir / Madam,'}</p>
+  <div style="margin-bottom:44px">${bodyHtml}</div>
+  <p style="margin:0 0 26px">With warm regards,</p>
+  <div style="position:relative;min-height:140px;margin-bottom:6px;width:100%">
+    <div style="display:inline-block">
+      <img src="${origin}/sign.png" style="height:78px;display:block;margin-bottom:2px;mix-blend-mode:screen" alt="" onerror="this.style.display='none'"/>
+      <p style="margin:0 0 1px;font-size:15.5px;font-weight:700">Vardeep Singh Sodhi</p>
+      <p style="margin:0 0 1px;font-size:12px;color:#555;font-family:Arial,sans-serif">Director</p>
+      <p style="margin:0;font-size:11.5px;color:#777;font-family:Arial,sans-serif">Golden Crescent Delivery Services LLC</p>
+    </div>
+    <img src="${origin}/stamp.png" style="position:absolute;right:0;top:0;height:118px;mix-blend-mode:multiply" alt="" onerror="this.style.display='none'"/>
+  </div>
+</div>
+
 <script>
 window.onload=function(){
   var imgs=document.images,n=imgs.length,d=0
