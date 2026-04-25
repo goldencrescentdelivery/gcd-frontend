@@ -20,24 +20,24 @@ function fmtShort(d) {
 
 function buildLetterHTML(l, origin) {
   const bodyHtml = (l.body || '').split('\n').map(
-    line => `<p style="margin:0 0 11px 0;line-height:1.75">${line.trim() ? line : '&nbsp;'}</p>`
+    line => `<p style="margin:0 0 11px 0;line-height:1.75;text-align:justify">${line.trim() ? line : '&nbsp;'}</p>`
   ).join('')
 
   return `<div style="width:794px;min-height:1123px;background:#fff;font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a;position:relative;padding-bottom:130px;box-sizing:border-box;overflow:hidden">
 
-  <!-- watermark layer -->
-  <div style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
+  <!-- tilted watermark: oversized rotated div so rotation doesn't leave gaps -->
+  <div style="position:absolute;top:-30%;left:-30%;width:160%;height:160%;pointer-events:none;z-index:0;
     background-image:url('${origin}/logo.webp');
     background-repeat:repeat;
-    background-size:68px auto;
-    background-position:18px 18px;
-    opacity:0.032"></div>
+    background-size:65px auto;
+    transform:rotate(-18deg);
+    opacity:0.033"></div>
 
-  <!-- all content above watermark -->
+  <!-- content above watermark -->
   <div style="position:relative;z-index:1">
 
   <!-- header -->
-  <div style="padding:28px 54px 16px;display:flex;align-items:center;gap:18px;border-bottom:2.5px solid #B8860B">
+  <div style="padding:28px 40px 16px;display:flex;align-items:center;gap:18px;border-bottom:2.5px solid #B8860B">
     <img src="${origin}/logo.webp" style="height:58px;object-fit:contain" alt="" onerror="this.style.display='none'"/>
     <div style="font-size:26px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:0.2px">
       Golden Crescent <span style="font-style:italic;color:#B8860B;font-family:Georgia,serif">Delivery Services</span> LLC
@@ -45,50 +45,55 @@ function buildLetterHTML(l, origin) {
   </div>
 
   <!-- body -->
-  <div style="padding:32px 54px 0">
+  <div style="padding:28px 40px 0">
 
-    <!-- ref + date row -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;font-size:11.5px;font-family:Arial,sans-serif;color:#555">
+    <!-- ref + date -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;font-size:11.5px;font-family:Arial,sans-serif;color:#555">
       <span style="font-weight:700;color:#333">Ref: ${l.ref_no || '—'}</span>
       <span>${fmtDate(l.date)}</span>
     </div>
 
-    <!-- to -->
-    <p style="margin:0 0 10px;font-weight:700;font-size:13.5px">${l.to_name || 'To Whom It May Concern'}</p>
-
-    <!-- re -->
+    <!-- subject (Re:) FIRST -->
     ${l.subject ? `
-    <div style="margin-bottom:24px">
-      <p style="margin:0 0 7px;font-size:16px;font-weight:700">Re: ${l.subject}</p>
-      <div style="height:2px;width:230px;background:#B8860B;border-radius:1px"></div>
-    </div>` : `<div style="margin-bottom:24px"></div>`}
+    <div style="margin-bottom:14px">
+      <p style="margin:0 0 6px;font-size:16px;font-weight:700">Re: ${l.subject}</p>
+      <div style="height:2px;width:240px;background:#B8860B;border-radius:1px"></div>
+    </div>` : ''}
+
+    <!-- to — below subject -->
+    <p style="margin:0 0 22px;font-weight:700;font-size:13.5px">${l.to_name || 'To Whom It May Concern'}</p>
 
     <!-- greeting -->
-    <p style="margin:0 0 18px">${l.greeting || 'Dear Sir / Madam,'}</p>
+    <p style="margin:0 0 16px">${l.greeting || 'Dear Sir / Madam,'}</p>
 
     <!-- body -->
-    <div style="margin-bottom:50px">${bodyHtml}</div>
+    <div style="margin-bottom:44px">${bodyHtml}</div>
 
     <!-- closing -->
-    <p style="margin:0 0 28px">With warm regards,</p>
+    <p style="margin:0 0 26px">With warm regards,</p>
 
-    <!-- signature + stamp row -->
-    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:6px">
-      <!-- left: signature above name -->
-      <div>
-        <img src="${origin}/letterhead-signature.png" style="height:72px;opacity:0.95;display:block;margin-bottom:4px" alt="" onerror="this.style.display='none'"/>
-        <p style="margin:0 0 2px;font-size:15.5px;font-weight:700">Vardeep Singh Sodhi</p>
-        <p style="margin:0;font-size:12px;color:#666;font-family:Arial,sans-serif">Director · Golden Crescent Delivery Services LLC</p>
+    <!-- signature left, stamp far right -->
+    <div style="position:relative;min-height:120px;margin-bottom:6px">
+      <!-- signature above name, left side -->
+      <div style="display:inline-block">
+        <img src="${origin}/letterhead-signature.png"
+          style="height:78px;display:block;margin-bottom:2px;mix-blend-mode:screen"
+          alt="" onerror="this.style.display='none'"/>
+        <p style="margin:0 0 1px;font-size:15.5px;font-weight:700">Vardeep Singh Sodhi</p>
+        <p style="margin:0 0 1px;font-size:12px;color:#555;font-family:Arial,sans-serif">Director</p>
+        <p style="margin:0;font-size:11.5px;color:#777;font-family:Arial,sans-serif">Golden Crescent Delivery Services LLC</p>
       </div>
-      <!-- right: stamp -->
-      <img src="${origin}/letterhead-stamp.png" style="height:115px;opacity:0.88;margin-right:30px" alt="" onerror="this.style.display='none'"/>
+      <!-- stamp far right -->
+      <img src="${origin}/letterhead-stamp.png"
+        style="position:absolute;right:20px;top:-10px;height:118px;mix-blend-mode:multiply"
+        alt="" onerror="this.style.display='none'"/>
     </div>
-  </div>
 
+  </div>
   </div><!-- /z-index wrapper -->
 
-  <!-- footer -->
-  <div style="position:absolute;bottom:0;left:0;right:0;width:100%;padding:16px 54px;background:#f0ede6;border-top:2px solid #B8860B;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;box-sizing:border-box">
+  <!-- footer — full width, no gap -->
+  <div style="position:absolute;bottom:0;left:0;right:0;width:100%;padding:16px 40px;background:#f0ede6;border-top:2px solid #B8860B;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;box-sizing:border-box">
     <div>
       <div style="font-size:8px;letter-spacing:2.5px;font-weight:700;color:#B8860B;font-family:Arial,sans-serif;text-transform:uppercase;margin-bottom:5px">ADDRESS</div>
       <div style="font-size:10.5px;color:#444;line-height:1.55;font-family:Arial,sans-serif">Office 68, 18th Floor<br>Burjuman Business Tower, Dubai</div>
