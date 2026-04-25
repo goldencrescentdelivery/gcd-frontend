@@ -511,6 +511,15 @@ a { text-decoration:none; color:inherit; }
 .emp-backdrop   { display:none; }
 .emp-detail-panel { width:272px; flex-shrink:0; }
 
+/* Detail panel — info grids */
+.detail-two-col  { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.detail-docs-col { display:grid; grid-template-columns:1fr 1fr; }
+.detail-act-col  { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+/* EmpModal tab grids */
+.modal-two-col   { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+.modal-proj-col  { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
 /* ── Attendance page ─────────────────────────────────────────── */
 .attendance-kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
 
@@ -562,6 +571,19 @@ a { text-decoration:none; color:inherit; }
 @media (max-width:900px) {
   .three-col-glass { grid-template-columns:1fr 1fr !important; }
 }
+@media (max-width:860px) {
+  /* detail panel info sections → single column when panel is narrow */
+  .detail-two-col  { grid-template-columns:1fr !important; }
+  .detail-docs-col { grid-template-columns:1fr !important; }
+}
+
+@media (max-width:640px) {
+  /* EmpModal tab grids → single column */
+  .modal-two-col  { grid-template-columns:1fr !important; }
+  .modal-proj-col { grid-template-columns:1fr !important; }
+  .detail-act-col { grid-template-columns:1fr !important; }
+}
+
 @media (max-width:768px) {
   .emp-backdrop {
     display: block;

@@ -82,105 +82,79 @@ function HandoverCard({ h, onPhoto }) {
   const photos = [h.photo_1, h.photo_2, h.photo_3, h.photo_4].filter(Boolean)
 
   return (
-    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, overflow:'hidden' }}>
-      {/* Colour bar */}
+    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:12, overflow:'hidden' }}>
       <div style={{ height:3, background: isReceived ? '#10B981' : '#EF4444' }}/>
+      <div style={{ padding:'10px 12px', display:'flex', flexDirection:'column', gap:7 }}>
 
-      <div style={{ padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
-
-        {/* Row 1 — plate + type + date */}
+        {/* Row 1 — plate + badge + date */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:9 }}>
-            <div style={{ width:36, height:36, borderRadius:9, background: isReceived?'#ECFDF5':'#FEF2F2', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-              {isReceived ? <ArrowDownToLine size={16} color="#10B981"/> : <ArrowUpFromLine size={16} color="#EF4444"/>}
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:32, height:32, borderRadius:8, background: isReceived?'#ECFDF5':'#FEF2F2', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              {isReceived ? <ArrowDownToLine size={14} color="#10B981"/> : <ArrowUpFromLine size={14} color="#EF4444"/>}
             </div>
             <div>
-              <div style={{ fontWeight:800, fontSize:16, color:'var(--text)', letterSpacing:'0.02em' }}>
-                {h.vehicle_plate || h.plate || '—'}
-              </div>
-              <div style={{ fontSize:11, color:'var(--text-muted)' }}>{h.make} {h.model}</div>
+              <div style={{ fontWeight:800, fontSize:15, color:'var(--text)' }}>{h.vehicle_plate || h.plate || '—'}</div>
+              <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>{h.make} {h.model}</div>
             </div>
           </div>
           <div style={{ textAlign:'right' }}>
-            <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20, background: isReceived?'#ECFDF5':'#FEF2F2', color: isReceived?'#10B981':'#EF4444' }}>
+            <span style={{ fontSize:10.5, fontWeight:700, padding:'2px 9px', borderRadius:20, background: isReceived?'#ECFDF5':'#FEF2F2', color: isReceived?'#10B981':'#EF4444' }}>
               {isReceived ? 'Received' : 'Returned'}
             </span>
-            <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:3 }}>
+            <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:2 }}>
               {new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'})}
             </div>
           </div>
         </div>
 
-        {/* Row 2 — 4 detail chips */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:6 }}>
+        {/* Row 2 — 4 inline detail chips */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:5 }}>
           {[
-            { icon:<User size={11}/>,   label:'Driver',   value: h.emp_name || '—' },
-            { icon:<MapPin size={11}/>, label:'Station',  value: h.station_code || h.vehicle_station || '—' },
-            { icon:<Fuel size={11}/>,   label:'Fuel',     value: FUEL_LABEL[h.fuel_level] || h.fuel_level || '—' },
-            { icon:<Gauge size={11}/>,  label:'ODO',      value: h.odometer ? `${Number(h.odometer).toLocaleString()} km` : '—' },
+            { icon:<User size={10}/>,   label:'Driver',  value: h.emp_name || '—' },
+            { icon:<MapPin size={10}/>, label:'Station', value: h.station_code || h.vehicle_station || '—' },
+            { icon:<Fuel size={10}/>,   label:'Fuel',    value: FUEL_LABEL[h.fuel_level] || h.fuel_level || '—' },
+            { icon:<Gauge size={10}/>,  label:'ODO',     value: h.odometer ? `${Number(h.odometer).toLocaleString()} km` : '—' },
           ].map(c => (
-            <div key={c.label} style={{ background:'var(--bg-alt)', borderRadius:8, padding:'7px 8px' }}>
-              <div style={{ fontSize:9.5, color:'var(--text-muted)', fontWeight:700, display:'flex', alignItems:'center', gap:3, marginBottom:2 }}>
+            <div key={c.label} style={{ background:'var(--bg-alt)', borderRadius:7, padding:'5px 7px' }}>
+              <div style={{ fontSize:9, color:'var(--text-muted)', fontWeight:700, display:'flex', alignItems:'center', gap:2, marginBottom:1 }}>
                 {c.icon} {c.label}
               </div>
-              <div style={{ fontSize:12, color:'var(--text)', fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.value}</div>
+              <div style={{ fontSize:11.5, color:'var(--text)', fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.value}</div>
             </div>
           ))}
         </div>
 
-        {/* Row 3 — handover person */}
+        {/* Row 3 — handover person (inline, no extra box) */}
         {(h.handover_from || h.handover_to) && (
-          <div style={{ fontSize:12, color:'var(--text-sub)' }}>
-            <span style={{ color:'var(--text-muted)' }}>{isReceived ? 'Received from:' : 'Handed to:'}</span>{' '}
+          <div style={{ fontSize:11.5, color:'var(--text-sub)' }}>
+            <span style={{ color:'var(--text-muted)' }}>{isReceived ? 'From:' : 'To:'}</span>{' '}
             <strong style={{ color:'var(--text)' }}>{h.handover_from || h.handover_to}</strong>
           </div>
         )}
 
-        {/* Row 4 — condition note */}
+        {/* Row 4 — condition note (only if present) */}
         {h.condition_note && (
-          <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:8, padding:'7px 10px', fontSize:12, color:'#92400E' }}>
+          <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:7, padding:'5px 9px', fontSize:11.5, color:'#92400E' }}>
             {h.condition_note}
           </div>
         )}
 
-        {/* Row 5 — photos (always shown) */}
-        <div>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
-            <div style={{ fontSize:10.5, color:'var(--text-muted)', fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
-              <Camera size={11}/> PHOTOS
-              {photos.length > 0 && (
-                <span style={{ background:'var(--gold,#B8860B)', color:'white', borderRadius:10, padding:'1px 7px', fontSize:10, fontWeight:700 }}>{photos.length}</span>
-              )}
-            </div>
-            {h.photos_expire_at && photos.length > 0 && (
-              <span style={{ fontSize:10, color:'#F59E0B' }}>
-                expires {new Date(h.photos_expire_at).toLocaleDateString('en-AE',{day:'numeric',month:'short'})}
-              </span>
-            )}
+        {/* Row 5 — photos */}
+        {photos.length === 0 ? (
+          <div style={{ display:'flex', alignItems:'center', gap:6, color:'var(--text-muted)', fontSize:11.5, padding:'4px 0' }}>
+            <Camera size={12} style={{ opacity:0.35 }}/> No photos
           </div>
-
-          {photos.length === 0 ? (
-            <div style={{ background:'var(--bg-alt)', borderRadius:8, padding:'10px', display:'flex', alignItems:'center', gap:8, color:'var(--text-muted)', fontSize:12 }}>
-              <Camera size={14} style={{ opacity:0.4 }}/>
-              No photos uploaded
-            </div>
-          ) : (
-            <div style={{ display:'flex', gap:6 }}>
-              {photos.map((url, i) => (
-                <div key={i} onClick={()=>onPhoto(photos, i)}
-                  style={{ flex:1, aspectRatio:'1', borderRadius:8, overflow:'hidden', cursor:'pointer', border:'2px solid var(--border)', position:'relative' }}>
-                  <img src={url} alt={`Photo ${i+1}`} style={{ width:'100%', height:'100%', objectFit:'cover' }}
-                    loading="lazy"/>
-                  {i === 0 && photos.length > 1 && (
-                    <div style={{ position:'absolute', bottom:3, right:3, background:'rgba(0,0,0,0.65)', color:'white', fontSize:9, fontWeight:700, borderRadius:5, padding:'1px 5px' }}>
-                      1/{photos.length}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        ) : (
+          <div style={{ display:'flex', gap:5, alignItems:'center' }}>
+            {photos.map((url, i) => (
+              <div key={i} onClick={()=>onPhoto(photos, i)}
+                style={{ width:52, height:52, borderRadius:7, overflow:'hidden', cursor:'pointer', border:'1.5px solid var(--border)', flexShrink:0, position:'relative' }}>
+                <img src={url} alt={`Photo ${i+1}`} style={{ width:'100%', height:'100%', objectFit:'cover' }} loading="lazy"/>
+              </div>
+            ))}
+            <span style={{ fontSize:10.5, color:'var(--text-muted)', marginLeft:4 }}>{photos.length} photo{photos.length>1?'s':''}{h.photos_expire_at ? ` · expires ${new Date(h.photos_expire_at).toLocaleDateString('en-AE',{day:'numeric',month:'short'})}` : ''}</span>
+          </div>
+        )}
 
       </div>
     </div>
