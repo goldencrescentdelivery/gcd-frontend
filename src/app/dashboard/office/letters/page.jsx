@@ -9,7 +9,8 @@ const TODAY = () => new Date().toISOString().split('T')[0]
 
 function fmtDate(d) {
   if (!d) return ''
-  return new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  const s = typeof d === 'string' ? d.split('T')[0] : d
+  return new Date(s + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function fmtShort(d) {
@@ -22,18 +23,23 @@ function buildLetterHTML(l, origin) {
     line => `<p style="margin:0 0 11px 0;line-height:1.75">${line.trim() ? line : '&nbsp;'}</p>`
   ).join('')
 
-  return `<div style="width:794px;min-height:1123px;background:#fff;font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a;position:relative;padding-bottom:120px;box-sizing:border-box">
+  return `<div style="width:794px;min-height:1123px;background:#fff;font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a;position:relative;padding-bottom:130px;box-sizing:border-box;overflow:hidden">
 
-  <!-- crop marks -->
-  <div style="position:absolute;top:11px;left:11px;width:19px;height:19px;border-top:1px solid #bbb;border-left:1px solid #bbb"></div>
-  <div style="position:absolute;top:11px;right:11px;width:19px;height:19px;border-top:1px solid #bbb;border-right:1px solid #bbb"></div>
-  <div style="position:absolute;bottom:11px;left:11px;width:19px;height:19px;border-bottom:1px solid #bbb;border-left:1px solid #bbb"></div>
-  <div style="position:absolute;bottom:11px;right:11px;width:19px;height:19px;border-bottom:1px solid #bbb;border-right:1px solid #bbb"></div>
+  <!-- watermark layer -->
+  <div style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
+    background-image:url('${origin}/logo.webp');
+    background-repeat:repeat;
+    background-size:68px auto;
+    background-position:18px 18px;
+    opacity:0.032"></div>
+
+  <!-- all content above watermark -->
+  <div style="position:relative;z-index:1">
 
   <!-- header -->
   <div style="padding:28px 54px 16px;display:flex;align-items:center;gap:18px;border-bottom:2.5px solid #B8860B">
-    <img src="${origin}/logo.webp" style="height:56px;object-fit:contain" alt="" onerror="this.style.display='none'"/>
-    <div style="font-size:21px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:0.2px">
+    <img src="${origin}/logo.webp" style="height:58px;object-fit:contain" alt="" onerror="this.style.display='none'"/>
+    <div style="font-size:26px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:0.2px">
       Golden Crescent <span style="font-style:italic;color:#B8860B;font-family:Georgia,serif">Delivery Services</span> LLC
     </div>
   </div>
@@ -64,19 +70,25 @@ function buildLetterHTML(l, origin) {
     <div style="margin-bottom:50px">${bodyHtml}</div>
 
     <!-- closing -->
-    <p style="margin:0 0 72px">With warm regards,</p>
+    <p style="margin:0 0 28px">With warm regards,</p>
 
-    <!-- signature block -->
-    <div style="position:relative;height:95px;margin-bottom:8px">
-      <img src="${origin}/letterhead-signature.png" style="position:absolute;left:0;top:0;height:78px;opacity:0.95" alt="" onerror="this.style.display='none'"/>
-      <img src="${origin}/letterhead-stamp.png" style="position:absolute;left:55px;top:-16px;height:105px;opacity:0.87" alt="" onerror="this.style.display='none'"/>
+    <!-- signature + stamp row -->
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:6px">
+      <!-- left: signature above name -->
+      <div>
+        <img src="${origin}/letterhead-signature.png" style="height:72px;opacity:0.95;display:block;margin-bottom:4px" alt="" onerror="this.style.display='none'"/>
+        <p style="margin:0 0 2px;font-size:15.5px;font-weight:700">Vardeep Singh Sodhi</p>
+        <p style="margin:0;font-size:12px;color:#666;font-family:Arial,sans-serif">Director · Golden Crescent Delivery Services LLC</p>
+      </div>
+      <!-- right: stamp -->
+      <img src="${origin}/letterhead-stamp.png" style="height:115px;opacity:0.88;margin-right:30px" alt="" onerror="this.style.display='none'"/>
     </div>
-    <p style="margin:0 0 3px;font-size:15.5px;font-weight:700">Vardeep Singh</p>
-    <p style="margin:0;font-size:12px;color:#666;font-family:Arial,sans-serif">Operations · Golden Crescent Delivery Services LLC</p>
   </div>
 
+  </div><!-- /z-index wrapper -->
+
   <!-- footer -->
-  <div style="position:absolute;bottom:0;left:0;right:0;padding:15px 54px;background:#f7f6f3;border-top:1px solid #e2dfd8;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;box-sizing:border-box">
+  <div style="position:absolute;bottom:0;left:0;right:0;width:100%;padding:16px 54px;background:#f0ede6;border-top:2px solid #B8860B;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;box-sizing:border-box">
     <div>
       <div style="font-size:8px;letter-spacing:2.5px;font-weight:700;color:#B8860B;font-family:Arial,sans-serif;text-transform:uppercase;margin-bottom:5px">ADDRESS</div>
       <div style="font-size:10.5px;color:#444;line-height:1.55;font-family:Arial,sans-serif">Office 68, 18th Floor<br>Burjuman Business Tower, Dubai</div>
