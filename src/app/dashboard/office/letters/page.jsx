@@ -26,16 +26,12 @@ function buildLetterHTML(l, origin) {
   return `<div style="width:794px;min-height:1123px;background:#fff;font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a;position:relative;padding-bottom:130px;box-sizing:border-box;overflow:hidden">
 
   <!-- tilted watermark: oversized rotated div so rotation doesn't leave gaps -->
-  <div style="position:absolute;top:-30%;left:-30%;width:160%;height:160%;pointer-events:none;z-index:0;transform:rotate(-18deg);opacity:0.033;overflow:hidden">
-    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" style="display:block">
-      <defs>
-        <pattern id="wm-logo" patternUnits="userSpaceOnUse" width="70" height="70">
-          <image href="${origin}/logo.webp" x="2.5" y="2.5" width="65" height="65"/>
-        </pattern>
-      </defs>
-      <rect fill="url(#wm-logo)" width="100%" height="100%"/>
-    </svg>
-  </div>
+  <div style="position:absolute;top:-30%;left:-30%;width:160%;height:160%;pointer-events:none;z-index:0;
+    background-image:url('${origin}/logo.webp');
+    background-repeat:repeat;
+    background-size:65px auto;
+    transform:rotate(-18deg);
+    opacity:0.033"></div>
 
   <!-- content above watermark -->
   <div style="position:relative;z-index:1">
