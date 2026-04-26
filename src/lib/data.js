@@ -39,7 +39,7 @@ export const NAV = [
   // ── Operations ────────────────────────────────────────────────
   { type:'section', label:'Operations', roles:['admin','general_manager','poc','manager'] },
   { label:'Vehicle Handovers',   href:'/dashboard/poc/handovers',          icon:'ArrowLeftRight', roles:['admin','general_manager','manager','poc'] },
-  { label:'Vehicle Inspections', href:'/dashboard/hr/vehicle-inspection', icon:'ClipboardCheck', roles:['admin','general_manager','hr'] },
+  { label:'Vehicle Inspections', href:'/dashboard/hr/vehicle-inspection', icon:'ClipboardCheck', roles:['admin','general_manager','hr','poc'] },
   { label:'Attendance',  href:'/dashboard/poc/attendance', icon:'Clock',          roles:['admin','general_manager','poc'] },
   { label:'DAs',         href:'/dashboard/poc/das',        icon:'UserCircle',     roles:['admin','general_manager','poc'] },
   { label:'Fleet',       href:'/dashboard/poc/fleet',      icon:'Truck',          roles:['admin','general_manager','poc'], alertKey:'fleet' },

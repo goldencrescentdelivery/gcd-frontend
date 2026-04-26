@@ -1,5 +1,7 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import {
   Users, Package, Wallet, AlertTriangle,
@@ -69,6 +71,13 @@ function Slider({ children, cardWidth = 160, gap = 12 }) {
 }
 
 export default function OverviewPage() {
+  const { user } = useAuth()
+  const router   = useRouter()
+
+  useEffect(() => {
+    if (user && user.role === 'poc') router.replace('/dashboard/poc')
+  }, [user, router])
+
   const [summary,      setSummary]      = useState(null)
   const [chart,        setChart]        = useState([])
   const [expenses,     setExpenses]     = useState([])
