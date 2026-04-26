@@ -68,7 +68,7 @@ function PhotoSlot({ index, file, onSelect, onRemove }) {
       ) : (
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100%', gap:4 }}>
           <Camera size={22} color="#C4B49A"/>
-          <span style={{ fontSize:10, color:'#C4B49A', fontWeight:600 }}>Photo {index+1}</span>
+          <span style={{ fontSize:10, color:'#C4B49A', fontWeight:600 }}>{['Front','Back','Left','Right'][index]}</span>
         </div>
       )}
     </div>
@@ -100,8 +100,8 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
         fetch(`${API}/api/vehicles${sc?`?station_code=${sc}`:''}`, { headers:hdr }).then(r=>r.json()),
         fetch(`${API}/api/handovers/current${sc?`?station_code=${sc}`:''}`, { headers:hdr }).then(r=>r.json()),
       ]).then(([vData, hData]) => {
-        const assigned = new Set((hData.current||[]).map(h=>h.vehicle_id))
-        setVehicles((vData.vehicles||[]).filter(v => v.status==='active' && !assigned.has(v.id)))
+        const assigned = new Set((hData.current||[]).map(h=>String(h.vehicle_id)))
+        setVehicles((vData.vehicles||[]).filter(v => v.status==='active' && !assigned.has(String(v.id))))
       }).catch(()=>{})
     }
   }, [isReturn, user])
@@ -111,7 +111,7 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
 
   async function handleSubmit() {
     if (!isReturn && !vehicleId)          return setErr('Please select a vehicle')
-    if (photos.filter(Boolean).length === 0) return setErr('At least 1 photo is required')
+    if (photos.filter(Boolean).length < 4) return setErr('All 4 photos are required (front, back, left side, right side)')
     if (!odometer || isNaN(Number(odometer)) || Number(odometer) <= 0)
                                           return setErr('Odometer reading is required')
     if (!handoverTo.trim())               return setErr(isReturn ? 'Handed-over-to name is required' : 'Received-from name is required')
@@ -197,7 +197,7 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
           {/* Photos — 4 slots */}
           <div>
             <label className="input-label" style={{ display:'flex', alignItems:'center', gap:6 }}><Camera size={12}/> Vehicle Photos <span style={{color:'#E53E3E'}}>*</span></label>
-            <p style={{ fontSize:11, color:'#A89880', marginBottom:10 }}>At least 1 photo required — front, back, sides</p>
+            <p style={{ fontSize:11, color:'#A89880', marginBottom:10 }}>All 4 photos required — front, back, left side, right side</p>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
               {photos.map((f,i) => (
                 <PhotoSlot key={i} index={i} file={f} onSelect={setPhoto} onRemove={removePhoto}/>
