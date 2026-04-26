@@ -13,7 +13,7 @@ export const ROLE_LABELS = {
 
 export const NAV = [
   { label:'Overview', href:'/dashboard/overview', icon:'LayoutDashboard', roles:['admin'] },
-  { label:'Reports',  href:'/dashboard/analytics', icon:'BarChart3',      roles:['admin','general_manager','hr','accountant','poc'] },
+  { label:'Reports',  href:'/dashboard/analytics', icon:'BarChart3',      roles:['admin','general_manager','hr','accountant'] },
 
   // ── Office ────────────────────────────────────────────────────
   { type:'section', label:'Office', roles:['admin','general_manager','hr','accountant'] },
@@ -40,20 +40,7 @@ export const NAV = [
   // ── Operations ────────────────────────────────────────────────
   { type:'section', label:'Operations', roles:['admin','general_manager','poc','manager'] },
   { label:'Vehicle Handovers', href:'/dashboard/poc/handovers', icon:'ArrowLeftRight', roles:['admin','general_manager','manager','poc'] },
-  {
-    label:'POC Station', href:'/dashboard/poc', icon:'Radio', alertKey:'poc',
-    roles:['admin','general_manager','poc'],
-    children:[
-      { label:'Attendance', href:'/dashboard/poc/attendance', icon:'Clock'                          },
-      { label:'DAs',        href:'/dashboard/poc/das',        icon:'UserCircle'                     },
-      { label:'Fleet',      href:'/dashboard/poc/fleet',      icon:'Truck',      alertKey:'fleet'   },
-      { label:'Deliveries', href:'/dashboard/poc/deliveries', icon:'Package'                        },
-      { label:'Handovers',  href:'/dashboard/poc/handovers',  icon:'Zap'                            },
-      { label:'SIM Cards',  href:'/dashboard/poc/sims',       icon:'Smartphone', alertKey:'sims'    },
-      { label:'Leaves',     href:'/dashboard/poc/leaves',     icon:'CalendarOff', alertKey:'leaves' },
-      { label:'Notices',    href:'/dashboard/poc/notices',    icon:'Bell'                           },
-    ]
-  },
+  { label:'POC Station', href:'/dashboard/poc', icon:'Radio', alertKey:'poc', roles:['admin','general_manager','poc'] },
 
   // ── System ────────────────────────────────────────────────────
   { type:'section', label:'System', roles:['admin'] },
