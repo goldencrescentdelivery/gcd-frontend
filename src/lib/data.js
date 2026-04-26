@@ -44,14 +44,14 @@ export const NAV = [
     label:'POC Station', href:'/dashboard/poc', icon:'Radio', alertKey:'poc',
     roles:['admin','general_manager','poc'],
     children:[
-      { label:'Attendance', href:'/dashboard/poc?tab=attendance', icon:'Clock'                        },
-      { label:'DAs',        href:'/dashboard/poc?tab=das',        icon:'UserCircle'                   },
-      { label:'Fleet',      href:'/dashboard/poc?tab=fleet',      icon:'Truck',      alertKey:'fleet' },
-      { label:'Deliveries', href:'/dashboard/poc?tab=deliveries', icon:'Package'                      },
-      { label:'Handovers',  href:'/dashboard/poc?tab=handovers',  icon:'Zap'                         },
-      { label:'SIM Cards',  href:'/dashboard/poc?tab=sims',       icon:'Smartphone', alertKey:'sims'  },
-      { label:'Leaves',     href:'/dashboard/poc?tab=leaves',     icon:'CalendarOff', alertKey:'leaves' },
-      { label:'Notices',    href:'/dashboard/poc?tab=notices',    icon:'Bell'                         },
+      { label:'Attendance', href:'/dashboard/poc/attendance', icon:'Clock'                          },
+      { label:'DAs',        href:'/dashboard/poc/das',        icon:'UserCircle'                     },
+      { label:'Fleet',      href:'/dashboard/poc/fleet',      icon:'Truck',      alertKey:'fleet'   },
+      { label:'Deliveries', href:'/dashboard/poc/deliveries', icon:'Package'                        },
+      { label:'Handovers',  href:'/dashboard/poc/handovers',  icon:'Zap'                            },
+      { label:'SIM Cards',  href:'/dashboard/poc/sims',       icon:'Smartphone', alertKey:'sims'    },
+      { label:'Leaves',     href:'/dashboard/poc/leaves',     icon:'CalendarOff', alertKey:'leaves' },
+      { label:'Notices',    href:'/dashboard/poc/notices',    icon:'Bell'                           },
     ]
   },
 
