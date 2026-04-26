@@ -135,11 +135,22 @@ export default function DashboardLayout({ children }) {
   const [collapsed,  setCollapsed]  = useState(false)
   const [showAward,  setShowAward]  = useState(false)
 
+  const POC_ALLOWED = [
+    '/dashboard/poc',
+    '/dashboard/hr/vehicle-inspection',
+    '/dashboard/finance/petty-cash',
+    '/dashboard/settings',
+  ]
+
   useEffect(() => {
     if (loading) return
     if (!user) router.replace('/login')
     else if (user.role === 'driver') router.replace('/driver')
-  }, [user, loading, router])
+    else if (user.role === 'poc') {
+      const allowed = POC_ALLOWED.some(p => pathname === p || pathname.startsWith(p + '/'))
+      if (!allowed) router.replace('/dashboard/poc')
+    }
+  }, [user, loading, router, pathname])
 
   useEffect(() => {
     const dismissed = localStorage.getItem(AWARD_KEY)
