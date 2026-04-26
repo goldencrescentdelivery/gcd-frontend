@@ -40,7 +40,13 @@ export const NAV = [
   // ── Operations ────────────────────────────────────────────────
   { type:'section', label:'Operations', roles:['admin','general_manager','poc','manager'] },
   { label:'Vehicle Handovers', href:'/dashboard/poc/handovers', icon:'ArrowLeftRight', roles:['admin','general_manager','manager','poc'] },
-  { label:'POC Station', href:'/dashboard/poc', icon:'Radio', alertKey:'poc', roles:['admin','general_manager','poc'] },
+  { label:'Attendance',  href:'/dashboard/poc/attendance', icon:'Clock',          roles:['admin','general_manager','poc'] },
+  { label:'DAs',         href:'/dashboard/poc/das',        icon:'UserCircle',     roles:['admin','general_manager','poc'] },
+  { label:'Fleet',       href:'/dashboard/poc/fleet',      icon:'Truck',          roles:['admin','general_manager','poc'], alertKey:'fleet' },
+  { label:'Deliveries',  href:'/dashboard/poc/deliveries', icon:'Package',        roles:['admin','general_manager','poc'] },
+  { label:'SIM Cards',   href:'/dashboard/poc/sims',       icon:'Smartphone',     roles:['admin','general_manager','poc'], alertKey:'sims'  },
+  { label:'Leaves',      href:'/dashboard/poc/leaves',     icon:'CalendarOff',    roles:['admin','general_manager','poc'], alertKey:'leaves' },
+  { label:'Notices',     href:'/dashboard/poc/notices',    icon:'Bell',           roles:['admin','general_manager','poc'] },
 
   // ── System ────────────────────────────────────────────────────
   { type:'section', label:'System', roles:['admin'] },

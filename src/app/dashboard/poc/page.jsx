@@ -131,14 +131,13 @@ export default function POCHub() {
           ) : stats && (
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
               {[
-                { l:'Present Today',   v:stats.present,                      sub:`${stats.logged}/${stats.total_das} logged`,  c:'#10B981', bg:'#ECFDF5', bc:'#A7F3D0',  em:'✅' },
-                { l:'Active Vehicles', v:stats.active_vehs,                  sub:`${stats.grounded} down`,                     c:'#3B82F6', bg:'#EFF6FF', bc:'#BFDBFE',  em:'🚗' },
-                { l:'Earnings Today',  v:`AED ${stats.earnings.toFixed(0)}`, sub:'attendance wages',                       c:'#B8860B', bg:'#FDF6E3', bc:'#F0D78C',  em:'💰' },
-                { l:'Pending Leaves',  v:stats.pending_leaves,               sub:'awaiting review',                             c:stats.pending_leaves>0?'#EF4444':'#10B981', bg:stats.pending_leaves>0?'#FEF2F2':'#ECFDF5', bc:stats.pending_leaves>0?'#FCA5A5':'#A7F3D0', em:stats.pending_leaves>0?'⚠️':'✓' },
+                { l:'Present Today',   v:stats.present,                      sub:`${stats.logged}/${stats.total_das} logged`,  c:'#10B981', bg:'#ECFDF5', bc:'#A7F3D0' },
+                { l:'Active Vehicles', v:stats.active_vehs,                  sub:`${stats.grounded} down`,                     c:'#3B82F6', bg:'#EFF6FF', bc:'#BFDBFE' },
+                { l:'Earnings Today',  v:`AED ${stats.earnings.toFixed(0)}`, sub:'attendance wages',                           c:'#B8860B', bg:'#FDF6E3', bc:'#F0D78C' },
+                { l:'Pending Leaves',  v:stats.pending_leaves,               sub:'awaiting review',                            c:stats.pending_leaves>0?'#EF4444':'#10B981', bg:stats.pending_leaves>0?'#FEF2F2':'#ECFDF5', bc:stats.pending_leaves>0?'#FCA5A5':'#A7F3D0' },
               ].map(s => (
-                <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:14, padding:'12px 10px', textAlign:'center' }}>
-                  <div style={{ fontSize:20, marginBottom:4 }}>{s.em}</div>
-                  <div style={{ fontWeight:900, fontSize:s.v?.toString().startsWith('AED')?13:20, color:s.c, letterSpacing:'-0.02em', lineHeight:1.2 }}>{s.v}</div>
+                <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:14, padding:'14px 10px', textAlign:'center' }}>
+                  <div style={{ fontWeight:900, fontSize:s.v?.toString().startsWith('AED')?13:22, color:s.c, letterSpacing:'-0.02em', lineHeight:1.2 }}>{s.v}</div>
                   <div style={{ fontSize:9.5, color:s.c, opacity:0.75, fontWeight:600, marginTop:3, textTransform:'uppercase', letterSpacing:'0.04em' }}>{s.l}</div>
                   <div style={{ fontSize:9.5, color:s.c, opacity:0.55, marginTop:2 }}>{s.sub}</div>
                 </div>
