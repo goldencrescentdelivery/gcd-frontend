@@ -22,13 +22,13 @@ export const NAV = [
 
   // ── HR Management ─────────────────────────────────────────────
   { type:'section', label:'HR Management', roles:['admin','general_manager','hr','accountant'] },
-  { label:'DAs',          href:'/dashboard/hr/employees',  icon:'UserCircle',  roles:['admin','general_manager','hr','accountant'], alertKey:'employees' },
-  { label:'Admins',       href:'/dashboard/hr/admins',     icon:'Shield',      roles:['admin','general_manager','hr','accountant'] },
-  { label:'Attendance',   href:'/dashboard/hr/attendance', icon:'Clock',       roles:['admin','general_manager','hr'] },
-  { label:'Leaves',       href:'/dashboard/hr/leaves',     icon:'CalendarOff', roles:['admin','general_manager','hr'], alertKey:'leaves' },
-  { label:'Documents',    href:'/dashboard/hr/documents',  icon:'FileText',    roles:['admin','hr'] },
-  { label:'Compliance',          href:'/dashboard/hr/compliance',          icon:'ShieldCheck',    roles:['admin','hr'] },
-  { label:'User Accounts',href:'/dashboard/hr/users',      icon:'KeyRound',    roles:['admin'] },
+  { label:'DAs',           href:'/dashboard/hr/employees',  icon:'UserCircle',  roles:['admin','general_manager','hr','accountant'], alertKey:'employees' },
+  { label:'Admins',        href:'/dashboard/hr/admins',     icon:'Shield',      roles:['admin','general_manager','hr','accountant'] },
+  { label:'Attendance',    href:'/dashboard/hr/attendance', icon:'Clock',       roles:['admin','general_manager','hr'] },
+  { label:'Leaves',        href:'/dashboard/hr/leaves',     icon:'CalendarOff', roles:['admin','general_manager','hr'], alertKey:'leaves' },
+  { label:'Documents',     href:'/dashboard/hr/documents',  icon:'FileText',    roles:['admin','hr'] },
+  { label:'Compliance',    href:'/dashboard/hr/compliance', icon:'ShieldCheck', roles:['admin','hr'] },
+  { label:'User Accounts', href:'/dashboard/hr/users',      icon:'KeyRound',    roles:['admin'] },
 
   // ── Finance ───────────────────────────────────────────────────
   { type:'section', label:'Finance', roles:['admin','accountant','general_manager','hr','poc'] },
@@ -38,18 +38,18 @@ export const NAV = [
 
   // ── Operations ────────────────────────────────────────────────
   { type:'section', label:'Operations', roles:['admin','general_manager','poc','manager'] },
+  { label:'Attendance',          href:'/dashboard/poc/attendance',         icon:'Clock',          roles:['admin','general_manager','poc'] },
+  { label:'DAs',                 href:'/dashboard/poc/das',                icon:'UserCircle',     roles:['admin','general_manager','poc'] },
+  { label:'Fleet',               href:'/dashboard/poc/fleet',              icon:'Truck',          roles:['admin','general_manager','poc'], alertKey:'fleet' },
   { label:'Vehicle Handovers',   href:'/dashboard/poc/handovers',          icon:'ArrowLeftRight', roles:['admin','general_manager','manager','poc'] },
-  { label:'Vehicle Inspections', href:'/dashboard/hr/vehicle-inspection', icon:'ClipboardCheck', roles:['admin','general_manager','hr','poc'] },
-  { label:'Attendance',  href:'/dashboard/poc/attendance', icon:'Clock',          roles:['admin','general_manager','poc'] },
-  { label:'DAs',         href:'/dashboard/poc/das',        icon:'UserCircle',     roles:['admin','general_manager','poc'] },
-  { label:'Fleet',       href:'/dashboard/poc/fleet',      icon:'Truck',          roles:['admin','general_manager','poc'], alertKey:'fleet' },
-  { label:'Deliveries',  href:'/dashboard/poc/deliveries', icon:'Package',        roles:['admin','general_manager','poc'] },
-  { label:'SIM Cards',   href:'/dashboard/poc/sims',       icon:'Smartphone',     roles:['admin','general_manager','poc'], alertKey:'sims'  },
-  { label:'Leaves',      href:'/dashboard/poc/leaves',     icon:'CalendarOff',    roles:['admin','general_manager','poc'], alertKey:'leaves' },
-  { label:'Notices',     href:'/dashboard/poc/notices',    icon:'Bell',           roles:['admin','general_manager','poc'] },
+  { label:'Vehicle Inspections', href:'/dashboard/hr/vehicle-inspection',  icon:'ClipboardCheck', roles:['admin','general_manager','hr','poc'] },
+  { label:'Deliveries',          href:'/dashboard/poc/deliveries',         icon:'Package',        roles:['admin','general_manager','poc'] },
+  { label:'SIM Cards',           href:'/dashboard/poc/sims',               icon:'Smartphone',     roles:['admin','general_manager','poc'], alertKey:'sims' },
+  { label:'Leaves',              href:'/dashboard/poc/leaves',             icon:'CalendarOff',    roles:['admin','general_manager','poc'], alertKey:'leaves' },
+  { label:'Notices',             href:'/dashboard/poc/notices',            icon:'Bell',           roles:['admin','general_manager','poc'] },
 
   // ── System ────────────────────────────────────────────────────
   { type:'section', label:'System', roles:['admin'] },
-  { label:'Backup',   href:'/dashboard/backup',   icon:'HardDrive', roles:['admin'] },
   { label:'Settings', href:'/dashboard/settings', icon:'Settings',  roles:['admin','general_manager','hr','accountant','poc'] },
+  { label:'Backup',   href:'/dashboard/backup',   icon:'HardDrive', roles:['admin'] },
 ]
