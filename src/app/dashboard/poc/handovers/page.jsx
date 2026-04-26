@@ -102,7 +102,7 @@ function HandoverCard({ h, onPhoto }) {
               {isReceived ? 'Received' : 'Returned'}
             </span>
             <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:2 }}>
-              {new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'})}
+              {new Date(h.submitted_at).toLocaleString('en-AE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
             </div>
           </div>
         </div>
@@ -168,7 +168,7 @@ export default function HandoversPage() {
   const [loading,   setLoading]   = useState(true)
   const [filter,    setFilter]    = useState('all')
   const [search,    setSearch]    = useState('')
-  const [dateFilter,setDateFilter]= useState('all')  // all | today | week
+  const [dateFilter,setDateFilter]= useState('today')  // all | today | week
   const [lightbox,  setLightbox]  = useState(null)
 
   useEffect(() => {
@@ -262,7 +262,7 @@ export default function HandoversPage() {
       {/* Results count */}
       {!loading && (
         <div style={{ fontSize:11.5, color:'var(--text-muted)', marginBottom:10 }}>
-          {filtered.length} record{filtered.length!==1?'s':''} {filter!=='all'||dateFilter!=='all'||search?'matching filters':'total'}
+          {filtered.length} record{filtered.length!==1?'s':''} {filter!=='all'||dateFilter!=='today'||search?'matching filters':'today'}
         </div>
       )}
 
