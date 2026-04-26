@@ -3,9 +3,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import {
   X, Plus, Pencil, Trash2, Truck, Users, Package, Bell, Calendar,
-  CheckCircle, XCircle, Search, ChevronDown, ChevronLeft, AlertTriangle,
-  MapPin, Clock, Smartphone, ArrowLeftRight, CheckSquare, History,
-  Contact, Upload, Download, FileText, Phone, CreditCard, Briefcase,
+  CheckCircle, XCircle, Search, ChevronDown, ChevronLeft, ChevronRight, AlertTriangle,
+  MapPin, Clock, Smartphone, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine,
+  CheckSquare, History, Contact, Upload, Download, FileText, Phone, CreditCard, Briefcase,
 } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { API } from '@/lib/api'
@@ -817,93 +817,254 @@ export function WorkNumModal({ emp, station, sims, onSave, onClose }) {
   )
 }
 
-// ── Vehicle Card ──────────────────────────────────────────────
-export function VehicleCard({ v, asgn, isDown, sc, sb, date, station, emps, onEdit, onDelete, onAssign }) {
-  const [showHistory, setShowHistory] = useState(false)
-  const [history,     setHistory]     = useState([])
-  const [histLoading, setHistLoading] = useState(false)
-  async function loadHistory() {
-    if (history.length > 0) { setShowHistory(p => !p); return }
-    setShowHistory(true); setHistLoading(true)
-    try {
-      const r = await fetch(`${API}/api/vehicles/assignments/history?vehicle_id=${v.id}&limit=30`, { headers: hdr() })
-      setHistory((await r.json()).history || [])
-    } catch { setHistory([]) } finally { setHistLoading(false) }
-  }
-  const assignedEmp      = asgn?.emp_id ? emps.find(e => e.id === asgn.emp_id) : null
-  const assignedInitials = assignedEmp ? assignedEmp.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase() : null
+// ── Fuel labels (shared) ──────────────────────────────────────
+const FUEL_LABEL_MAP = { empty:'Empty', quarter:'1/4', half:'1/2', three_quarter:'3/4', full:'Full' }
+
+// ── Vehicle History Modal ─────────────────────────────────────
+function VehicleHistoryModal({ v, onClose }) {
+  const [tab,     setTab]     = useState('assignments')
+  const [asgns,   setAsgns]   = useState([])
+  const [handovs, setHandovs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const sc = VSTATUS_COLORS[v.status]||'#A89880'
+  const sb = VSTATUS_BG[v.status]||'#F5F4F1'
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([
+      fetch(`${API}/api/vehicles/assignments/history?vehicle_id=${v.id}&limit=60`, { headers:hdr() }).then(r=>r.json()),
+      fetch(`${API}/api/handovers?vehicle_id=${v.id}&limit=60`, { headers:hdr() }).then(r=>r.json()),
+    ]).then(([aData, hData]) => {
+      setAsgns(aData.history||[])
+      setHandovs((hData.handovers||[]).filter(h => String(h.vehicle_id)===String(v.id)))
+    }).catch(()=>{}).finally(()=>setLoading(false))
+  }, [v.id])
+
   return (
-    <div onClick={onEdit} style={{ background:'var(--card)', borderRadius:18, overflow:'hidden', border:`1px solid ${isDown?`${sc}40`:'var(--border)'}`, transition:'box-shadow 0.2s', cursor:'pointer' }}
-      onMouseEnter={e => e.currentTarget.style.boxShadow='0 6px 20px rgba(0,0,0,0.08)'}
-      onMouseLeave={e => e.currentTarget.style.boxShadow=isDown?`0 0 0 1px ${sc}20`:'none'}>
-      <div style={{ height:4, background:sc }}/>
-      <div style={{ padding:'14px 16px' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{ maxWidth:520 }}>
+        {/* Header */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:44, height:44, borderRadius:14, background:sb, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Truck size={20} color={sc}/></div>
+            <div style={{ width:46, height:46, borderRadius:14, background:sb, border:`1.5px solid ${sc}30`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <Truck size={20} color={sc}/>
+            </div>
             <div>
-              <div style={{ fontWeight:900, fontSize:16, color:'var(--text)', letterSpacing:'0.03em', lineHeight:1.1 }}>{v.plate}</div>
-              <div style={{ fontSize:11.5, color:'var(--text-muted)', marginTop:2 }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
+              <div style={{ fontWeight:900, fontSize:18, color:'var(--text)', letterSpacing:'0.04em' }}>{v.plate}</div>
+              <div style={{ fontSize:11.5, color:'var(--text-muted)' }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
             </div>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-            <span style={{ fontSize:10.5, fontWeight:700, color:sc, background:sb, padding:'3px 10px', borderRadius:20, border:`1px solid ${sc}30`, textTransform:'capitalize' }}>{v.status}</span>
-            {v.station_code&&<span style={{ fontSize:9.5, fontWeight:700, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:6, padding:'2px 7px' }}>{v.station_code}</span>}
-            <button className="btn btn-ghost btn-icon btn-sm" onClick={e => { e.stopPropagation(); onEdit() }} title="Edit"><Pencil size={13}/></button>
-            <button className="btn btn-ghost btn-icon btn-sm" style={{ color:'#EF4444' }} onClick={e => { e.stopPropagation(); onDelete() }} title="Delete"><Trash2 size={13}/></button>
-          </div>
+          <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={16}/></button>
         </div>
-        {isDown&&v.grounded_reason&&(
-          <div style={{ background:`${sc}10`, border:`1px solid ${sc}40`, borderRadius:10, padding:'8px 12px', fontSize:12, color:sc, marginBottom:12, display:'flex', gap:6, alignItems:'flex-start' }}>
-            <AlertTriangle size={13} style={{ flexShrink:0, marginTop:1 }}/> {v.grounded_reason}{v.grounded_since?` · since ${v.grounded_since.slice(0,10)}`:''}
-          </div>
-        )}
-        {assignedEmp ? (
-          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'rgba(46,125,82,0.07)', border:'1px solid rgba(46,125,82,0.2)', borderRadius:10, marginBottom:12 }}>
-            <div style={{ width:28, height:28, borderRadius:8, background:'rgba(46,125,82,0.15)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:11, color:'#2E7D52', flexShrink:0 }}>{assignedInitials}</div>
-            <div style={{ minWidth:0 }}>
-              <div style={{ fontSize:12, fontWeight:700, color:'#2E7D52', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{assignedEmp.name}</div>
-              <div style={{ fontSize:10, color:'rgba(46,125,82,0.7)' }}>Assigned today</div>
-            </div>
-          </div>
-        ) : (
-          <div style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 10px', background:'var(--bg-alt)', border:'1px dashed var(--border-med)', borderRadius:10, marginBottom:12 }}>
-            <div style={{ width:24, height:24, borderRadius:6, background:'var(--border)', display:'flex', alignItems:'center', justifyContent:'center' }}><Users size={11} color="var(--text-muted)"/></div>
-            <span style={{ fontSize:11.5, color:'var(--text-muted)', fontStyle:'italic' }}>Unassigned today</span>
-          </div>
-        )}
-        <div style={{ marginBottom:10 }}>
-          <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Assign DA — {date}</div>
-          <DriverSearch employees={emps.filter(e => e.station_code===station)} value={asgn?.emp_id||''} onChange={onAssign} placeholder="— Unassigned —"/>
+
+        {/* Tabs */}
+        <div style={{ display:'flex', gap:4, background:'var(--bg-alt)', borderRadius:12, padding:3, marginBottom:14 }}>
+          {[['assignments','Assignments',Calendar],['handovers','Handovers',ArrowLeftRight]].map(([id,label,Icon])=>(
+            <button key={id} onClick={()=>setTab(id)}
+              style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'8px 10px', borderRadius:9, border:'none', background:tab===id?'var(--card)':'transparent', color:tab===id?'var(--text)':'var(--text-muted)', fontWeight:tab===id?700:500, fontSize:12.5, cursor:'pointer', boxShadow:tab===id?'0 1px 4px rgba(0,0,0,0.1)':'none', transition:'all 0.15s', fontFamily:'inherit' }}>
+              <Icon size={13}/> {label}
+              <span style={{ fontSize:10, fontWeight:700, color:tab===id?'var(--gold)':'var(--text-muted)', background:tab===id?'var(--amber-bg)':'var(--border)', borderRadius:20, padding:'0px 6px', marginLeft:2 }}>
+                {id==='assignments'?asgns.length:handovs.length}
+              </span>
+            </button>
+          ))}
         </div>
-        <button onClick={loadHistory} style={{ display:'flex', alignItems:'center', gap:6, width:'100%', padding:'8px 12px', borderRadius:10, background:showHistory?'var(--bg-alt)':'transparent', border:'1px solid var(--border)', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:600, color:'var(--text-muted)', transition:'all 0.15s' }}>
-          <History size={12}/> Assignment History
-          <ChevronDown size={12} style={{ marginLeft:'auto', transition:'transform 0.2s', transform:showHistory?'rotate(180deg)':'none' }}/>
-        </button>
-      </div>
-      {showHistory && (
-        <div style={{ borderTop:'1px solid var(--border)', padding:'12px 16px', background:'var(--bg-alt)', borderRadius:'0 0 18px 18px' }}>
-          {histLoading ? (
-            <div style={{ textAlign:'center', padding:'12px 0', color:'var(--text-muted)', fontSize:12 }}>Loading…</div>
-          ) : history.length===0 ? (
-            <div style={{ textAlign:'center', padding:'12px 0', color:'var(--text-muted)', fontSize:12 }}>No assignment history yet</div>
-          ) : (
-            <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
-              {history.map(h => (
-                <div key={h.id} style={{ display:'flex', alignItems:'center', gap:9, padding:'7px 10px', borderRadius:9, background:'var(--card)', border:'1px solid var(--border)' }}>
-                  <div style={{ width:6, height:6, borderRadius:'50%', background:h.emp_id?'#10B981':'#D1D5DB', flexShrink:0 }}/>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:12, fontWeight:700, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{h.driver_name||'— Unassigned —'}</div>
-                    <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:1 }}>{h.date?.slice(0,10)}</div>
+
+        {/* Content */}
+        <div style={{ maxHeight:400, overflowY:'auto' }}>
+          {loading ? (
+            <div style={{ padding:'30px 0', textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>Loading history…</div>
+          ) : tab==='assignments' ? (
+            asgns.length===0 ? (
+              <div style={{ padding:'30px 0', textAlign:'center', color:'var(--text-muted)' }}>
+                <Calendar size={32} style={{ margin:'0 auto 10px', display:'block', opacity:0.2 }}/>
+                <div style={{ fontSize:13, fontWeight:600 }}>No assignment history</div>
+              </div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+                {asgns.map((a,i)=>(
+                  <div key={a.id||i} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:11, background:'var(--bg-alt)', border:'1px solid var(--border)', animation:`slideUp 0.2s ${Math.min(i,15)*0.03}s ease both` }}>
+                    <div style={{ width:36, height:36, borderRadius:10, background:a.emp_id?'linear-gradient(135deg,#FDF6E3,#FEF3D0)':'var(--bg-alt)', border:a.emp_id?'1px solid #F0D78C':'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:a.emp_id?'#B8860B':'var(--text-muted)', flexShrink:0 }}>
+                      {a.emp_id?(a.driver_name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase():'—'}
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{a.driver_name||'— Unassigned —'}</div>
+                      <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>{a.date?.slice(0,10)}</div>
+                    </div>
+                    <span style={{ fontSize:9.5, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:5, padding:'2px 7px', fontWeight:700, flexShrink:0 }}>{a.station_code}</span>
                   </div>
-                  <span style={{ fontSize:9.5, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:5, padding:'2px 6px', flexShrink:0, fontWeight:700 }}>{h.station_code}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
+          ) : (
+            handovs.length===0 ? (
+              <div style={{ padding:'30px 0', textAlign:'center', color:'var(--text-muted)' }}>
+                <ArrowLeftRight size={32} style={{ margin:'0 auto 10px', display:'block', opacity:0.2 }}/>
+                <div style={{ fontSize:13, fontWeight:600 }}>No handover history</div>
+              </div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                {handovs.map((h,i)=>{
+                  const isRec = h.type==='received'
+                  return (
+                    <div key={h.id} style={{ borderRadius:12, overflow:'hidden', border:`1px solid ${isRec?'#A7F3D0':'#FECACA'}`, animation:`slideUp 0.2s ${Math.min(i,15)*0.03}s ease both` }}>
+                      <div style={{ height:3, background:isRec?'#10B981':'#EF4444' }}/>
+                      <div style={{ padding:'10px 12px', display:'flex', gap:10, alignItems:'flex-start' }}>
+                        <div style={{ width:34, height:34, borderRadius:10, background:isRec?'#ECFDF5':'#FEF2F2', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                          {isRec?<ArrowDownToLine size={14} color="#10B981"/>:<ArrowUpFromLine size={14} color="#EF4444"/>}
+                        </div>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:6, marginBottom:5 }}>
+                            <div>
+                              <div style={{ fontSize:10.5, fontWeight:700, color:isRec?'#10B981':'#EF4444', textTransform:'uppercase', letterSpacing:'0.06em' }}>{isRec?'Received':'Returned'}</div>
+                              <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', marginTop:1 }}>{h.emp_name}</div>
+                            </div>
+                            <div style={{ fontSize:10.5, color:'var(--text-muted)', textAlign:'right', flexShrink:0 }}>
+                              {new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short'})}
+                              <br/>{new Date(h.submitted_at).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit'})}
+                            </div>
+                          </div>
+                          <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                            {h.fuel_level&&<span style={{ fontSize:10.5, color:'#B45309', background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:5, padding:'1px 7px', fontWeight:600 }}>
+                              Fuel: {FUEL_LABEL_MAP[h.fuel_level]||h.fuel_level}
+                            </span>}
+                            {h.odometer&&<span style={{ fontSize:10.5, color:'#1D4ED8', background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:5, padding:'1px 7px', fontWeight:600 }}>
+                              {Number(h.odometer).toLocaleString()} km
+                            </span>}
+                            {(h.handover_from||h.handover_to)&&<span style={{ fontSize:10.5, color:'var(--text-muted)' }}>
+                              {isRec?'From:':'To:'} {h.handover_from||h.handover_to}
+                            </span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
           )}
         </div>
-      )}
+      </div>
     </div>
+  )
+}
+
+// ── Vehicle Card ──────────────────────────────────────────────
+export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, onEdit, onDelete, onAssign }) {
+  const [showAssign,    setShowAssign]    = useState(false)
+  const [showHistModal, setShowHistModal] = useState(false)
+  const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
+  const hasHandover = !!currentHandover
+
+  return (
+    <>
+      <div style={{ background:'var(--card)', borderRadius:20, overflow:'hidden', border:`1px solid ${hasHandover?'#A7F3D0':isDown?`${sc}40`:'var(--border)'}`, boxShadow:hasHandover?'0 0 0 2px rgba(16,185,129,0.15)':'0 2px 8px rgba(0,0,0,0.04)', transition:'box-shadow 0.2s' }}
+        onMouseEnter={e=>e.currentTarget.style.boxShadow=hasHandover?'0 0 0 2px rgba(16,185,129,0.2),0 8px 24px rgba(0,0,0,0.08)':'0 8px 24px rgba(0,0,0,0.08)'}
+        onMouseLeave={e=>e.currentTarget.style.boxShadow=hasHandover?'0 0 0 2px rgba(16,185,129,0.15)':'0 2px 8px rgba(0,0,0,0.04)'}>
+
+        <div style={{ height:4, background:`linear-gradient(90deg,${sc},${sc}80)` }}/>
+
+        <div style={{ padding:'16px 18px', display:'flex', flexDirection:'column', gap:12 }}>
+
+          {/* ── Header row ── */}
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <div style={{ width:50, height:50, borderRadius:15, background:sb, border:`2px solid ${sc}30`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:`0 4px 12px ${sc}18` }}>
+                <Truck size={22} color={sc}/>
+              </div>
+              <div>
+                <div style={{ fontWeight:900, fontSize:19, color:'var(--text)', letterSpacing:'0.04em', lineHeight:1 }}>{v.plate}</div>
+                <div style={{ fontSize:11.5, color:'var(--text-muted)', marginTop:3 }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
+              </div>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6 }}>
+              <div style={{ display:'flex', gap:5 }}>
+                <span style={{ fontSize:10.5, fontWeight:700, color:sc, background:sb, padding:'3px 10px', borderRadius:20, border:`1px solid ${sc}30`, textTransform:'capitalize' }}>{v.status}</span>
+                {v.station_code&&<span style={{ fontSize:9.5, fontWeight:700, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:6, padding:'2px 7px' }}>{v.station_code}</span>}
+              </div>
+              <div style={{ display:'flex', gap:4 }}>
+                <button className="btn btn-ghost btn-icon btn-sm" onClick={onEdit} title="Edit"><Pencil size={12}/></button>
+                <button className="btn btn-ghost btn-icon btn-sm" style={{ color:'#EF4444' }} onClick={onDelete} title="Delete"><Trash2 size={12}/></button>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Grounded reason ── */}
+          {isDown&&v.grounded_reason&&(
+            <div style={{ background:`${sc}10`, border:`1px solid ${sc}30`, borderRadius:10, padding:'8px 12px', fontSize:12, color:sc, display:'flex', gap:6, alignItems:'flex-start' }}>
+              <AlertTriangle size={13} style={{ flexShrink:0, marginTop:1 }}/> {v.grounded_reason}{v.grounded_since?` · since ${v.grounded_since.slice(0,10)}`:''}
+            </div>
+          )}
+
+          {/* ── Active handover banner ── */}
+          {hasHandover ? (
+            <div style={{ background:'linear-gradient(135deg,#ECFDF5,#F0FFF8)', border:'1.5px solid #6EE7B7', borderRadius:14, padding:'11px 13px', display:'flex', alignItems:'center', gap:10 }}>
+              <div style={{ width:38, height:38, borderRadius:11, background:'#D1FAE5', border:'1px solid #A7F3D0', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <ArrowLeftRight size={17} color="#2E7D52"/>
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:9.5, fontWeight:700, color:'#2E7D52', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2 }}>Currently In Use</div>
+                <div style={{ fontSize:13.5, fontWeight:800, color:'#064E3B', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{currentHandover.emp_name}</div>
+                <div style={{ fontSize:10.5, color:'#065F46', marginTop:1 }}>
+                  {new Date(currentHandover.submitted_at).toLocaleString('en-AE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+                  {currentHandover.fuel_level&&` · ${FUEL_LABEL_MAP[currentHandover.fuel_level]||currentHandover.fuel_level}`}
+                </div>
+              </div>
+              <span style={{ fontSize:9, fontWeight:800, color:'#2E7D52', background:'#A7F3D0', borderRadius:20, padding:'3px 9px', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0 }}>Live</span>
+            </div>
+          ) : (
+            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 12px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:12 }}>
+              <div style={{ width:8, height:8, borderRadius:'50%', background:'#D1D5DB', flexShrink:0 }}/>
+              <span style={{ fontSize:12, color:'var(--text-muted)' }}>No active handover — vehicle available</span>
+            </div>
+          )}
+
+          {/* ── Daily assignment ── */}
+          <div>
+            <div style={{ fontSize:9.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:7, display:'flex', alignItems:'center', gap:5 }}>
+              <Clock size={10}/> Assigned — {date}
+            </div>
+            {assignedEmp ? (
+              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 13px', background:'linear-gradient(135deg,#FDF6E3,#FFFBEB)', border:'1.5px solid #F0D78C', borderRadius:13 }}>
+                <div style={{ width:36, height:36, borderRadius:11, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:12, color:'white', flexShrink:0 }}>
+                  {assignedEmp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#92400E', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{assignedEmp.name}</div>
+                  <div style={{ fontSize:10.5, color:'#B45309', marginTop:1 }}>Assigned by POC</div>
+                </div>
+                <button onClick={()=>setShowAssign(p=>!p)} style={{ padding:'5px 10px', borderRadius:8, background:'rgba(184,134,11,0.1)', border:'1px solid rgba(184,134,11,0.3)', color:'#B8860B', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all 0.15s', flexShrink:0 }}>
+                  Change
+                </button>
+              </div>
+            ) : (
+              <div onClick={()=>setShowAssign(p=>!p)} style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 13px', background:'var(--bg-alt)', border:`1.5px dashed ${showAssign?'var(--gold)':'var(--border-med)'}`, borderRadius:13, cursor:'pointer', transition:'all 0.2s' }}>
+                <div style={{ width:32, height:32, borderRadius:9, background:'var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <Users size={14} color="var(--text-muted)"/>
+                </div>
+                <span style={{ fontSize:12.5, color:'var(--text-muted)', fontStyle:'italic', flex:1 }}>Unassigned — tap to assign</span>
+                <ChevronDown size={14} color="var(--text-muted)" style={{ transition:'transform 0.2s', transform:showAssign?'rotate(180deg)':'none', flexShrink:0 }}/>
+              </div>
+            )}
+            {showAssign&&(
+              <div style={{ marginTop:8, animation:'slideUp 0.2s ease' }}>
+                <DriverSearch employees={emps.filter(e=>e.station_code===station)} value={asgn?.emp_id||''} onChange={id=>{ onAssign(id); setShowAssign(false) }} placeholder="— Unassigned —"/>
+              </div>
+            )}
+          </div>
+
+          {/* ── History button ── */}
+          <button onClick={()=>setShowHistModal(true)} style={{ display:'flex', alignItems:'center', gap:7, width:'100%', padding:'10px 14px', borderRadius:12, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', fontSize:12.5, fontWeight:600, color:'var(--text-sub)', transition:'all 0.15s', fontFamily:'inherit' }}
+            onMouseEnter={e=>{e.currentTarget.style.background='var(--card)';e.currentTarget.style.borderColor='var(--gold)';e.currentTarget.style.color='var(--gold)'}}
+            onMouseLeave={e=>{e.currentTarget.style.background='var(--bg-alt)';e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--text-sub)'}}>
+            <History size={13}/> View Full History
+            <ChevronRight size={13} style={{ marginLeft:'auto' }}/>
+          </button>
+        </div>
+      </div>
+
+      {showHistModal&&<VehicleHistoryModal v={v} onClose={()=>setShowHistModal(false)}/>}
+    </>
   )
 }
 

@@ -91,17 +91,28 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
   const [done,       setDone]       = useState(false)
   const [photoWarn,  setPhotoWarn]  = useState(null)
 
-  // Load only available (unassigned) vehicles at DA's station for "received" type
+  // Load only available vehicles: exclude those with active handovers OR assigned to another driver today
   useEffect(() => {
     if (!isReturn) {
-      const sc  = user?.station_code
-      const hdr = { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` }
+      const sc    = user?.station_code
+      const today = new Date().toISOString().slice(0, 10)
+      const h     = { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` }
       Promise.all([
-        fetch(`${API}/api/vehicles${sc?`?station_code=${sc}`:''}`, { headers:hdr }).then(r=>r.json()),
-        fetch(`${API}/api/handovers/current${sc?`?station_code=${sc}`:''}`, { headers:hdr }).then(r=>r.json()),
-      ]).then(([vData, hData]) => {
-        const assigned = new Set((hData.current||[]).map(h=>String(h.vehicle_id)))
-        setVehicles((vData.vehicles||[]).filter(v => v.status==='active' && !assigned.has(String(v.id))))
+        fetch(`${API}/api/vehicles${sc?`?station_code=${sc}`:''}`, { headers:h }).then(r=>r.json()),
+        fetch(`${API}/api/handovers/current${sc?`?station_code=${sc}`:''}`, { headers:h }).then(r=>r.ok?r.json():{current:[]}),
+        fetch(`${API}/api/vehicles/assignments?date=${today}${sc?`&station_code=${sc}`:''}`, { headers:h }).then(r=>r.ok?r.json():{assignments:[]}),
+      ]).then(([vData, hData, aData]) => {
+        // Exclude vehicles with active handovers
+        const handoverBusy = new Set((hData.current||[]).map(h=>String(h.vehicle_id)))
+        // Exclude vehicles assigned to a *different* driver today by POC
+        const pocBusy = new Set(
+          (aData.assignments||[])
+            .filter(a => a.emp_id && String(a.emp_id) !== String(user?.emp_id))
+            .map(a => String(a.vehicle_id))
+        )
+        setVehicles((vData.vehicles||[]).filter(v =>
+          v.status==='active' && !handoverBusy.has(String(v.id)) && !pocBusy.has(String(v.id))
+        ))
       }).catch(()=>{})
     }
   }, [isReturn, user])
