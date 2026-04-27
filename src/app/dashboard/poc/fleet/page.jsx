@@ -26,7 +26,7 @@ export default function FleetPage() {
     const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
     try {
       const [v, a, e, hv] = await Promise.all([
-        fetch(`${API}/api/vehicles`, h).then(r => r.json()),
+        fetch(`${API}/api/vehicles?station_code=${station}`, h).then(r => r.json()),
         fetch(`${API}/api/vehicles/assignments?date=${date}&station_code=${station}`, h).then(r => r.json()),
         fetch(`${API}/api/employees`, h).then(r => r.json()),
         fetch(`${API}/api/handovers/current?station_code=${station}`, h).then(r => r.ok ? r.json() : { current:[] }),
@@ -51,7 +51,8 @@ export default function FleetPage() {
     } catch { alert('Failed to assign vehicle') }
   }
 
-  const stationVehs = vehs.filter(v => v.station_code === station)
+  // Server already filters by station; keep a loose client filter as fallback
+  const stationVehs = vehs.filter(v => !v.station_code || v.station_code === station)
   const active      = stationVehs.filter(v => v.status==='active').length
   const grounded    = stationVehs.filter(v => v.status!=='active').length
   const inUse       = currentHVs.length
