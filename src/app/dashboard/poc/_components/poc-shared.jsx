@@ -25,6 +25,8 @@ export function hdr() {
 
 // ── useStation hook ───────────────────────────────────────────
 export function useStation(user) {
+  const canSwitch = user?.role === 'admin' || user?.role === 'general_manager'
+
   const [station, setStationState] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('gcd_poc_station')
@@ -32,11 +34,22 @@ export function useStation(user) {
     }
     return user?.station_code || 'DDB1'
   })
+
+  // Auth loads async — once user is available, correct the station.
+  // POC users cannot switch so always lock to their assigned station.
+  // Admins/GMs use the persisted localStorage value.
+  useEffect(() => {
+    if (!user) return
+    if (!canSwitch && user.station_code) {
+      setStationState(user.station_code)
+    }
+  }, [user, canSwitch])
+
   function setStation(s) {
     setStationState(s)
     if (typeof window !== 'undefined') localStorage.setItem('gcd_poc_station', s)
   }
-  const canSwitch = user?.role === 'admin' || user?.role === 'general_manager'
+
   return { station, setStation, canSwitch }
 }
 
