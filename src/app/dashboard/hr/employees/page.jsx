@@ -1023,6 +1023,7 @@ function EmpCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole }
         <div style={{ display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4,flexShrink:0 }}>
           <span style={{ fontSize:11,fontWeight:700,color:sc,background:sbg,border:`1px solid ${sbc}`,borderRadius:7,padding:'2px 8px' }}>{emp.station_code||'DDB1'}</span>
           {emp.project_type&&<span style={{ fontSize:10,fontWeight:600,color:'#7C3AED',background:'var(--purple-bg)',borderRadius:5,padding:'1px 6px' }}>{emp.project_type.toUpperCase()}</span>}
+          {emp.visa_type&&<span style={{ fontSize:10,fontWeight:600,color:emp.visa_type==='own'?'#0369A1':'#065F46',background:emp.visa_type==='own'?'#EFF6FF':'#ECFDF5',border:`1px solid ${emp.visa_type==='own'?'#BAE6FD':'#A7F3D0'}`,borderRadius:5,padding:'1px 6px' }}>{emp.visa_type==='own'?'Own Visa':'Co. Visa'}</span>}
         </div>
       </div>
 
