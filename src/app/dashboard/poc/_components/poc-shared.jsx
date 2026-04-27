@@ -1224,6 +1224,7 @@ export function DAsTab({ stationEmps, sims, onViewEmp }) {
                 <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:5 }}>
                   <span style={{ fontSize:11, color:'var(--text-muted)', background:'var(--bg-alt)', padding:'2px 8px', borderRadius:6, border:'1px solid var(--border)' }}>{emp.id}</span>
                   {emp.nationality&&<span style={{ fontSize:11, color:'var(--text-muted)', background:'var(--bg-alt)', padding:'2px 8px', borderRadius:6, border:'1px solid var(--border)' }}>{emp.nationality}</span>}
+                  {(()=>{ const vt=emp.visa_type||'company'; return <span style={{ fontSize:10, fontWeight:600, color:vt==='own'?'#0369A1':'#065F46', background:vt==='own'?'#EFF6FF':'#ECFDF5', border:`1px solid ${vt==='own'?'#BAE6FD':'#A7F3D0'}`, borderRadius:6, padding:'2px 8px' }}>{vt==='own'?'Own Visa':'Co. Visa'}</span> })()}
                 </div>
                 <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
                   {emp.phone&&<span style={{ display:'flex', alignItems:'center', gap:4, fontSize:11, color:'var(--text-muted)' }}><span style={{ fontSize:9, fontWeight:600, textTransform:'uppercase' }}>Personal</span><span style={{ fontWeight:600, color:'var(--text)', fontSize:11 }}>{emp.phone}</span></span>}
