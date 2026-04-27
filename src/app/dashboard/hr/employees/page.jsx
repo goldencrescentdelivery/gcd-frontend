@@ -28,6 +28,7 @@ const EMPTY = {
   station_code:'DDB1', hourly_rate:'3.85',
   iloe_expiry:'', annual_leave_start:'',
   amazon_id:'', emirates_id:'', annual_leave_balance:30,
+  visa_type:'company',
   project_type:'pulser', per_shipment_rate:'0.5', performance_bonus:'100',
   login_email:'', login_password:'',
   // Extended personal / WPS fields
@@ -115,6 +116,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
     iloe_expiry:          emp.iloe_expiry?.slice(0,10)||'',
     annual_leave_start:   emp.annual_leave_start?.slice(0,10)||'',
     dob:                  emp.dob?.slice(0,10)||'',
+    visa_type:            emp.visa_type||'company',
     project_type:         emp.project_type||'pulser',
     per_shipment_rate:    emp.per_shipment_rate||'0.5',
     performance_bonus:    emp.performance_bonus||'100',
@@ -248,6 +250,21 @@ function EmpModal({ emp, onSave, onClose, mode }) {
               {inp('Amazon / Transporter ID','amazon_id','text','TRS-00123')}
               {inp('Emirates ID','emirates_id','text','784-XXXX-XXXXXXX-X')}
               {inp('Nationality','nationality','text','UAE')}
+              <div style={{ gridColumn:'span 2' }}>
+                <Lbl>Visa Type</Lbl>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                  {[
+                    { v:'company', l:'Company Visa',  d:'Sponsored by Golden Crescent' },
+                    { v:'own',     l:'Own Visa',       d:"Employee's own sponsorship"  },
+                  ].map(opt => (
+                    <button key={opt.v} type="button" onClick={() => set('visa_type', opt.v)}
+                      style={{ padding:'12px', borderRadius:11, border:`2px solid ${form.visa_type===opt.v?'var(--gold)':'var(--border)'}`, background:form.visa_type===opt.v?'var(--amber-bg)':'var(--card)', cursor:'pointer', textAlign:'left', transition:'all 0.15s' }}>
+                      <div style={{ fontWeight:700, fontSize:13, color:form.visa_type===opt.v?'var(--gold)':'var(--text)' }}>{opt.l}</div>
+                      <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:2 }}>{opt.d}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
