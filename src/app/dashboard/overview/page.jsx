@@ -6,7 +6,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveCo
 import {
   Users, Package, Wallet, AlertTriangle,
   ChevronRight, TrendingUp, Smartphone,
-  Receipt, Zap
+  Receipt, Zap, ScrollText, Clock
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -78,13 +78,14 @@ export default function OverviewPage() {
     if (user && user.role === 'poc') router.replace('/dashboard/poc')
   }, [user, router])
 
-  const [summary,      setSummary]      = useState(null)
-  const [chart,        setChart]        = useState([])
-  const [expenses,     setExpenses]     = useState([])
-  const [simStats,     setSimStats]     = useState(null)
-  const [simByStation, setSimByStation] = useState([])
-  const [loading,      setLoading]      = useState(true)
-  const [isMobile,     setIsMobile]     = useState(false)
+  const [summary,        setSummary]        = useState(null)
+  const [chart,          setChart]          = useState([])
+  const [expenses,       setExpenses]       = useState([])
+  const [simStats,       setSimStats]       = useState(null)
+  const [simByStation,   setSimByStation]   = useState([])
+  const [pendingLetters, setPendingLetters] = useState([])
+  const [loading,        setLoading]        = useState(true)
+  const [isMobile,       setIsMobile]       = useState(false)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -99,21 +100,24 @@ export default function OverviewPage() {
     try {
       // Promise.allSettled lets individual endpoint failures be handled
       // gracefully — a single slow or down API won't blank the whole page.
-      const [sumRes, chartRes, expRes, simRes] = await Promise.allSettled([
+      const [sumRes, chartRes, expRes, simRes, letRes] = await Promise.allSettled([
         fetch(`${API}/api/analytics/summary`,                     {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/analytics/deliveries-chart?months=6`,   {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/expenses?month=${month}`,               {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/sims/stats`,                            {headers:hdr()}).then(r=>r.json()),
+        fetch(`${API}/api/letters`,                               {headers:hdr()}).then(r=>r.json()),
       ])
       const sumData   = sumRes.status   === 'fulfilled' ? sumRes.value   : {}
       const chartData = chartRes.status === 'fulfilled' ? chartRes.value : {}
       const expData   = expRes.status   === 'fulfilled' ? expRes.value   : {}
       const simData   = simRes.status   === 'fulfilled' ? simRes.value   : {}
+      const letData   = letRes.status   === 'fulfilled' ? letRes.value   : {}
       setSummary(sumData)
       setChart(chartData.chart || [])
       setExpenses(expData.expenses || [])
       setSimStats(simData.stats || null)
       setSimByStation(simData.by_station || [])
+      setPendingLetters((letData.letters || []).filter(l => l.status === 'pending'))
     } catch(e) { console.error(e) } finally { setLoading(false) }
   }, [])
 
@@ -137,6 +141,33 @@ const ECATS = [
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+
+      {/* ── PENDING LETTERS ALERT ────────────────────────────── */}
+      {pendingLetters.length > 0 && (
+        <Link href="/dashboard/office/letters" style={{ textDecoration:'none' }}>
+          <div style={{ background:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', border:'2px solid #FDE68A', borderRadius:14, padding:'14px 18px', display:'flex', alignItems:'center', gap:14, cursor:'pointer', transition:'box-shadow 0.2s' }}
+            onMouseEnter={e=>e.currentTarget.style.boxShadow='0 4px 20px rgba(180,130,0,0.18)'}
+            onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
+            <div style={{ width:44, height:44, borderRadius:12, background:'#FDE68A', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <ScrollText size={20} color="#92400E"/>
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:800, fontSize:14, color:'#92400E', display:'flex', alignItems:'center', gap:8 }}>
+                {pendingLetters.length} Letter{pendingLetters.length > 1 ? 's' : ''} Awaiting Your Approval
+                <span style={{ fontSize:10.5, fontWeight:700, padding:'2px 8px', borderRadius:20, background:'#F59E0B', color:'white' }}>ACTION REQUIRED</span>
+              </div>
+              <div style={{ fontSize:12, color:'#B45309', marginTop:3 }}>
+                {pendingLetters.map(l => l.ref_no).join(' · ')}
+                {' — submitted by '}
+                {[...new Set(pendingLetters.map(l => l.created_by_name).filter(Boolean))].join(', ')}
+              </div>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:12, fontWeight:700, color:'#92400E', flexShrink:0 }}>
+              Review <ChevronRight size={14}/>
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* ── LAST 6 MONTHS — PROJECT-WISE DELIVERIES ──────────── */}
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
