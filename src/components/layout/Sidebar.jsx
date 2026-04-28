@@ -11,7 +11,7 @@ import {
   ShieldCheck, Radio, HardDrive, KeyRound, ChevronLeft, ChevronRight,
   Settings, Trophy, AlertTriangle, Calendar, Zap, LayoutDashboard,
   Truck, Smartphone, Shield, Package, Bell, Building2, ClipboardCheck,
-  ArrowLeftRight, ScrollText,
+  ArrowLeftRight, ScrollText, CalendarDays, ClipboardList,
 } from 'lucide-react'
 
 
@@ -20,7 +20,7 @@ const ICONS = {
   FileText, Wallet, Receipt, ShieldCheck, Radio, HardDrive, KeyRound,
   Settings, Trophy, AlertTriangle, Calendar, Zap, LayoutDashboard,
   Truck, Smartphone, Shield, Package, Bell, Banknote, Building2, ClipboardCheck,
-  ArrowLeftRight, ScrollText,
+  ArrowLeftRight, ScrollText, CalendarDays, ClipboardList,
 }
 
 const ROLE_LABELS = {
@@ -54,6 +54,14 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
 
   // Filter out manager role from nav visibility — admin handles everything manager did
   const nav = NAV.filter(item => !item.roles || item.roles.includes(user?.role))
+
+  // Active: exact match, OR prefix match only when no sibling nav item is a closer match
+  const navHrefs = nav.filter(n => n.href).map(n => n.href)
+  function isItemActive(href) {
+    if (pathname === href) return true
+    if (!pathname.startsWith(href + '/')) return false
+    return !navHrefs.some(other => other !== href && other.startsWith(href + '/') && (pathname === other || pathname.startsWith(other + '/')))
+  }
 
   return (
     <>
@@ -115,7 +123,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
             }
 
             const Icon       = ICONS[item.icon]
-            const isActive   = pathname.startsWith(item.href)
+            const isActive   = isItemActive(item.href)
             const isExpanded = expanded[item.href]
             const hasKids    = item.children?.length > 0
             const itemBadge  = item.alertKey ? (counts[item.alertKey] || 0) : 0
