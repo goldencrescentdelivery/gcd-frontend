@@ -140,6 +140,7 @@ export default function DashboardLayout({ children }) {
     '/dashboard/hr/vehicle-inspection',
     '/dashboard/finance/petty-cash',
     '/dashboard/settings',
+    '/dashboard/tasks',
   ]
 
   useEffect(() => {

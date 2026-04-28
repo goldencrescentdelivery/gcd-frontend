@@ -16,14 +16,11 @@ export const NAV = [
   { label:'Reports',  href:'/dashboard/analytics', icon:'BarChart3',      roles:['admin','general_manager','hr','accountant'] },
 
   // ── Office ────────────────────────────────────────────────────
-  { type:'section', label:'Office', roles:['admin','general_manager','hr','accountant'] },
+  { type:'section', label:'Office', roles:['admin','general_manager','hr','accountant','poc'] },
   { label:'Office Profile', href:'/dashboard/office',         icon:'Building2',    roles:['admin','general_manager','hr','accountant'] },
   { label:'Letters',        href:'/dashboard/office/letters', icon:'ScrollText',   roles:['admin','general_manager','hr','accountant'] },
   { label:'Events',         href:'/dashboard/office/events',  icon:'CalendarDays', roles:['admin','general_manager','hr','accountant'] },
-
-  // ── Tasks ─────────────────────────────────────────────────────
-  { type:'section', label:'Tasks', roles:['admin','general_manager','hr','accountant','poc'] },
-  { label:'Tasks', href:'/dashboard/tasks', icon:'ClipboardList', roles:['admin','general_manager','hr','accountant','poc'], alertKey:'tasks' },
+  { label:'Tasks',          href:'/dashboard/tasks',          icon:'ClipboardList', roles:['admin','general_manager','hr','accountant','poc'], alertKey:'tasks' },
 
   // ── HR Management ─────────────────────────────────────────────
   { type:'section', label:'HR Management', roles:['admin','general_manager','hr','accountant'] },
