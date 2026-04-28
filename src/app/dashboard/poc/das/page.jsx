@@ -28,7 +28,7 @@ export default function DAsPage() {
 
   useEffect(() => { load() }, [load])
 
-  const stationEmps = emps.filter(e => e.station_code === station)
+  const stationEmps = emps.filter(e => e.station_code === station && (e.role||'').toLowerCase() === 'driver')
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:14, animation:'slideUp 0.3s ease' }}>
@@ -36,7 +36,7 @@ export default function DAsPage() {
         title="Delivery Agents" icon={Users} color="#8B5CF6"
         station={station} onStationChange={setStation} canSwitch={canSwitch}
         showDate={false}
-        subtitle={`${stationEmps.length} DAs assigned to ${station}`}
+        subtitle={`${stationEmps.length} drivers assigned to ${station}`}
       />
 
       {loading ? (
