@@ -125,11 +125,11 @@ export default function POCHub() {
 
           {/* Quick stats */}
           {loading ? (
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
+            <div className="four-kpi-grid">
               {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height:78, borderRadius:14 }}/>)}
             </div>
           ) : stats && (
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
+            <div className="four-kpi-grid">
               {[
                 { l:'Present Today',   v:stats.present,                      sub:`${stats.logged}/${stats.total_das} logged`,  c:'#10B981', bg:'#ECFDF5', bc:'#A7F3D0' },
                 { l:'Active Vehicles', v:stats.active_vehs,                  sub:`${stats.grounded} down`,                     c:'#3B82F6', bg:'#EFF6FF', bc:'#BFDBFE' },

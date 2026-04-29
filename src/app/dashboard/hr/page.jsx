@@ -430,7 +430,7 @@ export default function EmployeesPage() {
         </div>
 
         {/* Stats row */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
+        <div className="four-kpi-grid" style={{ gap:10 }}>
           {[
             { l:'Total',    v:total,    c:'#1A1612', bg:'#FAFAF8', bc:'#EAE6DE',  icon:'👥' },
             { l:'Active',   v:active,   c:'#2E7D52', bg:'#ECFDF5', bc:'#A7F3D0',  icon:'✅' },

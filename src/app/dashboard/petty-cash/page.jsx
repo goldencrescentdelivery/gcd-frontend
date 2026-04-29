@@ -459,7 +459,7 @@ export default function PettyCashPage() {
       {tab === 'team' && (
         <>
           {/* Stats row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+          <div className="r-grid-3">
             {[
               { label: 'Total Distributed', value: fmt(totalAllocatedAll), color: '#F59E0B', icon: <Wallet size={16} /> },
               { label: 'Total Recorded', value: fmt(totalSpentAll), color: '#10B981', icon: <ArrowUpRight size={16} /> },

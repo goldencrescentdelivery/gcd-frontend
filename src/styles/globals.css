@@ -659,3 +659,103 @@ a { text-decoration:none; color:inherit; }
   .r-grid-3  { grid-template-columns:1fr !important; }
   .quick-actions-grid { grid-template-columns:repeat(2,1fr) !important; }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   DARK MODE
+   Token overrides when data-theme="dark" is set on <html>.
+   All component colours (status badges, highlights) use the
+   semantic tokens above, so flipping the tokens here re-themes
+   the whole app without touching component code.
+   ───────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:          #0F0E0C;
+  --bg-alt:      #1A1814;
+  --bg-hover:    rgba(255,255,255,0.04);
+  --card:        #1C1A17;
+
+  --border:      #2C2924;
+  --border-med:  #3A3530;
+  --border-strong:#4A4540;
+
+  --text:        #E8E2D8;
+  --text-sub:    #A89880;
+  --text-muted:  #6A6460;
+
+  --shadow:    0 1px 3px rgba(0,0,0,0.4),  0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3);
+  --shadow-lg: 0 16px 32px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.3);
+  --shadow-xl: 0 32px 64px rgba(0,0,0,0.6), 0 8px 16px rgba(0,0,0,0.35);
+
+  --surface:      rgba(28,26,23,0.85);
+  --border-glass: rgba(50,45,40,0.72);
+  --shadow-glass: 0 4px 24px rgba(0,0,0,0.3);
+
+  --green-bg:    #052E16; --green-border: #145222;
+  --red-bg:      #2D0D0D; --red-border:   #5C1A1A;
+  --amber-bg:    #2D1F00; --amber-border: #5C3D00;
+  --blue-bg:     #0D1D3A; --blue-border:  #1A3A6A;
+  --purple-bg:   #1A1228; --purple-border:#2D1F52;
+  --gold-pale:   #2D2000; --gold-border:  #5C4000;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   EXTRA UTILITY CLASSES
+   ───────────────────────────────────────────────────────────── */
+
+/* Button sizes */
+.btn-sm { padding:5px 11px !important; font-size:12px !important; border-radius:14px !important; }
+.btn-xs { padding:3px  8px  !important; font-size:11px !important; border-radius:10px !important; }
+
+/* Cycle picker — 7-button grid for attendance modal
+   Desktop: all 7 in one row; mobile: 4-3 wrap */
+.cycle-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+
+/* Controls / filter bar — flexbox row that wraps on mobile */
+.controls-bar {
+  display: flex; gap:10px; flex-wrap:wrap; align-items:center;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   IOS ZOOM PREVENTION
+   iOS Safari auto-zooms any input whose font-size < 16px.
+   Setting 16px on mobile prevents the jarring zoom while still
+   looking correct (mobile users expect slightly larger inputs).
+   ───────────────────────────────────────────────────────────── */
+@media (max-width:768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE-SPECIFIC ADDITIONS
+   ───────────────────────────────────────────────────────────── */
+@media (max-width:640px) {
+  /* Cycle grid → 4-col on phones so buttons don't become unreadably tiny */
+  .cycle-grid { grid-template-columns:repeat(4,1fr); }
+
+  /* Login right panel: reduce massive desktop padding on phones */
+  .right-panel { padding: 32px 24px !important; }
+
+  /* Topbar date text hidden below title on tiny screens */
+  .topbar-date { display:none !important; }
+
+  /* Ensure all modal inner containers respect viewport */
+  .modal { width:100% !important; }
+
+  /* Control bars wrap more gracefully */
+  .controls-bar { gap:8px; }
+  .controls-bar .input { min-width:0; flex:1 1 140px; }
+}
+
+@media (max-width:480px) {
+  /* Login right panel: even tighter padding on very small phones */
+  .right-panel { padding: 24px 18px !important; }
+
+  /* Condensed page content padding */
+  .page-content { padding:12px 10px 88px !important; }
+
+  /* Modal always full-width, enough bottom clearance */
+  .modal-overlay { padding:0 !important; align-items:flex-end !important; }
+  .modal { border-radius:20px 20px 0 0 !important; max-height:96vh !important; }
+}

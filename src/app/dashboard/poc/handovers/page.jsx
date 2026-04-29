@@ -214,7 +214,7 @@ export default function HandoversPage() {
     <div style={{ padding:'0 0 40px' }}>
 
       {/* Stats strip */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:16 }}>
+      <div className="four-kpi-grid" style={{ gap:10, marginBottom:16 }}>
         {[
           { label:'Total',    value:counts.all,      color:'#6366F1' },
           { label:'Received', value:counts.received,  color:'#10B981' },

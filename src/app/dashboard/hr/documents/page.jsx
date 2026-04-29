@@ -265,7 +265,7 @@ export default function DocumentsPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+      <div className="r-grid-3">
         {[
           { l:'Total Files',  v:totalDocs,   c:'#1A1612', bg:'#FAFAF8', bc:'#EAE6DE', icon:'📁' },
           { l:'Expiring Soon',v:expiring60,  c:'#B45309', bg:'#FFFBEB', bc:'#FCD34D', icon:'⏰' },

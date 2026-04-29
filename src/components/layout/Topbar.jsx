@@ -6,24 +6,42 @@ import { useEffect, useState } from 'react'
 import NotificationBell from '@/components/layout/NotificationBell'
 
 const PAGE_TITLES = {
-  '/dashboard/overview':           'Overview',
-  '/dashboard/analytics':         'Reports',
-  '/dashboard/hr/employees':      'Employees',
-  '/dashboard/hr/attendance':     'Attendance',
-  '/dashboard/hr/leaves':         'Leaves',
-  '/dashboard/hr/documents':      'Documents',
-  '/dashboard/hr/compliance':     'Compliance',
-  '/dashboard/hr/users':          'User Accounts',
-  '/dashboard/finance/payroll':   'Payroll',
-  '/dashboard/finance/expenses':  'Expenses',
-  '/dashboard/poc':               'POC Station',
-  '/dashboard/backup':            'Backup',
-  '/dashboard/settings':          'Settings',
-  '/dashboard/performance':       'Performance',
-  '/dashboard/roster':            'Weekly Roster',
-  '/dashboard/damage':            'Damage Reports',
-  '/dashboard/advances':          'Salary Advances',
-  '/dashboard/petty-cash':        'Petty Cash',
+  '/dashboard/overview':                  'Overview',
+  '/dashboard/analytics':                 'Reports',
+  '/dashboard/hr':                        'HR Hub',
+  '/dashboard/hr/employees':              'Employees',
+  '/dashboard/hr/attendance':             'Attendance',
+  '/dashboard/hr/leaves':                 'Leaves',
+  '/dashboard/hr/documents':              'Documents',
+  '/dashboard/hr/compliance':             'Compliance',
+  '/dashboard/hr/users':                  'User Accounts',
+  '/dashboard/hr/admins':                 'Admin Accounts',
+  '/dashboard/hr/handovers':              'Handovers',
+  '/dashboard/hr/vehicle-inspection':     'Vehicle Inspection',
+  '/dashboard/finance/payroll':           'Payroll',
+  '/dashboard/finance/expenses':          'Expenses',
+  '/dashboard/finance/petty-cash':        'Petty Cash',
+  '/dashboard/poc':                       'POC Station',
+  '/dashboard/poc/attendance':            'POC Attendance',
+  '/dashboard/poc/das':                   'Delivery Agents',
+  '/dashboard/poc/deliveries':            'Deliveries',
+  '/dashboard/poc/fleet':                 'Fleet',
+  '/dashboard/poc/handovers':             'POC Handovers',
+  '/dashboard/poc/leaves':                'POC Leaves',
+  '/dashboard/poc/notices':               'Notices',
+  '/dashboard/poc/sims':                  'SIM Cards',
+  '/dashboard/office':                    'Office Profile',
+  '/dashboard/office/letters':            'Letters',
+  '/dashboard/office/events':             'Events',
+  '/dashboard/tasks':                     'Tasks',
+  '/dashboard/backup':                    'Backup',
+  '/dashboard/settings':                  'Settings',
+  '/dashboard/performance':               'Performance',
+  '/dashboard/roster':                    'Weekly Roster',
+  '/dashboard/damage':                    'Damage Reports',
+  '/dashboard/advances':                  'Salary Advances',
+  '/dashboard/petty-cash':               'Petty Cash',
+  '/dashboard/compliance':               'Compliance',
 }
 
 const ROLE_CFG = {
@@ -80,7 +98,7 @@ export default function Topbar({ onMenuClick }) {
       {/* Title */}
       <div style={{ flex:1, minWidth:0 }}>
         <div className="topbar-title" style={{ fontWeight:700, fontSize:16, color:'var(--text)', letterSpacing:'-0.01em', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{title}</div>
-        <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>
+        <div className="topbar-date" style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>
           {new Date().toLocaleDateString('en-AE',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
         </div>
       </div>

@@ -78,7 +78,7 @@ function LogModal({ employees, onSave, onClose }) {
           {form.status === 'present' && <>
             <div>
               <label className="input-label">Cycle</label>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:6 }}>
+              <div className="cycle-grid">
                 {CYCLES.map(c => (
                   <button key={c} type="button"
                     onClick={() => onCycleChange(c)}

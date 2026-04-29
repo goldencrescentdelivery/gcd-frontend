@@ -96,7 +96,7 @@ export default function AttendancePage() {
 
       {/* Stats row */}
       {!loading && (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
+        <div className="four-kpi-grid" style={{ gap:8 }}>
           {[
             { l:'Present',    v:present,                c:'#10B981', bg:'#ECFDF5', bc:'#A7F3D0' },
             { l:'Absent',     v:absent,                 c:'#EF4444', bg:'#FEF2F2', bc:'#FCA5A5' },

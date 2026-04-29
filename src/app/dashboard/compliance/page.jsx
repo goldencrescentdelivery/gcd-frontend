@@ -84,7 +84,7 @@ export default function CompliancePage() {
       {/* Insurance */}
       {tab==='insurance' && (
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          <div className="stat-grid-4" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
+          <div className="four-kpi-grid">
             <StatPill label="Active"         value={insActive}                      color="#2E7D52" bg="#ECFDF5" bc="#A7F3D0" delay={0.05}/>
             <StatPill label="Expiring Soon"  value={insExpiring}                    color="#B45309" bg="#FFFBEB" bc="#FCD34D" delay={0.10}/>
             <StatPill label="Expired"        value={insExpired}                     color="#C0392B" bg="#FEF2F2" bc="#FCA5A5" delay={0.15}/>
@@ -132,7 +132,7 @@ export default function CompliancePage() {
       {/* Fines */}
       {tab==='fines' && (
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          <div className="stat-grid-3" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+          <div className="r-grid-3">
             <StatPill label="Total Fines"     value={`AED ${fineTotal.toLocaleString()}`}   color="#1A1612" bg="#F5F4F1" bc="#EAE6DE" delay={0.05}/>
             <StatPill label="Pending Payment" value={`AED ${finePending.toLocaleString()}`} color="#B45309" bg="#FFFBEB" bc="#FCD34D" delay={0.10}/>
             <StatPill label="Settled"         value={`AED ${finePaid.toLocaleString()}`}    color="#2E7D52" bg="#ECFDF5" bc="#A7F3D0" delay={0.15}/>

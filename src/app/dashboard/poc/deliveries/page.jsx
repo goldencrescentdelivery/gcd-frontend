@@ -65,7 +65,7 @@ export default function DeliveriesPage() {
           {todayRecord ? (
             <div style={{ background:'linear-gradient(135deg,var(--card),var(--bg-alt))', border:'1px solid var(--border)', borderRadius:18, padding:'20px' }}>
               <div style={{ fontWeight:700, fontSize:12, color:'var(--text-muted)', marginBottom:14, textTransform:'uppercase', letterSpacing:'0.06em' }}>📅 Today — {date}</div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:16 }}>
+              <div className="four-kpi-grid" style={{ gap:10, marginBottom:16 }}>
                 {[
                   { l:'Total',      v:todayRecord.total,      c:'#F97316', bg:'#FFF7ED' },
                   { l:'Attempted',  v:todayRecord.attempted,  c:'#3B82F6', bg:'#EFF6FF' },
