@@ -677,7 +677,7 @@ export function SimSection({ sims, emps, station, onRefresh }) {
   }
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+      <div className="r-grid-3" style={{ gap:8 }}>
         {[{l:'Total',v:sims.length,c:'var(--text)',bg:'var(--bg-alt)',bc:'var(--border)'},{l:'In Use',v:sims.filter(s=>s.status==='assigned').length,c:'#B8860B',bg:'#FDF6E3',bc:'#F0D78C'},{l:'Free',v:sims.filter(s=>s.status==='available').length,c:'#2E7D52',bg:'#ECFDF5',bc:'#A7F3D0'}].map(s => (
           <div key={s.l} style={{ textAlign:'center', padding:'12px 8px', borderRadius:12, background:s.bg, border:`1px solid ${s.bc}` }}>
             <div style={{ fontWeight:900, fontSize:22, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>

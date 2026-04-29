@@ -731,7 +731,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
               return (
                 <>
                   {/* Expiry strip */}
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:12 }}>
+                  <div className="r-grid-3" style={{ gap:8, marginBottom:12 }}>
                     {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].map(([l,d])=>{
                       const info=expiry(d)
                       return (
@@ -794,7 +794,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
 
         {tab==='leaves' && (
           <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
-            <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6,marginBottom:4 }}>
+            <div className="r-grid-3" style={{ gap:6, marginBottom:4 }}>
               {[
                 {l:'Total',   v:leaves.length,                                    c:'var(--text)',bg:'var(--bg-alt)'},
                 {l:'Approved',v:leaves.filter(l=>l.status==='approved').length,   c:'#10B981',   bg:'#F0FDF4'     },

@@ -427,7 +427,7 @@ function SalaryPanel({ emp, userRole }) {
       {loading ? <div className="sk" style={{ height:80, borderRadius:12 }}/> : (
         <>
           {/* Summary cards */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:14 }}>
+          <div className="four-kpi-grid" style={{ gap:8, marginBottom:14 }}>
             {[
               { l:'Base',       v:`${base.toLocaleString()}`,    c:'var(--text)',  bg:'var(--bg-alt)' },
               { l:'Bonuses',    v:`+${bonus.toLocaleString()}`,  c:'#10B981',     bg:'#F0FDF4' },
@@ -564,7 +564,7 @@ function AttendancePanel({ emp, userRole }) {
       </div>
 
       {/* Summary */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:12 }}>
+      <div className="r-grid-3" style={{ gap:8, marginBottom:12 }}>
         {[{l:'Present',v:present,c:'#10B981',bg:'#F0FDF4'},{l:'Absent',v:absent,c:'#EF4444',bg:'#FEF2F2'},{l:'Leave',v:leave,c:'#F59E0B',bg:'#FFFBEB'}].map(s=>(
           <div key={s.l} style={{ textAlign:'center', padding:'9px', borderRadius:10, background:s.bg, border:'1px solid var(--border)' }}>
             <div style={{ fontWeight:900, fontSize:17, color:s.c }}>{s.v}</div>
@@ -767,7 +767,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
         {/* ── Documents ── */}
         {tab==='docs' && (
           <>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:10 }}>
+            <div className="r-grid-3" style={{ gap:8, marginBottom:10 }}>
               {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].map(([l,d])=>{
                 const info = expiry(d)
                 return (
