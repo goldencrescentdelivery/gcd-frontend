@@ -759,3 +759,17 @@ a { text-decoration:none; color:inherit; }
   .modal-overlay { padding:0 !important; align-items:flex-end !important; }
   .modal { border-radius:20px 20px 0 0 !important; max-height:96vh !important; }
 }
+
+/* ── Driver Portal ─────────────────────────────────────────────── */
+.dp-nav-label  { font-size: 8.5px; }
+.dp-salary     { font-size: 26px;  }
+.dp-action-label { font-size: 12.5px; }
+@media (max-width: 380px) {
+  .dp-nav-label    { font-size: 7.5px !important; }
+  .dp-salary       { font-size: 22px  !important; }
+  .dp-action-label { font-size: 11px  !important; }
+}
+@media (max-width: 340px) {
+  .dp-nav-icon  { display: none !important; }
+  .dp-nav-label { font-size: 9px !important; }
+}
