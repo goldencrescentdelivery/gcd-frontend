@@ -773,3 +773,40 @@ a { text-decoration:none; color:inherit; }
   .dp-nav-icon  { display: none !important; }
   .dp-nav-label { font-size: 9px !important; }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   UI COMPONENT LIBRARY ADDITIONS
+   (Badge, Button, Input, Modal, StatCard, DataTable, PageHeader)
+   ───────────────────────────────────────────────────────────── */
+
+/* Badge — additional semantic variants */
+.badge-purple  { color: var(--purple);   background: var(--purple-bg);  border: 1px solid var(--purple-border); }
+.badge-neutral { color: var(--text-sub); background: var(--bg-alt);     border: 1px solid var(--border); }
+
+/* Input — error state ring (mirrors focus ring but in red) */
+.input-error {
+  border-color: var(--red) !important;
+  box-shadow:   0 0 0 3px rgba(239,68,68,0.10) !important;
+}
+
+/* btn-close — icon-only ghost close button used by Modal */
+.btn-close {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:  30px;
+  height: 30px;
+  padding: 0;
+  border-radius:   var(--radius-sm);
+  background:      none;
+  border:          none;
+  cursor:          pointer;
+  color:           var(--text-muted);
+  transition:      background var(--t-fast), color var(--t-fast);
+  flex-shrink:     0;
+}
+.btn-close:hover  { background: var(--bg-hover); color: var(--text); }
+.btn-close:focus-visible {
+  outline:     2px solid var(--gold);
+  outline-offset: 2px;
+}
