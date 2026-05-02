@@ -6,7 +6,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveCo
 import {
   Users, Package, Wallet, AlertTriangle,
   ChevronRight, TrendingUp, Smartphone,
-  Receipt, Zap, ScrollText, Clock
+  Receipt, Zap, ScrollText
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -203,21 +203,10 @@ const ECATS = [
       </div>
 
       {/* ── TOP KPIs ─────────────────────────────────────────── */}
-      {isMobile ? (
-        <Slider cardWidth={155}>
-          <KPI icon={Users}      label="Active DAs"          color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
-          <KPI icon={Package}    label="Deliveries (6 mo)"  color="#38BDF8" loading={false}   value={chart.length?fmt(chart.reduce((s,r)=>s+(Number(r.DDB1||0)+Number(r.DXE6||0)),0)):'—'} sub={chart.length?`${chart.length} months`:'No data yet'}/>
-          <KPI icon={Receipt}    label="Expenses This Month" color="#10B981" loading={loading} value={fmtAED(totalExp)} sub={`${pendingExp} pending`}/>
-          <KPI icon={Smartphone} label="SIM Cards"           color="#A78BFA" loading={loading} value={simStats?.total||'—'} sub={`${simStats?.assigned||0} assigned`}/>
-        </Slider>
-      ) : (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
-          <KPI icon={Users}      label="Active DAs"          color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
-          <KPI icon={Package}    label="Deliveries (6 mo)"   color="#38BDF8" loading={false}   value={chart.length?fmt(chart.reduce((s,r)=>s+(Number(r.DDB1||0)+Number(r.DXE6||0)),0)):'—'} sub={chart.length?`${chart.length} months`:'No data yet'}/>
-          <KPI icon={Receipt}    label="Expenses This Month" color="#10B981" loading={loading} value={fmtAED(totalExp)} sub={`${pendingExp} pending`}/>
-          <KPI icon={Smartphone} label="SIM Cards"           color="#A78BFA" loading={loading} value={simStats?.total||'—'} sub={`${simStats?.assigned||0} assigned`}/>
-        </div>
-      )}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:12 }}>
+        <KPI icon={Users}   label="Active DAs"        color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
+        <KPI icon={Package} label="Deliveries (6 mo)" color="#38BDF8" loading={false}   value={chart.length?fmt(chart.reduce((s,r)=>s+(Number(r.DDB1||0)+Number(r.DXE6||0)),0)):'—'} sub={chart.length?`${chart.length} months`:'No data yet'}/>
+      </div>
 
       {/* ── EXPENSES + SIM SIDE BY SIDE ──────────────────────── */}
       <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:16 }}>
