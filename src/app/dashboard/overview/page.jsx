@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import {
-  Users, Wallet, AlertTriangle,
+  Users, Package, Car, Wallet, AlertTriangle,
   ChevronRight, TrendingUp, Smartphone,
   Receipt, Zap, ScrollText
 } from 'lucide-react'
@@ -13,8 +13,6 @@ import Link from 'next/link'
 import { API } from '@/lib/api'
 const SC  = { DDB1:'#F59E0B', DXE6:'#38BDF8' }
 function hdr() { return { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
-// Explicit locale prevents Node.js server locale (often C/POSIX) from
-// formatting numbers differently than the browser, causing SSR text mismatches.
 function fmt(n) { return Number(n||0).toLocaleString('en-US') }
 function fmtAED(n) { return `AED ${fmt(n)}` }
 
@@ -37,22 +35,15 @@ function SH({ title, sub, right, href }) {
   )
 }
 
-/* ── KPI Card ────────────────────────────────────────────────── */
-function KPI({ icon:Icon, label, value, color, loading, sub }) {
+/* ── Stat pill used inside detail cards ──────────────────────── */
+function StatPill({ label, value, color, bg, loading }) {
   return (
-    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, padding:'16px', position:'relative', overflow:'hidden', transition:'all 0.2s' }}
-      onMouseEnter={e=>{e.currentTarget.style.boxShadow='var(--shadow-md)';e.currentTarget.style.transform='translateY(-2px)'}}
-      onMouseLeave={e=>{e.currentTarget.style.boxShadow='var(--shadow)';e.currentTarget.style.transform='none'}}>
-      <div style={{ position:'absolute', right:-10, bottom:-10, width:60, height:60, borderRadius:'50%', background:`${color}12`, filter:'blur(8px)' }}/>
-      <div style={{ width:36, height:36, borderRadius:10, background:`${color}15`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
-        <Icon size={16} color={color}/>
-      </div>
+    <div style={{ textAlign:'center', padding:'10px 6px', borderRadius:10, background:bg, border:'1px solid var(--border)' }}>
       {loading
-        ? <div className="sk" style={{ height:24, width:'60%', marginBottom:5 }}/>
-        : <div style={{ fontWeight:800, fontSize:20, color:'var(--text)', letterSpacing:'-0.04em', lineHeight:1, marginBottom:4 }}>{value}</div>
+        ? <div className="sk" style={{ height:18, width:'60%', margin:'0 auto 4px' }}/>
+        : <div style={{ fontWeight:800, fontSize:15, color, letterSpacing:'-0.02em' }}>{value}</div>
       }
-      <div style={{ fontSize:11.5, fontWeight:600, color:'var(--text-muted)' }}>{label}</div>
-      {sub && <div style={{ fontSize:10.5, color:color, fontWeight:600, marginTop:3 }}>{sub}</div>}
+      <div style={{ fontSize:10.5, color:'var(--text-muted)', fontWeight:600, marginTop:2 }}>{label}</div>
     </div>
   )
 }
@@ -84,6 +75,7 @@ export default function OverviewPage() {
   const [expenses,       setExpenses]       = useState([])
   const [simStats,       setSimStats]       = useState(null)
   const [simByStation,   setSimByStation]   = useState([])
+  const [fleetStats,     setFleetStats]     = useState(null)
   const [pendingLetters, setPendingLetters] = useState([])
   const [loading,        setLoading]        = useState(true)
   const [isMobile,       setIsMobile]       = useState(false)
@@ -102,26 +94,35 @@ export default function OverviewPage() {
     setLoading(true)
     const month = new Date().toISOString().slice(0,7)
     try {
-      // Promise.allSettled lets individual endpoint failures be handled
-      // gracefully — a single slow or down API won't blank the whole page.
-      const [sumRes, chartRes, expRes, simRes, letRes] = await Promise.allSettled([
+      const [sumRes, chartRes, expRes, simRes, letRes, fleetRes] = await Promise.allSettled([
         fetch(`${API}/api/analytics/summary`,                     {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/analytics/deliveries-chart?months=6`,   {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/expenses?month=${month}`,               {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/sims/stats`,                            {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/letters`,                               {headers:hdr()}).then(r=>r.json()),
+        fetch(`${API}/api/fleet/vehicles`,                        {headers:hdr()}).then(r=>r.json()),
       ])
       const sumData   = sumRes.status   === 'fulfilled' ? sumRes.value   : {}
       const chartData = chartRes.status === 'fulfilled' ? chartRes.value : {}
       const expData   = expRes.status   === 'fulfilled' ? expRes.value   : {}
       const simData   = simRes.status   === 'fulfilled' ? simRes.value   : {}
       const letData   = letRes.status   === 'fulfilled' ? letRes.value   : {}
+      const fleetData = fleetRes.status === 'fulfilled' ? fleetRes.value : {}
+
       setSummary(sumData)
       setChart(chartData.chart || [])
       setExpenses(expData.expenses || [])
       setSimStats(simData.stats || null)
       setSimByStation(simData.by_station || [])
       setPendingLetters((letData.letters || []).filter(l => l.status === 'pending'))
+
+      const vehicles = fleetData.vehicles || []
+      setFleetStats({
+        total:       vehicles.length,
+        active:      vehicles.filter(v => v.status === 'active').length,
+        grounded:    vehicles.filter(v => v.status === 'grounded').length,
+        maintenance: vehicles.filter(v => v.status === 'maintenance').length,
+      })
     } catch(e) { console.error(e) } finally { setLoading(false) }
   }, [])
 
@@ -130,7 +131,8 @@ export default function OverviewPage() {
   const totalExp   = expenses.reduce((s,e)=>s+Number(e.amount||0),0)
   const pendingExp = expenses.filter(e=>e.status==='pending').length
   const approvedExp= expenses.filter(e=>e.status==='approved').reduce((s,e)=>s+Number(e.amount||0),0)
-const ECATS = [
+
+  const ECATS = [
     {v:'Parking',c:'#F59E0B'},{v:'Advances',c:'#10B981'},{v:'Air Tickets',c:'#3B82F6'},
     {v:'ENOC',c:'#EF4444'},{v:'Health Insurance',c:'#8B5CF6'},{v:'Idfy',c:'#EC4899'},
     {v:'Mobile Expenses',c:'#06B6D4'},{v:'Office Expenses',c:'#84CC16'},{v:'Petty Cash',c:'#F97316'},
@@ -142,6 +144,10 @@ const ECATS = [
     value:expenses.filter(e=>e.category===cat.v).reduce((s,e)=>s+Number(e.amount||0),0),
     color:cat.c,
   })).filter(c=>c.value>0).sort((a,b)=>b.value-a.value)
+
+  const totalEmp    = summary?.employees?.c      || 0
+  const activeEmp   = summary?.employees?.active || 0
+  const inactiveEmp = Math.max(0, totalEmp - activeEmp)
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
@@ -202,8 +208,66 @@ const ECATS = [
         )}
       </div>
 
-      {/* ── TOP KPIs ─────────────────────────────────────────── */}
-      <KPI icon={Users} label="Active DAs" color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
+      {/* ── STAFF + FLEET SIDE BY SIDE ───────────────────────── */}
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:16 }}>
+
+        {/* Delivery Agents */}
+        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
+          <SH title="Delivery Agents" sub={`${totalEmp} total staff`} href="/dashboard/hr/employees"/>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:16 }}>
+            <StatPill label="Active"   value={activeEmp}   color="var(--green)"  bg="var(--green-bg)"  loading={loading}/>
+            <StatPill label="Inactive" value={inactiveEmp} color="var(--red)"    bg="var(--red-bg)"    loading={loading}/>
+            <StatPill label="Total"    value={totalEmp}    color="var(--purple)" bg="var(--purple-bg)" loading={loading}/>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px', borderRadius:12, background:'var(--bg-alt)', border:'1px solid var(--border)' }}>
+            <div style={{ width:44, height:44, borderRadius:12, background:'#F59E0B18', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <Users size={20} color="#F59E0B"/>
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>
+                {loading ? <span className="sk" style={{ display:'inline-block', height:14, width:80 }}/> : `${activeEmp} active DAs`}
+              </div>
+              <div style={{ fontSize:11.5, color:'var(--text-muted)', marginTop:2 }}>across all stations</div>
+            </div>
+            {!loading && totalEmp > 0 && (
+              <div style={{ textAlign:'right', flexShrink:0 }}>
+                <div style={{ fontWeight:900, fontSize:18, color:'#F59E0B' }}>{Math.round(activeEmp/totalEmp*100)}%</div>
+                <div style={{ fontSize:10, color:'var(--text-muted)' }}>utilised</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Fleet Vehicles */}
+        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
+          <SH title="Fleet Vehicles" sub="Active vehicle inventory" href="/dashboard/damage"/>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:16 }}>
+            <StatPill label="Active"      value={fleetStats?.active      ?? '—'} color="var(--green)"  bg="var(--green-bg)"  loading={loading}/>
+            <StatPill label="Grounded"    value={fleetStats?.grounded    ?? '—'} color="var(--red)"    bg="var(--red-bg)"    loading={loading}/>
+            <StatPill label="Maintenance" value={fleetStats?.maintenance ?? '—'} color="var(--amber)"  bg="var(--amber-bg)"  loading={loading}/>
+            <StatPill label="Total"       value={fleetStats?.total       ?? '—'} color="var(--purple)" bg="var(--purple-bg)" loading={loading}/>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px', borderRadius:12, background:'var(--bg-alt)', border:'1px solid var(--border)' }}>
+            <div style={{ width:44, height:44, borderRadius:12, background:'#38BDF818', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <Car size={20} color="#38BDF8"/>
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>
+                {loading ? <span className="sk" style={{ display:'inline-block', height:14, width:80 }}/> : `${fleetStats?.active ?? 0} vehicles on road`}
+              </div>
+              <div style={{ fontSize:11.5, color:'var(--text-muted)', marginTop:2 }}>
+                {fleetStats?.grounded ? `${fleetStats.grounded} grounded · ` : ''}{fleetStats?.maintenance ? `${fleetStats.maintenance} in maintenance` : 'fleet status overview'}
+              </div>
+            </div>
+            {!loading && fleetStats?.total > 0 && (
+              <div style={{ textAlign:'right', flexShrink:0 }}>
+                <div style={{ fontWeight:900, fontSize:18, color:'#38BDF8' }}>{Math.round((fleetStats?.active||0)/fleetStats.total*100)}%</div>
+                <div style={{ fontSize:10, color:'var(--text-muted)' }}>on road</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* ── EXPENSES + SIM SIDE BY SIDE ──────────────────────── */}
       <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:16 }}>
@@ -211,25 +275,16 @@ const ECATS = [
         {/* Expenses This Month */}
         <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
           <SH title="Expenses This Month" sub={`${fmtAED(totalExp)} total · ${pendingExp} pending`} href="/dashboard/finance/expenses"/>
-          {/* Stat row */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:16 }}>
-            {[
-              { l:'Total',    v:fmtAED(totalExp),    bg:'var(--bg-alt)',   c:'var(--text)' },
-              { l:'Approved', v:fmtAED(approvedExp), bg:'var(--green-bg)', c:'var(--green)' },
-              { l:'Pending',  v:pendingExp,           bg:'var(--amber-bg)', c:'var(--amber)' },
-            ].map(s=>(
-              <div key={s.l} style={{ textAlign:'center', padding:'10px 6px', borderRadius:10, background:s.bg, border:'1px solid var(--border)' }}>
-                <div style={{ fontWeight:800, fontSize:14, color:s.c, letterSpacing:'-0.02em' }}>{s.v}</div>
-                <div style={{ fontSize:10.5, color:'var(--text-muted)', fontWeight:600, marginTop:2 }}>{s.l}</div>
-              </div>
-            ))}
+            <StatPill label="Total"    value={fmtAED(totalExp)}    color="var(--text)"  bg="var(--bg-alt)"   loading={loading}/>
+            <StatPill label="Approved" value={fmtAED(approvedExp)} color="var(--green)" bg="var(--green-bg)" loading={loading}/>
+            <StatPill label="Pending"  value={pendingExp}          color="var(--amber)" bg="var(--amber-bg)" loading={loading}/>
           </div>
 
           {!mounted || byCat.length === 0 ? (
             <div style={{ textAlign:'center', padding:'20px', color:'var(--text-muted)', fontSize:12 }}>No expenses this month yet.</div>
           ) : (
             <div style={{ display:'flex', gap:16, alignItems:'center' }}>
-              {/* Donut */}
               <div style={{ flexShrink:0 }}>
                 <PieChart width={90} height={90}>
                   <Pie data={byCat} cx={40} cy={40} innerRadius={26} outerRadius={42} dataKey="value" strokeWidth={1.5} stroke="var(--card)">
@@ -237,7 +292,6 @@ const ECATS = [
                   </Pie>
                 </PieChart>
               </div>
-              {/* Legend */}
               <div style={{ flex:1, display:'flex', flexDirection:'column', gap:5, overflow:'hidden' }}>
                 {byCat.slice(0,5).map(c=>(
                   <div key={c.name} style={{ display:'flex', alignItems:'center', gap:6 }}>
@@ -257,22 +311,13 @@ const ECATS = [
         {/* SIM Card Inventory */}
         <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
           <SH title="SIM Card Inventory" sub="Fleet communication management" href="/dashboard/poc"/>
-          {/* Stat row */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:16 }}>
-            {[
-              { l:'Total SIMs',   v:simStats?.total||'—',              c:'var(--purple)', bg:'var(--purple-bg)' },
-              { l:'Assigned',     v:simStats?.assigned||'—',           c:'var(--amber)',  bg:'var(--amber-bg)'  },
-              { l:'Available',    v:simStats?.available||'—',          c:'var(--green)',  bg:'var(--green-bg)'  },
-              { l:'Monthly Cost', v:fmtAED(simStats?.monthly_cost||0), c:'var(--blue)',   bg:'var(--blue-bg)'   },
-            ].map(s=>(
-              <div key={s.l} style={{ textAlign:'center', padding:'10px 6px', borderRadius:10, background:s.bg, border:'1px solid var(--border)' }}>
-                <div style={{ fontWeight:900, fontSize:16, color:s.c, letterSpacing:'-0.03em' }}>{s.v}</div>
-                <div style={{ fontSize:10.5, color:'var(--text-muted)', fontWeight:600, marginTop:2 }}>{s.l}</div>
-              </div>
-            ))}
+            <StatPill label="Total SIMs"   value={simStats?.total     ?? '—'}              color="var(--purple)" bg="var(--purple-bg)" loading={loading}/>
+            <StatPill label="Assigned"     value={simStats?.assigned  ?? '—'}              color="var(--amber)"  bg="var(--amber-bg)"  loading={loading}/>
+            <StatPill label="Available"    value={simStats?.available ?? '—'}              color="var(--green)"  bg="var(--green-bg)"  loading={loading}/>
+            <StatPill label="Monthly Cost" value={fmtAED(simStats?.monthly_cost||0)}       color="var(--blue)"   bg="var(--blue-bg)"   loading={loading}/>
           </div>
 
-          {/* Station breakdown */}
           {simByStation.length > 0 && (
             <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
               {simByStation.map(s=>{
@@ -295,8 +340,8 @@ const ECATS = [
                     </div>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginTop:8 }}>
                       {[
-                        { l:'Available',   v:s.available||0,            c:'#10B981' },
-                        { l:'Cost/mo',     v:fmtAED(s.monthly_cost||0), c:'#7C3AED' },
+                        { l:'Available', v:s.available||0,            c:'#10B981' },
+                        { l:'Cost/mo',   v:fmtAED(s.monthly_cost||0), c:'#7C3AED' },
                       ].map(x=>(
                         <div key={x.l} style={{ fontSize:11, color:'var(--text-muted)' }}>
                           <span style={{ fontWeight:700, color:x.c }}>{x.v}</span> {x.l}
