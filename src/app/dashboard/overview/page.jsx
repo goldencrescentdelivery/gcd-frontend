@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import {
-  Users, Package, Wallet, AlertTriangle,
+  Users, Wallet, AlertTriangle,
   ChevronRight, TrendingUp, Smartphone,
   Receipt, Zap, ScrollText
 } from 'lucide-react'
@@ -203,10 +203,7 @@ const ECATS = [
       </div>
 
       {/* ── TOP KPIs ─────────────────────────────────────────── */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:12 }}>
-        <KPI icon={Users}   label="Active DAs"        color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
-        <KPI icon={Package} label="Deliveries (6 mo)" color="#38BDF8" loading={false}   value={chart.length?fmt(chart.reduce((s,r)=>s+(Number(r.DDB1||0)+Number(r.DXE6||0)),0)):'—'} sub={chart.length?`${chart.length} months`:'No data yet'}/>
-      </div>
+      <KPI icon={Users} label="Active DAs" color="#F59E0B" loading={loading} value={summary?.employees?.active||'—'} sub={`${summary?.employees?.c||0} total staff`}/>
 
       {/* ── EXPENSES + SIM SIDE BY SIDE ──────────────────────── */}
       <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:16 }}>
