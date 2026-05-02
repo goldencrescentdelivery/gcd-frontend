@@ -810,3 +810,6 @@ a { text-decoration:none; color:inherit; }
   outline:     2px solid var(--gold);
   outline-offset: 2px;
 }
+
+/* Slider track — hide scrollbar on webkit (Firefox uses scrollbar-width:none inline) */
+.slider-track::-webkit-scrollbar { display: none; }

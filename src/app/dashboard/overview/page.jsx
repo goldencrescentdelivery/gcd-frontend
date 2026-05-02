@@ -13,7 +13,9 @@ import Link from 'next/link'
 import { API } from '@/lib/api'
 const SC  = { DDB1:'#F59E0B', DXE6:'#38BDF8' }
 function hdr() { return { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` } }
-function fmt(n) { return Number(n||0).toLocaleString() }
+// Explicit locale prevents Node.js server locale (often C/POSIX) from
+// formatting numbers differently than the browser, causing SSR text mismatches.
+function fmt(n) { return Number(n||0).toLocaleString('en-US') }
 function fmtAED(n) { return `AED ${fmt(n)}` }
 
 /* ── Section Header ──────────────────────────────────────────── */
@@ -61,8 +63,7 @@ function KPI({ icon:Icon, label, value, color, loading, sub }) {
 /* ── Horizontal slider wrapper (mobile) ─────────────────────── */
 function Slider({ children, cardWidth = 160, gap = 12 }) {
   return (
-    <div style={{ display:'flex', gap, overflowX:'auto', scrollSnapType:'x mandatory', WebkitOverflowScrolling:'touch', scrollbarWidth:'none', paddingBottom:4, marginRight:-20, paddingRight:20 }}>
-      <style>{`.slider-hide::-webkit-scrollbar{display:none}`}</style>
+    <div className="slider-track" style={{ display:'flex', gap, overflowX:'auto', scrollSnapType:'x mandatory', WebkitOverflowScrolling:'touch', scrollbarWidth:'none', paddingBottom:4, marginRight:-20, paddingRight:20 }}>
       {React.Children.map(children, child =>
         <div style={{ flexShrink:0, width:cardWidth, scrollSnapAlign:'start' }}>{child}</div>
       )}
@@ -86,6 +87,9 @@ export default function OverviewPage() {
   const [pendingLetters, setPendingLetters] = useState([])
   const [loading,        setLoading]        = useState(true)
   const [isMobile,       setIsMobile]       = useState(false)
+  const [mounted,        setMounted]        = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -172,7 +176,7 @@ const ECATS = [
       {/* ── LAST 6 MONTHS — PROJECT-WISE DELIVERIES ──────────── */}
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
         <SH title="Last 6 Months — Project Deliveries" sub="DDB1 (Pulser) vs DXE6 (CRET)"/>
-        {chart.length === 0 ? (
+        {!mounted || chart.length === 0 ? (
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 24px', textAlign:'center' }}>
             <div style={{ width:52, height:52, borderRadius:16, background:'var(--amber-bg)', border:'1px solid var(--gold-border)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
               <Package size={22} color="var(--gold)"/>
@@ -188,7 +192,7 @@ const ECATS = [
               <Tooltip
                 contentStyle={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:10, fontSize:12 }}
                 labelStyle={{ fontWeight:700, color:'var(--text)' }}
-                formatter={(v, name) => [Number(v).toLocaleString(), name]}
+                formatter={(v, name) => [Number(v).toLocaleString('en-US'), name]}
               />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:12 }}/>
               <Bar dataKey="DDB1" name="DDB1 (Pulser)" fill="#F59E0B" radius={[4,4,0,0]}/>
@@ -235,7 +239,7 @@ const ECATS = [
             ))}
           </div>
 
-          {byCat.length === 0 ? (
+          {!mounted || byCat.length === 0 ? (
             <div style={{ textAlign:'center', padding:'20px', color:'var(--text-muted)', fontSize:12 }}>No expenses this month yet.</div>
           ) : (
             <div style={{ display:'flex', gap:16, alignItems:'center' }}>
