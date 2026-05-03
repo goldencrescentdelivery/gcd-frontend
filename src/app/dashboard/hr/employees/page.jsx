@@ -1498,10 +1498,11 @@ export default function EmployeesPage() {
         )}
       </div>
 
-      {/* Detail popup */}
+      {/* Detail drawer — right-side panel */}
       {selected && (
-        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setSelected(null)}>
-          <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:1100, height:'92vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'var(--shadow-lg)', border:'1px solid var(--border)' }}>
+        <div className="emp-drawer-overlay">
+          <div className="emp-drawer-backdrop" onClick={()=>setSelected(null)}/>
+          <div className="emp-drawer-panel">
             <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
               onSelectEmployee={id=>{ const t=employees.find(e=>e.id===id); if(t) setSelected(t) }}/>
           </div>
