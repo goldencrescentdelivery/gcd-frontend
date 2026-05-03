@@ -6,7 +6,7 @@ import {
   Search, Plus, X, Pencil, Trash2, Phone, User, Building2,
   AlertCircle, CheckCircle2, Briefcase, CreditCard, Calendar,
   Users, Receipt, ExternalLink, Shield, ChevronRight, Truck, ArrowLeftRight,
-  Mail, MapPin, Clock
+  Mail, MapPin, Clock, AlertTriangle, Wallet, TrendingUp, FileText
 } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
 
@@ -547,18 +547,17 @@ function WorkNumberAssigner({ emp, onSaved, userRole, onSelectEmployee }) {
 
 /* ── Detail Drawer ───────────────────────────────────────────── */
 function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onSelectEmployee }) {
-  const [leaves,      setLeaves]     = useState([])
-  const [leavesLoad,  setLeavesLoad] = useState(true)
-  const [expenses,    setExpenses]   = useState([])
-  const [expLoad,     setExpLoad]    = useState(false)
-  const [fleetAsgn,   setFleetAsgn]  = useState([])
-  const [fleetHv,     setFleetHv]    = useState([])
-  const [fleetLoad,   setFleetLoad]  = useState(false)
-  const [attendance,  setAttendance] = useState([])
-  const [attLoad,     setAttLoad]    = useState(false)
-  const [notes,       setNotes]      = useState([])
-  const [tab,         setTab]        = useState('overview')
-  const [isMobile,    setIsMobile]   = useState(false)
+  const [leaves,     setLeaves]    = useState([])
+  const [leavesLoad, setLeavesLoad]= useState(true)
+  const [expenses,   setExpenses]  = useState([])
+  const [expLoad,    setExpLoad]   = useState(false)
+  const [fleetHv,    setFleetHv]   = useState([])
+  const [fleetAsgn,  setFleetAsgn] = useState([])
+  const [fleetLoad,  setFleetLoad] = useState(false)
+  const [attendance, setAttendance]= useState([])
+  const [attLoad,    setAttLoad]   = useState(false)
+  const [tab,        setTab]       = useState('overview')
+  const [isMobile,   setIsMobile]  = useState(false)
 
   const auth = () => ({ Authorization: `Bearer ${localStorage.getItem('gcd_token')}` })
 
@@ -568,6 +567,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
     return () => window.removeEventListener('resize', check)
   }, [])
 
+  // Eager loads — shown on Overview
   useEffect(() => {
     setLeavesLoad(true)
     fetch(`${API}/api/leaves?emp_id=${emp.id}&stage=all`, { headers: auth() })
@@ -581,11 +581,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
       .then(r => r.json()).then(d => setAttendance(d.records || d.attendance || [])).catch(() => setAttendance([])).finally(() => setAttLoad(false))
   }, [emp.id])
 
-  useEffect(() => {
-    fetch(`${API}/api/employees/${emp.id}/notes`, { headers: auth() })
-      .then(r => r.json()).then(d => setNotes(d.notes || [])).catch(() => setNotes([]))
-  }, [emp.id])
-
+  // Lazy loads
   useEffect(() => {
     if (tab !== 'expenses') return
     setExpLoad(true)
@@ -603,691 +599,478 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
   }, [tab, emp.id])
 
   // ── Computed values ─────────────────────────────────────────
-  const s          = STATUS[emp.status] || STATUS.inactive
-  const sc         = SC_COLOR[emp.station_code]  || '#B8860B'
-  const sbg        = SC_BG[emp.station_code]     || '#FFFBEB'
-  const sbc        = SC_BORDER[emp.station_code] || '#FDE68A'
-  const pct        = profileCompletion(emp)
-  const missing    = missingFields(emp)
-  const ringColor  = pct === 100 ? '#10B981' : pct >= 60 ? '#F59E0B' : '#EF4444'
+  const s           = STATUS[emp.status] || STATUS.inactive
+  const sc          = SC_COLOR[emp.station_code]  || '#B8860B'
+  const sbg         = SC_BG[emp.station_code]     || '#FFFBEB'
+  const sbc         = SC_BORDER[emp.station_code] || '#FDE68A'
   const serviceDays = emp.joined ? differenceInDays(new Date(), parseISO(emp.joined.slice(0,10))) : 0
+  const serviceYrs  = Math.floor(serviceDays / 365)
+  const serviceMos  = Math.floor((serviceDays % 365) / 30)
+  const serviceStr  = serviceYrs > 0 ? `${serviceYrs}yr ${serviceMos}mo` : serviceDays > 30 ? `${Math.floor(serviceDays/30)}mo` : `${serviceDays}d`
   const today       = new Date().toISOString().slice(0, 10)
   const onLeaveNow  = leaves.filter(l => l.status === 'approved' && l.from_date <= today && l.to_date >= today).length
-  const alertDocs   = [emp.visa_expiry, emp.license_expiry, emp.iloe_expiry].filter(d => { if (!d) return false; const i = expiry(d); return i && (i.label === 'Expired' || parseInt(i.label) <= 30) }).length
-  const usedByType  = type => leaves.filter(l => l.type === type && l.status === 'approved').reduce((s, l) => s + (l.days || 0), 0)
+  const usedByType  = type => leaves.filter(l => l.type === type && l.status === 'approved').reduce((a, l) => a + (l.days || 0), 0)
+  const usedAnnual  = usedByType('Annual')
+  const usedSick    = usedByType('Sick')
   const curVehicle  = fleetHv.find(h => h.type === 'received' && !fleetHv.find(h2 => h2.vehicle_id === h.vehicle_id && h2.type === 'returned' && new Date(h2.submitted_at) > new Date(h.submitted_at)))
-  const thisMonth   = new Date().toISOString().slice(0, 7)
-  const monthExp    = expenses.filter(e => e.date?.slice(0, 7) === thisMonth)
-  const totalMonthExp    = monthExp.reduce((s, e) => s + Number(e.amount || 0), 0)
-  const pendingMonthExp  = monthExp.filter(e => e.status === 'pending').length
-  const approvedMonthExp = monthExp.filter(e => e.status === 'approved').reduce((s, e) => s + Number(e.amount || 0), 0)
+
+  function docDays(d) {
+    if (!d) return null
+    try { return differenceInDays(parseISO(d.slice(0,10)), new Date()) } catch { return null }
+  }
+  function docChip(d) {
+    const days = docDays(d)
+    if (days === null) return null
+    if (days < 0)   return { label:'Expired',       c:'#DC2626', bg:'#FEF2F2', bc:'#FECACA' }
+    if (days <= 30) return { label:`${days}d left`, c:'#DC2626', bg:'#FEF2F2', bc:'#FECACA' }
+    if (days <= 90) return { label:`${days}d left`, c:'#D97706', bg:'#FFFBEB', bc:'#FDE68A' }
+    return              { label:'Valid',             c:'#059669', bg:'#F0FDF4', bc:'#A7F3D0' }
+  }
+  const visaChip   = docChip(emp.visa_expiry)
+  const licChip    = docChip(emp.license_expiry)
+  const iloeChip   = docChip(emp.iloe_expiry)
+  const alertCount = [emp.visa_expiry, emp.license_expiry, emp.iloe_expiry].filter(d => { const n = docDays(d); return n !== null && n <= 30 }).length
+  const attPresent = attendance.filter(a => a.status === 'present').length
+  const attAbsent  = attendance.filter(a => a.status === 'absent').length
+  const attLeave   = attendance.filter(a => a.status === 'leave').length
 
   const TABS = [
-    { id: 'overview',   l: 'Overview'    },
-    { id: 'personal',   l: 'Personal Info'},
-    { id: 'employment', l: 'Employment'  },
-    { id: 'documents',  l: 'Documents'   },
-    { id: 'attendance', l: 'Attendance'  },
-    { id: 'leaves',     l: `Leaves${leaves.length > 0 ? ` (${leaves.length})` : ''}` },
-    { id: 'sims',       l: 'SIMs'        },
-    { id: 'fleet',      l: 'Fleet'       },
-    { id: 'expenses',   l: 'Expenses'    },
-    { id: 'tasks',      l: 'Tasks'       },
-    { id: 'history',    l: 'History'     },
+    { id:'overview',  l:'Overview'  },
+    { id:'leaves',    l:`Leaves${leaves.length ? ` (${leaves.length})` : ''}` },
+    { id:'documents', l:'Documents' },
+    { id:'sims',      l:'SIMs'      },
+    { id:'fleet',     l:'Fleet'     },
+    { id:'expenses',  l:'Expenses'  },
   ]
 
-  // ── Shared sub-components ────────────────────────────────────
-  function InfoRow({ label, value }) {
-    const v = typeof value === 'object' && value !== null ? JSON.stringify(value) : value
+  // ── Sub-components ──────────────────────────────────────────
+  function Section({ title, children }) {
     return (
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'7px 0', borderBottom:'1px solid var(--border)', gap:8 }}>
-        <span style={{ fontSize:11.5, color:'var(--text-muted)', flexShrink:0 }}>{label}</span>
-        <span style={{ fontSize:12, fontWeight:600, color: v ? 'var(--text)' : 'var(--text-muted)', textAlign:'right', wordBreak:'break-word' }}>{v || '—'}</span>
+      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, overflow:'hidden' }}>
+        <div style={{ padding:'10px 16px', borderBottom:'1px solid var(--border)', background:'var(--bg-alt)' }}>
+          <span style={{ fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.08em', color:'var(--text-muted)' }}>{title}</span>
+        </div>
+        <div style={{ padding:'4px 0' }}>{children}</div>
       </div>
     )
   }
-  function SectionBox({ title, badge, badgeColor='#10B981', children, onViewAll, viewAllHref }) {
+
+  function InfoItem({ icon: Icon, label, value, href, mono }) {
+    const val = typeof value === 'object' ? JSON.stringify(value) : value
+    const display = href && val
+      ? <a href={href} style={{ fontSize:12.5, fontWeight:600, color:'var(--gold)', textDecoration:'none', wordBreak:'break-all' }}>{val}</a>
+      : <span style={{ fontSize:12.5, fontWeight:600, color: val ? 'var(--text)' : 'var(--text-muted)', fontFamily: mono ? 'monospace' : 'inherit', wordBreak:'break-all' }}>{val || '—'}</span>
     return (
-      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, overflow:'hidden' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 14px', borderBottom:'1px solid var(--border)' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-            <span style={{ fontSize:12, fontWeight:800, color:'var(--text)' }}>{title}</span>
-            {badge && <span style={{ fontSize:9.5, fontWeight:700, color:badgeColor, background:`${badgeColor}15`, border:`1px solid ${badgeColor}30`, borderRadius:20, padding:'1px 7px' }}>{badge}</span>}
-          </div>
-          {(onViewAll || viewAllHref) && (
-            viewAllHref
-              ? <a href={viewAllHref} style={{ fontSize:11, fontWeight:600, color:'var(--gold)', textDecoration:'none', display:'flex', alignItems:'center', gap:2 }}>View All <ChevronRight size={10}/></a>
-              : <button onClick={onViewAll} style={{ fontSize:11, fontWeight:600, color:'var(--gold)', background:'none', border:'none', cursor:'pointer', padding:0, display:'flex', alignItems:'center', gap:2, fontFamily:'Poppins,sans-serif' }}>View All <ChevronRight size={10}/></button>
-          )}
+      <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px', borderBottom:'1px solid var(--border)' }}>
+        <div style={{ width:28, height:28, borderRadius:8, background:'var(--bg-alt)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          {Icon && <Icon size={12} color="var(--text-muted)"/>}
         </div>
-        <div style={{ padding:'4px 14px 10px' }}>{children}</div>
+        <span style={{ fontSize:11.5, color:'var(--text-muted)', minWidth:92, flexShrink:0 }}>{label}</span>
+        {display}
+      </div>
+    )
+  }
+
+  function DocRow({ label, date }) {
+    const chip = docChip(date)
+    const days = docDays(date)
+    return (
+      <div style={{ display:'flex', alignItems:'center', padding:'11px 16px', borderBottom:'1px solid var(--border)', gap:8 }}>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:12.5, fontWeight:600, color:'var(--text)', marginBottom:1 }}>{label}</div>
+          <div style={{ fontSize:11, color:'var(--text-muted)' }}>{date ? date.slice(0,10) : 'Not on file'}</div>
+        </div>
+        {chip
+          ? <span style={{ fontSize:10.5, fontWeight:700, color:chip.c, background:chip.bg, border:`1px solid ${chip.bc}`, borderRadius:99, padding:'3px 10px', flexShrink:0 }}>
+              {days !== null && days < 0 ? 'Expired' : chip.label}
+            </span>
+          : <span style={{ fontSize:10.5, color:'var(--text-muted)' }}>—</span>}
       </div>
     )
   }
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', fontFamily:'Poppins,sans-serif' }}>
 
-      {/* ── HEADER ─────────────────────────────────────────────── */}
-      <div style={{ background:`linear-gradient(120deg,${sbg} 0%,var(--card) 60%)`, padding:'18px 22px 0', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
-        <div style={{ display:'flex', alignItems:'flex-start', gap:14, marginBottom:14 }}>
-          {/* Avatar */}
+      {/* ══ HEADER ══════════════════════════════════════════════ */}
+      <div style={{ background:`linear-gradient(135deg,${sbg} 0%,var(--card) 65%)`, padding:'20px 22px 16px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+        <div style={{ display:'flex', alignItems:'flex-start', gap:16, marginBottom: alertCount > 0 ? 14 : 0 }}>
+
+          {/* Rounded-square avatar */}
           <div style={{ position:'relative', flexShrink:0 }}>
-            <div style={{ width:60, height:60, borderRadius:30, background:`linear-gradient(135deg,${sbg},${sbc})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:900, color:sc, boxShadow:`0 4px 14px ${sc}28` }}>
+            <div style={{ width:68, height:68, borderRadius:20, background:`linear-gradient(145deg,${sc}25,${sc}50)`, border:`2px solid ${sbc}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:900, color:sc, letterSpacing:'-0.02em', boxShadow:`0 6px 20px ${sc}22` }}>
               {emp.name?.slice(0,2).toUpperCase()}
             </div>
-            <CompletionRing pct={pct} size={60} stroke={3}/>
-            <div style={{ position:'absolute', bottom:2, right:2, width:12, height:12, borderRadius:'50%', background:s.dot, border:'2.5px solid var(--card)' }}/>
+            <div style={{ position:'absolute', bottom:-3, right:-3, width:16, height:16, borderRadius:'50%', background:s.dot, border:'2.5px solid var(--card)', boxShadow:'0 1px 4px rgba(0,0,0,0.15)' }}/>
           </div>
 
-          {/* Name + badges */}
+          {/* Identity */}
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:7, flexWrap:'wrap', marginBottom:3 }}>
-              <h2 style={{ margin:0, fontSize:17, fontWeight:900, color:'var(--text)', letterSpacing:'-0.03em' }}>{emp.name}</h2>
-              <span style={{ fontSize:10.5, fontWeight:700, color:s.c, background:s.bg, border:`1.5px solid ${s.bc}`, borderRadius:20, padding:'2px 8px' }}>{s.l}</span>
+              <h2 style={{ margin:0, fontSize:19, fontWeight:900, color:'var(--text)', letterSpacing:'-0.03em', lineHeight:1.2 }}>{emp.name}</h2>
+              <span style={{ fontSize:10.5, fontWeight:700, color:s.c, background:s.bg, border:`1.5px solid ${s.bc}`, borderRadius:99, padding:'2px 9px' }}>{s.l}</span>
             </div>
-            <div style={{ fontSize:11.5, color:'var(--text-muted)', marginBottom:7 }}>{emp.role}</div>
+            <div style={{ fontSize:11.5, color:'var(--text-muted)', marginBottom:8 }}>
+              {emp.role} · {emp.station_code || 'DDB1'} · <span style={{ fontFamily:'monospace', fontSize:11 }}>#{emp.id}</span>
+            </div>
             <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-              <span style={{ fontSize:10.5, fontWeight:700, color:sc, background:sbg, border:`1.5px solid ${sbc}`, borderRadius:20, padding:'2px 8px' }}>{emp.station_code||'DDB1'}</span>
-              {emp.project_type && <span style={{ fontSize:10.5, fontWeight:700, color:'#7C3AED', background:'var(--purple-bg)', border:'1.5px solid var(--purple-border)', borderRadius:20, padding:'2px 8px' }}>{emp.project_type.toUpperCase()}</span>}
-              {emp.visa_type && <span style={{ fontSize:10.5, fontWeight:600, color:emp.visa_type==='own'?'#0369A1':'#065F46', background:emp.visa_type==='own'?'#EFF6FF':'#ECFDF5', border:`1.5px solid ${emp.visa_type==='own'?'#BAE6FD':'#A7F3D0'}`, borderRadius:20, padding:'2px 8px' }}>{emp.visa_type==='own'?'Own Visa':'Co. Visa'}</span>}
+              {emp.project_type && <span style={{ fontSize:10, fontWeight:700, color:'#7C3AED', background:'var(--purple-bg)', border:'1px solid var(--purple-border)', borderRadius:99, padding:'2px 8px' }}>{emp.project_type.toUpperCase()}</span>}
+              {emp.visa_type && <span style={{ fontSize:10, fontWeight:600, color:emp.visa_type==='own'?'#0369A1':'#065F46', background:emp.visa_type==='own'?'#EFF6FF':'#ECFDF5', border:`1px solid ${emp.visa_type==='own'?'#BAE6FD':'#A7F3D0'}`, borderRadius:99, padding:'2px 8px' }}>{emp.visa_type==='own'?'Own Visa':'Co. Visa'}</span>}
+              {serviceDays > 0 && <span style={{ fontSize:10, color:'var(--text-muted)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:99, padding:'2px 8px' }}>{serviceStr} service</span>}
             </div>
-            <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:5 }}>DA ID: {emp.id}</div>
           </div>
 
-          {/* Completion + close */}
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:5, flexShrink:0 }}>
-            <button onClick={onClose} className="btn-close"><X size={14}/></button>
-            <div style={{ textAlign:'right' }}>
-              <span style={{ fontSize:20, fontWeight:900, color:ringColor, letterSpacing:'-0.04em' }}>{pct}%</span>
-              <span style={{ fontSize:9.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', marginLeft:4 }}>COMPLETE</span>
-            </div>
-            <div style={{ width:110, height:4, borderRadius:99, background:'var(--border)' }}>
-              <div style={{ height:'100%', borderRadius:99, background:ringColor, width:`${pct}%`, transition:'width 0.5s' }}/>
-            </div>
-            {pct < 100 && missing.length > 0 && (
-              <div style={{ display:'flex', flexWrap:'wrap', gap:3, justifyContent:'flex-end', maxWidth:150 }}>
-                {missing.slice(0,3).map(f=>(
-                  <span key={f} style={{ fontSize:9.5, fontWeight:600, color:'#EF4444', background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:5, padding:'1px 5px' }}>{f}</span>
-                ))}
-                {missing.length>3 && <span style={{ fontSize:9.5, color:'var(--text-muted)' }}>+{missing.length-3}</span>}
-              </div>
+          {/* Actions */}
+          <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+            {userRole !== 'accountant' && (
+              <button onClick={onEdit} style={{ padding:'8px 16px', borderRadius:10, background:'var(--gold)', color:'#fff', fontWeight:700, fontSize:12.5, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Edit</button>
             )}
+            <button onClick={onClose} className="btn-close" style={{ width:36, height:36, borderRadius:10 }}><X size={15}/></button>
           </div>
         </div>
 
-        {/* Stats row */}
-        <div style={{ display:'grid', gridTemplateColumns:`repeat(${isMobile?2:4},1fr)`, gap:1, background:'var(--border)', borderRadius:'10px 10px 0 0', overflow:'hidden' }}>
-          {[
-            { l:'Active Status',  v:s.l,                  sub:`Since ${emp.joined?.slice(0,10)||'—'}`,    c:s.c,                  bg:s.bg                                                      },
-            { l:'Total Service',  v:`${serviceDays} Days`, sub:`Join Date: ${emp.joined?.slice(0,10)||'—'}`,c:'var(--blue)',        bg:'var(--blue-bg)'                                          },
-            { l:'On Leave',       v:`${onLeaveNow} Days`,  sub:onLeaveNow>0?'Currently on leave':'—',      c:onLeaveNow>0?'#F59E0B':'var(--text-muted)', bg:onLeaveNow>0?'#FFFBEB':'var(--bg-alt)' },
-            { l:'Alerts',         v:alertDocs,             sub:alertDocs>0?'Documents expiring':'No active alerts', c:alertDocs>0?'#EF4444':'var(--text-muted)', bg:alertDocs>0?'#FEF2F2':'var(--bg-alt)' },
-          ].map(stat=>(
-            <div key={stat.l} style={{ padding:'10px 12px', background:stat.bg, textAlign:'center' }}>
-              <div style={{ fontWeight:900, fontSize:14, color:stat.c, letterSpacing:'-0.02em' }}>{stat.v}</div>
-              <div style={{ fontSize:9.5, fontWeight:700, color:'var(--text-muted)', marginTop:1 }}>{stat.l}</div>
-              <div style={{ fontSize:9.5, color:stat.c, opacity:0.7, marginTop:1 }}>{stat.sub}</div>
-            </div>
-          ))}
-        </div>
+        {/* Alert banner */}
+        {alertCount > 0 && (
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 13px', background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:10 }}>
+            <AlertTriangle size={13} color="#DC2626" style={{ flexShrink:0 }}/>
+            <span style={{ fontSize:12, fontWeight:700, color:'#DC2626' }}>
+              {[emp.visa_expiry && docDays(emp.visa_expiry) !== null && docDays(emp.visa_expiry) <= 30 && 'Visa',
+                emp.license_expiry && docDays(emp.license_expiry) !== null && docDays(emp.license_expiry) <= 30 && 'License',
+                emp.iloe_expiry && docDays(emp.iloe_expiry) !== null && docDays(emp.iloe_expiry) <= 30 && 'ILOE',
+              ].filter(Boolean).join(', ')} expiring soon — action required
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* ── TABS ───────────────────────────────────────────────── */}
+      {/* ══ TABS ════════════════════════════════════════════════ */}
       <div className="slider-track" style={{ display:'flex', overflowX:'auto', padding:'0 18px', borderBottom:'1px solid var(--border)', flexShrink:0, background:'var(--bg-alt)', scrollbarWidth:'none' }}>
-        {TABS.map(t=>(
-          <button key={t.id} onClick={()=>setTab(t.id)}
-            style={{ padding:'10px 13px', fontSize:11.5, fontWeight:tab===t.id?700:500, color:tab===t.id?'var(--gold)':'var(--text-muted)', background:'none', border:'none', borderBottom:`2.5px solid ${tab===t.id?'var(--gold)':'transparent'}`, cursor:'pointer', fontFamily:'Poppins,sans-serif', marginBottom:-1, transition:'all 0.15s', whiteSpace:'nowrap', flexShrink:0 }}>
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            style={{ padding:'10px 14px', fontSize:12, fontWeight:tab===t.id?700:500, color:tab===t.id?'var(--gold)':'var(--text-muted)', background:'none', border:'none', borderBottom:`2.5px solid ${tab===t.id?'var(--gold)':'transparent'}`, cursor:'pointer', fontFamily:'Poppins,sans-serif', marginBottom:-1, whiteSpace:'nowrap', flexShrink:0, transition:'all 0.15s' }}>
             {t.l}
           </button>
         ))}
       </div>
 
-      {/* ── CONTENT ────────────────────────────────────────────── */}
-      <div style={{ flex:1, overflowY:'auto', padding:'18px 20px' }}>
+      {/* ══ CONTENT ═════════════════════════════════════════════ */}
+      <div style={{ flex:1, overflowY:'auto', padding:'18px 20px', display:'flex', flexDirection:'column', gap:14 }}>
 
-        {/* ══════════ OVERVIEW ═══════════════════════════════ */}
-        {tab==='overview' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+        {/* ════ OVERVIEW ════ */}
+        {tab === 'overview' && (<>
 
-            {/* Top 3 info cards */}
-            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)', gap:12 }}>
-
-              {/* Contact Information — dark card */}
-              <div style={{ background:'#1C1917', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'14px 16px' }}>
-                <div style={{ fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.07em', color:'#78716C', marginBottom:12 }}>Contact Information</div>
-                {[
-                  { Icon:Phone,  label:'Phone',             value:emp.phone },
-                  { Icon:Mail,   label:'Email',             value:emp.email_id },
-                  { Icon:Users,  label:'Emergency Contact', value:emp.emergency_contact_name },
-                  { Icon:MapPin, label:'Address',           value:emp.residential_location },
-                ].filter(r=>r.value).map(row=>(
-                  <div key={row.label} style={{ display:'flex', gap:10, marginBottom:10 }}>
-                    <div style={{ width:26, height:26, borderRadius:8, background:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      <row.Icon size={11} color="#A8A29E"/>
-                    </div>
-                    <div>
-                      <div style={{ fontSize:9.5, color:'#78716C', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.05em' }}>{row.label}</div>
-                      <div style={{ fontSize:11.5, color:'#F5F5F4', fontWeight:500, marginTop:1, wordBreak:'break-word' }}>{row.value}</div>
-                    </div>
-                  </div>
-                ))}
-                {!emp.phone && !emp.email_id && !emp.residential_location && (
-                  <div style={{ fontSize:11.5, color:'#78716C', textAlign:'center', padding:'12px 0' }}>No contact details</div>
-                )}
+          {/* 4 metric cards */}
+          <div style={{ display:'grid', gridTemplateColumns:`repeat(${isMobile?2:4},1fr)`, gap:10 }}>
+            {[
+              { label:'Service',    v: serviceDays > 0 ? serviceStr : '—',             sub: emp.joined ? `From ${emp.joined.slice(0,10)}` : 'No join date',                      c:'#2563EB', bg:'#EFF6FF' },
+              { label:'Status',     v: onLeaveNow > 0 ? 'On Leave' : s.l,              sub: onLeaveNow > 0 ? 'Currently away' : `Since ${emp.joined?.slice(0,10)||'—'}`,         c: onLeaveNow>0?'#D97706':s.c, bg: onLeaveNow>0?'#FFFBEB':s.bg },
+              { label:'Leave Used', v: leavesLoad ? '…' : `${usedAnnual}d`,            sub: leavesLoad ? '' : `${Math.max(0,30-usedAnnual)} days remaining`,                     c:'#7C3AED', bg:'#F5F3FF' },
+              { label:'Documents',  v: alertCount > 0 ? `${alertCount} Alert${alertCount>1?'s':''}` : 'All OK', sub: alertCount>0?'Needs renewal':'Up to date', c: alertCount>0?'#DC2626':'#059669', bg: alertCount>0?'#FEF2F2':'#F0FDF4' },
+            ].map(m => (
+              <div key={m.label} style={{ background:m.bg, border:'1px solid var(--border)', borderRadius:12, padding:'12px 14px', textAlign:'center' }}>
+                <div style={{ fontWeight:900, fontSize:16, color:m.c, letterSpacing:'-0.03em', lineHeight:1 }}>{m.v}</div>
+                <div style={{ fontSize:9.5, fontWeight:700, color:'var(--text-muted)', marginTop:4, textTransform:'uppercase', letterSpacing:'0.05em' }}>{m.label}</div>
+                <div style={{ fontSize:9.5, color:m.c, opacity:0.75, marginTop:3 }}>{m.sub}</div>
               </div>
+            ))}
+          </div>
 
-              {/* Personal Information */}
-              <SectionBox title="Personal Information" badge={pct>=80?'Verified':null} badgeColor="#10B981">
-                {[
-                  { l:'Marital Status',  v:emp.marital_status },
-                  { l:'Date of Birth',   v:emp.dob ? `${emp.dob.slice(0,10)} (${Math.floor(differenceInDays(new Date(),parseISO(emp.dob.slice(0,10)))/365)} Yrs)` : null },
-                  { l:'Father / Family', v:emp.father_family_name },
-                  { l:'Gender',          v:emp.gender },
-                  { l:'Nationality',     v:emp.nationality },
-                ].map(r=><InfoRow key={r.l} label={r.l} value={r.v}/>)}
-              </SectionBox>
+          {/* Contact + Employment 2-col */}
+          <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:12 }}>
+            <Section title="Contact">
+              <InfoItem icon={Phone}      label="Mobile"      value={emp.phone}       href={emp.phone?`tel:${emp.phone}`:null}/>
+              <InfoItem icon={Phone}      label="Work Phone"  value={emp.work_number} href={emp.work_number?`tel:${emp.work_number}`:null}/>
+              <InfoItem icon={Mail}       label="Email"       value={emp.email_id}    href={emp.email_id?`mailto:${emp.email_id}`:null}/>
+              <InfoItem icon={CreditCard} label="Passport"    value={emp.passport_no} mono/>
+            </Section>
 
-              {/* Work & Access */}
-              <SectionBox title="Work & Access Information" badge={emp.status==='active'?'+ Active':null} badgeColor="#10B981">
-                {[
-                  { l:'DA Type / Category',  v:emp.station_code },
-                  { l:'Device / App Access', v:emp.project_type?.toUpperCase() },
-                  { l:'Visa Type',           v:emp.visa_type==='own'?'Own Visa':'Co. Visa' },
-                  { l:'Employee ID',         v:emp.id },
-                  { l:'Punch ID',            v:emp.punch_id },
-                  { l:'System Access',       v:'Enabled' },
-                ].map(r=><InfoRow key={r.l} label={r.l} value={r.v}/>)}
-              </SectionBox>
-            </div>
+            <Section title="Employment">
+              <InfoItem icon={Building2}  label="Station"      value={emp.station_code}/>
+              <InfoItem icon={Briefcase}  label="Project"      value={emp.project_type ? emp.project_type.charAt(0).toUpperCase()+emp.project_type.slice(1) : null}/>
+              <InfoItem icon={Calendar}   label="Join Date"    value={emp.joined?.slice(0,10)}/>
+              <InfoItem icon={Wallet}     label="Base Salary"  value={emp.salary ? `AED ${Number(emp.salary).toLocaleString('en-US')}` : null}/>
+              {emp.project_type==='pulser' && <InfoItem icon={TrendingUp} label="Hourly Rate" value={emp.hourly_rate?`AED ${emp.hourly_rate}/hr`:null}/>}
+              {emp.project_type==='cret'   && <InfoItem icon={TrendingUp} label="Ship. Rate"  value={emp.per_shipment_rate?`AED ${emp.per_shipment_rate}/pkg`:null}/>}
+            </Section>
+          </div>
 
-            {/* Middle 3 cards */}
-            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)', gap:12 }}>
+          {/* Documents */}
+          <Section title="Document Expiry">
+            <DocRow label="UAE Visa"        date={emp.visa_expiry}/>
+            <DocRow label="Driving License" date={emp.license_expiry}/>
+            <DocRow label="ILOE"            date={emp.iloe_expiry}/>
+            {emp.insurance_url && (
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'11px 16px' }}>
+                <div style={{ fontSize:12.5, fontWeight:600, color:'var(--text)' }}>Insurance Card</div>
+                <a href={emp.insurance_url} target="_blank" rel="noreferrer" style={{ display:'flex', alignItems:'center', gap:5, fontSize:11.5, fontWeight:700, color:'var(--gold)', textDecoration:'none' }}>
+                  View <ExternalLink size={11}/>
+                </a>
+              </div>
+            )}
+          </Section>
 
-              {/* Employment */}
-              <SectionBox title="Employment Information">
-                {[
-                  { l:'Designation',       v:emp.role },
-                  { l:'Employment Type',   v:emp.employment_type||'Full Time' },
-                  { l:'Department',        v:emp.dept },
-                  { l:'Reporting To',      v:emp.reporting_to||'Operations Manager' },
-                  { l:'Work Location',     v:emp.work_location },
-                  { l:'Probation End',     v:emp.probation_end_date?.slice(0,10) },
-                ].map(r=><InfoRow key={r.l} label={r.l} value={r.v}/>)}
-              </SectionBox>
-
-              {/* Salary */}
-              <SectionBox title="Salary Information">
-                {[
-                  { l:'Salary',           v:`AED ${Number(emp.salary||0).toLocaleString('en-US')} /mo` },
-                  { l:'Overtime Eligible',v:emp.hourly_rate?'Yes':'No' },
-                ].map(r=><InfoRow key={r.l} label={r.l} value={r.v}/>)}
-                <div style={{ marginTop:10, background:'var(--purple-bg)', border:'1px solid var(--purple-border)', borderRadius:10, padding:'10px 12px' }}>
-                  <div style={{ fontSize:9.5, fontWeight:800, color:'#7C3AED', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5 }}>Salary Formula</div>
-                  <div style={{ fontSize:12.5, color:'var(--text)', fontWeight:600 }}>
-                    {emp.project_type==='office' ? `AED ${Number(emp.salary||0).toLocaleString('en-US')} (fixed salary)`
-                      : emp.project_type==='cret' ? `AED ${Number(emp.salary||0).toLocaleString('en-US')} + shipments × ${emp.per_shipment_rate||0.5}`
-                      : `AED ${Number(emp.salary||0).toLocaleString('en-US')} + hrs × ${emp.hourly_rate||3.85} + ${emp.performance_bonus||100} bonus`}
+          {/* Leave Balance progress bars */}
+          <Section title="Leave Balance">
+            <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:14 }}>
+              {[
+                { label:'Annual Leave', used:usedAnnual, total:30, c:'#7C3AED' },
+                { label:'Sick Leave',   used:usedSick,   total:15, c:'#2563EB' },
+              ].map(lb => (
+                <div key={lb.label}>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                    <span style={{ fontSize:12.5, fontWeight:600, color:'var(--text)' }}>{lb.label}</span>
+                    <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>{leavesLoad ? '…' : `${lb.used} / ${lb.total} days`}</span>
+                  </div>
+                  <div style={{ height:7, borderRadius:99, background:'var(--border)', overflow:'hidden' }}>
+                    {!leavesLoad && <div style={{ height:'100%', width:`${Math.min(100,(lb.used/lb.total)*100)}%`, background:lb.c, borderRadius:99, transition:'width 0.6s cubic-bezier(0.16,1,0.3,1)' }}/>}
+                  </div>
+                  <div style={{ fontSize:10.5, color:lb.c, marginTop:5, fontWeight:600 }}>
+                    {!leavesLoad && `${Math.max(0,lb.total-lb.used)} days remaining`}
                   </div>
                 </div>
-              </SectionBox>
+              ))}
+            </div>
+          </Section>
 
-              {/* Documents */}
-              <SectionBox title="Documents" onViewAll={()=>setTab('documents')}>
-                {[
-                  { l:'Passport',    v:emp.passport_no,   d:null              },
-                  { l:'Visa',        v:emp.visa_file_no,  d:emp.visa_expiry   },
-                  { l:'Emirates ID', v:emp.emirates_id,   d:null              },
-                  { l:'License',     v:emp.license_expiry?'On file':null, d:emp.license_expiry },
-                ].filter(r=>r.v||r.d).map(r=>{
-                  const info = r.d ? expiry(r.d) : { label:'Verified', c:'#10B981', bg:'#F0FDF4', bc:'#A7F3D0' }
-                  return (
-                    <div key={r.l} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid var(--border)' }}>
-                      <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>{r.l}</span>
-                      <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                        {r.d && <span style={{ fontSize:10, color:'var(--text-muted)' }}>Till {r.d.slice(0,10)}</span>}
-                        {info && <span style={{ fontSize:10, fontWeight:700, color:info.c, background:info.bg, border:`1px solid ${info.bc||info.bg}`, borderRadius:20, padding:'1px 6px' }}>{info.label==='Valid'?'Verified':info.label}</span>}
+          {/* Attendance this month */}
+          <Section title="Attendance — This Month">
+            <div style={{ padding:'14px 16px' }}>
+              {attLoad ? (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+                  {[1,2,3].map(i => <div key={i} className="sk" style={{ height:56, borderRadius:10 }}/>)}
+                </div>
+              ) : (
+                <>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:14 }}>
+                    {[
+                      { l:'Present', v:attPresent, c:'#059669', bg:'#F0FDF4' },
+                      { l:'Absent',  v:attAbsent,  c:'#DC2626', bg:'#FEF2F2' },
+                      { l:'Leave',   v:attLeave,   c:'#D97706', bg:'#FFFBEB' },
+                    ].map(a => (
+                      <div key={a.l} style={{ textAlign:'center', padding:'10px 8px', borderRadius:10, background:a.bg, border:'1px solid var(--border)' }}>
+                        <div style={{ fontWeight:900, fontSize:22, color:a.c, lineHeight:1 }}>{a.v}</div>
+                        <div style={{ fontSize:10, fontWeight:600, color:a.c, opacity:0.8, marginTop:4 }}>{a.l}</div>
                       </div>
-                    </div>
-                  )
-                })}
-                {!emp.passport_no&&!emp.visa_file_no&&!emp.emirates_id&&!emp.visa_expiry&&(
-                  <div style={{ textAlign:'center', padding:'14px 0', color:'var(--text-muted)', fontSize:12 }}>No documents uploaded</div>
-                )}
-              </SectionBox>
-            </div>
-
-            {/* Bottom 4 summary cards */}
-            <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:12 }}>
-
-              {/* Leave Balance */}
-              <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, overflow:'hidden' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', borderBottom:'1px solid var(--border)' }}>
-                  <span style={{ fontSize:11.5, fontWeight:800, color:'var(--text)' }}>Leave Balance</span>
-                  <button onClick={()=>setTab('leaves')} style={{ fontSize:10.5, fontWeight:600, color:'var(--gold)', background:'none', border:'none', cursor:'pointer', padding:0, fontFamily:'Poppins,sans-serif' }}>View All</button>
-                </div>
-                <div style={{ padding:'8px 12px' }}>
-                  {[
-                    { l:'Annual Leave',  used:usedByType('Annual'),   total:Number(emp.annual_leave_balance||30), c:'#F59E0B' },
-                    { l:'Sick Leave',    used:usedByType('Sick'),      total:15, c:'#3B82F6' },
-                    { l:'Casual Leave',  used:usedByType('Casual'),    total:16, c:'#10B981' },
-                    { l:'Unpaid Leave',  used:usedByType('Unpaid'),    total:null, c:'#9CA3AF' },
-                  ].map(lt=>(
-                    <div key={lt.l} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'1px solid var(--border)' }}>
-                      <span style={{ fontSize:10.5, color:'var(--text-muted)' }}>{lt.l}</span>
-                      <span style={{ fontSize:11, fontWeight:700, color:lt.c }}>{lt.used}{lt.total?<span style={{ fontWeight:400, color:'var(--text-muted)' }}> / {lt.total}</span>:''} <span style={{ fontWeight:400, fontSize:10, color:'var(--text-muted)' }}>Days</span></span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* SIM Information */}
-              <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, overflow:'hidden' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', borderBottom:'1px solid var(--border)' }}>
-                  <span style={{ fontSize:11.5, fontWeight:800, color:'var(--text)' }}>SIM Information</span>
-                  <button onClick={()=>setTab('sims')} style={{ fontSize:10.5, fontWeight:600, color:'var(--gold)', background:'none', border:'none', cursor:'pointer', padding:0, fontFamily:'Poppins,sans-serif' }}>View All</button>
-                </div>
-                <div style={{ padding:'8px 12px' }}>
-                  {[
-                    { l:'SIM Number',    v:emp.work_number },
-                    { l:'Status',        v:emp.work_number?'Active':'Unassigned' },
-                    { l:'Provider',      v:emp.sim_provider },
-                    { l:'Assigned Date', v:emp.sim_assigned_date?.slice(0,10) },
-                  ].map(r=>(
-                    <div key={r.l} style={{ display:'flex', justifyContent:'space-between', padding:'5px 0', borderBottom:'1px solid var(--border)' }}>
-                      <span style={{ fontSize:10.5, color:'var(--text-muted)' }}>{r.l}</span>
-                      <span style={{ fontSize:11, fontWeight:600, color:r.v?'var(--text)':'var(--text-muted)' }}>{r.v||'—'}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Fleet / Vehicle */}
-              <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, overflow:'hidden' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', borderBottom:'1px solid var(--border)' }}>
-                  <span style={{ fontSize:11.5, fontWeight:800, color:'var(--text)' }}>Fleet / Vehicle</span>
-                  <button onClick={()=>setTab('fleet')} style={{ fontSize:10.5, fontWeight:600, color:'var(--gold)', background:'none', border:'none', cursor:'pointer', padding:0, fontFamily:'Poppins,sans-serif' }}>View All</button>
-                </div>
-                <div style={{ padding:'8px 12px' }}>
-                  {[
-                    { l:'Vehicle Number', v:curVehicle?.plate||emp.vehicle_number },
-                    { l:'Vehicle Type',   v:curVehicle?.vehicle_type||emp.vehicle_type },
-                    { l:'Assigned Date',  v:curVehicle?.submitted_at?.slice(0,10) },
-                    { l:'Status',         v:curVehicle?'Active':'Unassigned' },
-                  ].map(r=>(
-                    <div key={r.l} style={{ display:'flex', justifyContent:'space-between', padding:'5px 0', borderBottom:'1px solid var(--border)' }}>
-                      <span style={{ fontSize:10.5, color:'var(--text-muted)' }}>{r.l}</span>
-                      <span style={{ fontSize:11, fontWeight:600, color:r.v?'var(--text)':'var(--text-muted)' }}>{r.v||'—'}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Expenses This Month */}
-              <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, overflow:'hidden' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', borderBottom:'1px solid var(--border)' }}>
-                  <span style={{ fontSize:11.5, fontWeight:800, color:'var(--text)' }}>Expenses (Month)</span>
-                  <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`} style={{ fontSize:10.5, fontWeight:600, color:'var(--gold)', textDecoration:'none' }}>View All</a>
-                </div>
-                <div style={{ padding:'8px 12px' }}>
-                  <div style={{ fontWeight:900, fontSize:17, color:'var(--red)', letterSpacing:'-0.03em', marginBottom:1 }}>AED {totalMonthExp.toLocaleString('en-US')}</div>
-                  <div style={{ fontSize:10, color:'var(--text-muted)', marginBottom:8 }}>Total Claims</div>
-                  <div style={{ display:'flex', gap:6 }}>
-                    <div style={{ flex:1, background:'var(--green-bg)', borderRadius:8, padding:'6px', textAlign:'center' }}>
-                      <div style={{ fontWeight:800, fontSize:12, color:'var(--green)' }}>AED {approvedMonthExp.toLocaleString('en-US')}</div>
-                      <div style={{ fontSize:9, color:'var(--green)', opacity:0.8 }}>Approved</div>
-                    </div>
-                    <div style={{ flex:1, background:'var(--amber-bg)', borderRadius:8, padding:'6px', textAlign:'center' }}>
-                      <div style={{ fontWeight:800, fontSize:12, color:'var(--amber)' }}>{pendingMonthExp}</div>
-                      <div style={{ fontSize:9, color:'var(--amber)', opacity:0.8 }}>Pending</div>
-                    </div>
+                    ))}
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Attendance */}
-            <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', borderBottom:'1px solid var(--border)' }}>
-                <span style={{ fontSize:12, fontWeight:800, color:'var(--text)' }}>Recent Attendance</span>
-                <button onClick={()=>setTab('attendance')} style={{ fontSize:11, fontWeight:600, color:'var(--gold)', background:'none', border:'none', cursor:'pointer', padding:0, fontFamily:'Poppins,sans-serif' }}>View Full Attendance</button>
-              </div>
-              <div style={{ padding:'14px 16px' }}>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:12 }}>
-                  {[
-                    { l:'Present',    v:attendance.filter(a=>a.status==='present').length,  c:'#10B981', bg:'#F0FDF4' },
-                    { l:'Absent',     v:attendance.filter(a=>a.status==='absent').length,   c:'#EF4444', bg:'#FEF2F2' },
-                    { l:'Late',       v:attendance.filter(a=>a.is_late).length,             c:'#F59E0B', bg:'#FFFBEB' },
-                    { l:'Early Leave',v:attendance.filter(a=>a.early_leave).length,         c:'#3B82F6', bg:'#EFF6FF' },
-                  ].map(stat=>(
-                    <div key={stat.l} style={{ textAlign:'center', padding:'8px', borderRadius:10, background:stat.bg, border:'1px solid var(--border)' }}>
-                      <div style={{ fontSize:16, fontWeight:900, color:stat.c }}>{attLoad?'—':stat.v}</div>
-                      <div style={{ fontSize:9.5, color:'var(--text-muted)', marginTop:1 }}>{stat.l}</div>
+                  {attendance.length > 0 ? (
+                    <div style={{ display:'flex', gap:3, flexWrap:'wrap' }}>
+                      {attendance.slice(0,31).map((a, i) => {
+                        const c = a.status==='present'?'#059669':a.status==='absent'?'#DC2626':'#D97706'
+                        return <div key={i} title={`${a.date?.slice(0,10)} · ${a.status}`} style={{ width:9, height:24, borderRadius:3, background:c, opacity:0.85, flexShrink:0 }}/>
+                      })}
                     </div>
-                  ))}
+                  ) : (
+                    <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center' }}>No attendance records this month</div>
+                  )}
+                </>
+              )}
+            </div>
+          </Section>
+
+          {/* Edit / Delete */}
+          {userRole !== 'accountant' && (
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={onEdit} style={{ flex:1, padding:'12px', borderRadius:12, background:'var(--gold)', color:'#fff', fontWeight:700, fontSize:13.5, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                Edit Profile
+              </button>
+              <button onClick={onDelete} style={{ padding:'12px 20px', borderRadius:12, background:'#FEF2F2', color:'#DC2626', fontWeight:700, fontSize:13.5, border:'1px solid #FECACA', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                Delete
+              </button>
+            </div>
+          )}
+        </>)}
+
+        {/* ════ LEAVES ════ */}
+        {tab === 'leaves' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+              {[
+                { l:'Total',    v:leaves.length,                                  c:'var(--text)', bg:'var(--bg-alt)' },
+                { l:'Approved', v:leaves.filter(l=>l.status==='approved').length, c:'#059669',     bg:'#F0FDF4'       },
+                { l:'Pending',  v:leaves.filter(l=>l.status==='pending').length,  c:'#D97706',     bg:'#FFFBEB'       },
+              ].map(s => (
+                <div key={s.l} style={{ textAlign:'center', padding:'12px 8px', borderRadius:12, background:s.bg, border:'1px solid var(--border)' }}>
+                  <div style={{ fontWeight:900, fontSize:22, color:s.c, lineHeight:1 }}>{s.v}</div>
+                  <div style={{ fontSize:10, fontWeight:600, color:s.c, opacity:0.8, marginTop:5 }}>{s.l}</div>
                 </div>
-                {attLoad ? <div className="sk" style={{ height:26, borderRadius:6 }}/> : attendance.length>0 ? (
-                  <div style={{ display:'flex', gap:3, flexWrap:'wrap' }}>
-                    {attendance.slice(-30).map((a,i)=>{
-                      const c=a.status==='present'?'#10B981':a.status==='absent'?'#EF4444':a.status==='leave'?'#F59E0B':'#D1D5DB'
-                      return <div key={i} title={`${a.date?.slice(0,10)} — ${a.status}`} style={{ width:9, height:26, borderRadius:2, background:c, opacity:0.8, cursor:'default' }} onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.8'}/>
-                    })}
-                  </div>
-                ) : <div style={{ textAlign:'center', padding:'10px 0', color:'var(--text-muted)', fontSize:12 }}>No attendance records this month</div>}
-              </div>
+              ))}
             </div>
-
-            {/* Notes */}
-            <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', borderBottom:'1px solid var(--border)' }}>
-                <span style={{ fontSize:12, fontWeight:800, color:'var(--text)' }}>Notes</span>
-                <button onClick={async()=>{
-                  const text=prompt('Add note:')
-                  if(!text?.trim()) return
-                  try {
-                    await fetch(`${API}/api/employees/${emp.id}/notes`,{method:'POST',headers:{...auth(),'Content-Type':'application/json'},body:JSON.stringify({text})})
-                    const d=await fetch(`${API}/api/employees/${emp.id}/notes`,{headers:auth()}).then(r=>r.json())
-                    setNotes(d.notes||[])
-                  } catch(e){}
-                }} style={{ fontSize:11, fontWeight:700, color:'var(--gold)', background:'var(--amber-bg)', border:'1px solid var(--gold-border)', borderRadius:20, padding:'4px 12px', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                  + Add Note
-                </button>
-              </div>
-              <div style={{ padding:'12px 16px', display:'flex', flexDirection:'column', gap:8 }}>
-                {notes.length===0 ? (
-                  <div style={{ textAlign:'center', padding:'14px 0', color:'var(--text-muted)', fontSize:12 }}>No more notes</div>
-                ) : notes.map((n,i)=>(
-                  <div key={n.id||i} style={{ background:'var(--bg-alt)', borderRadius:10, padding:'10px 12px', border:'1px solid var(--border)' }}>
-                    <div style={{ fontSize:12.5, color:'var(--text)', marginBottom:4 }}>{n.text||n.content}</div>
-                    <div style={{ fontSize:10.5, color:'var(--text-muted)' }}>{n.created_by_name||'Team'} · {n.created_at?.slice(0,10)}</div>
+            {leavesLoad
+              ? <div style={{ textAlign:'center', padding:'24px', color:'var(--text-muted)', fontSize:13 }}>Loading…</div>
+              : leaves.length === 0
+                ? <div style={{ textAlign:'center', padding:'40px 20px' }}>
+                    <Calendar size={32} style={{ margin:'0 auto 12px', display:'block', opacity:0.15 }}/>
+                    <div style={{ fontSize:13, color:'var(--text-muted)' }}>No leave records</div>
                   </div>
-                ))}
-              </div>
-            </div>
+                : leaves.map(lv => {
+                    const TC  = { Annual:'#B8860B', Sick:'#2563EB', Emergency:'#EF4444', Unpaid:'#6B7280', Other:'#9CA3AF' }
+                    const SC2 = { approved:'#059669', pending:'#D97706', rejected:'#EF4444' }
+                    const SBG = { approved:'#F0FDF4', pending:'#FFFBEB', rejected:'#FEF2F2' }
+                    return (
+                      <div key={lv.id} style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:12, padding:'12px 14px' }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                          <span style={{ fontSize:12.5, fontWeight:700, color:TC[lv.type]||'#9CA3AF' }}>{lv.type}</span>
+                          <span style={{ fontSize:11, fontWeight:700, color:SC2[lv.status]||'#9CA3AF', background:SBG[lv.status], borderRadius:99, padding:'2px 10px', border:`1px solid ${SBG[lv.status]}` }}>{lv.status}</span>
+                        </div>
+                        <div style={{ fontSize:12.5, fontWeight:600, color:'var(--text)', marginBottom:4 }}>{lv.from_date?.slice(0,10)} → {lv.to_date?.slice(0,10)}</div>
+                        <div style={{ display:'flex', justifyContent:'space-between' }}>
+                          <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>{lv.days} day{lv.days!==1?'s':''}</span>
+                          {lv.reason && <span style={{ fontSize:11, color:'var(--text-sub)', maxWidth:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{lv.reason}</span>}
+                        </div>
+                      </div>
+                    )
+                  })
+            }
+          </div>
+        )}
 
-            {/* Actions */}
-            {userRole!=='accountant' && (
-              <div style={{ display:'flex', gap:8 }}>
-                <button onClick={onEdit} className="btn btn-secondary" style={{ flex:1, justifyContent:'center', borderRadius:12 }}><Pencil size={13}/> Edit Employee</button>
-                <button onClick={onDelete} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:12, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', fontWeight:700, fontSize:12.5, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}><Trash2 size={13}/> Delete</button>
+        {/* ════ DOCUMENTS ════ */}
+        {tab === 'documents' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            <Section title="Expiry Dates">
+              <DocRow label="UAE Visa"        date={emp.visa_expiry}/>
+              <DocRow label="Driving License" date={emp.license_expiry}/>
+              <DocRow label="ILOE"            date={emp.iloe_expiry}/>
+            </Section>
+            <Section title="Identity & Numbers">
+              <InfoItem icon={CreditCard} label="Passport No"     value={emp.passport_no}          mono/>
+              <InfoItem icon={Shield}     label="Emirates ID"     value={emp.emirates_id}           mono/>
+              <InfoItem icon={FileText}   label="UID Number"      value={emp.uid_number}            mono/>
+              <InfoItem icon={FileText}   label="Visa File No"    value={emp.visa_file_no}/>
+              <InfoItem icon={MapPin}     label="Issuing Emirate" value={emp.emirates_issuing_visa}/>
+              <InfoItem icon={User}       label="Visa Type"       value={emp.visa_type==='own'?'Own Visa':'Company Visa'}/>
+              <InfoItem icon={FileText}   label="Sub Group"       value={emp.sub_group_name}/>
+            </Section>
+            {emp.insurance_url ? (
+              <Section title="Insurance Card">
+                <div style={{ padding:'14px 16px' }}>
+                  <a href={emp.insurance_url} target="_blank" rel="noreferrer"
+                    style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'13px', borderRadius:12, background:'var(--amber-bg)', border:'1px solid var(--amber-border)', color:'#B8860B', fontWeight:700, fontSize:13, fontFamily:'Poppins,sans-serif', textDecoration:'none' }}>
+                    <FileText size={14}/> View Insurance Card <ExternalLink size={12}/>
+                  </a>
+                </div>
+              </Section>
+            ) : (
+              <div style={{ textAlign:'center', padding:'20px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:14, fontSize:12, color:'var(--text-muted)' }}>
+                No insurance card on file
               </div>
             )}
           </div>
         )}
 
-        {/* ══════════ PERSONAL INFO ══════════════════════════ */}
-        {tab==='personal' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            <SectionBox title="Personal Details">
-              {[
-                {l:'Full Name',      v:emp.name},
-                {l:'Date of Birth',  v:emp.dob?.slice(0,10)},
-                {l:'Gender',         v:emp.gender},
-                {l:'Marital Status', v:emp.marital_status},
-                {l:'Father / Family',v:emp.father_family_name},
-                {l:'Nationality',    v:emp.nationality},
-                {l:'Religion',       v:emp.religion},
-                {l:'Languages',      v:emp.languages},
-              ].map(r=><InfoRow key={r.l} label={r.l} value={r.v}/>)}
-            </SectionBox>
-            <SectionBox title="Contact Details">
-              {[
-                {l:'Phone',              v:emp.phone},
-                {l:'Email',              v:emp.email_id},
-                {l:'Emergency Contact',  v:emp.emergency_contact_name},
-                {l:'Emergency Phone',    v:emp.emergency_contact_phone},
-                {l:'Residential Location',v:emp.residential_location},
-              ].map(r=><InfoRow key={r.l} label={r.l} value={r.v}/>)}
-            </SectionBox>
-          </div>
-        )}
-
-        {/* ══════════ EMPLOYMENT ═════════════════════════════ */}
-        {tab==='employment' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            <SectionBox title="Employment Details">
-              {[
-                {l:'Designation',      v:emp.role},
-                {l:'Department',       v:emp.dept},
-                {l:'Employment Type',  v:emp.employment_type||'Full Time'},
-                {l:'Reporting To',     v:emp.reporting_to||'Operations Manager'},
-                {l:'Work Location',    v:emp.work_location},
-                {l:'Probation End Date',v:emp.probation_end_date?.slice(0,10)},
-                {l:'Joined Date',      v:emp.joined?.slice(0,10)},
-              ].map(r=><InfoRow key={r.l} label={r.l} value={r.v}/>)}
-            </SectionBox>
-            <SectionBox title="Salary & Compensation">
-              {[
-                {l:'Base Salary',       v:`AED ${Number(emp.salary||0).toLocaleString('en-US')} /mo`},
-                {l:'Hourly Rate',       v:emp.hourly_rate?`AED ${emp.hourly_rate} /hr`:null},
-                {l:'Performance Bonus', v:emp.performance_bonus?`AED ${emp.performance_bonus}`:null},
-                {l:'Per Shipment Rate', v:emp.per_shipment_rate?`AED ${emp.per_shipment_rate}`:null},
-              ].map(r=><InfoRow key={r.l} label={r.l} value={r.v}/>)}
-              <div style={{ marginTop:10, background:'var(--purple-bg)', border:'1px solid var(--purple-border)', borderRadius:10, padding:'10px 12px' }}>
-                <div style={{ fontSize:9.5, fontWeight:800, color:'#7C3AED', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5 }}>Salary Formula</div>
-                <div style={{ fontSize:12.5, color:'var(--text)', fontWeight:600 }}>
-                  {emp.project_type==='office'?`AED ${Number(emp.salary||0).toLocaleString('en-US')} (fixed salary)`:emp.project_type==='cret'?`AED ${Number(emp.salary||0).toLocaleString('en-US')} + shipments × ${emp.per_shipment_rate||0.5}`:`AED ${Number(emp.salary||0).toLocaleString('en-US')} + hrs × ${emp.hourly_rate||3.85} + ${emp.performance_bonus||100} bonus`}
-                </div>
-              </div>
-            </SectionBox>
-          </div>
-        )}
-
-        {/* ══════════ DOCUMENTS ══════════════════════════════ */}
-        {tab==='documents' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            <div className="r-grid-3" style={{ gap:8 }}>
-              {[['Visa',emp.visa_expiry],['License',emp.license_expiry],['ILOE',emp.iloe_expiry]].map(([l,d])=>{
-                const info=expiry(d)
-                return (
-                  <div key={l} style={{ textAlign:'center', padding:'12px 8px', borderRadius:12, background:info?.bg||'var(--bg-alt)', border:`1px solid ${info?.bc||'var(--border)'}` }}>
-                    <div style={{ fontSize:10, fontWeight:800, color:info?.c||'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:4 }}>{l}</div>
-                    <div style={{ fontSize:13, color:info?.c||'var(--text-muted)', fontWeight:700 }}>{info?.label||'N/A'}</div>
-                    {d && <div style={{ fontSize:10, color:info?.c||'var(--text-muted)', opacity:0.7, marginTop:2 }}>{d.slice(0,10)}</div>}
-                  </div>
-                )
-              })}
-            </div>
-            <SectionBox title="Document Numbers">
-              {[
-                {l:'Passport No',          v:emp.passport_no},
-                {l:'UID Number',           v:emp.uid_number},
-                {l:'Emirates ID',          v:emp.emirates_id},
-                {l:'Visa File No',         v:emp.visa_file_no},
-                {l:'Emirates Issuing Visa',v:emp.emirates_issuing_visa},
-                {l:'Email',                v:emp.email_id},
-              ].map(r=><InfoRow key={r.l} label={r.l} value={r.v}/>)}
-            </SectionBox>
-          </div>
-        )}
-
-        {/* ══════════ ATTENDANCE ═════════════════════════════ */}
-        {tab==='attendance' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            <div className="r-grid-3" style={{ gap:8 }}>
-              {[
-                {l:'Present', v:attendance.filter(a=>a.status==='present').length, c:'#10B981', bg:'#F0FDF4'},
-                {l:'Absent',  v:attendance.filter(a=>a.status==='absent').length,  c:'#EF4444', bg:'#FEF2F2'},
-                {l:'On Leave',v:attendance.filter(a=>a.status==='leave').length,   c:'#F59E0B', bg:'#FFFBEB'},
-              ].map(s=>(
-                <div key={s.l} style={{ textAlign:'center', padding:'12px', borderRadius:12, background:s.bg, border:'1px solid var(--border)' }}>
-                  <div style={{ fontWeight:900, fontSize:22, color:s.c }}>{attLoad?'—':s.v}</div>
-                  <div style={{ fontSize:11, color:s.c, opacity:0.8, marginTop:3, fontWeight:600 }}>{s.l}</div>
-                </div>
-              ))}
-            </div>
-            {attLoad ? <div style={{ textAlign:'center', padding:20, color:'var(--text-muted)', fontSize:12 }}>Loading…</div>
-            : attendance.length===0 ? <div style={{ textAlign:'center', padding:30, color:'var(--text-muted)', fontSize:12 }}>No attendance records this month</div>
-            : <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                {attendance.map(a=>{
-                  const c=a.status==='present'?'#10B981':a.status==='absent'?'#EF4444':'#F59E0B'
-                  return (
-                    <div key={a.id||a.date} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background:'var(--bg-alt)', borderRadius:10, border:'1px solid var(--border)' }}>
-                      <div style={{ width:8, height:8, borderRadius:'50%', background:c, flexShrink:0 }}/>
-                      <span style={{ fontSize:12, fontWeight:600, color:'var(--text)', flex:1 }}>{a.date?.slice(0,10)}</span>
-                      <span style={{ fontSize:11, fontWeight:700, color:c, textTransform:'capitalize' }}>{a.status}</span>
-                      {a.check_in&&<span style={{ fontSize:10.5, color:'var(--text-muted)' }}>{a.check_in} – {a.check_out||'—'}</span>}
-                    </div>
-                  )
-                })}
-              </div>}
-          </div>
-        )}
-
-        {/* ══════════ LEAVES ═════════════════════════════════ */}
-        {tab==='leaves' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            <div className="r-grid-3" style={{ gap:6, marginBottom:4 }}>
-              {[
-                {l:'Total',   v:leaves.length,                                  c:'var(--text)',bg:'var(--bg-alt)'},
-                {l:'Approved',v:leaves.filter(l=>l.status==='approved').length, c:'#10B981',   bg:'#F0FDF4'},
-                {l:'Pending', v:leaves.filter(l=>l.status==='pending').length,  c:'#F59E0B',   bg:'#FFFBEB'},
-              ].map(s=>(
-                <div key={s.l} style={{ textAlign:'center', padding:'8px 4px', borderRadius:10, background:s.bg, border:'1px solid var(--border)' }}>
-                  <div style={{ fontWeight:900, fontSize:18, color:s.c }}>{s.v}</div>
-                  <div style={{ fontSize:9.5, color:s.c, fontWeight:600, marginTop:2, opacity:0.8 }}>{s.l}</div>
-                </div>
-              ))}
-            </div>
-            {leavesLoad ? <div style={{ textAlign:'center', padding:20, color:'var(--text-muted)', fontSize:12 }}>Loading…</div>
-            : leaves.length===0 ? <div style={{ textAlign:'center', padding:20, color:'var(--text-muted)', fontSize:12 }}><Calendar size={28} style={{ margin:'0 auto 8px', display:'block', opacity:0.2 }}/>No leave records</div>
-            : leaves.map(lv=>{
-              const TC={Annual:'#B8860B',Sick:'#2563EB',Emergency:'#EF4444',Unpaid:'#6B7280',Other:'#9CA3AF'}
-              const SC2={approved:'#10B981',pending:'#F59E0B',rejected:'#EF4444'}
-              const SBG={approved:'#F0FDF4',pending:'#FFFBEB',rejected:'#FEF2F2'}
-              const tc=TC[lv.type]||'#9CA3AF', sc2=SC2[lv.status]||'#9CA3AF'
-              return (
-                <div key={lv.id} style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10, padding:'10px 12px' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5 }}>
-                    <span style={{ fontSize:11.5, fontWeight:700, color:tc, background:`${tc}12`, borderRadius:6, padding:'2px 8px' }}>{lv.type}</span>
-                    <span style={{ fontSize:10.5, fontWeight:700, color:sc2, background:SBG[lv.status], borderRadius:20, padding:'2px 8px' }}>{lv.status}</span>
-                  </div>
-                  <div style={{ fontSize:12, color:'var(--text)', fontWeight:600, marginBottom:2 }}>{lv.from_date?.slice(0,10)} → {lv.to_date?.slice(0,10)}</div>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <span style={{ fontSize:11, color:'var(--text-muted)' }}>{lv.days} day{lv.days!==1?'s':''}</span>
-                    {lv.reason&&<span style={{ fontSize:10.5, color:'var(--text-sub)', maxWidth:110, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{lv.reason}</span>}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {tab==='sims' && (
+        {/* ════ SIMS ════ */}
+        {tab === 'sims' && (
           <div>
             <WorkNumberAssigner emp={emp} onSaved={onRefresh} userRole={userRole} onSelectEmployee={onSelectEmployee}/>
-            <div style={{ marginTop:10, padding:'10px 12px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10 }}>
-              <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:6 }}>Personal Phone</div>
-              <div style={{ fontSize:13, fontWeight:600, color:'var(--text)' }}>{emp.phone||'—'}</div>
+            <div style={{ marginTop:10, background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:12, padding:'12px 14px' }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5 }}>Personal Phone</div>
+              <div style={{ fontSize:13.5, fontWeight:700, color:'var(--text)' }}>{emp.phone || '—'}</div>
             </div>
           </div>
         )}
 
-        {tab==='fleet' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            {fleetLoad ? <div style={{ textAlign:'center', padding:30, color:'var(--text-muted)', fontSize:12 }}>Loading…</div> : (
+        {/* ════ FLEET ════ */}
+        {tab === 'fleet' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {fleetLoad ? (
+              [1,2,3].map(i => <div key={i} className="sk" style={{ height:72, borderRadius:12 }}/>)
+            ) : (
               <>
+                {/* Current vehicle highlight */}
                 {curVehicle ? (
-                  <div style={{ background:'var(--green-bg)', border:'1px solid #A7F3D0', borderRadius:12, padding:'12px 14px' }}>
-                    <div style={{ fontSize:10, fontWeight:700, color:'#10B981', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8 }}>Current Vehicle</div>
-                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <div style={{ width:40, height:40, borderRadius:10, background:'#DCFCE7', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Truck size={19} color="#10B981"/></div>
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ fontWeight:800, fontSize:16, color:'var(--text)' }}>{curVehicle.plate||'—'}</div>
-                        <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:2 }}>Since {new Date(curVehicle.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'})}</div>
+                  <div style={{ background:'#F0FDF4', border:'1px solid #A7F3D0', borderRadius:12, padding:'13px 16px' }}>
+                    <div style={{ fontSize:9.5, fontWeight:800, color:'#059669', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:9 }}>Current Vehicle</div>
+                    <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                      <div style={{ width:42, height:42, borderRadius:12, background:'#DCFCE7', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        <Truck size={20} color="#059669"/>
                       </div>
-                      <span style={{ fontSize:10, fontWeight:700, color:'#10B981', background:'#DCFCE7', border:'1px solid #A7F3D0', borderRadius:20, padding:'2px 9px' }}>Active</span>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontWeight:800, fontSize:16, color:'var(--text)', letterSpacing:'-0.02em' }}>{curVehicle.plate || '—'}</div>
+                        <div style={{ fontSize:11.5, color:'var(--text-muted)', marginTop:2 }}>Since {new Date(curVehicle.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'})}</div>
+                      </div>
+                      <span style={{ fontSize:10.5, fontWeight:700, color:'#059669', background:'#DCFCE7', border:'1px solid #A7F3D0', borderRadius:99, padding:'3px 10px' }}>Active</span>
                     </div>
-                    {curVehicle.fuel_level&&<div style={{ marginTop:8, fontSize:11, color:'var(--text-sub)' }}>Fuel at receive: {curVehicle.fuel_level}{curVehicle.odometer?` · ODO: ${curVehicle.odometer} km`:''}</div>}
                   </div>
                 ) : (
-                  <div style={{ background:'var(--bg-alt)', border:'1px dashed var(--border)', borderRadius:12, padding:16, textAlign:'center' }}>
-                    <Truck size={20} color="var(--text-muted)" style={{ margin:'0 auto 6px', display:'block', opacity:0.3 }}/>
+                  <div style={{ textAlign:'center', padding:'16px', background:'var(--bg-alt)', border:'1px dashed var(--border)', borderRadius:12 }}>
+                    <Truck size={20} color="var(--text-muted)" style={{ margin:'0 auto 6px', display:'block', opacity:0.25 }}/>
                     <div style={{ fontSize:12, color:'var(--text-muted)' }}>No vehicle currently assigned</div>
                   </div>
                 )}
-                <div>
-                  <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8, display:'flex', alignItems:'center', gap:6 }}><ArrowLeftRight size={11}/> Receive / Return History</div>
-                  {fleetHv.length===0 ? <div style={{ textAlign:'center', padding:'14px 0', color:'var(--text-muted)', fontSize:12 }}>No handover records</div> : (
+
+                {/* Handover history */}
+                {fleetHv.length > 0 && (
+                  <div>
+                    <div style={{ fontSize:10, fontWeight:800, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
+                      <ArrowLeftRight size={10}/> Handover History
+                    </div>
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                      {fleetHv.map(h=>{
-                        const isRecv=h.type==='received'
+                      {fleetHv.map(h => {
+                        const isRecv = h.type === 'received'
                         return (
-                          <div key={h.id} style={{ padding:'9px 12px', borderRadius:10, background:'var(--bg-alt)', border:`1px solid ${isRecv?'#A7F3D0':'#FECACA'}` }}>
-                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:h.fuel_level||h.odometer||h.condition_note?5:0 }}>
+                          <div key={h.id} style={{ padding:'10px 14px', borderRadius:10, background:'var(--bg-alt)', border:`1px solid ${isRecv?'#A7F3D0':'#FECACA'}` }}>
+                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                               <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                                <span style={{ fontSize:10, fontWeight:700, color:isRecv?'#10B981':'#EF4444', background:isRecv?'#F0FDF4':'#FEF2F2', borderRadius:5, padding:'1px 7px', textTransform:'uppercase' }}>{h.type}</span>
-                                <span style={{ fontWeight:700, fontSize:12.5, color:'var(--text)' }}>{h.plate||'—'}</span>
+                                <span style={{ fontSize:10, fontWeight:700, color:isRecv?'#059669':'#DC2626', background:isRecv?'#F0FDF4':'#FEF2F2', borderRadius:5, padding:'1px 7px', textTransform:'uppercase' }}>{h.type}</span>
+                                <span style={{ fontWeight:700, fontSize:12.5, color:'var(--text)' }}>{h.plate || '—'}</span>
                               </div>
-                              <span style={{ fontSize:10.5, color:'var(--text-muted)' }}>{new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'})}</span>
+                              <span style={{ fontSize:11, color:'var(--text-muted)' }}>{new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'})}</span>
                             </div>
-                            {(h.fuel_level||h.odometer||h.condition_note)&&<div style={{ display:'flex', gap:12, flexWrap:'wrap', marginTop:4 }}>
-                              {h.fuel_level&&<span style={{ fontSize:10.5, color:'var(--text-sub)' }}>Fuel: {h.fuel_level}</span>}
-                              {h.odometer&&<span style={{ fontSize:10.5, color:'var(--text-sub)' }}>ODO: {h.odometer} km</span>}
-                              {h.condition_note&&<span style={{ fontSize:10.5, color:'var(--text-sub)', flexBasis:'100%', marginTop:2 }}>{h.condition_note}</span>}
-                            </div>}
+                            {(h.fuel_level||h.odometer||h.condition_note) && (
+                              <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginTop:5 }}>
+                                {h.fuel_level && <span style={{ fontSize:10.5, color:'var(--text-sub)' }}>Fuel: {h.fuel_level}</span>}
+                                {h.odometer && <span style={{ fontSize:10.5, color:'var(--text-sub)' }}>ODO: {h.odometer} km</span>}
+                                {h.condition_note && <span style={{ fontSize:10.5, color:'var(--text-sub)' }}>{h.condition_note}</span>}
+                              </div>
+                            )}
                           </div>
                         )
                       })}
                     </div>
-                  )}
-                </div>
-                {fleetAsgn.length>0&&(
-                  <div>
-                    <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8, display:'flex', alignItems:'center', gap:6 }}><Truck size={11}/> POC Assignment History</div>
-                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                      {fleetAsgn.map((a,i)=>(
-                        <div key={a.id||i} style={{ padding:'9px 12px', borderRadius:10, background:'var(--bg-alt)', border:'1px solid var(--border)' }}>
-                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                            <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                              <span style={{ fontSize:10, fontWeight:700, color:'#2563EB', background:'#EFF6FF', borderRadius:5, padding:'1px 7px' }}>POC</span>
-                              <span style={{ fontWeight:700, fontSize:12.5, color:'var(--text)' }}>{a.plate||a.vehicle_plate||'—'}</span>
-                            </div>
-                            <span style={{ fontSize:10.5, color:'var(--text-muted)' }}>{a.date?new Date(a.date).toLocaleDateString('en-AE',{day:'numeric',month:'short',year:'numeric'}):'—'}</span>
-                          </div>
-                          {a.assigned_by_name&&<div style={{ fontSize:10.5, color:'var(--text-sub)', marginTop:4 }}>Assigned by: {a.assigned_by_name}</div>}
-                        </div>
-                      ))}
-                    </div>
                   </div>
+                )}
+
+                {fleetHv.length === 0 && !curVehicle && (
+                  <div style={{ textAlign:'center', padding:'20px', color:'var(--text-muted)', fontSize:12 }}>No handover records</div>
                 )}
               </>
             )}
           </div>
         )}
 
-        {tab==='expenses' && (
-          <div>
-            <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:10, background:'var(--blue-bg)', border:'1px solid var(--blue-border)', color:'var(--blue)', fontWeight:600, fontSize:12, textDecoration:'none', marginBottom:12 }}>
+        {/* ════ EXPENSES ════ */}
+        {tab === 'expenses' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            <a href={`/dashboard/finance/expenses?emp_id=${emp.id}`}
+              style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px 14px', borderRadius:10, background:'var(--blue-bg)', border:'1px solid var(--blue-border)', color:'var(--blue)', fontWeight:600, fontSize:12, textDecoration:'none' }}>
               <Receipt size={13}/> View All Expenses <ExternalLink size={11}/>
             </a>
-            {expLoad ? <div style={{ textAlign:'center', padding:20, color:'var(--text-muted)', fontSize:12 }}>Loading…</div>
-            : expenses.length===0 ? <div style={{ textAlign:'center', padding:24, color:'var(--text-muted)', fontSize:12 }}><Receipt size={28} style={{ margin:'0 auto 8px', display:'block', opacity:0.2 }}/>No expenses found</div>
-            : expenses.slice(0,20).map(ex=>(
-              <div key={ex.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 10px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:9, marginBottom:5 }}>
-                <div style={{ minWidth:0 }}>
-                  <div style={{ fontSize:12, fontWeight:600, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:160 }}>{ex.description||ex.category||'Expense'}</div>
-                  <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>{ex.date?.slice(0,10)}</div>
-                </div>
-                <span style={{ fontSize:12, fontWeight:700, color:'#EF4444', flexShrink:0 }}>AED {Number(ex.amount||0).toLocaleString('en-US')}</span>
-              </div>
-            ))}
+            {expLoad
+              ? [1,2,3].map(i => <div key={i} className="sk" style={{ height:68, borderRadius:12 }}/>)
+              : expenses.length === 0
+                ? <div style={{ textAlign:'center', padding:'40px 20px' }}>
+                    <Receipt size={32} style={{ margin:'0 auto 12px', display:'block', opacity:0.15 }}/>
+                    <div style={{ fontSize:13, color:'var(--text-muted)' }}>No expense records</div>
+                  </div>
+                : expenses.slice(0,30).map(ex => (
+                    <div key={ex.id} style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:12, padding:'12px 14px' }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5 }}>
+                        <span style={{ fontSize:12.5, fontWeight:700, color:'var(--text)' }}>{ex.description || ex.category || 'Expense'}</span>
+                        <span style={{ fontSize:13.5, fontWeight:800, color:'#DC2626' }}>AED {Number(ex.amount||0).toLocaleString('en-US')}</span>
+                      </div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                        <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>{ex.date?.slice(0,10)}</span>
+                        <span style={{ fontSize:10.5, fontWeight:700, color:ex.status==='approved'?'#059669':ex.status==='pending'?'#D97706':'#EF4444', background:ex.status==='approved'?'#F0FDF4':ex.status==='pending'?'#FFFBEB':'#FEF2F2', borderRadius:99, padding:'2px 9px' }}>
+                          {ex.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+            }
           </div>
         )}
 
-        {tab==='tasks' && (
-          <div style={{ textAlign:'center', padding:'40px 20px', color:'var(--text-muted)' }}>
-            <Briefcase size={32} style={{ margin:'0 auto 12px', display:'block', opacity:0.15 }}/>
-            <div style={{ fontWeight:700, fontSize:14, color:'var(--text-sub)' }}>Tasks coming soon</div>
-          </div>
-        )}
-
-        {tab==='history' && (
-          <div style={{ textAlign:'center', padding:'40px 20px', color:'var(--text-muted)' }}>
-            <Clock size={32} style={{ margin:'0 auto 12px', display:'block', opacity:0.15 }}/>
-            <div style={{ fontWeight:700, fontSize:14, color:'var(--text-sub)' }}>Activity history coming soon</div>
-          </div>
-        )}
       </div>
     </div>
   )
