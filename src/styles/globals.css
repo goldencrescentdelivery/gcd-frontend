@@ -144,7 +144,7 @@ a { text-decoration:none; color:inherit; }
    ───────────────────────────────────────────────────────────── */
 .sidebar {
   width: 232px; min-width: 232px; height: 100vh;
-  background: var(--card);
+  background: #f4f4f4;
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
   overflow-y: auto; overflow-x: hidden;
