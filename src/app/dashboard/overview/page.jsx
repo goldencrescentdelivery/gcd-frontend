@@ -100,7 +100,7 @@ export default function OverviewPage() {
         fetch(`${API}/api/expenses?month=${month}`,               {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/sims/stats`,                            {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/letters`,                               {headers:hdr()}).then(r=>r.json()),
-        fetch(`${API}/api/fleet/vehicles`,                        {headers:hdr()}).then(r=>r.json()),
+        fetch(`${API}/api/vehicles`,                              {headers:hdr()}).then(r=>r.json()),
       ])
       const sumData   = sumRes.status   === 'fulfilled' ? sumRes.value   : {}
       const chartData = chartRes.status === 'fulfilled' ? chartRes.value : {}
@@ -145,9 +145,10 @@ export default function OverviewPage() {
     color:cat.c,
   })).filter(c=>c.value>0).sort((a,b)=>b.value-a.value)
 
-  const totalEmp    = summary?.employees?.c      || 0
-  const activeEmp   = summary?.employees?.active || 0
-  const inactiveEmp = Math.max(0, totalEmp - activeEmp)
+  const totalEmp    = summary?.employees?.c        || 0
+  const activeEmp   = summary?.employees?.active   || 0
+  const onLeaveEmp  = summary?.employees?.on_leave || 0
+  const inactiveEmp = Math.max(0, totalEmp - activeEmp - onLeaveEmp)
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
@@ -214,8 +215,9 @@ export default function OverviewPage() {
         {/* Delivery Agents */}
         <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
           <SH title="Delivery Agents" sub={`${totalEmp} total staff`} href="/dashboard/hr/employees"/>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:16 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:16 }}>
             <StatPill label="Active"   value={activeEmp}   color="var(--green)"  bg="var(--green-bg)"  loading={loading}/>
+            <StatPill label="On Leave" value={onLeaveEmp}  color="var(--amber)"  bg="var(--amber-bg)"  loading={loading}/>
             <StatPill label="Inactive" value={inactiveEmp} color="var(--red)"    bg="var(--red-bg)"    loading={loading}/>
             <StatPill label="Total"    value={totalEmp}    color="var(--purple)" bg="var(--purple-bg)" loading={loading}/>
           </div>
