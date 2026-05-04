@@ -128,9 +128,10 @@ export default function OverviewPage() {
 
   useEffect(() => { load() }, [load])
 
-  const totalExp   = expenses.reduce((s,e)=>s+Number(e.amount||0),0)
-  const pendingExp = expenses.filter(e=>e.status==='pending').length
-  const approvedExp= expenses.filter(e=>e.status==='approved').reduce((s,e)=>s+Number(e.amount||0),0)
+  const totalExp    = expenses.reduce((s,e)=>s+Number(e.amount||0),0)
+  const pendingExp  = expenses.filter(e=>e.status==='pending').length
+  const approvedExp = expenses.filter(e=>e.status==='approved').reduce((s,e)=>s+Number(e.amount||0),0)
+  const rejectedExp = expenses.filter(e=>e.status==='rejected').length
 
   const ECATS = [
     {v:'Parking',c:'#F59E0B'},{v:'Advances',c:'#10B981'},{v:'Air Tickets',c:'#3B82F6'},
@@ -277,10 +278,11 @@ export default function OverviewPage() {
         {/* Expenses This Month */}
         <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'20px' }}>
           <SH title="Expenses This Month" sub={`${fmtAED(totalExp)} total · ${pendingExp} pending`} href="/dashboard/finance/expenses"/>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:16 }}>
-            <StatPill label="Total"    value={fmtAED(totalExp)}    color="var(--text)"  bg="var(--bg-alt)"   loading={loading}/>
-            <StatPill label="Approved" value={fmtAED(approvedExp)} color="var(--green)" bg="var(--green-bg)" loading={loading}/>
-            <StatPill label="Pending"  value={pendingExp}          color="var(--amber)" bg="var(--amber-bg)" loading={loading}/>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:16 }}>
+            <StatPill label="Total"    value={fmtAED(totalExp)}    color="var(--text)"   bg="var(--bg-alt)"   loading={loading}/>
+            <StatPill label="Approved" value={fmtAED(approvedExp)} color="var(--green)"  bg="var(--green-bg)" loading={loading}/>
+            <StatPill label="Pending"  value={pendingExp}          color="var(--amber)"  bg="var(--amber-bg)" loading={loading}/>
+            <StatPill label="Rejected" value={rejectedExp}         color="var(--red)"    bg="var(--red-bg)"   loading={loading}/>
           </div>
 
           {!mounted || byCat.length === 0 ? (
