@@ -95,7 +95,7 @@ function LeaveModal({ empId, onClose, onSave }) {
         <div style={{ width:36, height:4, background:'#E5E7EB', borderRadius:2, margin:'0 auto 20px' }}/>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
           <h3 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>Apply for Leave</h3>
-          <button onClick={onClose} style={{ width:30, height:30, borderRadius:8, background:'#F3F4F6', border:'none', cursor:'pointer', fontSize:18, color:'#6B7280' }}>×</button>
+          <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'#F3F4F6', border:'none', cursor:'pointer', fontSize:18, color:'#6B7280' }}>×</button>
         </div>
         <div style={{ display:'flex', gap:7, marginBottom:16, flexWrap:'wrap' }}>
           {['Annual','Sick','Emergency','Unpaid'].map(t => (
@@ -280,7 +280,7 @@ function CompleteHandoverSheet({ handover, onClose, onDone }) {
                   Receiving {handover.vehicle_plate || handover.plate} from {handover.emp_name}
                 </div>
               </div>
-              <button onClick={onClose} style={{ width:30, height:30, borderRadius:8, background:'#F3F4F6', border:'none', cursor:'pointer', fontSize:18, color:'#6B7280' }}>×</button>
+              <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'#F3F4F6', border:'none', cursor:'pointer', fontSize:18, color:'#6B7280' }}>×</button>
             </div>
 
             {err && <div style={{ background:'#FEF2F2', border:'1px solid #FCA5A5', borderRadius:9, padding:'9px 13px', fontSize:12.5, color:'#C0392B', marginBottom:14 }}>{err}</div>}

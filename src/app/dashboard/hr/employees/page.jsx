@@ -220,7 +220,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
               <h3 style={{ fontWeight:800, fontSize:16, color:'var(--text)', margin:0 }}>{mode==='add'?'Add New DA':'Edit DA'}</h3>
               <p style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>{mode==='add'?'Create a new Delivery Associate':emp?.name}</p>
             </div>
-            <button onClick={onClose} style={{ width:30, height:30, borderRadius:8, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <X size={14} color="var(--text-sub)"/>
             </button>
           </div>
@@ -444,8 +444,8 @@ function WorkNumberAssigner({ emp, onSaved, userRole, onSelectEmployee }) {
             ⚠️ <strong>{pending}</strong> is already assigned to <strong>{conflict.conflictEmpName}</strong>. Proceed?
           </div>
           <div style={{ display:'flex', gap:6 }}>
-            <button onClick={()=>setStep(2)} style={{ flex:1, padding:'6px', borderRadius:7, background:'#B8860B', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>Yes, proceed</button>
-            <button onClick={reset} style={{ flex:1, padding:'6px', borderRadius:7, background:'var(--card)', color:'var(--text-sub)', border:'1px solid var(--border)', cursor:'pointer', fontSize:11, fontFamily:'Poppins,sans-serif' }}>Cancel</button>
+            <button onClick={()=>setStep(2)} style={{ flex:1, padding:'6px', borderRadius:100, background:'#B8860B', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>Yes, proceed</button>
+            <button onClick={reset} style={{ flex:1, padding:'6px', borderRadius:100, background:'var(--card)', color:'var(--text-sub)', border:'1px solid var(--border)', cursor:'pointer', fontSize:11, fontFamily:'Poppins,sans-serif' }}>Cancel</button>
           </div>
         </div>
       )}
@@ -478,11 +478,11 @@ function WorkNumberAssigner({ emp, onSaved, userRole, onSelectEmployee }) {
           </span>
           {canEdit && (
             <div style={{ display:'flex', gap:5 }}>
-              <button onClick={openPicker} style={{ padding:'4px 10px', borderRadius:7, background:'var(--card)', border:'1px solid var(--border)', color:'var(--text-sub)', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:4 }}>
+              <button onClick={openPicker} style={{ padding:'4px 10px', borderRadius:100, background:'var(--card)', border:'1px solid var(--border)', color:'var(--text-sub)', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:4 }}>
                 <Phone size={10}/> {emp.work_number?'Change':'Assign'}
               </button>
               {emp.work_number && (
-                <button onClick={handleRemove} disabled={saving} style={{ padding:'4px 8px', borderRadius:7, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', cursor:'pointer', display:'flex', alignItems:'center' }}>
+                <button onClick={handleRemove} disabled={saving} style={{ padding:'4px 8px', borderRadius:100, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', cursor:'pointer', display:'flex', alignItems:'center' }}>
                   <X size={10}/>
                 </button>
               )}
@@ -515,7 +515,7 @@ function WorkNumberAssigner({ emp, onSaved, userRole, onSelectEmployee }) {
               ))}
             </div>
           )}
-          <button onClick={reset} style={{ width:'100%', padding:'6px', borderRadius:8, background:'var(--bg-alt)', border:'1px solid var(--border)', color:'var(--text-sub)', cursor:'pointer', fontSize:11, fontFamily:'Poppins,sans-serif' }}>Cancel</button>
+          <button onClick={reset} style={{ width:'100%', padding:'6px', borderRadius:100, background:'var(--bg-alt)', border:'1px solid var(--border)', color:'var(--text-sub)', cursor:'pointer', fontSize:11, fontFamily:'Poppins,sans-serif' }}>Cancel</button>
         </div>
       )}
 
@@ -723,9 +723,9 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
           {/* Actions */}
           <div style={{ display:'flex', gap:6, flexShrink:0 }}>
             {userRole !== 'accountant' && (
-              <button onClick={onEdit} style={{ padding:'8px 16px', borderRadius:10, background:'var(--gold)', color:'#fff', fontWeight:700, fontSize:12.5, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Edit</button>
+              <button onClick={onEdit} style={{ padding:'8px 16px', borderRadius:100, background:'var(--gold)', color:'#fff', fontWeight:700, fontSize:12.5, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Edit</button>
             )}
-            <button onClick={onClose} className="btn-close" style={{ width:36, height:36, borderRadius:10 }}><X size={15}/></button>
+            <button onClick={onClose} className="btn-close" style={{ width:36, height:36 }}><X size={15}/></button>
           </div>
         </div>
 
@@ -871,10 +871,10 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
           {/* Edit / Delete */}
           {userRole !== 'accountant' && (
             <div style={{ display:'flex', gap:10 }}>
-              <button onClick={onEdit} style={{ flex:1, padding:'12px', borderRadius:12, background:'var(--gold)', color:'#fff', fontWeight:700, fontSize:13.5, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+              <button onClick={onEdit} style={{ flex:1, padding:'12px', borderRadius:100, background:'var(--gold)', color:'#fff', fontWeight:700, fontSize:13.5, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
                 Edit Profile
               </button>
-              <button onClick={onDelete} style={{ padding:'12px 20px', borderRadius:12, background:'#FEF2F2', color:'#DC2626', fontWeight:700, fontSize:13.5, border:'1px solid #FECACA', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+              <button onClick={onDelete} style={{ padding:'12px 20px', borderRadius:100, background:'#FEF2F2', color:'#DC2626', fontWeight:700, fontSize:13.5, border:'1px solid #FECACA', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
                 Delete
               </button>
             </div>

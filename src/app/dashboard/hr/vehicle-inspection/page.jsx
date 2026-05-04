@@ -224,7 +224,7 @@ function InspectionModal({ vehicles, editInspection, onSave, onClose }) {
                 Complete all 7 sections with Yes / No / NA
               </p>
             </div>
-            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(0,0,0,0.06)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <X size={15}/>
             </button>
           </div>
@@ -468,7 +468,7 @@ function ViewModal({ inspection, onClose, onEdit, onDelete }) {
               <button onClick={() => printInspection(inspection)} className="btn-secondary" style={{ padding:'7px 14px', fontSize:12, display:'flex', alignItems:'center', gap:6 }}>
                 <Printer size={13}/> Print
               </button>
-              <button onClick={onClose} style={{ width:32, height:32, borderRadius:9, background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <X size={15}/>
               </button>
             </div>

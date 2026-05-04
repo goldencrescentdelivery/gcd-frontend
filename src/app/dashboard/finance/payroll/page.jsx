@@ -324,7 +324,7 @@ function SalaryModal({ emp, onSave, onClose }) {
         <div style={{ padding:'22px 24px 18px', background:'linear-gradient(135deg,rgba(184,134,11,0.1),transparent)' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
             <h3 style={{ fontWeight:900, fontSize:16, color:'#1A1612', margin:0 }}>Edit Base Salary</h3>
-            <button onClick={onClose} style={{ width:28,height:28,borderRadius:8,background:'rgba(0,0,0,0.06)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><X size={13}/></button>
+            <button onClick={onClose} style={{ width:28,height:28,borderRadius:'50%',background:'rgba(0,0,0,0.06)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><X size={13}/></button>
           </div>
           <p style={{ fontSize:12, color:'#A89880', margin:0 }}>{emp.name} · {ROLE_CFG[emp.role]?.l||emp.role||'Staff'}</p>
         </div>
@@ -377,12 +377,12 @@ function BonusModal({ employees, month, onSave, onClose }) {
         <div style={{ padding:'20px 22px 16px', background:'linear-gradient(135deg,rgba(16,185,129,0.1),transparent)' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
             <div><h3 style={{ fontWeight:900, fontSize:16, color:'#1A1612', margin:0 }}>Add Bonus</h3><p style={{ fontSize:12, color:'#A89880', marginTop:2 }}>{month}</p></div>
-            <button onClick={onClose} style={{ width:28,height:28,borderRadius:8,background:'rgba(0,0,0,0.06)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><X size={13}/></button>
+            <button onClick={onClose} style={{ width:28,height:28,borderRadius:'50%',background:'rgba(0,0,0,0.06)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><X size={13}/></button>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:7 }}>
             {BON_TYPES.map(t=>(
               <button key={t.v} onClick={()=>setType(t.v)} type="button"
-                style={{ padding:'8px',borderRadius:10,border:`2px solid ${type===t.v?t.c:'rgba(0,0,0,0.1)'}`,background:type===t.v?`${t.c}15`:'rgba(255,255,255,0.7)',cursor:'pointer',textAlign:'center',transition:'all 0.15s',fontFamily:'Poppins,sans-serif' }}>
+                style={{ padding:'8px',borderRadius:100,border:`2px solid ${type===t.v?t.c:'rgba(0,0,0,0.1)'}`,background:type===t.v?`${t.c}15`:'rgba(255,255,255,0.7)',cursor:'pointer',textAlign:'center',transition:'all 0.15s',fontFamily:'Poppins,sans-serif' }}>
                 <div style={{ fontSize:11,fontWeight:700,color:type===t.v?t.c:'#A89880' }}>{t.l}</div>
               </button>
             ))}
@@ -391,8 +391,8 @@ function BonusModal({ employees, month, onSave, onClose }) {
         <div style={{ padding:'16px 22px 20px', display:'flex', flexDirection:'column', gap:12 }}>
           {err&&<div style={{ background:'#FEF2F2',border:'1px solid #FCA5A5',borderRadius:9,padding:'8px 12px',fontSize:12,color:'#EF4444',display:'flex',gap:6,alignItems:'center' }}><AlertCircle size={12}/>{err}</div>}
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-            <button onClick={()=>{setBulk(false);setEmpId('')}} style={{ padding:'9px',borderRadius:10,border:`2px solid ${!bulk?'#10B981':'rgba(0,0,0,0.1)'}`,background:!bulk?'rgba(16,185,129,0.1)':'rgba(255,255,255,0.7)',color:!bulk?'#10B981':'#A89880',fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>Single</button>
-            <button onClick={()=>setBulk(true)} style={{ padding:'9px',borderRadius:10,border:`2px solid ${bulk?'#10B981':'rgba(0,0,0,0.1)'}`,background:bulk?'rgba(16,185,129,0.1)':'rgba(255,255,255,0.7)',color:bulk?'#10B981':'#A89880',fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>All ({employees.length})</button>
+            <button onClick={()=>{setBulk(false);setEmpId('')}} style={{ padding:'9px',borderRadius:100,border:`2px solid ${!bulk?'#10B981':'rgba(0,0,0,0.1)'}`,background:!bulk?'rgba(16,185,129,0.1)':'rgba(255,255,255,0.7)',color:!bulk?'#10B981':'#A89880',fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>Single</button>
+            <button onClick={()=>setBulk(true)} style={{ padding:'9px',borderRadius:100,border:`2px solid ${bulk?'#10B981':'rgba(0,0,0,0.1)'}`,background:bulk?'rgba(16,185,129,0.1)':'rgba(255,255,255,0.7)',color:bulk?'#10B981':'#A89880',fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'Poppins,sans-serif' }}>All ({employees.length})</button>
           </div>
           {!bulk&&<div><label className="input-label">Employee</label>
             <select className="input" value={empId} onChange={e=>setEmpId(e.target.value)}>
@@ -409,7 +409,7 @@ function BonusModal({ employees, month, onSave, onClose }) {
             <input className="input" value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Reason for bonus"/></div>
           <div style={{ display:'flex', gap:10, marginTop:4 }}>
             <button onClick={onClose} className="btn btn-secondary" style={{ flex:1, justifyContent:'center' }}>Cancel</button>
-            <button onClick={handleSave} disabled={saving} style={{ flex:2,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'11px',borderRadius:10,background:'linear-gradient(135deg,#10B981,#22C55E)',color:'white',fontWeight:700,fontSize:13,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif',opacity:saving?0.7:1 }}>
+            <button onClick={handleSave} disabled={saving} style={{ flex:2,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'11px',borderRadius:100,background:'linear-gradient(135deg,#10B981,#22C55E)',color:'white',fontWeight:700,fontSize:13,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif',opacity:saving?0.7:1 }}>
               {saving?'Saving…':bulk?`Add to All`:'Add Bonus'}
             </button>
           </div>
@@ -439,7 +439,7 @@ function DeductionModal({ employees, month, onSave, onClose }) {
         <div style={{ padding:'20px 22px 16px', background:'linear-gradient(135deg,rgba(239,68,68,0.08),transparent)' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
             <div><h3 style={{ fontWeight:900, fontSize:16, color:'#1A1612', margin:0 }}>Add Deduction</h3><p style={{ fontSize:12, color:'#A89880', marginTop:2 }}>{month}</p></div>
-            <button onClick={onClose} style={{ width:28,height:28,borderRadius:8,background:'rgba(0,0,0,0.06)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><X size={13}/></button>
+            <button onClick={onClose} style={{ width:28,height:28,borderRadius:'50%',background:'rgba(0,0,0,0.06)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><X size={13}/></button>
           </div>
           <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
             {DED_TYPES.map(t=>(
@@ -468,7 +468,7 @@ function DeductionModal({ employees, month, onSave, onClose }) {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:4 }}>
             <button onClick={onClose} className="btn btn-secondary" style={{ flex:1, justifyContent:'center' }}>Cancel</button>
-            <button onClick={handleSave} disabled={saving} style={{ flex:2,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'11px',borderRadius:10,background:'linear-gradient(135deg,#EF4444,#F87171)',color:'white',fontWeight:700,fontSize:13,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif',opacity:saving?0.7:1 }}>
+            <button onClick={handleSave} disabled={saving} style={{ flex:2,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'11px',borderRadius:100,background:'linear-gradient(135deg,#EF4444,#F87171)',color:'white',fontWeight:700,fontSize:13,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif',opacity:saving?0.7:1 }}>
               {saving?'Saving…':'Add Deduction'}
             </button>
           </div>
@@ -796,19 +796,19 @@ export default function PayrollPage() {
           <Search size={13} style={{ position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#C4B49A',pointerEvents:'none' }}/>
           <input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search employee…" style={{ paddingLeft:34, borderRadius:20 }}/>
         </div>
-        <button onClick={()=>exportCSV(payroll,month)} style={{ padding:'8px 14px',borderRadius:20,background:'rgba(255,255,255,0.7)',border:'1.5px solid rgba(0,0,0,0.1)',fontSize:12,fontWeight:600,color:'#6B5D4A',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
+        <button onClick={()=>exportCSV(payroll,month)} style={{ padding:'8px 14px',borderRadius:100,background:'rgba(255,255,255,0.7)',border:'1.5px solid rgba(0,0,0,0.1)',fontSize:12,fontWeight:600,color:'#6B5D4A',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
           <Download size={13}/> Export CSV
         </button>
-        <button onClick={()=>generateAllPayslips(filtered,month)} style={{ padding:'8px 14px',borderRadius:20,background:'rgba(29,111,164,0.1)',border:'1.5px solid rgba(29,111,164,0.3)',fontSize:12,fontWeight:600,color:'#1D6FA4',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
+        <button onClick={()=>generateAllPayslips(filtered,month)} style={{ padding:'8px 14px',borderRadius:100,background:'rgba(29,111,164,0.1)',border:'1.5px solid rgba(29,111,164,0.3)',fontSize:12,fontWeight:600,color:'#1D6FA4',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
           <FileText size={13}/> All Payslips
         </button>
-        <button onClick={()=>setModal('bonus')} style={{ padding:'8px 14px',borderRadius:20,background:'rgba(16,185,129,0.1)',border:'1.5px solid rgba(16,185,129,0.3)',fontSize:12,fontWeight:600,color:'#10B981',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
+        <button onClick={()=>setModal('bonus')} style={{ padding:'8px 14px',borderRadius:100,background:'rgba(16,185,129,0.1)',border:'1.5px solid rgba(16,185,129,0.3)',fontSize:12,fontWeight:600,color:'#10B981',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
           <Plus size={13}/> Bonus
         </button>
-        <button onClick={()=>setModal('deduction')} style={{ padding:'8px 14px',borderRadius:20,background:'rgba(239,68,68,0.08)',border:'1.5px solid rgba(239,68,68,0.25)',fontSize:12,fontWeight:600,color:'#EF4444',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
+        <button onClick={()=>setModal('deduction')} style={{ padding:'8px 14px',borderRadius:100,background:'rgba(239,68,68,0.08)',border:'1.5px solid rgba(239,68,68,0.25)',fontSize:12,fontWeight:600,color:'#EF4444',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
           <Plus size={13}/> Deduction
         </button>
-        <button onClick={markAllPaid} style={{ padding:'8px 14px',borderRadius:20,background:'linear-gradient(135deg,#B8860B,#D4A017)',border:'none',fontSize:12,fontWeight:700,color:'white',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
+        <button onClick={markAllPaid} style={{ padding:'8px 14px',borderRadius:100,background:'linear-gradient(135deg,#B8860B,#D4A017)',border:'none',fontSize:12,fontWeight:700,color:'white',cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5 }}>
           <Check size={13}/> Mark All Paid
         </button>
       </div>

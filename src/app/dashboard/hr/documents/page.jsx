@@ -75,7 +75,7 @@ function DocModal({ emp, employees, editDoc, onSave, onClose }) {
               <h3 style={{ fontWeight:900, fontSize:17, color:'#1A1612' }}>{isEdit?'Edit':'Add'} Document</h3>
               <p style={{ fontSize:12, color:'#A89880', marginTop:2 }}>{isEdit?editDoc.emp_name:emp?.name||'Select employee below'}</p>
             </div>
-            <button onClick={onClose} style={{ width:30, height:30, borderRadius:9, background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
+            <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
           </div>
           {/* Doc type selector */}
           <div className="doc-type-pills" style={{ display:'flex', gap:6, overflowX:'auto', scrollbarWidth:'none', WebkitOverflowScrolling:'touch', paddingBottom:8, cursor:'grab', userSelect:'none' }} onMouseDown={e=>{const el=e.currentTarget;el.isDragging=true;el.startX=e.pageX-el.offsetLeft;el.scrollLeft=el.scrollLeft}} onMouseMove={e=>{const el=e.currentTarget;if(!el.isDragging)return;e.preventDefault();el.scrollLeft=el.scrollLeft-(e.pageX-el.offsetLeft-el.startX);el.startX=e.pageX-el.offsetLeft}} onMouseUp={e=>e.currentTarget.isDragging=false} onMouseLeave={e=>e.currentTarget.isDragging=false}>
@@ -146,9 +146,9 @@ function DocModal({ emp, employees, editDoc, onSave, onClose }) {
           {/* How to share guide */}
 
           <div style={{ display:'flex', gap:10, marginTop:4 }}>
-            <button onClick={onClose} className="btn btn-secondary" style={{ flex:1, justifyContent:'center', borderRadius:10 }}>Cancel</button>
+            <button onClick={onClose} className="btn btn-secondary" style={{ flex:1, justifyContent:'center' }}>Cancel</button>
             <button onClick={handleSave} disabled={saving}
-              style={{ flex:2, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'11px', borderRadius:10, background:`linear-gradient(135deg,${selectedType?.c||'#B8860B'},${selectedType?.c||'#B8860B'}cc)`, color:'white', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', opacity:saving?0.6:1 }}>
+              style={{ flex:2, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'11px', borderRadius:100, background:`linear-gradient(135deg,${selectedType?.c||'#B8860B'},${selectedType?.c||'#B8860B'}cc)`, color:'white', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', opacity:saving?0.6:1 }}>
               {saving ? <><span style={{ width:14, height:14, border:'2px solid rgba(255,255,255,0.4)', borderTopColor:'white', borderRadius:'50%', animation:'spin 0.8s linear infinite', display:'inline-block' }}/> Saving…</> : isEdit ? 'Save Changes' : 'Add Document'}
             </button>
           </div>
@@ -313,7 +313,7 @@ export default function DocumentsPage() {
             {f.l}
           </button>
         ))}
-        <button onClick={load} style={{ width:34, height:34, borderRadius:10, background:'#F5F4F1', border:'1px solid #EAE6DE', color:'#6B5D4A', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <button onClick={load} style={{ width:34, height:34, borderRadius:'50%', background:'#F5F4F1', border:'1px solid #EAE6DE', color:'#6B5D4A', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
           <RefreshCw size={14}/>
         </button>
       </div>

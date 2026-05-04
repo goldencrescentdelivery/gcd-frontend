@@ -126,7 +126,7 @@ function AdminModal({ emp, onSave, onClose, mode }) {
               <h3 style={{ fontWeight:800, fontSize:16, color:'var(--text)', margin:0 }}>{mode==='add'?'Add Admin Staff':'Edit Admin Staff'}</h3>
               <p style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>{mode==='add'?'Add a new admin team member':emp?.name}</p>
             </div>
-            <button onClick={onClose} style={{ width:30, height:30, borderRadius:8, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <X size={14} color="var(--text-sub)"/>
             </button>
           </div>
@@ -279,8 +279,8 @@ function WorkNumberAssigner({ emp, onSaved, userRole }) {
         <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:9, padding:'10px 12px', fontSize:12 }}>
           <div style={{ fontWeight:600, color:'#92400E', marginBottom:8 }}>⚠️ <strong>{pending}</strong> is assigned to <strong>{conflict.conflictEmpName}</strong>. Proceed?</div>
           <div style={{ display:'flex', gap:6 }}>
-            <button onClick={()=>setStep(2)} style={{ flex:1, padding:'6px', borderRadius:7, background:'#B8860B', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>Yes, proceed</button>
-            <button onClick={reset} style={{ flex:1, padding:'6px', borderRadius:7, background:'var(--card)', color:'var(--text-sub)', border:'1px solid var(--border)', cursor:'pointer', fontSize:11, fontFamily:'Poppins,sans-serif' }}>Cancel</button>
+            <button onClick={()=>setStep(2)} style={{ flex:1, padding:'6px', borderRadius:100, background:'#B8860B', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>Yes, proceed</button>
+            <button onClick={reset} style={{ flex:1, padding:'6px', borderRadius:100, background:'var(--card)', color:'var(--text-sub)', border:'1px solid var(--border)', cursor:'pointer', fontSize:11, fontFamily:'Poppins,sans-serif' }}>Cancel</button>
           </div>
         </div>
       )}
@@ -289,8 +289,8 @@ function WorkNumberAssigner({ emp, onSaved, userRole }) {
         <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:9, padding:'10px 12px', fontSize:12 }}>
           <div style={{ fontWeight:600, color:'#7F1D1D', marginBottom:8 }}>Assign a new number to <strong>{conflict.conflictEmpName}</strong>?</div>
           <div style={{ display:'flex', gap:6 }}>
-            <button onClick={()=>tryAssign(pending,true)} disabled={saving} style={{ flex:1, padding:'6px', borderRadius:7, background:'#10B981', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>Yes, reassign</button>
-            <button onClick={()=>tryAssign(pending,true)} disabled={saving} style={{ flex:1, padding:'6px', borderRadius:7, background:'#EF4444', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>{saving?'…':'No, just remove'}</button>
+            <button onClick={()=>tryAssign(pending,true)} disabled={saving} style={{ flex:1, padding:'6px', borderRadius:100, background:'#10B981', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>Yes, reassign</button>
+            <button onClick={()=>tryAssign(pending,true)} disabled={saving} style={{ flex:1, padding:'6px', borderRadius:100, background:'#EF4444', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>{saving?'…':'No, just remove'}</button>
           </div>
         </div>
       )}
@@ -302,11 +302,11 @@ function WorkNumberAssigner({ emp, onSaved, userRole }) {
           </span>
           {canEdit && (
             <div style={{ display:'flex', gap:5 }}>
-              <button onClick={openPicker} style={{ padding:'4px 10px', borderRadius:7, background:'var(--card)', border:'1px solid var(--border)', color:'var(--text-sub)', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:4 }}>
+              <button onClick={openPicker} style={{ padding:'4px 10px', borderRadius:100, background:'var(--card)', border:'1px solid var(--border)', color:'var(--text-sub)', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'Poppins,sans-serif', display:'flex', alignItems:'center', gap:4 }}>
                 <Phone size={10}/> {emp.work_number?'Change':'Assign'}
               </button>
               {emp.work_number && (
-                <button onClick={handleRemove} disabled={saving} style={{ padding:'4px 8px', borderRadius:7, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', cursor:'pointer', display:'flex', alignItems:'center' }}>
+                <button onClick={handleRemove} disabled={saving} style={{ padding:'4px 8px', borderRadius:100, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', cursor:'pointer', display:'flex', alignItems:'center' }}>
                   <X size={10}/>
                 </button>
               )}
@@ -326,7 +326,7 @@ function WorkNumberAssigner({ emp, onSaved, userRole }) {
               <span style={{ fontSize:10.5, color:s.emp_id===emp.id?'#10B981':'var(--text-muted)' }}>{s.emp_id===emp.id?'Current':'Available'}</span>
             </div>
           ))}
-          <button onClick={reset} style={{ width:'100%', marginTop:4, padding:'6px', borderRadius:8, background:'none', border:'1px solid var(--border)', fontSize:11, color:'var(--text-muted)', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Cancel</button>
+          <button onClick={reset} style={{ width:'100%', marginTop:4, padding:'6px', borderRadius:100, background:'none', border:'1px solid var(--border)', fontSize:11, color:'var(--text-muted)', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Cancel</button>
         </div>
       )}
 
@@ -420,7 +420,7 @@ function SalaryPanel({ emp, userRole }) {
           style={{ padding:'6px 10px', borderRadius:9, border:'1px solid var(--border)', fontSize:12, background:'var(--card)', color:'var(--text)', fontFamily:'Poppins,sans-serif' }}/>
         {isPaid
           ? <span style={{ fontSize:11, fontWeight:700, color:'#10B981', background:'#F0FDF4', border:'1px solid #A7F3D0', borderRadius:20, padding:'3px 10px' }}>✓ Paid</span>
-          : canManage && !loading && <button onClick={markPaid} style={{ padding:'5px 12px', borderRadius:9, background:'#10B981', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>Mark Paid</button>
+          : canManage && !loading && <button onClick={markPaid} style={{ padding:'5px 12px', borderRadius:100, background:'#10B981', color:'white', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'Poppins,sans-serif' }}>Mark Paid</button>
         }
       </div>
 
@@ -488,7 +488,7 @@ function SalaryPanel({ emp, userRole }) {
                 <div><Lbl>Amount (AED)</Lbl><input className="input" type="number" value={bonusAmt} onChange={e=>setBonusAmt(e.target.value)} placeholder="500"/></div>
                 <div><Lbl>Description</Lbl><input className="input" value={bonusDesc} onChange={e=>setBonusDesc(e.target.value)} placeholder="Performance bonus"/></div>
               </div>
-              <button onClick={addBonus} disabled={saving||!bonusAmt} className="btn btn-primary" style={{ width:'100%', justifyContent:'center', borderRadius:9 }}>{saving?'Adding…':'Add Bonus'}</button>
+              <button onClick={addBonus} disabled={saving||!bonusAmt} className="btn btn-primary" style={{ width:'100%', justifyContent:'center' }}>{saving?'Adding…':'Add Bonus'}</button>
             </div>
           )}
 
@@ -504,7 +504,7 @@ function SalaryPanel({ emp, userRole }) {
                 <div><Lbl>Amount (AED)</Lbl><input className="input" type="number" value={dedAmt} onChange={e=>setDedAmt(e.target.value)} placeholder="200"/></div>
                 <div style={{ gridColumn:'span 2' }}><Lbl>Description</Lbl><input className="input" value={dedDesc} onChange={e=>setDedDesc(e.target.value)} placeholder="Reason for deduction"/></div>
               </div>
-              <button onClick={addDeduction} disabled={saving||!dedAmt} className="btn btn-primary" style={{ width:'100%', justifyContent:'center', borderRadius:9 }}>{saving?'Adding…':'Add Deduction'}</button>
+              <button onClick={addDeduction} disabled={saving||!dedAmt} className="btn btn-primary" style={{ width:'100%', justifyContent:'center' }}>{saving?'Adding…':'Add Deduction'}</button>
             </div>
           )}
         </>
@@ -587,7 +587,7 @@ function AttendancePanel({ emp, userRole }) {
             </div>
             <div style={{ gridColumn:'span 2' }}><Lbl>Note</Lbl><input className="input" value={logNote} onChange={e=>setLogNote(e.target.value)} placeholder="Optional note"/></div>
           </div>
-          <button onClick={logAttendance} disabled={saving} className="btn btn-primary" style={{ width:'100%', justifyContent:'center', borderRadius:9 }}>{saving?'Logging…':'Log Attendance'}</button>
+          <button onClick={logAttendance} disabled={saving} className="btn btn-primary" style={{ width:'100%', justifyContent:'center' }}>{saving?'Logging…':'Log Attendance'}</button>
         </div>
       )}
 
@@ -622,7 +622,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
     return (
       <div style={{ background:'var(--card)', borderRadius:20, overflow:'hidden', display:'flex', flexDirection:'column', height:'100%' }}>
         <div style={{ background:`linear-gradient(120deg,${rc.bg} 0%,var(--card) 60%)`, padding:'22px 24px 18px', position:'relative', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
-          <button onClick={onClose} style={{ position:'absolute',top:14,right:16,width:28,height:28,borderRadius:9,background:'var(--card)',border:'1px solid var(--border)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
+          <button onClick={onClose} style={{ position:'absolute',top:14,right:16,width:28,height:28,borderRadius:'50%',background:'var(--card)',border:'1px solid var(--border)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
             <X size={14} color="var(--text-sub)"/>
           </button>
           <div style={{ display:'flex', alignItems:'center', gap:20 }}>
@@ -676,7 +676,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
     <div style={{ background:'var(--card)', borderRadius:20, overflow:'hidden', display:'flex', flexDirection:'column', height:'100%' }}>
       {/* Horizontal header — same layout as DA DetailDrawer */}
       <div style={{ background:`linear-gradient(120deg,${rc.bg} 0%,var(--card) 60%)`, padding:'22px 24px 18px', position:'relative', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
-        <button onClick={onClose} style={{ position:'absolute',top:14,right:16,width:28,height:28,borderRadius:9,background:'var(--card)',border:'1px solid var(--border)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'var(--shadow-sm)' }}>
+        <button onClick={onClose} style={{ position:'absolute',top:14,right:16,width:28,height:28,borderRadius:'50%',background:'var(--card)',border:'1px solid var(--border)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'var(--shadow-sm)' }}>
           <X size={14} color="var(--text-sub)"/>
         </button>
         <div style={{ display:'flex', alignItems:'center', gap:20 }}>
@@ -700,10 +700,10 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
           </div>
           {/* Actions */}
           <div style={{ display:'flex', gap:8, flexShrink:0 }}>
-            <button onClick={onEdit} style={{ padding:'7px 14px',borderRadius:10,background:'var(--bg-alt)',border:'1px solid var(--border)',cursor:'pointer',fontSize:12.5,color:'var(--text-sub)',fontWeight:600,display:'flex',alignItems:'center',gap:5,fontFamily:'Poppins,sans-serif' }}>
+            <button onClick={onEdit} style={{ padding:'7px 14px',borderRadius:100,background:'var(--bg-alt)',border:'1px solid var(--border)',cursor:'pointer',fontSize:12.5,color:'var(--text-sub)',fontWeight:600,display:'flex',alignItems:'center',gap:5,fontFamily:'Poppins,sans-serif' }}>
               <Pencil size={13}/> Edit
             </button>
-            <button onClick={onDelete} style={{ padding:'7px 10px',borderRadius:10,background:'var(--red-bg)',border:'1px solid var(--red-border)',cursor:'pointer',color:'var(--red)',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif' }}>
+            <button onClick={onDelete} style={{ padding:'7px 10px',borderRadius:100,background:'var(--red-bg)',border:'1px solid var(--red-border)',cursor:'pointer',color:'var(--red)',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif' }}>
               <Trash2 size={13}/>
             </button>
           </div>
@@ -753,10 +753,10 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
 
             {userRole !== 'accountant' && (
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center', borderRadius:10 }}>
+                <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center' }}>
                   <Pencil size={13}/> Edit
                 </button>
-                <button onClick={onDelete} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px', borderRadius:10, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                <button onClick={onDelete} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px', borderRadius:100, background:'var(--red-bg)', border:'1px solid var(--red-border)', color:'var(--red)', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
                   <Trash2 size={13}/> Delete
                 </button>
               </div>

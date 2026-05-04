@@ -128,7 +128,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
                 {mode==='add' ? 'Add a new Delivery Associate' : `Editing ${emp?.name}`}
               </p>
             </div>
-            <button onClick={onClose} style={{ width:32, height:32, borderRadius:10, background:'#F5F4F1', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'background 0.2s' }}>
+            <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', background:'#F5F4F1', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'background 0.2s' }}>
               <X size={15} color="#6B5D4A"/>
             </button>
           </div>
@@ -201,8 +201,8 @@ function EmpModal({ emp, onSave, onClose, mode }) {
 
         {/* Footer */}
         <div style={{ padding:'16px 28px 24px', borderTop:'1px solid #EAE6DE', display:'flex', gap:10, justifyContent:'flex-end', background:'#FAFAF8' }}>
-          <button onClick={onClose} className="btn btn-secondary" style={{ borderRadius:10 }}>Cancel</button>
-          <button onClick={handleSave} disabled={saving} className="btn btn-primary" style={{ borderRadius:10, minWidth:130, justifyContent:'center' }}>
+          <button onClick={onClose} className="btn btn-secondary">Cancel</button>
+          <button onClick={handleSave} disabled={saving} className="btn btn-primary" style={{ minWidth:130, justifyContent:'center' }}>
             {saving ? (
               <span style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <span style={{ width:14, height:14, border:'2px solid rgba(255,255,255,0.3)', borderTopColor:'white', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
@@ -228,7 +228,7 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
         {/* Top banner */}
         <div style={{ background:`linear-gradient(135deg,${sb},${sb}cc)`, padding:'24px 20px 20px', position:'relative', overflow:'hidden' }}>
           <div style={{ position:'absolute', right:-20, top:-20, width:100, height:100, borderRadius:'50%', background:`${sc}15` }}/>
-          <button onClick={onClose} style={{ position:'absolute', top:14, right:14, width:28, height:28, borderRadius:8, background:'rgba(255,255,255,0.7)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <button onClick={onClose} style={{ position:'absolute', top:14, right:14, width:28, height:28, borderRadius:'50%', background:'rgba(255,255,255,0.7)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
             <X size={14} color="#6B5D4A"/>
           </button>
           <div style={{ textAlign:'center' }}>
@@ -286,10 +286,10 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose }) {
 
           {/* Actions */}
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:16 }}>
-            <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center', borderRadius:12, padding:'10px' }}>
+            <button onClick={onEdit} className="btn btn-secondary" style={{ justifyContent:'center', padding:'10px' }}>
               <Pencil size={13}/> Edit
             </button>
-            <button onClick={onDelete} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:12, background:'#FEF2F2', border:'1px solid #FCA5A5', color:'#C0392B', fontWeight:600, fontSize:12, cursor:'pointer' }}>
+            <button onClick={onDelete} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:100, background:'#FEF2F2', border:'1px solid #FCA5A5', color:'#C0392B', fontWeight:600, fontSize:12, cursor:'pointer' }}>
               <Trash2 size={13}/> Delete
             </button>
           </div>

@@ -75,7 +75,7 @@ function DocModal({ doc, onSave, onClose }) {
             <h3 style={{ fontWeight:800, fontSize:15, color:'var(--text)', margin:0 }}>{doc?'Edit Document':'Add Document'}</h3>
             <p style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>Office record with expiry tracking</p>
           </div>
-          <button onClick={onClose} style={{ width:30, height:30, borderRadius:8, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
+          <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
         </div>
 
         <div style={{ padding:'20px 24px', overflowY:'auto', flex:1, display:'flex', flexDirection:'column', gap:14 }}>
@@ -170,11 +170,11 @@ export default function OfficePage() {
             <p style={{ fontSize:12.5, color:'var(--text-muted)', marginTop:2 }}>Company documents, licenses &amp; expiry tracking</p>
           </div>
           <div className="page-header-actions">
-            <button onClick={load} title="Refresh" style={{ width:36, height:36, borderRadius:10, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <button onClick={load} title="Refresh" style={{ width:36, height:36, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <RefreshCw size={14} color="var(--text-muted)"/>
             </button>
             {canEdit && (
-              <button className="btn btn-primary" onClick={()=>setDocModal({mode:'add'})} style={{ borderRadius:24 }}>
+              <button className="btn btn-primary" onClick={()=>setDocModal({mode:'add'})}>
                 <Plus size={14}/> Add Document
               </button>
             )}

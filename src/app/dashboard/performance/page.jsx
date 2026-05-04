@@ -97,7 +97,7 @@ export default function PerformancePage() {
             style={{padding:'8px 14px',borderRadius:20,border:'1.5px solid #EAE6DE',background:'#FFF',fontSize:13,fontWeight:600,color:'#1A1612',cursor:'pointer',outline:'none',fontFamily:'Poppins,sans-serif'}}>
             {MONTHS.map(m=><option key={m}>{m}</option>)}
           </select>
-          <button onClick={load} style={{width:36,height:36,borderRadius:10,background:'#F5F4F1',border:'1px solid #EAE6DE',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <button onClick={load} style={{width:36,height:36,borderRadius:'50%',background:'#F5F4F1',border:'1px solid #EAE6DE',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
             <RefreshCw size={14} color="#6B5D4A"/>
           </button>
         </div>
@@ -112,7 +112,7 @@ export default function PerformancePage() {
           <Trophy size={48} style={{margin:'0 auto 14px',display:'block',opacity:0.15}}/>
           <div style={{fontWeight:700,color:'#6B5D4A',fontSize:16}}>No scores yet for {month}</div>
           <div style={{fontSize:12,marginTop:6}}>Click refresh to compute scores for all active DAs</div>
-          <button onClick={load} className="btn btn-primary" style={{margin:'16px auto 0',display:'flex',borderRadius:20}}>
+          <button onClick={load} className="btn btn-primary" style={{margin:'16px auto 0',display:'flex'}}>
             <Zap size={14}/> Compute Scores
           </button>
         </div>

@@ -215,7 +215,7 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
                   : 'Document the vehicle you received'}
               </p>
             </div>
-            <button onClick={onClose} style={{ width:30, height:30, borderRadius:9, background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
+            <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
           </div>
         </div>
 

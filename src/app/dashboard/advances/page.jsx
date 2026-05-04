@@ -206,7 +206,7 @@ export default function AdvancesPage() {
               </div>
               <div style={{display:'flex',gap:10,marginTop:4}}>
                 <button onClick={()=>setModal(false)} className="btn btn-secondary" style={{flex:1,justifyContent:'center'}}>Cancel</button>
-                <button onClick={submitAdvance} disabled={saving||!form.emp_id||!form.amount} style={{flex:2,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'11px',borderRadius:10,background:'linear-gradient(135deg,#2E7D52,#22C55E)',color:'white',fontWeight:700,fontSize:13,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif',opacity:saving?0.7:1}}>
+                <button onClick={submitAdvance} disabled={saving||!form.emp_id||!form.amount} style={{flex:2,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'11px',borderRadius:100,background:'linear-gradient(135deg,#2E7D52,#22C55E)',color:'white',fontWeight:700,fontSize:13,border:'none',cursor:'pointer',fontFamily:'Poppins,sans-serif',opacity:saving?0.7:1}}>
                   {saving?'Submitting…':'Submit Request'}
                 </button>
               </div>

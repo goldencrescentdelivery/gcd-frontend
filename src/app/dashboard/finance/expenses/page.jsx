@@ -96,7 +96,7 @@ function ExpenseModal({ expense, employees, onSave, onClose }) {
               <h3 style={{ fontWeight:900, fontSize:17, color:'#1A1612', margin:0 }}>{isEdit?'Edit Expense':'Add Expense'}</h3>
               <p style={{ fontSize:12, color:'#A89880', marginTop:3 }}>{isEdit?'Update this expense record':'Log a company expense'}</p>
             </div>
-            <button onClick={onClose} style={{ width:30,height:30,borderRadius:9,background:'rgba(0,0,0,0.06)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><X size={14}/></button>
+            <button onClick={onClose} style={{ width:30,height:30,borderRadius:'50%',background:'rgba(0,0,0,0.06)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><X size={14}/></button>
           </div>
           {/* Scrollable category pills */}
           <div style={{ overflowX:'auto', paddingBottom:4, marginBottom:-4 }}>

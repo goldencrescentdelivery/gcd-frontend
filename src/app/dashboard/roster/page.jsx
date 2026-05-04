@@ -94,8 +94,8 @@ function ShiftCell({ shift, empId, date, station, onAssign }) {
             </div>
           </>}
           <div style={{display:'flex',gap:6}}>
-            {shift&&<button onClick={clear} style={{flex:1,padding:'7px',borderRadius:8,background:'#FEF2F2',border:'1px solid #FCA5A5',color:'#C0392B',fontWeight:700,fontSize:11,cursor:'pointer',fontFamily:'Poppins,sans-serif'}}>Clear</button>}
-            <button onClick={save} disabled={saving} style={{flex:2,padding:'7px',borderRadius:8,background:'linear-gradient(135deg,#B8860B,#D4A017)',border:'none',color:'white',fontWeight:700,fontSize:11,cursor:'pointer',fontFamily:'Poppins,sans-serif'}}>
+            {shift&&<button onClick={clear} style={{flex:1,padding:'7px',borderRadius:100,background:'#FEF2F2',border:'1px solid #FCA5A5',color:'#C0392B',fontWeight:700,fontSize:11,cursor:'pointer',fontFamily:'Poppins,sans-serif'}}>Clear</button>}
+            <button onClick={save} disabled={saving} style={{flex:2,padding:'7px',borderRadius:100,background:'linear-gradient(135deg,#B8860B,#D4A017)',border:'none',color:'white',fontWeight:700,fontSize:11,cursor:'pointer',fontFamily:'Poppins,sans-serif'}}>
               {saving?'Saving…':'Save'}
             </button>
           </div>
@@ -188,14 +188,14 @@ export default function RosterPage() {
 
       {/* Week navigator */}
       <div style={{display:'flex',alignItems:'center',gap:12,background:'#FFF',border:'1px solid #EAE6DE',borderRadius:14,padding:'12px 16px'}}>
-        <button onClick={prevWeek} style={{width:32,height:32,borderRadius:10,background:'#F5F4F1',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><ChevronLeft size={15}/></button>
+        <button onClick={prevWeek} style={{width:32,height:32,borderRadius:'50%',background:'#F5F4F1',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><ChevronLeft size={15}/></button>
         <div style={{flex:1,textAlign:'center'}}>
           <div style={{fontWeight:800,fontSize:14,color:'#1A1612'}}>{weekDates[0]} — {weekDates[6]}</div>
           <div style={{fontSize:11,color:'#A89880',marginTop:2}}>{employees.length} DAs · {station}</div>
         </div>
-        <button onClick={nextWeek} style={{width:32,height:32,borderRadius:10,background:'#F5F4F1',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><ChevronRight size={15}/></button>
-        <button onClick={()=>setWeekStart(getMonday())} style={{padding:'6px 14px',borderRadius:10,background:'#FDF6E3',border:'1px solid #F0D78C',color:'#B8860B',fontWeight:700,fontSize:11,cursor:'pointer',fontFamily:'Poppins,sans-serif'}}>Today</button>
-        <button onClick={copyLastWeek} disabled={copying} style={{padding:'6px 14px',borderRadius:10,background:'var(--bg-alt)',border:'1px solid var(--border-med)',color:'var(--text-sub)',fontWeight:600,fontSize:11,cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5}}>
+        <button onClick={nextWeek} style={{width:32,height:32,borderRadius:'50%',background:'#F5F4F1',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><ChevronRight size={15}/></button>
+        <button onClick={()=>setWeekStart(getMonday())} style={{padding:'6px 14px',borderRadius:100,background:'#FDF6E3',border:'1px solid #F0D78C',color:'#B8860B',fontWeight:700,fontSize:11,cursor:'pointer',fontFamily:'Poppins,sans-serif'}}>Today</button>
+        <button onClick={copyLastWeek} disabled={copying} style={{padding:'6px 14px',borderRadius:100,background:'var(--bg-alt)',border:'1px solid var(--border-med)',color:'var(--text-sub)',fontWeight:600,fontSize:11,cursor:'pointer',fontFamily:'Poppins,sans-serif',display:'flex',alignItems:'center',gap:5}}>
           <Copy size={12}/>{copying?'Copying…':'Copy Last Week'}
         </button>
       </div>

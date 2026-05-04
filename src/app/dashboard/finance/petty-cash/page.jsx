@@ -137,7 +137,7 @@ function ExpenseModal({ drivers, onSave, onClose }) {
               <div style={{ fontSize:11, color:'#A89880', marginTop:1 }}>Log a petty cash expense</div>
             </div>
           </div>
-          <button onClick={onClose} style={{ background:'rgba(184,134,11,0.1)', border:'1px solid #F0D78C', cursor:'pointer', color:'#B8860B', display:'flex', padding:6, borderRadius:8 }}><X size={16}/></button>
+          <button onClick={onClose} style={{ background:'rgba(184,134,11,0.1)', border:'1px solid #F0D78C', cursor:'pointer', color:'#B8860B', display:'flex', padding:6, borderRadius:'50%' }}><X size={16}/></button>
         </div>
         <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:14 }}>
           {err && (
@@ -221,7 +221,7 @@ function GiveCashModal({ users, onSave, onClose }) {
               <div style={{ fontSize:11, color:'#6B7280', marginTop:1 }}>Allocate petty cash to a team member</div>
             </div>
           </div>
-          <button onClick={onClose} style={{ background:'rgba(46,125,82,0.1)', border:'1px solid #A7F3D0', cursor:'pointer', color:'#2E7D52', display:'flex', padding:6, borderRadius:8 }}><X size={16}/></button>
+          <button onClick={onClose} style={{ background:'rgba(46,125,82,0.1)', border:'1px solid #A7F3D0', cursor:'pointer', color:'#2E7D52', display:'flex', padding:6, borderRadius:'50%' }}><X size={16}/></button>
         </div>
         <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:14 }}>
           {err && (

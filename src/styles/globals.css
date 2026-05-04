@@ -285,7 +285,7 @@ a { text-decoration:none; color:inherit; }
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 16px;
-  border-radius: 20px; /* pill shape retained */
+  border-radius: 100px;
   font-size: 13px; font-weight: 600;
   cursor: pointer;
   transition: all var(--t-base);
@@ -309,9 +309,9 @@ a { text-decoration:none; color:inherit; }
 .btn-secondary:hover { color:var(--text); border-color:var(--border-strong); background:var(--bg-alt); }
 .btn-secondary:active { transform:translateY(1px); }
 
-.btn-ghost { background:none; color:var(--text-sub); border-radius:var(--radius-sm); padding:7px; }
+.btn-ghost { background:none; color:var(--text-sub); border-radius:100px; padding:7px; }
 .btn-ghost:hover { background:var(--bg-hover); color:var(--text); }
-.btn-icon { width:32px; height:32px; padding:0; justify-content:center; border-radius:var(--radius-sm); }
+.btn-icon { width:32px; height:32px; padding:0; justify-content:center; border-radius:100px; }
 
 /* ─────────────────────────────────────────────────────────────
    INPUTS
@@ -703,8 +703,8 @@ a { text-decoration:none; color:inherit; }
    ───────────────────────────────────────────────────────────── */
 
 /* Button sizes */
-.btn-sm { padding:5px 11px !important; font-size:12px !important; border-radius:14px !important; }
-.btn-xs { padding:3px  8px  !important; font-size:11px !important; border-radius:10px !important; }
+.btn-sm { padding:5px 11px !important; font-size:12px !important; border-radius:100px !important; }
+.btn-xs { padding:3px  8px  !important; font-size:11px !important; border-radius:100px !important; }
 
 /* Cycle picker — 7-button grid for attendance modal
    Desktop: all 7 in one row; mobile: 4-3 wrap */
@@ -797,7 +797,7 @@ a { text-decoration:none; color:inherit; }
   width:  30px;
   height: 30px;
   padding: 0;
-  border-radius:   var(--radius-sm);
+  border-radius:   50%;
   background:      none;
   border:          none;
   cursor:          pointer;

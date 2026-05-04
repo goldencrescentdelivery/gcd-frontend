@@ -68,7 +68,7 @@ function UserModal({ user, onSave, onClose }) {
               <h3 style={{ fontWeight:900, fontSize:17, color:'#1A1612' }}>{isEdit?'Edit User Account':'New User Account'}</h3>
               <p style={{ fontSize:12, color:'#A89880', marginTop:2 }}>{isEdit?`Editing ${user.name}`:'Create login access for a team member'}</p>
             </div>
-            <button onClick={onClose} style={{ width:30, height:30, borderRadius:9, background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
+            <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
           </div>
           {/* Role selector */}
           <div style={{ display:'flex', gap:6, flexWrap:'wrap', paddingBottom:2 }}>
@@ -150,8 +150,8 @@ function UserModal({ user, onSave, onClose }) {
         </div>
 
         <div style={{ padding:'14px 24px 22px', borderTop:'1px solid #EAE6DE', display:'flex', gap:10, justifyContent:'flex-end', background:'#FAFAF8' }}>
-          <button onClick={onClose} className="btn btn-secondary" style={{ borderRadius:10 }}>Cancel</button>
-          <button onClick={handleSave} disabled={saving} className="btn btn-primary" style={{ borderRadius:10, minWidth:140, justifyContent:'center' }}>
+          <button onClick={onClose} className="btn btn-secondary">Cancel</button>
+          <button onClick={handleSave} disabled={saving} className="btn btn-primary" style={{ minWidth:140, justifyContent:'center' }}>
             {saving ? <span style={{ display:'flex', alignItems:'center', gap:7 }}><span style={{ width:13, height:13, border:'2px solid rgba(255,255,255,0.3)', borderTopColor:'white', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/> Saving…</span> : isEdit ? 'Save Changes' : 'Create Account'}
           </button>
         </div>
@@ -303,10 +303,10 @@ export default function UsersPage() {
           <p style={{ fontSize:12, color:'#A89880', marginTop:3 }}>{users.length} accounts · {active} active · {blocked} blocked</p>
         </div>
         <div style={{ display:'flex', gap:8 }}>
-          <button onClick={load} style={{ width:36, height:36, borderRadius:10, background:'#F5F4F1', border:'1px solid #EAE6DE', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#6B5D4A' }}>
+          <button onClick={load} style={{ width:36, height:36, borderRadius:'50%', background:'#F5F4F1', border:'1px solid #EAE6DE', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#6B5D4A' }}>
             <RefreshCw size={14}/>
           </button>
-          <button className="btn btn-primary" onClick={()=>setModal({user:null})} style={{ borderRadius:24 }}>
+          <button className="btn btn-primary" onClick={()=>setModal({user:null})}>
             <Plus size={15}/> New Account
           </button>
         </div>

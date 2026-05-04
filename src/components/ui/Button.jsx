@@ -8,7 +8,7 @@ const SIZE_CLS    = { xs: 'btn-xs', sm: 'btn-sm', md: '' }
 // with --red token even in dark mode
 const DANGER_STYLE = {
   background: 'var(--red)', color: '#fff', border: 'none',
-  boxShadow: '0 2px 8px rgba(239,68,68,0.22)',
+  boxShadow: '0 2px 8px rgba(239,68,68,0.22)', borderRadius: 100,
 }
 
 function Spinner() {

@@ -48,7 +48,7 @@ function EventModal({ event, onSave, onClose }) {
       <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:440, maxHeight:'92vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'var(--shadow-lg)', border:'1px solid var(--border)' }}>
         <div style={{ padding:'22px 24px 18px', borderBottom:'1px solid var(--border)', flexShrink:0, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <h3 style={{ fontWeight:800, fontSize:15, color:'var(--text)', margin:0 }}>{event?'Edit Event':'Add Event'}</h3>
-          <button onClick={onClose} style={{ width:30, height:30, borderRadius:8, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
+          <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
         </div>
         <div style={{ padding:'20px 24px', overflowY:'auto', flex:1, display:'flex', flexDirection:'column', gap:14 }}>
           {err && <div style={{ display:'flex', gap:8, alignItems:'center', background:'var(--red-bg)', border:'1px solid var(--red-border)', borderRadius:10, padding:'10px 14px', fontSize:12.5, color:'var(--red)' }}><AlertCircle size={14}/>{err}</div>}
@@ -123,10 +123,10 @@ export default function EventsPage() {
             <p style={{ fontSize:12.5, color:'var(--text-muted)', marginTop:2 }}>Track renewals, meetings, deadlines &amp; payments</p>
           </div>
           <div className="page-header-actions">
-            <button onClick={load} title="Refresh" style={{ width:36, height:36, borderRadius:10, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <button onClick={load} title="Refresh" style={{ width:36, height:36, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <RefreshCw size={14} color="var(--text-muted)"/>
             </button>
-            <button className="btn btn-primary" onClick={()=>setEvtModal({mode:'add'})} style={{ borderRadius:24 }}>
+            <button className="btn btn-primary" onClick={()=>setEvtModal({mode:'add'})}>
               <Plus size={14}/> Add Event
             </button>
           </div>

@@ -127,7 +127,7 @@ export default function AttendancePage() {
           <Search size={13} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', pointerEvents:'none' }}/>
           <input className="input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search driver…" style={{ paddingLeft:34, borderRadius:20 }}/>
         </div>
-        <button className="btn btn-secondary" onClick={handleBulkPresent} disabled={bulkLoading} style={{ borderRadius:20, padding:'9px 14px', fontSize:12 }}>
+        <button className="btn btn-secondary" onClick={handleBulkPresent} disabled={bulkLoading} style={{ padding:'9px 14px', fontSize:12 }}>
           <CheckSquare size={13}/> {bulkLoading?'Marking…':'Mark All Present'}
         </button>
         <button className="btn btn-primary" onClick={() => setModal('att')} style={{ borderRadius:20, padding:'9px 16px' }}>

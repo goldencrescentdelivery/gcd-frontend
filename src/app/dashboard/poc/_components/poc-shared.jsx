@@ -474,7 +474,7 @@ export function SimModal({ sim, emps, station, onSave, onClose }) {
             <h3 style={{ fontWeight:900, fontSize:16, color:'var(--text)' }}>{isEdit?'Edit':'Add'} SIM Card</h3>
             <p style={{ fontSize:11.5, color:'#A89880', marginTop:2 }}>{station} Station</p>
           </div>
-          <button onClick={onClose} style={{ width:30, height:30, borderRadius:9, background:'var(--bg-alt)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
+          <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'var(--bg-alt)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
         </div>
         {err && <div style={{ background:'#FEF2F2', border:'1px solid #FCA5A5', borderRadius:9, padding:'9px 12px', fontSize:12.5, color:'#C0392B', marginBottom:12 }}>{err}</div>}
         <div style={{ display:'flex', flexDirection:'column', gap:13 }}>
@@ -585,7 +585,7 @@ export function SimBulkModal({ station, emps, onClose, onSave }) {
             <h3 style={{ fontWeight:900, fontSize:16, color:'var(--text)' }}>Bulk Upload SIM Cards</h3>
             <p style={{ fontSize:11.5, color:'#A89880', marginTop:2 }}>{station} Station</p>
           </div>
-          <button onClick={onClose} style={{ width:30, height:30, borderRadius:9, background:'var(--bg-alt)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
+          <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'var(--bg-alt)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
         </div>
         {err && <div style={{ background:'#FEF2F2', border:'1px solid #FCA5A5', borderRadius:9, padding:'9px 12px', fontSize:12.5, color:'#C0392B', marginBottom:12 }}>{err}</div>}
         {stage==='upload' && (
@@ -597,7 +597,7 @@ export function SimBulkModal({ station, emps, onClose, onSave }) {
               <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{ display:'none' }}/>
               <button className="btn btn-primary" onClick={() => fileRef.current?.click()} style={{ justifyContent:'center', marginBottom:10 }}><FileText size={14}/> Choose CSV File</button>
             </div>
-            <button onClick={downloadTemplate} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:10, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', fontSize:12.5, fontWeight:600, color:'var(--text-sub)', fontFamily:'inherit' }}>
+            <button onClick={downloadTemplate} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:100, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', fontSize:12.5, fontWeight:600, color:'var(--text-sub)', fontFamily:'inherit' }}>
               <Download size={13}/> Download Template CSV
             </button>
           </div>
@@ -775,7 +775,7 @@ export function WorkNumModal({ emp, station, sims, onSave, onClose }) {
             <h3 style={{ fontWeight:800, fontSize:16, color:'var(--text)' }}>Assign Work Number</h3>
             <p style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>{emp.name}{emp.work_number&&<span style={{ marginLeft:8, color:'#B8860B' }}>({emp.work_number})</span>}</p>
           </div>
-          <button onClick={onClose} style={{ width:28, height:28, borderRadius:8, background:'var(--bg-alt)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={13}/></button>
+          <button onClick={onClose} style={{ width:28, height:28, borderRadius:'50%', background:'var(--bg-alt)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={13}/></button>
         </div>
         {step===1 && conflict && (
           <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:10, padding:'12px 14px', marginBottom:14 }}>
