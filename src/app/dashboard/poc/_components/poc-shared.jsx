@@ -1082,17 +1082,18 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
 }
 
 // ── DA Avatar ─────────────────────────────────────────────────
-export function DAAvatar({ emp }) {
+const AVATAR_COLORS = ['#B8860B','#1D6FA4','#2E7D52','#7C3AED','#C0392B','#0F766E']
+export function DAAvatar({ emp, size = 52 }) {
   const [broken, setBroken] = useState(false)
   const initials = emp.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()
+  const color    = AVATAR_COLORS[emp.name.charCodeAt(0) % AVATAR_COLORS.length]
+  const radius   = Math.round(size * 0.3)
   if (emp.avatar && !broken) {
     return <img src={emp.avatar} alt="" onError={() => setBroken(true)}
-      style={{ width:48, height:48, borderRadius:14, objectFit:'cover', flexShrink:0, border:'2px solid var(--border-med)' }}/>
+      style={{ width:size, height:size, borderRadius:radius, objectFit:'cover', flexShrink:0, border:`2px solid ${color}40` }}/>
   }
-  const COLORS = ['#B8860B','#1D6FA4','#2E7D52','#7C3AED','#C0392B','#0F766E']
-  const color  = COLORS[emp.name.charCodeAt(0) % COLORS.length]
   return (
-    <div style={{ width:48, height:48, borderRadius:14, background:`${color}18`, border:`2px solid ${color}33`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontWeight:800, fontSize:16, color }}>
+    <div style={{ width:size, height:size, borderRadius:radius, background:`${color}15`, border:`2px solid ${color}30`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontWeight:800, fontSize:Math.round(size*0.33), color, letterSpacing:'-0.02em' }}>
       {initials}
     </div>
   )
@@ -1207,41 +1208,124 @@ export function EmpDetailModal({ emp, sims, onClose }) {
 }
 
 // ── DAs Tab ───────────────────────────────────────────────────
+const STATUS_STYLE = {
+  active:   { label:'Active',   accent:'#10B981', c:'#065F46', bg:'#ECFDF5', bc:'#A7F3D0' },
+  on_leave: { label:'On Leave', accent:'#F59E0B', c:'#92400E', bg:'#FFFBEB', bc:'#FDE68A' },
+  inactive: { label:'Inactive', accent:'#EF4444', c:'#991B1B', bg:'#FEF2F2', bc:'#FECACA' },
+}
+
 export function DAsTab({ stationEmps, sims, onViewEmp }) {
   const [q, setQ] = useState('')
-  const filtered = stationEmps.filter(e => !q || e.name.toLowerCase().includes(q.toLowerCase()) || e.id.toLowerCase().includes(q.toLowerCase()))
+  const filtered = stationEmps.filter(e =>
+    !q ||
+    e.name.toLowerCase().includes(q.toLowerCase()) ||
+    e.id.toLowerCase().includes(q.toLowerCase()) ||
+    (e.nationality||'').toLowerCase().includes(q.toLowerCase())
+  )
+
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+      {/* Search bar */}
       <div style={{ display:'flex', alignItems:'center', gap:10 }}>
         <div style={{ position:'relative', flex:1 }}>
           <Search size={13} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', pointerEvents:'none' }}/>
-          <input className="input" value={q} onChange={e => setQ(e.target.value)} placeholder="Search by name or ID…" style={{ paddingLeft:34, borderRadius:20 }}/>
+          <input className="input" value={q} onChange={e => setQ(e.target.value)}
+            placeholder="Search by name, ID or nationality…"
+            style={{ paddingLeft:34, borderRadius:20 }}/>
         </div>
-        <span style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', whiteSpace:'nowrap', flexShrink:0 }}>{filtered.length} DA{filtered.length!==1?'s':''}</span>
+        <span style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', whiteSpace:'nowrap', flexShrink:0, background:'var(--bg-alt)', padding:'6px 12px', borderRadius:20, border:'1px solid var(--border)' }}>
+          {filtered.length} DA{filtered.length!==1?'s':''}
+        </span>
       </div>
-      {filtered.length===0 && <div style={{ textAlign:'center', padding:50, color:'var(--text-muted)', fontSize:13 }}>No drivers found</div>}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:10 }}>
-        {filtered.map((emp,i) => {
-          const workSim = sims.find(s => s.emp_id===emp.id)
+
+      {/* Empty state */}
+      {filtered.length === 0 && (
+        <div style={{ textAlign:'center', padding:'60px 20px', color:'var(--text-muted)' }}>
+          <Users size={36} style={{ opacity:0.2, marginBottom:12, display:'block', margin:'0 auto 12px' }}/>
+          <div style={{ fontWeight:600, fontSize:14 }}>No drivers found</div>
+          <div style={{ fontSize:12, marginTop:4 }}>Try a different search term</div>
+        </div>
+      )}
+
+      {/* 3-column grid — auto collapses to 2 then 1 on smaller screens */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))', gap:12 }}>
+        {filtered.map((emp, i) => {
+          const workSim = sims.find(s => s.emp_id === emp.id)
+          const ss      = STATUS_STYLE[emp.status] || STATUS_STYLE.active
+          const vt      = emp.visa_type || 'company'
+          const isOwn   = vt === 'own'
+          const accentColor = AVATAR_COLORS[emp.name.charCodeAt(0) % AVATAR_COLORS.length]
+
           return (
-            <div key={emp.id} onClick={() => onViewEmp&&onViewEmp(emp)}
-              style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:'14px', animation:`slideUp 0.25s ${Math.min(i,10)*0.03}s ease both`, display:'flex', gap:12, alignItems:'flex-start', transition:'box-shadow 0.2s,border-color 0.2s', cursor:'pointer' }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor='#B8860B66' }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow='none'; e.currentTarget.style.borderColor='var(--border)' }}>
-              <DAAvatar emp={emp}/>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:5, flexWrap:'wrap' }}>
-                  <span style={{ fontWeight:700, fontSize:13.5, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:160 }}>{emp.name}</span>
-                  {emp.station_code&&<span style={{ fontSize:9.5, fontWeight:700, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:6, padding:'1px 7px', flexShrink:0 }}>{emp.station_code}</span>}
+            <div key={emp.id}
+              onClick={() => onViewEmp && onViewEmp(emp)}
+              style={{
+                background:'var(--card)',
+                border:'1px solid var(--border)',
+                borderRadius:16,
+                overflow:'hidden',
+                animation:`slideUp 0.25s ${Math.min(i,12)*0.025}s ease both`,
+                cursor:'pointer',
+                transition:'box-shadow 0.18s, border-color 0.18s, transform 0.18s',
+                display:'flex',
+                flexDirection:'column',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.10)'
+                e.currentTarget.style.borderColor = `${accentColor}55`
+                e.currentTarget.style.transform = 'translateY(-1px)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.boxShadow = 'none'
+                e.currentTarget.style.borderColor = 'var(--border)'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}>
+
+              {/* Status accent bar */}
+              <div style={{ height:3, background:ss.accent, flexShrink:0 }}/>
+
+              {/* Main content */}
+              <div style={{ padding:'14px 16px 0', display:'flex', gap:13, alignItems:'flex-start' }}>
+                <DAAvatar emp={emp} size={52}/>
+                <div style={{ flex:1, minWidth:0 }}>
+                  {/* Name + Status */}
+                  <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:6, marginBottom:6 }}>
+                    <span style={{ fontWeight:800, fontSize:14, color:'var(--text)', lineHeight:1.25, wordBreak:'break-word' }}>{emp.name}</span>
+                    <span style={{ fontSize:9.5, fontWeight:700, color:ss.c, background:ss.bg, border:`1px solid ${ss.bc}`, borderRadius:20, padding:'2px 8px', flexShrink:0, whiteSpace:'nowrap' }}>
+                      {ss.label}
+                    </span>
+                  </div>
+                  {/* Chips row */}
+                  <div style={{ display:'flex', gap:5, flexWrap:'wrap', marginBottom:10 }}>
+                    <span style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:6, padding:'2px 7px', fontFamily:'monospace' }}>{emp.id}</span>
+                    {emp.station_code && (
+                      <span style={{ fontSize:10, fontWeight:700, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:6, padding:'2px 7px' }}>{emp.station_code}</span>
+                    )}
+                    {emp.nationality && (
+                      <span style={{ fontSize:10, fontWeight:600, color:'var(--text-muted)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:6, padding:'2px 7px' }}>{emp.nationality}</span>
+                    )}
+                    <span style={{ fontSize:10, fontWeight:600, color:isOwn?'#0369A1':'#065F46', background:isOwn?'#EFF6FF':'#ECFDF5', border:`1px solid ${isOwn?'#BAE6FD':'#A7F3D0'}`, borderRadius:6, padding:'2px 7px' }}>
+                      {isOwn ? 'Own Visa' : 'Co. Visa'}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:5 }}>
-                  <span style={{ fontSize:11, color:'var(--text-muted)', background:'var(--bg-alt)', padding:'2px 8px', borderRadius:6, border:'1px solid var(--border)' }}>{emp.id}</span>
-                  {emp.nationality&&<span style={{ fontSize:11, color:'var(--text-muted)', background:'var(--bg-alt)', padding:'2px 8px', borderRadius:6, border:'1px solid var(--border)' }}>{emp.nationality}</span>}
-                  {(()=>{ const vt=emp.visa_type||'company'; return <span style={{ fontSize:10, fontWeight:600, color:vt==='own'?'#0369A1':'#065F46', background:vt==='own'?'#EFF6FF':'#ECFDF5', border:`1px solid ${vt==='own'?'#BAE6FD':'#A7F3D0'}`, borderRadius:6, padding:'2px 8px' }}>{vt==='own'?'Own Visa':'Co. Visa'}</span> })()}
+              </div>
+
+              {/* Contact footer */}
+              <div style={{ margin:'0 16px 14px', borderTop:'1px solid var(--border)', paddingTop:10, display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                {/* Personal phone */}
+                <div>
+                  <div style={{ fontSize:9, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>Personal</div>
+                  <div style={{ fontSize:11.5, fontWeight:600, color: emp.phone ? 'var(--text)' : 'var(--text-muted)', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {emp.phone || '—'}
+                  </div>
                 </div>
-                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                  {emp.phone&&<span style={{ display:'flex', alignItems:'center', gap:4, fontSize:11, color:'var(--text-muted)' }}><span style={{ fontSize:9, fontWeight:600, textTransform:'uppercase' }}>Personal</span><span style={{ fontWeight:600, color:'var(--text)', fontSize:11 }}>{emp.phone}</span></span>}
-                  {workSim?.phone_number&&<span style={{ display:'flex', alignItems:'center', gap:4, fontSize:11 }}><span style={{ fontSize:9, color:'#7C3AED', fontWeight:600, textTransform:'uppercase' }}>SIM</span><span style={{ fontWeight:600, color:'#7C3AED', fontSize:11 }}>{workSim.phone_number}</span></span>}
+                {/* Work SIM */}
+                <div>
+                  <div style={{ fontSize:9, fontWeight:700, color:'#7C3AED', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>Work SIM</div>
+                  <div style={{ fontSize:11.5, fontWeight:600, color: workSim?.phone_number ? '#7C3AED' : 'var(--text-muted)', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {workSim?.phone_number || emp.work_number || '—'}
+                  </div>
                 </div>
               </div>
             </div>
