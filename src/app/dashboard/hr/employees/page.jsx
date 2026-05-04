@@ -1078,62 +1078,114 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
 
 /* ── Employee Card ───────────────────────────────────────────── */
 function EmpCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole }) {
-  const s   = STATUS[emp.status]||STATUS.inactive
-  const sc  = SC_COLOR[emp.station_code]||'#B8860B'
-  const sbg = SC_BG[emp.station_code]||'#FFFBEB'
-  const sbc = SC_BORDER[emp.station_code]||'#FDE68A'
-  const exp = expiry(emp.visa_expiry)
-  const hasAlert = exp && (exp.label==='Expired'||parseInt(exp.label)<=60)
+  const s        = STATUS[emp.status] || STATUS.inactive
+  const sc       = SC_COLOR[emp.station_code]  || '#B8860B'
+  const sbg      = SC_BG[emp.station_code]     || '#FFFBEB'
+  const sbc      = SC_BORDER[emp.station_code] || '#FDE68A'
+  const exp      = expiry(emp.visa_expiry)
+  const hasAlert = exp && (exp.label === 'Expired' || parseInt(exp.label) <= 60)
+  const pct      = profileCompletion(emp)
+  const vt       = emp.visa_type || 'company'
+  const isOwn    = vt === 'own'
 
   return (
     <div onClick={onClick}
-      style={{ background:'var(--card)', border:`1px solid ${isSelected?sc:hasAlert?'var(--red-border)':'var(--border)'}`, borderRadius:14, padding:'14px 16px', cursor:'pointer', transition:'all 0.18s', boxShadow:isSelected?`0 0 0 3px ${sc}20`:'none', position:'relative', overflow:'hidden' }}
-      onMouseEnter={e=>{if(!isSelected){e.currentTarget.style.boxShadow='var(--shadow-md)';e.currentTarget.style.borderColor=hasAlert?'var(--red)':sc+'66'}}}
-      onMouseLeave={e=>{if(!isSelected){e.currentTarget.style.boxShadow='none';e.currentTarget.style.borderColor=hasAlert?'var(--red-border)':'var(--border)'}}}>
+      style={{
+        background:'var(--card)',
+        border:`1px solid ${isSelected ? sc : hasAlert ? 'var(--red-border)' : 'var(--border)'}`,
+        borderRadius:16,
+        overflow:'hidden',
+        cursor:'pointer',
+        transition:'box-shadow 0.18s, border-color 0.18s, transform 0.18s',
+        boxShadow: isSelected ? `0 0 0 3px ${sc}22, 0 6px 24px rgba(0,0,0,0.08)` : 'none',
+        display:'flex',
+        flexDirection:'column',
+        animation:`slideUp 0.25s ${Math.min(index,12)*0.025}s ease both`,
+      }}
+      onMouseEnter={e => {
+        if (!isSelected) {
+          e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.10)'
+          e.currentTarget.style.borderColor = hasAlert ? 'var(--red)' : `${sc}55`
+          e.currentTarget.style.transform = 'translateY(-1px)'
+        }
+      }}
+      onMouseLeave={e => {
+        if (!isSelected) {
+          e.currentTarget.style.boxShadow = 'none'
+          e.currentTarget.style.borderColor = hasAlert ? 'var(--red-border)' : 'var(--border)'
+          e.currentTarget.style.transform = 'translateY(0)'
+        }
+      }}>
 
-      {hasAlert && <div style={{ position:'absolute',top:12,right:12,width:7,height:7,borderRadius:'50%',background:'var(--red)',boxShadow:'0 0 0 3px rgba(239,68,68,0.2)',animation:'pulse-dot 2s infinite'}}/>}
+      {/* Status accent bar */}
+      <div style={{ height:3, background: hasAlert ? '#EF4444' : s.dot, flexShrink:0 }}/>
 
-      <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-        {/* Avatar */}
-        <div style={{ width:44,height:44,borderRadius:13,background:`linear-gradient(135deg,${sbg},var(--card))`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:sc,flexShrink:0,position:'relative' }}>
-          {emp.name?.slice(0,2).toUpperCase()}
-          <CompletionRing pct={profileCompletion(emp)} size={44} stroke={3}/>
-          <div style={{ position:'absolute',bottom:-1,right:-1,width:11,height:11,borderRadius:'50%',background:s.dot,border:'2px solid var(--card)' }}/>
-        </div>
-
-        {/* Main info */}
-        <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontWeight:700,fontSize:13.5,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{emp.name}</div>
-          <div style={{ fontSize:11,color:'var(--text-muted)',marginTop:2,display:'flex',gap:5,alignItems:'center' }}>
-            <span style={{ fontFamily:'inherit' }}>{emp.id}</span>
-            {emp.work_number&&<><span>·</span><span style={{ color:'var(--text-sub)' }}>{emp.work_number}</span></>}
+      {/* Main content */}
+      <div style={{ padding:'14px 16px 0', display:'flex', gap:12, alignItems:'flex-start' }}>
+        {/* Avatar with completion ring */}
+        <div style={{ position:'relative', flexShrink:0 }}>
+          <div style={{ width:52, height:52, borderRadius:15, background:`linear-gradient(135deg,${sbg},var(--card))`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:900, color:sc }}>
+            {emp.name?.slice(0,2).toUpperCase()}
+            <CompletionRing pct={pct} size={52} stroke={3}/>
           </div>
+          <div style={{ position:'absolute', bottom:-2, right:-2, width:12, height:12, borderRadius:'50%', background: hasAlert ? '#EF4444' : s.dot, border:'2.5px solid var(--card)' }}/>
         </div>
 
-        {/* Right badges */}
-        <div style={{ display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4,flexShrink:0 }}>
-          <span style={{ fontSize:11,fontWeight:700,color:sc,background:sbg,border:`1px solid ${sbc}`,borderRadius:7,padding:'2px 8px' }}>{emp.station_code||'DDB1'}</span>
-          {emp.project_type&&<span style={{ fontSize:10,fontWeight:600,color:'#7C3AED',background:'var(--purple-bg)',borderRadius:5,padding:'1px 6px' }}>{emp.project_type.toUpperCase()}</span>}
-          {(()=>{ const vt=emp.visa_type||'company'; return <span style={{ fontSize:10,fontWeight:600,color:vt==='own'?'#0369A1':'#065F46',background:vt==='own'?'#EFF6FF':'#ECFDF5',border:`1px solid ${vt==='own'?'#BAE6FD':'#A7F3D0'}`,borderRadius:5,padding:'1px 6px' }}>{vt==='own'?'Own Visa':'Co. Visa'}</span> })()}
+        {/* Name + badges */}
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:6, marginBottom:6 }}>
+            <span style={{ fontWeight:800, fontSize:14, color:'var(--text)', lineHeight:1.25, wordBreak:'break-word' }}>{emp.name}</span>
+            <span style={{ fontSize:9.5, fontWeight:700, color:s.c, background:s.bg, border:`1px solid ${s.bc}`, borderRadius:20, padding:'2px 8px', flexShrink:0, whiteSpace:'nowrap' }}>
+              {s.l}
+            </span>
+          </div>
+          <div style={{ display:'flex', gap:5, flexWrap:'wrap', marginBottom:10 }}>
+            <span style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:6, padding:'2px 7px', fontFamily:'monospace' }}>{emp.id}</span>
+            {emp.station_code && (
+              <span style={{ fontSize:10, fontWeight:700, color:sc, background:sbg, border:`1px solid ${sbc}`, borderRadius:6, padding:'2px 7px' }}>{emp.station_code}</span>
+            )}
+            {emp.nationality && (
+              <span style={{ fontSize:10, fontWeight:600, color:'var(--text-muted)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:6, padding:'2px 7px' }}>{emp.nationality}</span>
+            )}
+            {emp.project_type && (
+              <span style={{ fontSize:10, fontWeight:700, color:'#7C3AED', background:'var(--purple-bg)', border:'1px solid var(--purple-border)', borderRadius:6, padding:'2px 7px' }}>{emp.project_type.toUpperCase()}</span>
+            )}
+            <span style={{ fontSize:10, fontWeight:600, color:isOwn?'#0369A1':'#065F46', background:isOwn?'#EFF6FF':'#ECFDF5', border:`1px solid ${isOwn?'#BAE6FD':'#A7F3D0'}`, borderRadius:6, padding:'2px 7px' }}>
+              {isOwn ? 'Own Visa' : 'Co. Visa'}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Bottom row */}
-      <div style={{ display:'flex',gap:8,marginTop:11,paddingTop:11,borderTop:'1px solid var(--border)',alignItems:'center',flexWrap:'wrap' }}>
-        <span style={{ flex:1,fontSize:11,fontWeight:600,color:s.c,display:'flex',alignItems:'center',gap:4 }}>
-          <span style={{ width:6,height:6,borderRadius:'50%',background:s.dot,display:'inline-block' }}/>{s.l}
-        </span>
-        {emp.phone&&<span style={{ fontSize:11,color:'var(--text-sub)',display:'flex',alignItems:'center',gap:3 }}><Phone size={10}/>{emp.phone}</span>}
-        {userRole !== 'accountant' && <>
-          <button onClick={e=>{e.stopPropagation();onEdit(emp)}}
-            style={{ padding:'4px 10px',borderRadius:7,background:'var(--bg-alt)',border:'1px solid var(--border)',cursor:'pointer',fontSize:11,color:'var(--text-sub)',fontWeight:600,display:'flex',alignItems:'center',gap:4,fontFamily:'Poppins,sans-serif' }}>
-            <Pencil size={11}/> Edit
-          </button>
-          <button onClick={e=>{e.stopPropagation();onDelete(emp)}}
-            style={{ padding:'4px 8px',borderRadius:7,background:'var(--red-bg)',border:'1px solid var(--red-border)',cursor:'pointer',color:'var(--red)',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif' }}>
-            <Trash2 size={11}/>
-          </button>
-        </>}
+      {/* Contact + action footer */}
+      <div style={{ margin:'0 16px 14px', borderTop:'1px solid var(--border)', paddingTop:10, display:'flex', alignItems:'center', gap:8 }}>
+        {/* Personal phone */}
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:9, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:2 }}>Personal</div>
+          <div style={{ fontSize:11.5, fontWeight:600, color: emp.phone ? 'var(--text)' : 'var(--text-muted)', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+            {emp.phone || '—'}
+          </div>
+        </div>
+        {/* Work SIM */}
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:9, fontWeight:700, color:'#7C3AED', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:2 }}>Work SIM</div>
+          <div style={{ fontSize:11.5, fontWeight:600, color: emp.work_number ? '#7C3AED' : 'var(--text-muted)', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+            {emp.work_number || '—'}
+          </div>
+        </div>
+        {/* Edit / Delete */}
+        {userRole !== 'accountant' && (
+          <div style={{ display:'flex', gap:4, flexShrink:0 }}>
+            <button onClick={e => { e.stopPropagation(); onEdit(emp) }}
+              style={{ width:30, height:30, borderRadius:8, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)' }}>
+              <Pencil size={11}/>
+            </button>
+            <button onClick={e => { e.stopPropagation(); onDelete(emp) }}
+              style={{ width:30, height:30, borderRadius:8, background:'var(--red-bg)', border:'1px solid var(--red-border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--red)' }}>
+              <Trash2 size={11}/>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -1150,7 +1202,7 @@ export default function EmployeesPage() {
   const [userRole,  setUserRole]  = useState(null)
   const [isMobile,  setIsMobile]  = useState(false)
   const [page,      setPage]      = useState(1)
-  const PAGE_SIZE = 20
+  const PAGE_SIZE = 24
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -1250,8 +1302,8 @@ export default function EmployeesPage() {
 
         {/* List */}
         {loading ? (
-          <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
-            {[1,2,3,4].map(i=><div key={i} className="sk" style={{ height:86, borderRadius:14 }}/>)}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))', gap:12 }}>
+            {[1,2,3,4,5,6].map(i=><div key={i} className="sk" style={{ height:158, borderRadius:16 }}/>)}
           </div>
         ) : employees.length===0 ? (
           <div style={{ textAlign:'center', padding:'60px 20px' }}>
@@ -1260,7 +1312,7 @@ export default function EmployeesPage() {
           </div>
         ) : (
           <>
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))', gap:12 }}>
               {paginated.map((emp,i)=>(
                 <EmpCard key={emp.id} emp={emp} index={i}
                   isSelected={selected?.id===emp.id}
