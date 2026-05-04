@@ -467,7 +467,7 @@ export function SimModal({ sim, emps, station, onSave, onClose }) {
   }
   const STATUSES = [{ v:'available',l:'Available',c:'#2E7D52' },{ v:'assigned',l:'Assigned',c:'#B8860B' },{ v:'inactive',l:'Inactive',c:'#A89880' },{ v:'damaged',l:'Damaged',c:'#C0392B' }]
   return (
-    <div className="modal-overlay" onClick={e => e.target===e.currentTarget&&onClose()}>
+    <div className="modal-overlay modal-fs" onClick={e => e.target===e.currentTarget&&onClose()}>
       <div className="modal" style={{ maxWidth:440 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
           <div>
@@ -700,7 +700,7 @@ export function SimSection({ sims, emps, station, onRefresh }) {
           <div style={{ fontSize:12 }}>{search?'Try a different search term':'Add your first SIM card above'}</div>
         </div>
       ) : (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px,1fr))', gap:14 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px,1fr))', gap:14 }}>
           {filtered.map((sim, i) => {
             const sc = SC[sim.status] || SC.available
             return (
@@ -708,8 +708,7 @@ export function SimSection({ sims, emps, station, onRefresh }) {
                 onClick={() => setModal({type:'edit', sim})}
                 style={{
                   background:'var(--card)',
-                  border:'1px solid var(--border)',
-                  borderTop:`3px solid ${sc.c}`,
+                  border:`1.5px solid ${sc.bc}`,
                   borderRadius:16,
                   overflow:'hidden',
                   cursor:'pointer',
