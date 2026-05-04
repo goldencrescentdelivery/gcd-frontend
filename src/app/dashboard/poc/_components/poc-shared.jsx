@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import {
   X, Plus, Pencil, Trash2, Truck, Users, Package, Bell, Calendar,
@@ -98,19 +99,31 @@ export function POCHeader({ title, icon: Icon, color, station, onStationChange, 
 export function DriverSearch({ employees, value, onChange, placeholder='Search driver…' }) {
   const [open, setOpen]     = useState(false)
   const [search, setSearch] = useState('')
-  const ref = useRef(null)
+  const [pos, setPos]       = useState({})
+  const ref     = useRef(null)
+  const trigRef = useRef(null)
   const selected = employees.find(e => e.id === value)
   const filtered = employees.filter(e =>
     !search || e.name.toLowerCase().includes(search.toLowerCase()) || e.id.toLowerCase().includes(search.toLowerCase())
   )
+  function handleOpen() {
+    if (trigRef.current) {
+      const r = trigRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + 6, left: r.left, width: r.width })
+    }
+    setOpen(p => !p)
+  }
   useEffect(() => {
-    function h(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
+    if (!open) return
+    function close(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    function onScroll() { setOpen(false) }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('scroll', onScroll, true)
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('scroll', onScroll, true) }
+  }, [open])
   return (
     <div ref={ref} style={{ position:'relative' }}>
-      <div onClick={() => setOpen(p => !p)} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px', background:'var(--card)', border:`1.5px solid ${open?'var(--gold)':'var(--border-med)'}`, borderRadius:12, cursor:'pointer', transition:'all 0.2s', boxShadow:open?'0 0 0 3px rgba(184,134,11,0.1)':'' }}>
+      <div ref={trigRef} onClick={handleOpen} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px', background:'var(--card)', border:`1.5px solid ${open?'var(--gold)':'var(--border-med)'}`, borderRadius:12, cursor:'pointer', transition:'all 0.2s', boxShadow:open?'0 0 0 3px rgba(184,134,11,0.1)':'' }}>
         {selected ? (
           <div style={{ display:'flex', alignItems:'center', gap:10, flex:1 }}>
             <div style={{ width:32, height:32, borderRadius:9, background:'var(--amber-bg)', border:'1px solid var(--gold-border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{selected.avatar||'👤'}</div>
@@ -124,33 +137,34 @@ export function DriverSearch({ employees, value, onChange, placeholder='Search d
         )}
         <ChevronDown size={15} color="var(--text-muted)" style={{ flexShrink:0, transition:'transform 0.2s', transform:open?'rotate(180deg)':'none' }}/>
       </div>
-      {open && (
-        <div style={{ position:'absolute', top:'calc(100% + 6px)', left:0, right:0, background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, boxShadow:'var(--shadow-lg)', zIndex:999, maxHeight:300, overflow:'hidden', animation:'scaleIn 0.15s ease' }}>
-          <div style={{ padding:'10px 12px', borderBottom:'1px solid var(--border)' }}>
-            <div style={{ position:'relative' }}>
-              <Search size={13} style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)' }}/>
-              <input autoFocus className="input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name or ID…" style={{ paddingLeft:32, fontSize:12, borderRadius:8 }}/>
-            </div>
-          </div>
-          <div style={{ overflowY:'auto', maxHeight:230 }}>
-            <div onClick={() => { onChange(''); setOpen(false); setSearch('') }} style={{ padding:'10px 14px', fontSize:13, color:'var(--text-muted)', cursor:'pointer', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ width:28, height:28, borderRadius:8, background:'var(--bg-alt)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>—</div>None
-            </div>
-            {filtered.map(e => (
-              <div key={e.id} onClick={() => { onChange(e.id); setOpen(false); setSearch('') }}
-                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', cursor:'pointer', background:value===e.id?'var(--amber-bg)':'transparent', transition:'background 0.15s' }}>
-                <div style={{ width:32, height:32, borderRadius:9, background:'var(--amber-bg)', border:`1px solid ${value===e.id?'var(--gold)':'var(--gold-border)'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{e.avatar||'👤'}</div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:13, fontWeight:600, color:'var(--text)' }}>{e.name}</div>
-                  <div style={{ fontSize:10.5, color:'var(--text-muted)' }}>{e.id}</div>
-                </div>
-                {value===e.id && <CheckCircle size={15} color="var(--gold)"/>}
+      {open && typeof window !== 'undefined' && createPortal(
+          <div style={{ position:'fixed', top:pos.top, left:pos.left, width:pos.width, background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, boxShadow:'0 8px 32px rgba(0,0,0,0.18)', zIndex:9999, maxHeight:300, overflow:'hidden', animation:'scaleIn 0.15s ease' }}>
+            <div style={{ padding:'10px 12px', borderBottom:'1px solid var(--border)' }}>
+              <div style={{ position:'relative' }}>
+                <Search size={13} style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)' }}/>
+                <input autoFocus className="input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name or ID…" style={{ paddingLeft:32, fontSize:12, borderRadius:8 }}/>
               </div>
-            ))}
-            {filtered.length===0 && <div style={{ padding:24, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>No drivers found</div>}
-          </div>
-        </div>
-      )}
+            </div>
+            <div style={{ overflowY:'auto', maxHeight:230 }}>
+              <div onClick={() => { onChange(''); setOpen(false); setSearch('') }} style={{ padding:'10px 14px', fontSize:13, color:'var(--text-muted)', cursor:'pointer', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ width:28, height:28, borderRadius:8, background:'var(--bg-alt)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>—</div>None
+              </div>
+              {filtered.map(e => (
+                <div key={e.id} onClick={() => { onChange(e.id); setOpen(false); setSearch('') }}
+                  style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', cursor:'pointer', background:value===e.id?'var(--amber-bg)':'transparent', transition:'background 0.15s' }}>
+                  <div style={{ width:32, height:32, borderRadius:9, background:'var(--amber-bg)', border:`1px solid ${value===e.id?'var(--gold)':'var(--gold-border)'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{e.avatar||'👤'}</div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:13, fontWeight:600, color:'var(--text)' }}>{e.name}</div>
+                    <div style={{ fontSize:10.5, color:'var(--text-muted)' }}>{e.id}</div>
+                  </div>
+                  {value===e.id && <CheckCircle size={15} color="var(--gold)"/>}
+                </div>
+              ))}
+              {filtered.length===0 && <div style={{ padding:24, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>No drivers found</div>}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   )
 }
