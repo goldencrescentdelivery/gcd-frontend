@@ -39,8 +39,8 @@ export default function SimsPage() {
       />
 
       {loading ? (
-        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-          {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height:80, borderRadius:14 }}/>)}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px,1fr))', gap:14 }}>
+          {[1,2,3,4,5,6].map(i => <div key={i} className="skeleton" style={{ height:168, borderRadius:16 }}/>)}
         </div>
       ) : (
         <SimSection sims={stationSims} emps={emps} station={station} onRefresh={load}/>

@@ -688,52 +688,99 @@ export function SimSection({ sims, emps, station, onRefresh }) {
       <div style={{ display:'flex', gap:8 }}>
         <div style={{ flex:1, position:'relative' }}>
           <Search size={13} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', pointerEvents:'none' }}/>
-          <input className="input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search SIM, phone, DA…" style={{ paddingLeft:34, borderRadius:20 }}/>
+          <input className="input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search SIM, phone, DA…" style={{ paddingLeft:34 }}/>
         </div>
-        <button className="btn btn-secondary" onClick={() => setModal({type:'bulk'})} style={{ borderRadius:20, padding:'9px 14px', gap:5 }}><Upload size={14}/> Bulk</button>
-        <button className="btn btn-primary" onClick={() => setModal({type:'add'})} style={{ borderRadius:20, padding:'9px 16px' }}><Plus size={14}/> Add SIM</button>
+        <button className="btn btn-secondary" onClick={() => setModal({type:'bulk'})} style={{ gap:5 }}><Upload size={14}/> Bulk</button>
+        <button className="btn btn-primary" onClick={() => setModal({type:'add'})}><Plus size={14}/> Add SIM</button>
       </div>
       {filtered.length===0 ? (
-        <div style={{ textAlign:'center', padding:'40px', color:'var(--text-muted)' }}>
-          <Smartphone size={36} style={{ margin:'0 auto 10px', display:'block', opacity:0.2 }}/>
-          <div style={{ fontWeight:600 }}>{search?`No results for "${search}"`:'No SIM cards yet — add one above'}</div>
+        <div style={{ textAlign:'center', padding:'60px 20px', color:'var(--text-muted)' }}>
+          <Smartphone size={40} style={{ margin:'0 auto 12px', display:'block', opacity:0.15 }}/>
+          <div style={{ fontWeight:700, fontSize:15, color:'var(--text-sub)', marginBottom:4 }}>{search?`No results for "${search}"`:'No SIM cards yet'}</div>
+          <div style={{ fontSize:12 }}>{search?'Try a different search term':'Add your first SIM card above'}</div>
         </div>
-      ) : filtered.map((sim,i) => {
-        const sc = SC[sim.status]||SC.available
-        return (
-          <div key={sim.id} onClick={() => setModal({type:'edit',sim})} style={{ background:'var(--card)', border:`1.5px solid ${sc.bc}`, borderRadius:14, padding:'13px 15px', animation:`slideUp 0.3s ${i*0.04}s ease both`, cursor:'pointer', transition:'box-shadow 0.2s' }}
-            onMouseEnter={e => e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'}
-            onMouseLeave={e => e.currentTarget.style.boxShadow='none'}>
-            <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-              <div style={{ width:42, height:42, borderRadius:12, background:sc.bg, border:`1px solid ${sc.bc}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Smartphone size={18} color={sc.c}/></div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>{sim.phone_number||sim.sim_number}</div>
-                <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:2, display:'flex', gap:5, flexWrap:'wrap' }}>
-                  <span>{sim.carrier}</span>
-                  {sim.phone_number&&<><span>·</span><span style={{ fontSize:10 }}>{sim.sim_number}</span></>}
-                  {sim.monthly_cost>0&&<><span>·</span><span style={{ color:'#7C3AED', fontWeight:600 }}>AED {sim.monthly_cost}/mo</span></>}
+      ) : (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px,1fr))', gap:14 }}>
+          {filtered.map((sim, i) => {
+            const sc = SC[sim.status] || SC.available
+            return (
+              <div key={sim.id}
+                onClick={() => setModal({type:'edit', sim})}
+                style={{
+                  background:'var(--card)',
+                  border:'1px solid var(--border)',
+                  borderTop:`3px solid ${sc.c}`,
+                  borderRadius:16,
+                  overflow:'hidden',
+                  cursor:'pointer',
+                  boxShadow:'var(--shadow)',
+                  transition:'transform 0.15s, box-shadow 0.15s',
+                  animation:`slideUp 0.3s ${i*0.04}s ease both`,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='var(--shadow-md)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='var(--shadow)' }}
+              >
+                <div style={{ padding:'15px 16px 13px' }}>
+                  {/* Icon + status badge */}
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
+                    <div style={{ width:46, height:46, borderRadius:13, background:sc.bg, border:`1.5px solid ${sc.bc}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      <Smartphone size={21} color={sc.c}/>
+                    </div>
+                    <span style={{ fontSize:11, fontWeight:700, color:sc.c, background:sc.bg, border:`1px solid ${sc.bc}`, borderRadius:100, padding:'3px 10px' }}>{sc.l}</span>
+                  </div>
+
+                  {/* Phone + SIM ID */}
+                  <div style={{ marginBottom:10 }}>
+                    <div style={{ fontWeight:800, fontSize:15, color:'var(--text)', letterSpacing:'-0.01em' }}>
+                      {sim.phone_number || sim.sim_number}
+                    </div>
+                    {sim.phone_number && sim.sim_number && (
+                      <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:2, fontFamily:'ui-monospace,monospace' }}>{sim.sim_number}</div>
+                    )}
+                  </div>
+
+                  {/* Chips */}
+                  <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                    {sim.carrier && (
+                      <span style={{ fontSize:10.5, fontWeight:600, color:'var(--text-sub)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:100, padding:'2px 8px' }}>{sim.carrier}</span>
+                    )}
+                    {sim.monthly_cost > 0 && (
+                      <span style={{ fontSize:10.5, fontWeight:600, color:'#7C3AED', background:'#F5F3FF', border:'1px solid #DDD6FE', borderRadius:100, padding:'2px 8px' }}>AED {sim.monthly_cost}/mo</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer: employee or unassigned + actions */}
+                <div style={{ borderTop:'1px solid var(--border)', padding:'10px 14px', display:'flex', justifyContent:'space-between', alignItems:'center', background:'var(--bg)' }}>
+                  {sim.emp_id ? (
+                    <div style={{ display:'flex', alignItems:'center', gap:8, flex:1, minWidth:0 }}>
+                      <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)', border:'1px solid #F0D78C', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:900, color:'#B8860B', flexShrink:0 }}>
+                        {sim.emp_name?.slice(0,2).toUpperCase()}
+                      </div>
+                      <div style={{ minWidth:0 }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sim.emp_name}</div>
+                        <div style={{ fontSize:10, color:'var(--text-muted)' }}>Since {sim.assigned_at?.slice(0,10)||'—'}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <span style={{ fontSize:11.5, color:'var(--text-muted)', fontStyle:'italic' }}>Unassigned</span>
+                  )}
+                  <div style={{ display:'flex', gap:5, flexShrink:0, marginLeft:8 }} onClick={e => e.stopPropagation()}>
+                    <button onClick={e => { e.stopPropagation(); setModal({type:'edit', sim}) }}
+                      style={{ width:30, height:30, borderRadius:'50%', background:'var(--card)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)' }}>
+                      <Pencil size={12}/>
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); handleDelete(sim.id, sim.sim_number||sim.phone_number||'—') }}
+                      style={{ width:30, height:30, borderRadius:'50%', background:'#FEF2F2', border:'1px solid #FECACA', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#C0392B' }}>
+                      <Trash2 size={12}/>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6, flexShrink:0 }}>
-                <span style={{ fontSize:11, fontWeight:700, color:sc.c, background:sc.bg, border:`1px solid ${sc.bc}`, borderRadius:20, padding:'2px 10px' }}>{sc.l}</span>
-                <div style={{ display:'flex', gap:5 }}>
-                  <button onClick={e => { e.stopPropagation(); setModal({type:'edit',sim}) }} style={{ padding:'4px 10px', borderRadius:7, background:'var(--bg-alt)', border:'none', cursor:'pointer', fontSize:11, color:'var(--text-sub)', fontWeight:600, fontFamily:'inherit', display:'flex', alignItems:'center', gap:4 }}><Pencil size={11}/> Edit</button>
-                  <button onClick={e => { e.stopPropagation(); handleDelete(sim.id, sim.sim_number||sim.phone_number||'—') }} style={{ padding:'4px 8px', borderRadius:7, background:'#FEF2F2', border:'none', cursor:'pointer', color:'#C0392B', display:'flex', alignItems:'center', fontFamily:'inherit' }}><Trash2 size={11}/></button>
-                </div>
-              </div>
-            </div>
-            {sim.emp_id && (
-              <div style={{ marginTop:10, paddingTop:10, borderTop:'1px solid var(--border)', display:'flex', alignItems:'center', gap:8 }}>
-                <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)', border:'1px solid #F0D78C', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'#B8860B', flexShrink:0 }}>{sim.emp_name?.slice(0,2).toUpperCase()}</div>
-                <div>
-                  <div style={{ fontSize:12, fontWeight:700, color:'var(--text)' }}>{sim.emp_name}</div>
-                  <div style={{ fontSize:10.5, color:'var(--text-muted)' }}>Assigned {sim.assigned_at?.slice(0,10)||'—'}</div>
-                </div>
-              </div>
-            )}
-          </div>
-        )
-      })}
+            )
+          })}
+        </div>
+      )}
       {modal?.type==='add'  && <SimModal emps={emps} station={station} onClose={() => setModal(null)} onSave={() => { setModal(null); onRefresh() }}/>}
       {modal?.type==='edit' && <SimModal sim={modal.sim} emps={emps} station={station} onClose={() => setModal(null)} onSave={() => { setModal(null); onRefresh() }}/>}
       {modal?.type==='bulk' && <SimBulkModal station={station} emps={emps} onClose={() => setModal(null)} onSave={() => { setModal(null); onRefresh() }}/>}
