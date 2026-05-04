@@ -1014,110 +1014,104 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
   const [showHistModal, setShowHistModal] = useState(false)
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
   const hasHandover = !!currentHandover
+  const BC = { active:'#A7F3D0', grounded:'#FCA5A5', maintenance:'#FDE68A', sold:'#E5E7EB' }
+  const bc = hasHandover ? '#6EE7B7' : (BC[v.status] || 'var(--border)')
 
   return (
     <>
-      <div style={{ background:'var(--card)', borderRadius:20, overflow:'hidden', border:`1px solid ${hasHandover?'#A7F3D0':isDown?`${sc}40`:'var(--border)'}`, boxShadow:hasHandover?'0 0 0 2px rgba(16,185,129,0.15)':'0 2px 8px rgba(0,0,0,0.04)', transition:'box-shadow 0.2s' }}
-        onMouseEnter={e=>e.currentTarget.style.boxShadow=hasHandover?'0 0 0 2px rgba(16,185,129,0.2),0 8px 24px rgba(0,0,0,0.08)':'0 8px 24px rgba(0,0,0,0.08)'}
-        onMouseLeave={e=>e.currentTarget.style.boxShadow=hasHandover?'0 0 0 2px rgba(16,185,129,0.15)':'0 2px 8px rgba(0,0,0,0.04)'}>
+      <div style={{
+        background:'var(--card)', borderRadius:16,
+        border:`1.5px solid ${bc}`,
+        boxShadow:'var(--shadow)',
+        transition:'transform 0.15s, box-shadow 0.15s',
+      }}
+        onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='var(--shadow-md)' }}
+        onMouseLeave={e=>{ e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='var(--shadow)' }}>
 
-        <div style={{ height:4, background:`linear-gradient(90deg,${sc},${sc}80)` }}/>
-
-        <div style={{ padding:'16px 18px', display:'flex', flexDirection:'column', gap:12 }}>
-
-          {/* ── Header row ── */}
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <div style={{ width:50, height:50, borderRadius:15, background:sb, border:`2px solid ${sc}30`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:`0 4px 12px ${sc}18` }}>
-                <Truck size={22} color={sc}/>
+        <div style={{ padding:'15px 16px 13px' }}>
+          {/* ── Header ── */}
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:11 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <div style={{ width:46, height:46, borderRadius:13, background:sb, border:`1.5px solid ${sc}40`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <Truck size={21} color={sc}/>
               </div>
               <div>
-                <div style={{ fontWeight:900, fontSize:19, color:'var(--text)', letterSpacing:'0.04em', lineHeight:1 }}>{v.plate}</div>
-                <div style={{ fontSize:11.5, color:'var(--text-muted)', marginTop:3 }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
+                <div style={{ fontWeight:900, fontSize:17, color:'var(--text)', letterSpacing:'0.03em', lineHeight:1 }}>{v.plate}</div>
+                <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:2 }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
               </div>
             </div>
-            <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6 }}>
-              <div style={{ display:'flex', gap:5 }}>
-                <span style={{ fontSize:10.5, fontWeight:700, color:sc, background:sb, padding:'3px 10px', borderRadius:20, border:`1px solid ${sc}30`, textTransform:'capitalize' }}>{v.status}</span>
-                {v.station_code&&<span style={{ fontSize:9.5, fontWeight:700, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:6, padding:'2px 7px' }}>{v.station_code}</span>}
-              </div>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:5 }}>
+              <span style={{ fontSize:11, fontWeight:700, color:sc, background:sb, padding:'3px 10px', borderRadius:100, border:`1px solid ${sc}40`, textTransform:'capitalize' }}>{v.status}</span>
               <div style={{ display:'flex', gap:4 }}>
-                <button className="btn btn-ghost btn-icon btn-sm" onClick={onEdit} title="Edit"><Pencil size={12}/></button>
-                <button className="btn btn-ghost btn-icon btn-sm" style={{ color:'#EF4444' }} onClick={onDelete} title="Delete"><Trash2 size={12}/></button>
+                <button onClick={e=>{e.stopPropagation();onEdit()}} style={{ width:28, height:28, borderRadius:'50%', background:'var(--card)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)' }}><Pencil size={11}/></button>
+                <button onClick={e=>{e.stopPropagation();onDelete()}} style={{ width:28, height:28, borderRadius:'50%', background:'#FEF2F2', border:'1px solid #FECACA', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#C0392B' }}><Trash2 size={11}/></button>
               </div>
             </div>
           </div>
 
           {/* ── Grounded reason ── */}
           {isDown&&v.grounded_reason&&(
-            <div style={{ background:`${sc}10`, border:`1px solid ${sc}30`, borderRadius:10, padding:'8px 12px', fontSize:12, color:sc, display:'flex', gap:6, alignItems:'flex-start' }}>
-              <AlertTriangle size={13} style={{ flexShrink:0, marginTop:1 }}/> {v.grounded_reason}{v.grounded_since?` · since ${v.grounded_since.slice(0,10)}`:''}
+            <div style={{ background:`${sc}10`, border:`1px solid ${sc}30`, borderRadius:8, padding:'7px 10px', fontSize:11.5, color:sc, display:'flex', gap:5, alignItems:'flex-start', marginBottom:10 }}>
+              <AlertTriangle size={12} style={{ flexShrink:0, marginTop:1 }}/> {v.grounded_reason}{v.grounded_since?` · since ${v.grounded_since.slice(0,10)}`:''}
             </div>
           )}
 
-          {/* ── Active handover banner ── */}
+          {/* ── Handover status ── */}
           {hasHandover ? (
-            <div style={{ background:'linear-gradient(135deg,#ECFDF5,#F0FFF8)', border:'1.5px solid #6EE7B7', borderRadius:14, padding:'11px 13px', display:'flex', alignItems:'center', gap:10 }}>
-              <div style={{ width:38, height:38, borderRadius:11, background:'#D1FAE5', border:'1px solid #A7F3D0', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <ArrowLeftRight size={17} color="#2E7D52"/>
-              </div>
+            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 11px', background:'#ECFDF5', border:'1px solid #A7F3D0', borderRadius:10 }}>
+              <ArrowLeftRight size={13} color="#2E7D52" style={{ flexShrink:0 }}/>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:9.5, fontWeight:700, color:'#2E7D52', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2 }}>Currently In Use</div>
-                <div style={{ fontSize:13.5, fontWeight:800, color:'#064E3B', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{currentHandover.emp_name}</div>
-                <div style={{ fontSize:10.5, color:'#065F46', marginTop:1 }}>
+                <div style={{ fontSize:12.5, fontWeight:800, color:'#064E3B', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{currentHandover.emp_name}</div>
+                <div style={{ fontSize:10, color:'#065F46' }}>
                   {new Date(currentHandover.submitted_at).toLocaleString('en-AE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
                   {currentHandover.fuel_level&&` · ${FUEL_LABEL_MAP[currentHandover.fuel_level]||currentHandover.fuel_level}`}
                 </div>
               </div>
-              <span style={{ fontSize:9, fontWeight:800, color:'#2E7D52', background:'#A7F3D0', borderRadius:20, padding:'3px 9px', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0 }}>Live</span>
+              <span style={{ fontSize:9, fontWeight:800, color:'#2E7D52', background:'#A7F3D0', borderRadius:100, padding:'2px 8px', flexShrink:0 }}>Live</span>
             </div>
           ) : (
-            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 12px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:12 }}>
-              <div style={{ width:8, height:8, borderRadius:'50%', background:'#D1D5DB', flexShrink:0 }}/>
-              <span style={{ fontSize:12, color:'var(--text-muted)' }}>No active handover — vehicle available</span>
+            <div style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 11px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10 }}>
+              <div style={{ width:7, height:7, borderRadius:'50%', background:'#D1D5DB', flexShrink:0 }}/>
+              <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>No active handover — vehicle available</span>
+            </div>
+          )}
+        </div>
+
+        {/* ── Footer: assignment + history ── */}
+        <div style={{ borderTop:'1px solid var(--border)', padding:'10px 14px 12px', background:'var(--bg)' }}>
+          <div style={{ fontSize:9, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:7, display:'flex', alignItems:'center', gap:4 }}>
+            <Clock size={9}/> Assigned — {date}
+          </div>
+
+          {assignedEmp ? (
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+              <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:11, color:'white', flexShrink:0 }}>
+                {assignedEmp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+              </div>
+              <span style={{ fontSize:12.5, fontWeight:700, color:'#92400E', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{assignedEmp.name}</span>
+              <button onClick={()=>setShowAssign(p=>!p)} style={{ padding:'4px 10px', borderRadius:100, background:'rgba(184,134,11,0.1)', border:'1px solid rgba(184,134,11,0.3)', color:'#B8860B', fontSize:10.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>
+                Change
+              </button>
+            </div>
+          ) : (
+            <div onClick={()=>setShowAssign(p=>!p)} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 11px', background:'var(--bg-alt)', border:`1.5px dashed ${showAssign?'var(--gold)':'var(--border-med)'}`, borderRadius:10, cursor:'pointer', marginBottom:8, transition:'border-color 0.2s' }}>
+              <Users size={13} color="var(--text-muted)"/>
+              <span style={{ fontSize:12, color:'var(--text-muted)', fontStyle:'italic', flex:1 }}>Unassigned — tap to assign</span>
+              <ChevronDown size={13} color="var(--text-muted)" style={{ transition:'transform 0.2s', transform:showAssign?'rotate(180deg)':'none' }}/>
             </div>
           )}
 
-          {/* ── Daily assignment ── */}
-          <div>
-            <div style={{ fontSize:9.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:7, display:'flex', alignItems:'center', gap:5 }}>
-              <Clock size={10}/> Assigned — {date}
+          {showAssign&&(
+            <div style={{ marginBottom:8, animation:'slideUp 0.2s ease' }}>
+              <DriverSearch employees={emps.filter(e=>e.station_code===station)} value={asgn?.emp_id||''} onChange={id=>{ onAssign(id); setShowAssign(false) }} placeholder="— Unassigned —"/>
             </div>
-            {assignedEmp ? (
-              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 13px', background:'linear-gradient(135deg,#FDF6E3,#FFFBEB)', border:'1.5px solid #F0D78C', borderRadius:13 }}>
-                <div style={{ width:36, height:36, borderRadius:11, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:12, color:'white', flexShrink:0 }}>
-                  {assignedEmp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
-                </div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:'#92400E', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{assignedEmp.name}</div>
-                  <div style={{ fontSize:10.5, color:'#B45309', marginTop:1 }}>Assigned by POC</div>
-                </div>
-                <button onClick={()=>setShowAssign(p=>!p)} style={{ padding:'5px 10px', borderRadius:8, background:'rgba(184,134,11,0.1)', border:'1px solid rgba(184,134,11,0.3)', color:'#B8860B', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all 0.15s', flexShrink:0 }}>
-                  Change
-                </button>
-              </div>
-            ) : (
-              <div onClick={()=>setShowAssign(p=>!p)} style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 13px', background:'var(--bg-alt)', border:`1.5px dashed ${showAssign?'var(--gold)':'var(--border-med)'}`, borderRadius:13, cursor:'pointer', transition:'all 0.2s' }}>
-                <div style={{ width:32, height:32, borderRadius:9, background:'var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                  <Users size={14} color="var(--text-muted)"/>
-                </div>
-                <span style={{ fontSize:12.5, color:'var(--text-muted)', fontStyle:'italic', flex:1 }}>Unassigned — tap to assign</span>
-                <ChevronDown size={14} color="var(--text-muted)" style={{ transition:'transform 0.2s', transform:showAssign?'rotate(180deg)':'none', flexShrink:0 }}/>
-              </div>
-            )}
-            {showAssign&&(
-              <div style={{ marginTop:8, animation:'slideUp 0.2s ease' }}>
-                <DriverSearch employees={emps.filter(e=>e.station_code===station)} value={asgn?.emp_id||''} onChange={id=>{ onAssign(id); setShowAssign(false) }} placeholder="— Unassigned —"/>
-              </div>
-            )}
-          </div>
+          )}
 
-          {/* ── History button ── */}
-          <button onClick={()=>setShowHistModal(true)} style={{ display:'flex', alignItems:'center', gap:7, width:'100%', padding:'10px 14px', borderRadius:12, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', fontSize:12.5, fontWeight:600, color:'var(--text-sub)', transition:'all 0.15s', fontFamily:'inherit' }}
-            onMouseEnter={e=>{e.currentTarget.style.background='var(--card)';e.currentTarget.style.borderColor='var(--gold)';e.currentTarget.style.color='var(--gold)'}}
-            onMouseLeave={e=>{e.currentTarget.style.background='var(--bg-alt)';e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--text-sub)'}}>
-            <History size={13}/> View Full History
-            <ChevronRight size={13} style={{ marginLeft:'auto' }}/>
+          <button onClick={()=>setShowHistModal(true)} style={{ display:'flex', alignItems:'center', gap:6, width:'100%', padding:'8px 12px', borderRadius:10, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', fontSize:12, fontWeight:600, color:'var(--text-sub)', fontFamily:'inherit', transition:'border-color 0.15s, color 0.15s' }}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--gold)';e.currentTarget.style.color='var(--gold)'}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--text-sub)'}}>
+            <History size={12}/> View Full History
+            <ChevronRight size={12} style={{ marginLeft:'auto' }}/>
           </button>
         </div>
       </div>

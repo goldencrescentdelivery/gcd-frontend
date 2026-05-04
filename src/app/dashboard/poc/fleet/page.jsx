@@ -112,7 +112,7 @@ export default function FleetPage() {
       </div>
 
       {loading ? (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(380px,1fr))', gap:14 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:14 }}>
           {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height:280, borderRadius:20 }}/>)}
         </div>
       ) : displayVehs.length === 0 ? (
@@ -121,7 +121,7 @@ export default function FleetPage() {
           <div style={{ fontSize:13, fontWeight:600 }}>{filterStatus==='all'?'No vehicles yet — add one above':'No vehicles match this filter'}</div>
         </div>
       ) : (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(380px,1fr))', gap:14 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:14 }}>
           {displayVehs.map((v, i) => {
             const asgn    = asgns.find(a => String(a.vehicle_id)===String(v.id))
             const curHV   = currentHVs.find(h => String(h.vehicle_id)===String(v.id))
