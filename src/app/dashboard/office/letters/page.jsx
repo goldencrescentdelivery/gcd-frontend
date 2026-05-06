@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
 import { API } from '@/lib/api'
-import { ScrollText, Plus, Printer, ChevronLeft, User, Trash2, Pencil, CheckCircle, Clock, Send } from 'lucide-react'
+import { ScrollText, Plus, Printer, ChevronLeft, User, Trash2, Pencil, CheckCircle, Clock, Send, Download } from 'lucide-react'
 
 const hdr = () => ({ Authorization: `Bearer ${localStorage.getItem('gcd_token')}` })
 const TODAY = () => new Date().toISOString().split('T')[0]
@@ -72,9 +72,9 @@ function buildLetterHTML(l, origin) {
     <p style="margin:0 0 26px">With warm regards,</p>
     <div style="position:relative;min-height:140px;margin-bottom:6px;width:100%">
       <div style="display:inline-block">
-        ${showSign ? `<img src="${origin}/sign.png" style="height:78px;display:block;margin-bottom:2px;mix-blend-mode:screen" alt="" onerror="this.style.display='none'"/>` : '<div style="height:80px"></div>'}
-        <p style="margin:0 0 1px;font-size:15.5px;font-weight:700">Vardeep Singh Sodhi</p>
-        <p style="margin:0 0 1px;font-size:12px;color:#555;font-family:Arial,sans-serif">Director</p>
+        ${showSign ? `<img src="${l.signature_data || (origin + '/sign.png')}" style="height:78px;display:block;margin-bottom:2px;mix-blend-mode:${l.signature_data ? 'multiply' : 'screen'}" alt="" onerror="this.style.display='none'"/>` : '<div style="height:80px"></div>'}
+        <p style="margin:0 0 1px;font-size:15.5px;font-weight:700">${l.signer_name || 'Vardeep Singh Sodhi'}</p>
+        <p style="margin:0 0 1px;font-size:12px;color:#555;font-family:Arial,sans-serif">${l.signer_title || 'Director'}</p>
         <p style="margin:0;font-size:11.5px;color:#777;font-family:Arial,sans-serif">Golden Crescent Delivery Services LLC</p>
       </div>
       ${showStamp ? `<img src="${origin}/stamp.png" style="position:absolute;right:0;top:0;height:118px;mix-blend-mode:multiply" alt="" onerror="this.style.display='none'"/>` : ''}
@@ -166,9 +166,9 @@ function buildPrintHTML(l, origin) {
   <p style="margin:0 0 26px">With warm regards,</p>
   <div style="position:relative;min-height:140px;margin-bottom:6px;width:100%">
     <div style="display:inline-block">
-      ${showSign ? `<img src="${origin}/sign.png" style="height:78px;display:block;margin-bottom:2px;mix-blend-mode:screen" alt="" onerror="this.style.display='none'"/>` : '<div style="height:80px"></div>'}
-      <p style="margin:0 0 1px;font-size:15.5px;font-weight:700">Vardeep Singh Sodhi</p>
-      <p style="margin:0 0 1px;font-size:12px;color:#555;font-family:Arial,sans-serif">Director</p>
+      ${showSign ? `<img src="${l.signature_data || (origin + '/sign.png')}" style="height:78px;display:block;margin-bottom:2px;mix-blend-mode:${l.signature_data ? 'multiply' : 'screen'}" alt="" onerror="this.style.display='none'"/>` : '<div style="height:80px"></div>'}
+      <p style="margin:0 0 1px;font-size:15.5px;font-weight:700">${l.signer_name || 'Vardeep Singh Sodhi'}</p>
+      <p style="margin:0 0 1px;font-size:12px;color:#555;font-family:Arial,sans-serif">${l.signer_title || 'Director'}</p>
       <p style="margin:0;font-size:11.5px;color:#777;font-family:Arial,sans-serif">Golden Crescent Delivery Services LLC</p>
     </div>
     ${showStamp ? `<img src="${origin}/stamp.png" style="position:absolute;right:0;top:0;height:118px;mix-blend-mode:multiply" alt="" onerror="this.style.display='none'"/>` : ''}
@@ -240,12 +240,18 @@ export default function LettersPage() {
   const [body,      setBody]      = useState('')
   const [showSign,  setShowSign]  = useState(true)
   const [showStamp, setShowStamp] = useState(true)
+  const [signerName,     setSignerName]     = useState('')
+  const [signerTitle,    setSignerTitle]    = useState('')
+  const [signatureData,  setSignatureData]  = useState(null)
+  const [downloading,    setDownloading]    = useState(false)
 
   const editingLetter = editingId ? letters.find(l => l.id === editingId) : null
   const draft = {
     date, to_name: toName, subject, greeting, body,
     ref_no: editingLetter?.ref_no || 'GCD/LTR/PREVIEW',
+    id: editingLetter?.id || null,
     show_sign: showSign, show_stamp: showStamp,
+    signer_name: signerName, signer_title: signerTitle, signature_data: signatureData,
   }
   const SCALE = 0.61
 
@@ -259,7 +265,66 @@ export default function LettersPage() {
     setDate(TODAY()); setToName(''); setSubject('')
     setGreeting('Dear Sir / Madam,'); setBody('')
     setShowSign(true); setShowStamp(true)
+    setSignerName(''); setSignerTitle(''); setSignatureData(null)
     setEditingId(null); setSubmitted(false)
+  }
+
+  function handleSignatureUpload(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const maxW = 500, maxH = 200
+        let w = img.width, h = img.height
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW }
+        if (h > maxH) { w = Math.round(w * maxH / h); h = maxH }
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+        setSignatureData(canvas.toDataURL('image/png'))
+      }
+      img.src = ev.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function downloadPDF(letter) {
+    setDownloading(true)
+    try {
+      const origin = window.location.origin
+      const html   = buildLetterHTML(letter, origin)
+      const container = document.createElement('div')
+      container.style.cssText = 'position:fixed;top:0;left:-9999px;width:794px;background:white;z-index:-1;'
+      container.innerHTML = html
+      document.body.appendChild(container)
+      await new Promise(r => setTimeout(r, 1200))
+      const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+        import('jspdf'), import('html2canvas')
+      ])
+      const canvas = await html2canvas(container, {
+        scale: 2, useCORS: true, logging: false,
+        width: 794, height: 1123, windowWidth: 794,
+      })
+      document.body.removeChild(container)
+      const imgData = canvas.toDataURL('image/jpeg', 0.92)
+      const doc = new jsPDF({
+        orientation: 'portrait', unit: 'px', format: [794, 1123],
+        compress: true,
+        encryption: {
+          userPassword: '',
+          ownerPassword: 'Khan@55884+',
+          userPermissions: ['print'],
+        },
+      })
+      doc.addImage(imgData, 'JPEG', 0, 0, 794, 1123)
+      doc.save(`${letter.ref_no || 'letter'}.pdf`)
+    } catch (e) {
+      alert('PDF generation failed: ' + e.message)
+    } finally {
+      setDownloading(false)
+    }
   }
 
   function loadEdit(letter) {
@@ -271,6 +336,9 @@ export default function LettersPage() {
     setBody(letter.body || '')
     setShowSign(letter.show_sign !== false)
     setShowStamp(letter.show_stamp !== false)
+    setSignerName(letter.signer_name || '')
+    setSignerTitle(letter.signer_title || '')
+    setSignatureData(letter.signature_data || null)
     setEditingId(letter.id)
     setSubmitted(false)
     setView('compose')
@@ -283,6 +351,9 @@ export default function LettersPage() {
       const payload = {
         date, to_name: toName || null, subject: subject || null, greeting, body,
         show_sign: showSign, show_stamp: showStamp,
+        signer_name: signerName || null,
+        signer_title: signerTitle || null,
+        signature_data: signatureData || null,
       }
 
       let saved
@@ -377,6 +448,12 @@ export default function LettersPage() {
           </span>
         )}
         <div style={{ flex:1 }}/>
+        {isAdmin && editingId && (
+          <button onClick={() => downloadPDF(draft)} disabled={downloading}
+            style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:9, border:'1px solid #B8860B', background:'white', color:'#B8860B', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity: downloading ? 0.6 : 1 }}>
+            <Download size={14}/>{downloading ? 'Generating…' : 'Download PDF'}
+          </button>
+        )}
         <button onClick={handleSave} disabled={!body.trim() || saving}
           style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 20px', borderRadius:9, border:'none', background: isAdmin ? '#B8860B' : '#6366F1', color:'white', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity:(!body.trim() || saving) ? 0.55 : 1 }}>
           {isAdmin ? <Printer size={14}/> : <Send size={14}/>}
@@ -423,6 +500,33 @@ export default function LettersPage() {
             <Toggle checked={showSign}  onChange={setShowSign}  label="Include Signature"/>
             <Toggle checked={showStamp} onChange={setShowStamp} label="Include Stamp"/>
           </div>
+
+          {/* Signature details */}
+          {showSign && (
+            <div style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10, padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
+              <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Signatory</div>
+              <div>
+                <label style={labelStyle}>Name</label>
+                <input value={signerName} onChange={e => setSignerName(e.target.value)}
+                  placeholder="e.g. John Smith" style={inputStyle}/>
+              </div>
+              <div>
+                <label style={labelStyle}>Title / Position</label>
+                <input value={signerTitle} onChange={e => setSignerTitle(e.target.value)}
+                  placeholder="e.g. Operations Manager" style={inputStyle}/>
+              </div>
+              <div>
+                <label style={labelStyle}>Signature Image</label>
+                <input type="file" accept="image/*" onChange={handleSignatureUpload}
+                  style={{ fontSize:11.5, color:'var(--text)', fontFamily:'Poppins,sans-serif' }}/>
+                {signatureData && (
+                  <div style={{ marginTop:8, background:'white', border:'1px solid var(--border)', borderRadius:6, padding:6, display:'inline-block' }}>
+                    <img src={signatureData} style={{ height:56, display:'block' }} alt="Signature preview"/>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* live preview */}
@@ -524,6 +628,13 @@ export default function LettersPage() {
                           <button onClick={() => openPrint(l)}
                             style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px', borderRadius:7, border:'1px solid var(--border)', background:'var(--bg-alt)', color:'var(--text)', fontSize:11.5, cursor:'pointer', fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap' }}>
                             <Printer size={11}/> Print
+                          </button>
+                        )}
+                        {/* Download PDF for approved letters */}
+                        {!isPending && (
+                          <button onClick={() => downloadPDF(l)} disabled={downloading}
+                            style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px', borderRadius:7, border:'1px solid #B8860B', background:'#FFFBEB', color:'#92400E', fontSize:11.5, cursor:'pointer', fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap', opacity: downloading ? 0.6 : 1 }}>
+                            <Download size={11}/> PDF
                           </button>
                         )}
                         {canEdit(l) && (

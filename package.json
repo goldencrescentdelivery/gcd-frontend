@@ -15,7 +15,9 @@
     "date-fns": "^3.6.0",
     "lucide-react": "^0.383.0",
     "recharts": "^2.12.7",
-    "socket.io-client": "^4.7.2"
+    "socket.io-client": "^4.7.2",
+    "jspdf": "^2.5.1",
+    "html2canvas": "^1.4.1"
   },
   "devDependencies": {
     "eslint": "^8",

@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { API } from '@/lib/api'
 import { CheckCircle, XCircle, Clock, FileText } from 'lucide-react'
 
 function fmtDate(d) {
@@ -20,7 +19,7 @@ export default function LetterVerificationPage() {
 
   useEffect(() => {
     if (!id) return
-    fetch(`${API}/api/letters/verify/${encodeURIComponent(id)}`)
+    fetch(`/api/letters/verify/${encodeURIComponent(id)}`)
       .then(async r => {
         const d = await r.json().catch(() => ({}))
         if (!r.ok && r.status !== 404) throw new Error(d.error || `HTTP ${r.status}`)
