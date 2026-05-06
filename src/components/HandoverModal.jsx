@@ -118,15 +118,11 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
     }
 
     if (isReturn) {
-      // Load ALL active drivers for receiver selection (no station filter)
-      fetch(`${API}/api/employees`, { headers:h })
+      fetch(`${API}/api/employees/for-handover`, { headers:h })
         .then(r=>r.json())
         .then(d => {
           const all = (d.employees || []).filter(Boolean)
-          setDrivers(all.filter(e =>
-            e.status === 'active' &&
-            String(e.id) !== String(user?.emp_id)
-          ))
+          setDrivers(all.filter(e => String(e.id) !== String(user?.emp_id)))
         })
         .catch(()=>{})
     }
