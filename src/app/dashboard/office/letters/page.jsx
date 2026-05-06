@@ -21,12 +21,32 @@ function buildBodyHtml(body) {
     line => `<p style="margin:0 0 11px 0;line-height:1.75;text-align:justify">${line.trim() ? line : '&nbsp;'}</p>`
   ).join('')
 }
+function getVerifyUrl(l, origin) {
+  if (!l?.id) return ''
+  return `${origin || ''}/verify/letter/${encodeURIComponent(l.id)}`
+}
+function getQrUrl(value, size = 96) {
+  if (!value) return ''
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=1&data=${encodeURIComponent(value)}`
+}
+function buildVerificationBlock(l, origin, size = 96) {
+  const verifyUrl = getVerifyUrl(l, origin)
+  if (!verifyUrl) return ''
+  const qrUrl = getQrUrl(verifyUrl, size)
+  return `
+    <div style="position:absolute;right:40px;bottom:104px;width:116px;text-align:center;font-family:Arial,sans-serif;color:#444;z-index:3">
+      <img src="${qrUrl}" style="width:${size}px;height:${size}px;display:block;margin:0 auto 5px;background:#fff;padding:4px;border:1px solid #ddd" alt="Document verification QR"/>
+      <div style="font-size:8px;letter-spacing:0.8px;text-transform:uppercase;font-weight:700;color:#B8860B;margin-bottom:2px">Verify Document</div>
+      <div style="font-size:8px;line-height:1.25;word-break:break-all;color:#666">${verifyUrl}</div>
+    </div>`
+}
 
 // ── Preview / Print HTML ─────────────────────────────────────────
 function buildLetterHTML(l, origin) {
   const bodyHtml  = buildBodyHtml(l.body)
   const showSign  = l.show_sign  !== false
   const showStamp = l.show_stamp !== false
+  const verifyBlock = buildVerificationBlock(l, origin, 82)
   return `<div style="width:794px;min-height:1123px;background:#fff;font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a;position:relative;padding-bottom:130px;box-sizing:border-box;overflow:hidden">
 
   <div style="position:absolute;top:-30%;left:-30%;width:160%;height:160%;pointer-events:none;z-index:0;
@@ -62,6 +82,7 @@ function buildLetterHTML(l, origin) {
     </div>
   </div>
   </div>
+  ${verifyBlock}
 
   <div style="position:absolute;bottom:0;left:0;right:0;width:100%;padding:16px 40px;background:#f0ede6;border-top:2px solid #B8860B;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;box-sizing:border-box">
     <div>
@@ -84,6 +105,7 @@ function buildPrintHTML(l, origin) {
   const bodyHtml  = buildBodyHtml(l.body)
   const showSign  = l.show_sign  !== false
   const showStamp = l.show_stamp !== false
+  const verifyBlock = buildVerificationBlock(l, origin, 96)
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -101,6 +123,7 @@ function buildPrintHTML(l, origin) {
   .ph{position:fixed;top:0;left:0;width:794px;background:#fff;z-index:2}
   .pf{position:fixed;bottom:0;left:0;width:794px;z-index:2}
   .pc{margin-top:106px;margin-bottom:84px;padding:28px 40px 32px;position:relative;z-index:1}
+  .verify-block{position:fixed!important}
 </style>
 </head>
 <body>
@@ -152,6 +175,7 @@ function buildPrintHTML(l, origin) {
     ${showStamp ? `<img src="${origin}/stamp.png" style="position:absolute;right:0;top:0;height:118px;mix-blend-mode:multiply" alt="" onerror="this.style.display='none'"/>` : ''}
   </div>
 </div>
+${verifyBlock.replace('position:absolute;', 'position:fixed;')}
 
 <script>
 window.onload=function(){
