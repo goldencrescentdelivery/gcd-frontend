@@ -649,7 +649,7 @@ export default function DriverPortal() {
                   <div style={{ fontSize:10.5, fontWeight:700, color:'#10B981', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>Current Vehicle</div>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
                     <div>
-                      <div style={{ fontWeight:800, fontSize:18, color:'#111', letterSpacing:'-0.02em' }}>{vehicle.plate}</div>
+                      <div style={{ fontWeight:800, fontSize:18, color:'#111', letterSpacing:'-0.02em' }}>{vehicle.vehicle_plate || vehicle.plate}</div>
                       <div style={{ fontSize:12, color:'#9CA3AF', marginTop:2 }}>
                         {[vehicle.make, vehicle.model].filter(Boolean).join(' ')} · Since {new Date(vehicle.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short'})}
                       </div>
