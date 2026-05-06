@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
 import { API } from '@/lib/api'
-import { ScrollText, Plus, Printer, ChevronLeft, User, Trash2, Pencil, CheckCircle, Clock, Send, Download } from 'lucide-react'
+import { ScrollText, Plus, ChevronLeft, User, Trash2, Pencil, CheckCircle, Clock, Send, Download } from 'lucide-react'
 
 const hdr = () => ({ Authorization: `Bearer ${localStorage.getItem('gcd_token')}` })
 const TODAY = () => new Date().toISOString().split('T')[0]
@@ -380,9 +380,9 @@ export default function LettersPage() {
       }
 
       if (isAdmin) {
-        openPrint(saved)
         setView('list')
         resetForm()
+        await downloadPDF(saved)
       } else {
         setSubmitted(true)
       }
@@ -398,7 +398,7 @@ export default function LettersPage() {
       const d = await r.json()
       if (!r.ok) throw new Error(d.error)
       setLetters(prev => prev.map(l => l.id === letter.id ? d.letter : l))
-      openPrint(d.letter)
+      await downloadPDF(d.letter)
     } catch (e) { alert(e.message) }
   }
 
@@ -456,10 +456,10 @@ export default function LettersPage() {
         )}
         <button onClick={handleSave} disabled={!body.trim() || saving}
           style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 20px', borderRadius:9, border:'none', background: isAdmin ? '#B8860B' : '#6366F1', color:'white', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity:(!body.trim() || saving) ? 0.55 : 1 }}>
-          {isAdmin ? <Printer size={14}/> : <Send size={14}/>}
+          {isAdmin ? <Download size={14}/> : <Send size={14}/>}
           {saving
             ? (isAdmin ? (editingId ? 'Updating…' : 'Saving…') : 'Submitting…')
-            : (isAdmin ? (editingId ? 'Update & Print' : 'Save & Print') : 'Submit for Approval')}
+            : (isAdmin ? (editingId ? 'Update & Download PDF' : 'Save & Download PDF') : 'Submit for Approval')}
         </button>
       </div>
 
@@ -620,21 +620,13 @@ export default function LettersPage() {
                         {isAdmin && isPending && (
                           <button onClick={() => handleApprove(l)}
                             style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px', borderRadius:7, border:'1px solid #FDE68A', background:'#FFFBEB', color:'#92400E', fontSize:11.5, cursor:'pointer', fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap', fontWeight:600 }}>
-                            <CheckCircle size={11}/> Approve & Print
+                            <CheckCircle size={11}/> Approve & Download PDF
                           </button>
                         )}
-                        {/* Print approved letters */}
-                        {!isPending && (
-                          <button onClick={() => openPrint(l)}
-                            style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px', borderRadius:7, border:'1px solid var(--border)', background:'var(--bg-alt)', color:'var(--text)', fontSize:11.5, cursor:'pointer', fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap' }}>
-                            <Printer size={11}/> Print
-                          </button>
-                        )}
-                        {/* Download PDF for approved letters */}
                         {!isPending && (
                           <button onClick={() => downloadPDF(l)} disabled={downloading}
                             style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px', borderRadius:7, border:'1px solid #B8860B', background:'#FFFBEB', color:'#92400E', fontSize:11.5, cursor:'pointer', fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap', opacity: downloading ? 0.6 : 1 }}>
-                            <Download size={11}/> PDF
+                            <Download size={11}/> {downloading ? 'Generating…' : 'Download PDF'}
                           </button>
                         )}
                         {canEdit(l) && (
