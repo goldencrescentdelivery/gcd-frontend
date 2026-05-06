@@ -408,6 +408,7 @@ export default function DriverPortal() {
   const { user, loading: authLoading, logout } = useAuth()
   const router = useRouter()
 
+  const [mounted,       setMounted]       = useState(false)
   const [tab,           setTab]           = useState('home')
   const [loading,       setLoading]       = useState(true)
   const [profile,       setProfile]       = useState(null)
@@ -426,6 +427,8 @@ export default function DriverPortal() {
   const [notifications,     setNotifications]     = useState([])
   const [unreadCount,       setUnreadCount]       = useState(0)
   const [toast,             setToast]             = useState(null)
+
+  useEffect(() => { setMounted(true) }, [])
 
   function signOut() { logout(); router.replace('/login') }
 
@@ -501,9 +504,10 @@ export default function DriverPortal() {
       setToast(notif)
       setTimeout(() => setToast(null), 4500)
     },
-    'handover:created': () => { refreshPending() },
-    'handover:updated': () => { refreshPending(); refreshHandovers() },
-    'handover:completed': () => { refreshPending(); refreshHandovers() },
+    'handover:incoming':     () => { refreshPending() },
+    'handover:created':      () => { refreshPending() },
+    'handover:updated':      () => { refreshPending(); refreshHandovers() },
+    'handover:completed':    () => { refreshPending(); refreshHandovers() },
     'handover:poc-approved': () => { refreshPending(); refreshHandovers() },
     'handover:poc-rejected': () => { refreshPending(); refreshHandovers() },
   })
@@ -546,7 +550,7 @@ export default function DriverPortal() {
   function handleHandoverSave() { setHvModal(null);     refreshHandovers(); refreshPending() }
   function handleCompleteDone() { setCompletingHandover(null); refreshHandovers(); refreshPending() }
 
-  if (!user || loading) return (
+  if (!mounted || !user || loading) return (
     <div style={{ minHeight:'100vh', background:'#FFF', display:'flex', alignItems:'center', justifyContent:'center' }}>
       <div style={{ textAlign:'center' }}>
         <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid #E5E7EB', borderTopColor:'#B8860B', animation:'spin 0.7s linear infinite', margin:'0 auto 12px' }}/>
@@ -558,8 +562,7 @@ export default function DriverPortal() {
   const net          = payroll ? Number(payroll.base_salary||0) + Number(payroll.bonus_total||0) - Number(payroll.deduction_total||0) : 0
   const grade        = perf ? getGrade(perf.total_score) : null
   const p            = profile
-  const serviceDays  = p?.joined ? differenceInDays(new Date(), parseISO(p.joined.slice(0,10))) : 0
-  const today2       = new Date().toISOString().slice(0,10)
+  const today2       = mounted ? new Date().toISOString().slice(0,10) : ''
   const onLeaveNow   = leaves.filter(l => l.status==='approved' && l.from_date<=today2 && l.to_date>=today2).length
   const alertCount   = [p?.visa_expiry, p?.license_expiry, p?.iloe_expiry].filter(expiryAlert).length
   const annualUsed   = leaves.filter(l=>l.type==='Annual'&&l.status==='approved').reduce((s,l)=>s+(l.days||0),0)
@@ -567,6 +570,11 @@ export default function DriverPortal() {
   const visaType     = p?.visa_type==='own' ? 'Own Visa' : 'Co. Visa'
   const visaColor    = p?.visa_type==='own' ? '#0369A1' : '#065F46'
   const visaBg       = p?.visa_type==='own' ? '#EFF6FF' : '#ECFDF5'
+  // Don't show POC-assigned vehicle if driver has already submitted a return that's in flight
+  const hasPendingReturn = handovers.some(h =>
+    h.type === 'returned' && ['pending_acceptance','accepted','poc_pending'].includes(h.status)
+  )
+  const effectiveTodayAsgn = (vehicle || hasPendingReturn) ? null : todayAsgn
 
   return (
     <div style={{ minHeight:'100vh', background:'#F4F4F3', fontFamily:'Poppins,sans-serif', paddingBottom:'calc(68px + env(safe-area-inset-bottom, 0px))' }}>
@@ -661,13 +669,13 @@ export default function DriverPortal() {
                     Return Vehicle
                   </button>
                 </Card>
-              ) : todayAsgn ? (
+              ) : effectiveTodayAsgn ? (
                 <Card style={{ background:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', border:'1px solid #A7F3D0' }}>
                   <div style={{ fontSize:10.5, fontWeight:700, color:'#10B981', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>Assigned Vehicle Today</div>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
                     <div>
-                      <div style={{ fontWeight:800, fontSize:18, color:'#111', letterSpacing:'-0.02em' }}>{todayAsgn.plate}</div>
-                      <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{[todayAsgn.make,todayAsgn.model].filter(Boolean).join(' ')||'Vehicle'}</div>
+                      <div style={{ fontWeight:800, fontSize:18, color:'#111', letterSpacing:'-0.02em' }}>{effectiveTodayAsgn.plate}</div>
+                      <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{[effectiveTodayAsgn.make,effectiveTodayAsgn.model].filter(Boolean).join(' ')||'Vehicle'}</div>
                     </div>
                     <div style={{ width:44, height:44, borderRadius:12, background:'#DCFCE7', display:'flex', alignItems:'center', justifyContent:'center' }}><Car size={20} color="#10B981"/></div>
                   </div>
@@ -948,17 +956,17 @@ export default function DriverPortal() {
                 <Plus size={13}/> {vehicle?'Return':'Receive'}
               </button>
             </div>
-            {todayAsgn ? (
+            {effectiveTodayAsgn ? (
               <Card style={{ background:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', border:'1px solid #A7F3D0' }}>
                 <div style={{ fontSize:10, fontWeight:700, color:'#10B981', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:6 }}>Today's Assigned Vehicle</div>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                   <div>
-                    <div style={{ fontWeight:800, fontSize:20, color:'#111', letterSpacing:'-0.02em' }}>{todayAsgn.plate}</div>
-                    <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{[todayAsgn.make,todayAsgn.model,todayAsgn.year].filter(Boolean).join(' ')||'Vehicle'}</div>
+                    <div style={{ fontWeight:800, fontSize:20, color:'#111', letterSpacing:'-0.02em' }}>{effectiveTodayAsgn.plate}</div>
+                    <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{[effectiveTodayAsgn.make,effectiveTodayAsgn.model,effectiveTodayAsgn.year].filter(Boolean).join(' ')||'Vehicle'}</div>
                   </div>
                   <div style={{ width:44, height:44, borderRadius:12, background:'#DCFCE7', display:'flex', alignItems:'center', justifyContent:'center' }}><Car size={20} color="#10B981"/></div>
                 </div>
-                <div style={{ marginTop:8, fontSize:11, color:'#6B7280' }}>Assigned by station · {todayAsgn.date?.slice(0,10)}</div>
+                <div style={{ marginTop:8, fontSize:11, color:'#6B7280' }}>Assigned by station · {effectiveTodayAsgn.date?.slice(0,10)}</div>
               </Card>
             ) : (
               <Card style={{ textAlign:'center', padding:'14px', background:'#FAFAF9', border:'1px dashed #D1D5DB' }}>
