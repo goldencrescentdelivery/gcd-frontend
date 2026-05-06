@@ -568,16 +568,16 @@ export default function DriverPortal() {
       {/* ── TOAST ── */}
       {toast && (
         <div onClick={openNotices}
-          style={{ position:'fixed', top:16, left:'50%', transform:'translateX(-50%)', zIndex:200, maxWidth:340, width:'calc(100% - 32px)', background:'#1C1208', borderRadius:14, padding:'12px 14px', boxShadow:'0 8px 30px rgba(0,0,0,0.25)', cursor:'pointer', animation:'slideUp 0.3s ease', display:'flex', gap:10, alignItems:'flex-start' }}>
+          style={{ position:'fixed', top:16, left:'50%', transform:'translateX(-50%)', zIndex:200, maxWidth:340, width:'calc(100% - 32px)', background:'#FFF', borderRadius:14, padding:'12px 14px', boxShadow:'0 8px 30px rgba(0,0,0,0.12)', border:'1px solid #F0D78C', cursor:'pointer', animation:'slideUp 0.3s ease', display:'flex', gap:10, alignItems:'flex-start' }}>
           <div style={{ width:32, height:32, borderRadius:9, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
             <Bell size={15} color="#FFF"/>
           </div>
           <div style={{ minWidth:0 }}>
-            <div style={{ fontWeight:700, fontSize:12.5, color:'#FFF', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{toast.title}</div>
-            <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.6)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{toast.body}</div>
+            <div style={{ fontWeight:700, fontSize:12.5, color:'#1C1208', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{toast.title}</div>
+            <div style={{ fontSize:11.5, color:'#6B7280', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{toast.body}</div>
           </div>
           <button onClick={e => { e.stopPropagation(); setToast(null) }}
-            style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.4)', padding:2, flexShrink:0 }}><X size={14}/></button>
+            style={{ background:'none', border:'none', cursor:'pointer', color:'#9CA3AF', padding:2, flexShrink:0 }}><X size={14}/></button>
         </div>
       )}
 
@@ -589,48 +589,45 @@ export default function DriverPortal() {
           <div style={{ display:'flex', flexDirection:'column', gap:0 }} className="fade">
 
             {/* ── Profile Header ── */}
-            <div style={{ background:'linear-gradient(160deg,#1C1208 0%,#2C1F0A 100%)', padding:'20px 16px 0', position:'sticky', top:0, zIndex:50 }}>
+            <div style={{ background:'#FFF', padding:'20px 16px 0', position:'sticky', top:0, zIndex:50, borderBottom:'1px solid #F0F0EE', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
 
               {/* Top bar: avatar + name + sign out */}
               <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:14 }}>
-                {/* Avatar */}
-                <div style={{ width:52, height:52, borderRadius:26, background:'linear-gradient(135deg,#D4A017,#B8860B)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:900, color:'#FFF', flexShrink:0, boxShadow:'0 4px 14px rgba(184,134,11,0.4)' }}>
+                <div style={{ width:52, height:52, borderRadius:26, background:'linear-gradient(135deg,#D4A017,#B8860B)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:900, color:'#FFF', flexShrink:0, boxShadow:'0 4px 14px rgba(184,134,11,0.35)' }}>
                   {user.name?.slice(0,2).toUpperCase()}
                 </div>
 
-                {/* Name + meta */}
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:7, flexWrap:'wrap', marginBottom:3 }}>
-                    <span style={{ fontWeight:900, fontSize:16, color:'#FFF', letterSpacing:'-0.02em' }}>{user.name}</span>
-                    <span style={{ fontSize:10, fontWeight:700, color:'#34D399', background:'rgba(52,211,153,0.15)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:20, padding:'2px 8px' }}>Active</span>
+                    <span style={{ fontWeight:900, fontSize:16, color:'#1C1208', letterSpacing:'-0.02em' }}>{user.name}</span>
+                    <span style={{ fontSize:10, fontWeight:700, color:'#10B981', background:'#ECFDF5', border:'1px solid #A7F3D0', borderRadius:20, padding:'2px 8px' }}>Active</span>
                   </div>
-                  <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.5)', marginBottom:7 }}>Delivery Associate</div>
+                  <div style={{ fontSize:11.5, color:'#9CA3AF', marginBottom:7 }}>Delivery Associate</div>
                   <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-                    <span style={{ fontSize:10.5, fontWeight:700, color:'#D4A017', background:'rgba(212,160,23,0.15)', border:'1px solid rgba(212,160,23,0.3)', borderRadius:20, padding:'2px 8px' }}>{user.station_code||'DDB1'}</span>
-                    {p?.project_type && <span style={{ fontSize:10.5, fontWeight:700, color:'#A78BFA', background:'rgba(167,139,250,0.15)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:20, padding:'2px 8px' }}>{p.project_type.toUpperCase()}</span>}
+                    <span style={{ fontSize:10.5, fontWeight:700, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:20, padding:'2px 8px' }}>{user.station_code||'DDB1'}</span>
+                    {p?.project_type && <span style={{ fontSize:10.5, fontWeight:700, color:'#7C3AED', background:'#F5F3FF', border:'1px solid #DDD6FE', borderRadius:20, padding:'2px 8px' }}>{p.project_type.toUpperCase()}</span>}
                     {p?.visa_type && <span style={{ fontSize:10.5, fontWeight:600, color:visaColor, background:visaBg, border:`1px solid ${p.visa_type==='own'?'#BAE6FD':'#A7F3D0'}`, borderRadius:20, padding:'2px 8px' }}>{visaType}</span>}
                     {grade && <span style={{ fontSize:10.5, fontWeight:600, color:grade.c, background:`${grade.c}15`, borderRadius:20, padding:'2px 8px' }}>{grade.label}</span>}
                   </div>
-                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', marginTop:5 }}>DA ID: {user.emp_id}</div>
                 </div>
 
                 <button onClick={signOut}
-                  style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 10px', borderRadius:20, background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)', color:'#F87171', fontWeight:600, fontSize:11, cursor:'pointer', fontFamily:'Poppins,sans-serif', flexShrink:0 }}>
+                  style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 10px', borderRadius:20, background:'#FEF2F2', border:'1px solid #FECACA', color:'#EF4444', fontWeight:600, fontSize:11, cursor:'pointer', fontFamily:'Poppins,sans-serif', flexShrink:0 }}>
                   <LogOut size={12}/> Out
                 </button>
               </div>
 
               {/* Stats row */}
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:1, background:'rgba(255,255,255,0.06)', borderRadius:'10px 10px 0 0', overflow:'hidden' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:1, background:'#F3F4F6', borderRadius:'10px 10px 0 0', overflow:'hidden' }}>
                 {[
-                  { l:'Status',    v:'Active',              sub:`Since ${p?.joined?.slice(0,10)||'—'}`,  c:'#34D399',  bg:'rgba(52,211,153,0.08)'   },
-                  { l:'Service',   v:`${serviceDays}d`,      sub:'Total days',                            c:'#60A5FA',  bg:'rgba(96,165,250,0.08)'   },
-                  { l:'On Leave',  v:onLeaveNow,             sub:onLeaveNow>0?'Active leave':'None',      c:onLeaveNow>0?'#FBBF24':'rgba(255,255,255,0.3)', bg:'rgba(0,0,0,0.15)' },
-                  { l:'Alerts',    v:alertCount,             sub:alertCount>0?'Docs expiring':'Clear',    c:alertCount>0?'#F87171':'rgba(255,255,255,0.3)', bg:'rgba(0,0,0,0.15)' },
+                  { l:'Status',   v:'Active',         sub:`Since ${p?.joined?.slice(0,10)||'—'}`, c:'#10B981', bg:'#F0FDF4' },
+                  { l:'Service',  v:`${serviceDays}d`, sub:'Total days',                           c:'#3B82F6', bg:'#EFF6FF' },
+                  { l:'On Leave', v:onLeaveNow,        sub:onLeaveNow>0?'Active':'None',           c:onLeaveNow>0?'#F59E0B':'#9CA3AF', bg:onLeaveNow>0?'#FFFBEB':'#F9FAFB' },
+                  { l:'Alerts',   v:alertCount,        sub:alertCount>0?'Expiring':'Clear',        c:alertCount>0?'#EF4444':'#9CA3AF', bg:alertCount>0?'#FEF2F2':'#F9FAFB' },
                 ].map(stat=>(
-                  <div key={stat.l} style={{ padding:'9px 8px', background:stat.bg, textAlign:'center' }}>
+                  <div key={stat.l} style={{ padding:'9px 6px', background:stat.bg, textAlign:'center' }}>
                     <div style={{ fontWeight:900, fontSize:14, color:stat.c, letterSpacing:'-0.02em' }}>{stat.v}</div>
-                    <div style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,0.4)', marginTop:1, textTransform:'uppercase', letterSpacing:'0.04em' }}>{stat.l}</div>
+                    <div style={{ fontSize:9, fontWeight:700, color:'#9CA3AF', marginTop:1, textTransform:'uppercase', letterSpacing:'0.04em' }}>{stat.l}</div>
                     <div style={{ fontSize:9, color:stat.c, opacity:0.7, marginTop:1 }}>{stat.sub}</div>
                   </div>
                 ))}
@@ -641,18 +638,18 @@ export default function DriverPortal() {
             <div style={{ display:'flex', flexDirection:'column', gap:10, padding:'10px 12px' }}>
 
               {/* Salary card */}
-              <Card style={{ background:'linear-gradient(135deg,#1C1208,#2C1F0A)', border:'none' }}>
-                <div style={{ fontSize:10, color:'rgba(255,255,255,0.45)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:5 }}>
+              <Card style={{ background:'linear-gradient(135deg,#FFFBEB,#FDF6E3)', border:'1.5px solid #F0D78C' }}>
+                <div style={{ fontSize:10, color:'#B8860B', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:5 }}>
                   This Month · {new Date().toLocaleString('en-US', { month:'long', year:'numeric' })}
                 </div>
-                <div className="dp-salary" style={{ fontWeight:900, color:'#D4A017', letterSpacing:'-0.04em', marginBottom:4, lineHeight:1.1 }}>{fmtA(net)}</div>
+                <div className="dp-salary" style={{ fontWeight:900, color:'#92400E', letterSpacing:'-0.04em', marginBottom:4, lineHeight:1.1 }}>{fmtA(net)}</div>
                 <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                  <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.5)' }}>Base {fmtA(payroll?.base_salary||0)}</span>
-                  {Number(payroll?.bonus_total)>0     && <span style={{ fontSize:11.5, color:'#34D399' }}>+{fmtA(payroll.bonus_total)}</span>}
-                  {Number(payroll?.deduction_total)>0 && <span style={{ fontSize:11.5, color:'#F87171' }}>-{fmtA(payroll.deduction_total)}</span>}
+                  <span style={{ fontSize:11.5, color:'#6B7280' }}>Base {fmtA(payroll?.base_salary||0)}</span>
+                  {Number(payroll?.bonus_total)>0     && <span style={{ fontSize:11.5, color:'#10B981' }}>+{fmtA(payroll.bonus_total)}</span>}
+                  {Number(payroll?.deduction_total)>0 && <span style={{ fontSize:11.5, color:'#EF4444' }}>-{fmtA(payroll.deduction_total)}</span>}
                 </div>
                 <div style={{ marginTop:8 }}>
-                  <span style={{ fontSize:11, fontWeight:600, color: payroll?.payroll_status==='paid'?'#34D399':'#FB923C', background: payroll?.payroll_status==='paid'?'rgba(52,211,153,0.15)':'rgba(251,146,60,0.15)', padding:'3px 10px', borderRadius:20 }}>
+                  <span style={{ fontSize:11, fontWeight:600, color:payroll?.payroll_status==='paid'?'#10B981':'#F59E0B', background:payroll?.payroll_status==='paid'?'#ECFDF5':'#FFFBEB', border:`1px solid ${payroll?.payroll_status==='paid'?'#A7F3D0':'#FDE68A'}`, padding:'3px 10px', borderRadius:20 }}>
                     {payroll?.payroll_status==='paid'?'✓ Paid':'Pending'}
                   </span>
                 </div>
@@ -763,7 +760,7 @@ export default function DriverPortal() {
                   { l:'Apply Leave',     icon:Calendar, c:'#F59E0B', bg:'#FFFBEB', action:()=>setLeaveModal(true)   },
                   { l:'Receive Vehicle', icon:Car,       c:'#2563EB', bg:'#EFF6FF', action:()=>setHvModal('received')},
                   { l:'My Payslips',     icon:Wallet,    c:'#10B981', bg:'#F0FDF4', action:()=>setTab('pay')         },
-                  { l:'Performance',     icon:BarChart2, c:'#7C3AED', bg:'#F5F3FF', action:()=>setTab('perf')        },
+                  { l:'My Leaves',       icon:Calendar,  c:'#7C3AED', bg:'#F5F3FF', action:()=>setTab('leaves')      },
                 ].map(a => {
                   const Icon = a.icon
                   return (
@@ -820,27 +817,27 @@ export default function DriverPortal() {
               {p && (
                 <>
                   {/* Personal info */}
-                  <div style={{ background:'#1C1917', borderRadius:16, padding:'14px 16px' }}>
-                    <div style={{ fontSize:9.5, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.07em', color:'#78716C', marginBottom:11 }}>Contact Information</div>
+                  <Card style={{ padding:'14px 16px' }}>
+                    <div style={{ fontSize:9.5, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.07em', color:'#9CA3AF', marginBottom:11 }}>Contact Information</div>
                     {[
-                      { Icon:Phone,  label:'Phone',       value:p.phone    },
-                      { Icon:Mail,   label:'Email',       value:p.email_id },
-                      { Icon:MapPin, label:'Location',    value:p.residential_location },
+                      { Icon:Phone,  label:'Phone',    value:p.phone    },
+                      { Icon:Mail,   label:'Email',    value:p.email_id },
+                      { Icon:MapPin, label:'Location', value:p.residential_location },
                     ].filter(r=>r.value).map(row=>(
                       <div key={row.label} style={{ display:'flex', gap:9, marginBottom:9 }}>
-                        <div style={{ width:24, height:24, borderRadius:7, background:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                          <row.Icon size={10} color="#A8A29E"/>
+                        <div style={{ width:24, height:24, borderRadius:7, background:'#FDF6E3', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                          <row.Icon size={10} color="#B8860B"/>
                         </div>
                         <div>
-                          <div style={{ fontSize:9, color:'#78716C', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.04em' }}>{row.label}</div>
-                          <div style={{ fontSize:11.5, color:'#F5F5F4', fontWeight:500, marginTop:1 }}>{row.value}</div>
+                          <div style={{ fontSize:9, color:'#9CA3AF', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.04em' }}>{row.label}</div>
+                          <div style={{ fontSize:11.5, color:'#111', fontWeight:500, marginTop:1 }}>{row.value}</div>
                         </div>
                       </div>
                     ))}
                     {!p.phone && !p.email_id && !p.residential_location && (
-                      <div style={{ fontSize:11.5, color:'#78716C', textAlign:'center', padding:'8px 0' }}>No contact details on file</div>
+                      <div style={{ fontSize:11.5, color:'#9CA3AF', textAlign:'center', padding:'8px 0' }}>No contact details on file</div>
                     )}
-                  </div>
+                  </Card>
 
                   {/* Document expiry strip */}
                   {(p.visa_expiry || p.license_expiry || p.iloe_expiry) && (
@@ -896,10 +893,10 @@ export default function DriverPortal() {
               </Card>
             ) : (
               <>
-                <Card style={{ background:'#111', border:'none' }}>
-                  <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.45)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:4 }}>Net Salary</div>
-                  <div style={{ fontWeight:900, fontSize:28, color:'#D4A017', letterSpacing:'-0.04em' }}>{fmtA(net)}</div>
-                  <div style={{ fontSize:12, color: payroll.payroll_status==='paid'?'#34D399':'#FB923C', marginTop:8, fontWeight:600 }}>
+                <Card style={{ background:'linear-gradient(135deg,#FFFBEB,#FDF6E3)', border:'1.5px solid #F0D78C' }}>
+                  <div style={{ fontSize:10.5, color:'#B8860B', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:4 }}>Net Salary</div>
+                  <div style={{ fontWeight:900, fontSize:28, color:'#92400E', letterSpacing:'-0.04em' }}>{fmtA(net)}</div>
+                  <div style={{ fontSize:12, color:payroll.payroll_status==='paid'?'#10B981':'#F59E0B', marginTop:8, fontWeight:600 }}>
                     {payroll.payroll_status==='paid'?'✓ Paid this month':'⏳ Pending payment'}
                   </div>
                 </Card>

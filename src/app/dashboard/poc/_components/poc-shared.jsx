@@ -97,11 +97,13 @@ export function POCHeader({ title, icon: Icon, color, station, onStationChange, 
 
 // ── Driver Search ─────────────────────────────────────────────
 export function DriverSearch({ employees, value, onChange, placeholder='Search driver…' }) {
-  const [open, setOpen]     = useState(false)
-  const [search, setSearch] = useState('')
-  const [pos, setPos]       = useState({})
+  const [open, setOpen]       = useState(false)
+  const [search, setSearch]   = useState('')
+  const [pos, setPos]         = useState({})
+  const [mounted, setMounted] = useState(false)
   const ref     = useRef(null)
   const trigRef = useRef(null)
+  useEffect(() => { setMounted(true) }, [])
   const selected = employees.find(e => e.id === value)
   const filtered = employees.filter(e =>
     !search || e.name.toLowerCase().includes(search.toLowerCase()) || e.id.toLowerCase().includes(search.toLowerCase())
@@ -137,7 +139,7 @@ export function DriverSearch({ employees, value, onChange, placeholder='Search d
         )}
         <ChevronDown size={15} color="var(--text-muted)" style={{ flexShrink:0, transition:'transform 0.2s', transform:open?'rotate(180deg)':'none' }}/>
       </div>
-      {open && typeof window !== 'undefined' && createPortal(
+      {open && mounted && createPortal(
           <div style={{ position:'fixed', top:pos.top, left:pos.left, width:pos.width, background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, boxShadow:'0 8px 32px rgba(0,0,0,0.18)', zIndex:9999, maxHeight:300, overflow:'hidden', animation:'scaleIn 0.15s ease' }}>
             <div style={{ padding:'10px 12px', borderBottom:'1px solid var(--border)' }}>
               <div style={{ position:'relative' }}>
