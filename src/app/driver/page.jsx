@@ -30,6 +30,7 @@ function authHeader() {
 function findCurrentVehicle(handovers) {
   return handovers.find(h =>
     h.type === 'received' &&
+    (h.status === 'completed' || h.status === 'poc_pending') &&
     !handovers.find(h2 =>
       h2.vehicle_id === h.vehicle_id &&
       h2.type === 'returned' &&
@@ -499,7 +500,12 @@ export default function DriverPortal() {
       setUnreadCount(c => c + 1)
       setToast(notif)
       setTimeout(() => setToast(null), 4500)
-    }
+    },
+    'handover:created': () => { refreshPending() },
+    'handover:updated': () => { refreshPending(); refreshHandovers() },
+    'handover:completed': () => { refreshPending(); refreshHandovers() },
+    'handover:poc-approved': () => { refreshPending(); refreshHandovers() },
+    'handover:poc-rejected': () => { refreshPending(); refreshHandovers() },
   })
 
   useEffect(() => {
@@ -702,15 +708,24 @@ export default function DriverPortal() {
               {/* Pending incoming handovers (Driver B view) */}
               {pendingHandovers.map(ph => {
                 const isPendingAccept = ph.status === 'pending_acceptance'
+                const isAccepted      = ph.status === 'accepted'
+                const isPocPending    = ph.status === 'poc_pending'
+                const cardBg     = isPendingAccept ? '#FFF7ED' : isPocPending ? '#F5F3FF' : '#F0FDF4'
+                const cardBorder = isPendingAccept ? '#FED7AA' : isPocPending ? '#DDD6FE' : '#A7F3D0'
+                const iconBg     = isPendingAccept ? '#FEF3C7' : isPocPending ? '#EDE9FE' : '#DCFCE7'
+                const iconColor  = isPendingAccept ? '#D97706' : isPocPending ? '#7C3AED' : '#16A34A'
+                const statusLabel = isPendingAccept ? 'Incoming Handover Request'
+                                  : isPocPending    ? 'Awaiting POC Verification'
+                                  : 'Handover Accepted — Upload Photos'
                 return (
-                  <Card key={ph.id} style={{ background: isPendingAccept ? '#FFF7ED' : '#F0FDF4', border: `1px solid ${isPendingAccept ? '#FED7AA' : '#A7F3D0'}` }}>
+                  <Card key={ph.id} style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-                      <div style={{ width:36, height:36, borderRadius:10, background: isPendingAccept ? '#FEF3C7' : '#DCFCE7', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                        <ArrowLeftRight size={16} color={isPendingAccept ? '#D97706' : '#16A34A'}/>
+                      <div style={{ width:36, height:36, borderRadius:10, background: iconBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        <ArrowLeftRight size={16} color={iconColor}/>
                       </div>
                       <div>
-                        <div style={{ fontSize:11, fontWeight:700, color: isPendingAccept ? '#D97706' : '#16A34A', textTransform:'uppercase', letterSpacing:'0.06em' }}>
-                          {isPendingAccept ? 'Incoming Handover Request' : 'Handover Accepted — Upload Photos'}
+                        <div style={{ fontSize:11, fontWeight:700, color: iconColor, textTransform:'uppercase', letterSpacing:'0.06em' }}>
+                          {statusLabel}
                         </div>
                         <div style={{ fontSize:12, color:'#374151', fontWeight:600, marginTop:1 }}>
                           {ph.vehicle_plate || ph.plate} · from {ph.emp_name}
@@ -730,7 +745,7 @@ export default function DriverPortal() {
                         </div>
                       ))}
                     </div>
-                    {isPendingAccept ? (
+                    {isPendingAccept && (
                       <button
                         onClick={async () => {
                           try {
@@ -744,11 +759,17 @@ export default function DriverPortal() {
                         style={{ width:'100%', padding:'10px', borderRadius:10, background:'#D97706', color:'#FFF', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
                         Accept Handover
                       </button>
-                    ) : (
+                    )}
+                    {isAccepted && (
                       <button onClick={() => setCompletingHandover(ph)}
                         style={{ width:'100%', padding:'10px', borderRadius:10, background:'linear-gradient(135deg,#2E7D52,#22C55E)', color:'#FFF', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
                         Upload Photos &amp; Complete
                       </button>
+                    )}
+                    {isPocPending && (
+                      <div style={{ padding:'9px 12px', borderRadius:10, background:'#EDE9FE', border:'1px solid #DDD6FE', fontSize:12, color:'#5B21B6', fontWeight:600, textAlign:'center' }}>
+                        ⏳ Waiting for POC to verify this handover
+                      </div>
                     )}
                   </Card>
                 )
