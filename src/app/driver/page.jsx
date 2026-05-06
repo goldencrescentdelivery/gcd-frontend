@@ -611,9 +611,6 @@ export default function DriverPortal() {
                   <div style={{ fontSize:11.5, color:'#9CA3AF', marginBottom:7 }}>Delivery Associate</div>
                   <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
                     <span style={{ fontSize:10.5, fontWeight:700, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:20, padding:'2px 8px' }}>{user.station_code||'DDB1'}</span>
-                    {p?.project_type && <span style={{ fontSize:10.5, fontWeight:700, color:'#7C3AED', background:'#F5F3FF', border:'1px solid #DDD6FE', borderRadius:20, padding:'2px 8px' }}>{p.project_type.toUpperCase()}</span>}
-                    {p?.visa_type && <span style={{ fontSize:10.5, fontWeight:600, color:visaColor, background:visaBg, border:`1px solid ${p.visa_type==='own'?'#BAE6FD':'#A7F3D0'}`, borderRadius:20, padding:'2px 8px' }}>{visaType}</span>}
-                    {grade && <span style={{ fontSize:10.5, fontWeight:600, color:grade.c, background:`${grade.c}15`, borderRadius:20, padding:'2px 8px' }}>{grade.label}</span>}
                   </div>
                 </div>
 
@@ -623,21 +620,6 @@ export default function DriverPortal() {
                 </button>
               </div>
 
-              {/* Stats row */}
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:1, background:'#F3F4F6', borderRadius:'10px 10px 0 0', overflow:'hidden' }}>
-                {[
-                  { l:'Status',   v:'Active',         sub:`Since ${p?.joined?.slice(0,10)||'—'}`, c:'#10B981', bg:'#F0FDF4' },
-                  { l:'Service',  v:`${serviceDays}d`, sub:'Total days',                           c:'#3B82F6', bg:'#EFF6FF' },
-                  { l:'On Leave', v:onLeaveNow,        sub:onLeaveNow>0?'Active':'None',           c:onLeaveNow>0?'#F59E0B':'#9CA3AF', bg:onLeaveNow>0?'#FFFBEB':'#F9FAFB' },
-                  { l:'Alerts',   v:alertCount,        sub:alertCount>0?'Expiring':'Clear',        c:alertCount>0?'#EF4444':'#9CA3AF', bg:alertCount>0?'#FEF2F2':'#F9FAFB' },
-                ].map(stat=>(
-                  <div key={stat.l} style={{ padding:'9px 6px', background:stat.bg, textAlign:'center' }}>
-                    <div style={{ fontWeight:900, fontSize:14, color:stat.c, letterSpacing:'-0.02em' }}>{stat.v}</div>
-                    <div style={{ fontSize:9, fontWeight:700, color:'#9CA3AF', marginTop:1, textTransform:'uppercase', letterSpacing:'0.04em' }}>{stat.l}</div>
-                    <div style={{ fontSize:9, color:stat.c, opacity:0.7, marginTop:1 }}>{stat.sub}</div>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Body content */}
@@ -796,70 +778,9 @@ export default function DriverPortal() {
                 })}
               </div>
 
-              {/* 2-col summary: Leave Balance + SIM */}
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-
-                {/* Leave Balance */}
-                <Card style={{ padding:'13px' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-                    <span style={{ fontSize:11, fontWeight:800, color:'#111' }}>Leave Balance</span>
-                    <button onClick={()=>setTab('leaves')} style={{ fontSize:10, fontWeight:600, color:'#B8860B', background:'none', border:'none', cursor:'pointer', padding:0, fontFamily:'Poppins,sans-serif' }}>View</button>
-                  </div>
-                  {[
-                    { l:'Annual', used:annualUsed, total:Number(p?.annual_leave_balance||30), c:'#F59E0B' },
-                    { l:'Sick',   used:sickUsed,   total:15,                                   c:'#3B82F6' },
-                  ].map(lt=>(
-                    <div key={lt.l} style={{ marginBottom:8 }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-                        <span style={{ fontSize:10, color:'#9CA3AF' }}>{lt.l}</span>
-                        <span style={{ fontSize:10, fontWeight:700, color:lt.c }}>{lt.used}/{lt.total}d</span>
-                      </div>
-                      <div style={{ height:4, borderRadius:4, background:'#F3F4F6', overflow:'hidden' }}>
-                        <div style={{ height:'100%', borderRadius:4, background:lt.c, width:`${Math.min(100,lt.used/lt.total*100)}%`, transition:'width 0.5s' }}/>
-                      </div>
-                    </div>
-                  ))}
-                </Card>
-
-                {/* Work Phone / SIM */}
-                <Card style={{ padding:'13px' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-                    <span style={{ fontSize:11, fontWeight:800, color:'#111' }}>Work Phone</span>
-                    <button onClick={()=>setTab('vehicle')} style={{ fontSize:10, fontWeight:600, color:'#B8860B', background:'none', border:'none', cursor:'pointer', padding:0, fontFamily:'Poppins,sans-serif' }}>View</button>
-                  </div>
-                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                    <InfoRow label="SIM No" value={p?.work_number}/>
-                    <InfoRow label="Provider" value={p?.sim_provider}/>
-                  </div>
-                </Card>
-              </div>
-
               {/* Profile info cards */}
               {p && (
                 <>
-                  {/* Personal info */}
-                  <Card style={{ padding:'14px 16px' }}>
-                    <div style={{ fontSize:9.5, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.07em', color:'#9CA3AF', marginBottom:11 }}>Contact Information</div>
-                    {[
-                      { Icon:Phone,  label:'Phone',    value:p.phone    },
-                      { Icon:Mail,   label:'Email',    value:p.email_id },
-                      { Icon:MapPin, label:'Location', value:p.residential_location },
-                    ].filter(r=>r.value).map(row=>(
-                      <div key={row.label} style={{ display:'flex', gap:9, marginBottom:9 }}>
-                        <div style={{ width:24, height:24, borderRadius:7, background:'#FDF6E3', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                          <row.Icon size={10} color="#B8860B"/>
-                        </div>
-                        <div>
-                          <div style={{ fontSize:9, color:'#9CA3AF', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.04em' }}>{row.label}</div>
-                          <div style={{ fontSize:11.5, color:'#111', fontWeight:500, marginTop:1 }}>{row.value}</div>
-                        </div>
-                      </div>
-                    ))}
-                    {!p.phone && !p.email_id && !p.residential_location && (
-                      <div style={{ fontSize:11.5, color:'#9CA3AF', textAlign:'center', padding:'8px 0' }}>No contact details on file</div>
-                    )}
-                  </Card>
-
                   {/* Document expiry strip */}
                   {(p.visa_expiry || p.license_expiry || p.iloe_expiry) && (
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
