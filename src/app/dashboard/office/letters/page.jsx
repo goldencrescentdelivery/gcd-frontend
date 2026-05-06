@@ -37,7 +37,6 @@ function buildVerificationBlock(l, origin, size = 96) {
     <div style="position:absolute;right:40px;bottom:104px;width:116px;text-align:center;font-family:Arial,sans-serif;color:#444;z-index:3">
       <img src="${qrUrl}" style="width:${size}px;height:${size}px;display:block;margin:0 auto 5px;background:#fff;padding:4px;border:1px solid #ddd" alt="Document verification QR"/>
       <div style="font-size:8px;letter-spacing:0.8px;text-transform:uppercase;font-weight:700;color:#B8860B;margin-bottom:2px">Verify Document</div>
-      <div style="font-size:8px;line-height:1.25;word-break:break-all;color:#666">${verifyUrl}</div>
     </div>`
 }
 
@@ -50,7 +49,7 @@ function buildLetterHTML(l, origin) {
   return `<div style="width:794px;min-height:1123px;background:#fff;font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a;position:relative;padding-bottom:130px;box-sizing:border-box;overflow:hidden">
 
   <div style="position:absolute;top:-30%;left:-30%;width:160%;height:160%;pointer-events:none;z-index:0;
-    background-image:url('${origin}/logo.webp');background-repeat:repeat;background-size:90px auto;
+    background-image:url('${origin}/watermark.png');background-repeat:repeat;background-size:90px auto;
     transform:rotate(-18deg);opacity:0.045"></div>
 
   <div style="position:relative;z-index:1">
@@ -117,7 +116,7 @@ function buildPrintHTML(l, origin) {
   body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;
     font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a;width:794px}
   .wm{position:fixed;top:-30%;left:-30%;width:160%;height:160%;
-    background-image:url('${origin}/logo.webp');
+    background-image:url('${origin}/watermark.png');
     background-repeat:repeat;background-size:90px auto;
     transform:rotate(-18deg);opacity:0.045;pointer-events:none;z-index:0}
   .ph{position:fixed;top:0;left:0;width:794px;background:#fff;z-index:2}
@@ -430,7 +429,7 @@ export default function LettersPage() {
         <div style={{ overflowY:'auto', background:'#d8d8d8', borderRadius:10, padding:20, display:'flex', justifyContent:'center', alignItems:'flex-start' }}>
           <div style={{ width: 794 * SCALE, flexShrink:0, boxShadow:'0 4px 24px rgba(0,0,0,0.18)', borderRadius:2, overflow:'hidden', background:'white' }}>
             <div style={{ transform:`scale(${SCALE})`, transformOrigin:'top left', width:794, pointerEvents:'none' }}
-              dangerouslySetInnerHTML={{ __html: buildLetterHTML(draft, '') }}/>
+              dangerouslySetInnerHTML={{ __html: buildLetterHTML(draft, typeof window !== 'undefined' ? window.location.origin : '') }}/>
           </div>
         </div>
       </div>
