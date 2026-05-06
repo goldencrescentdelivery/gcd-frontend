@@ -49,15 +49,15 @@ function buildLetterHTML(l, origin) {
   const verifyBlock = buildVerificationBlock(l, origin, 82)
   return `<div style="width:794px;min-height:1123px;background:#fff;font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a;position:relative;padding-bottom:130px;box-sizing:border-box;overflow:hidden">
 
-  <div style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;display:flex;align-items:center;justify-content:center;overflow:hidden">
-    <img src="${origin}/logo.webp" style="width:460px;opacity:0.055;transform:rotate(-15deg);display:block" alt=""/>
-  </div>
+  <div style="position:absolute;top:-30%;left:-30%;width:160%;height:160%;pointer-events:none;z-index:0;
+    background-image:url('${origin}/logo.webp');background-repeat:repeat;background-size:90px auto;
+    transform:rotate(-18deg);opacity:0.045"></div>
 
   <div style="position:relative;z-index:1">
   <div style="padding:28px 40px 16px;display:flex;align-items:center;gap:18px;border-bottom:2.5px solid #B8860B">
     <img src="${origin}/logo.webp" style="height:58px;object-fit:contain" alt="" onerror="this.style.display='none'"/>
-    <div style="font-size:26px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:0.2px">
-      Golden Crescent <span style="font-style:italic;color:#B8860B;font-family:Georgia,serif">Delivery Services</span> LLC
+    <div style="font-size:26px;font-weight:700;font-family:Georgia,serif;font-style:italic;letter-spacing:0.2px">
+      Golden Crescent <span style="color:#B8860B">Delivery Services</span> LLC
     </div>
   </div>
 
@@ -116,10 +116,10 @@ function buildPrintHTML(l, origin) {
   @page{size:A4 portrait;margin:0}
   body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;
     font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a;width:794px}
-  .wm{position:fixed;top:0;left:0;width:794px;height:100%;
-    display:flex;align-items:center;justify-content:center;
-    overflow:hidden;pointer-events:none;z-index:0}
-  .wm img{width:460px;opacity:0.055;transform:rotate(-15deg)}
+  .wm{position:fixed;top:-30%;left:-30%;width:160%;height:160%;
+    background-image:url('${origin}/logo.webp');
+    background-repeat:repeat;background-size:90px auto;
+    transform:rotate(-18deg);opacity:0.045;pointer-events:none;z-index:0}
   .ph{position:fixed;top:0;left:0;width:794px;background:#fff;z-index:2}
   .pf{position:fixed;bottom:0;left:0;width:794px;z-index:2}
   .pc{margin-top:106px;margin-bottom:84px;padding:28px 40px 32px;position:relative;z-index:1}
@@ -127,13 +127,13 @@ function buildPrintHTML(l, origin) {
 </style>
 </head>
 <body>
-<div class="wm"><img src="${origin}/logo.webp" alt=""/></div>
+<div class="wm"></div>
 
 <div class="ph">
   <div style="padding:28px 40px 16px;display:flex;align-items:center;gap:18px;border-bottom:2.5px solid #B8860B">
     <img src="${origin}/logo.webp" style="height:58px;object-fit:contain" alt="" onerror="this.style.display='none'"/>
-    <div style="font-size:26px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:0.2px">
-      Golden Crescent <span style="font-style:italic;color:#B8860B;font-family:Georgia,serif">Delivery Services</span> LLC
+    <div style="font-size:26px;font-weight:700;font-family:Georgia,serif;font-style:italic;letter-spacing:0.2px">
+      Golden Crescent <span style="color:#B8860B">Delivery Services</span> LLC
     </div>
   </div>
 </div>
