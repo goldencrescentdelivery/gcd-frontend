@@ -901,8 +901,13 @@ export function WorkNumModal({ emp, station, sims, onSave, onClose }) {
 const FUEL_LABEL_MAP = { empty:'Empty', quarter:'1/4', half:'1/2', three_quarter:'3/4', full:'Full' }
 
 // ── Assign Modal ─────────────────────────────────────────────
-function AssignModal({ v, asgn, emps, station, date, onAssign, onClose }) {
+function AssignModal({ v, asgn, emps, allAsgns, station, date, onAssign, onClose }) {
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
+  // Exclude drivers already assigned to a different vehicle today
+  const availableEmps = (emps||[]).filter(e =>
+    e.station_code === station &&
+    !(allAsgns||[]).some(a => a.emp_id === e.id && String(a.vehicle_id) !== String(v.id))
+  )
   const sc = VSTATUS_COLORS[v.status]||'#A89880'
   const sb = VSTATUS_BG[v.status]||'#F5F4F1'
   if (typeof document === 'undefined') return null
@@ -951,7 +956,7 @@ function AssignModal({ v, asgn, emps, station, date, onAssign, onClose }) {
             {assignedEmp ? 'Change Driver' : 'Assign Driver'}
           </div>
           <DriverSearch
-            employees={emps.filter(e=>e.station_code===station)}
+            employees={availableEmps}
             value={asgn?.emp_id||''}
             onChange={id=>{ onAssign(id); onClose() }}
             placeholder="— Search and select driver —"
@@ -1120,7 +1125,7 @@ function VehicleHistoryModal({ v, onClose }) {
 }
 
 // ── Vehicle Card ──────────────────────────────────────────────
-export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, onEdit, onDelete, onAssign }) {
+export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, allAsgns, onEdit, onDelete, onAssign }) {
   const [showAssign,    setShowAssign]    = useState(false)
   const [showHistModal, setShowHistModal] = useState(false)
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
@@ -1216,7 +1221,7 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
         </div>
       </div>
 
-      {showAssign && <AssignModal v={v} asgn={asgn} emps={emps} station={station} date={date} onAssign={onAssign} onClose={()=>setShowAssign(false)}/>}
+      {showAssign && <AssignModal v={v} asgn={asgn} emps={emps} allAsgns={allAsgns} station={station} date={date} onAssign={onAssign} onClose={()=>setShowAssign(false)}/>}
       {showHistModal && <VehicleHistoryModal v={v} onClose={()=>setShowHistModal(false)}/>}
     </>
   )
