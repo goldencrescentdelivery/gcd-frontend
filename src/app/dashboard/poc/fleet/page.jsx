@@ -23,6 +23,7 @@ export default function FleetPage() {
   const [search,             setSearch]            = useState('')
   const [pendingVerifications, setPendingVerifications] = useState([])
   const [verifying,          setVerifying]         = useState(null)
+  const [ctMap,              setCtMap]             = useState({}) // normalized plate → cartrack status
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -44,6 +45,26 @@ export default function FleetPage() {
   }, [date, station])
 
   useEffect(() => { load() }, [load])
+
+  // Cartrack live tracking — fetch once then refresh every 60 s
+  const loadCartrack = useCallback(async () => {
+    try {
+      const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
+      const res = await fetch(`${API}/api/cartrack/status`, h)
+      if (!res.ok) return
+      const json = await res.json()
+      const norm = p => (p || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+      const map = {}
+      for (const v of (json.data || [])) map[norm(v.registration)] = v
+      setCtMap(map)
+    } catch { /* silently ignore cartrack errors */ }
+  }, [])
+
+  useEffect(() => {
+    loadCartrack()
+    const id = setInterval(loadCartrack, 60_000)
+    return () => clearInterval(id)
+  }, [loadCartrack])
 
   async function assignVehicle(vId, eId) {
     try {
@@ -247,12 +268,14 @@ export default function FleetPage() {
             const isDown  = v.status !== 'active'
             const sc      = VSTATUS_COLORS[v.status]||'#A89880'
             const sb      = VSTATUS_BG[v.status]||'#F5F4F1'
+            const norm    = p => (p||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase()
+            const ctTrack = ctMap[norm(v.plate)] || null
             return (
               <div key={v.id} style={{ animation:`slideUp 0.3s ${Math.min(i,10)*0.05}s ease both` }}>
                 <VehicleCard
                   v={v} asgn={asgn} currentHandover={curHV}
                   isDown={isDown} sc={sc} sb={sb}
-                  date={date} station={station} emps={emps} allAsgns={asgns} currentUser={user}
+                  date={date} station={station} emps={emps} allAsgns={asgns} currentUser={user} ctTrack={ctTrack}
                   onEdit={() => setModal({type:'vehicle-edit',vehicle:v})}
                   onDelete={() => setConfirmDlg({
                     title:'Delete vehicle?',

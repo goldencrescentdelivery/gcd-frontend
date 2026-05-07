@@ -1152,7 +1152,7 @@ function VehicleHistoryModal({ v, onClose }) {
 }
 
 // ── Vehicle Card ──────────────────────────────────────────────
-export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, allAsgns, currentUser, onEdit, onDelete, onAssign }) {
+export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, allAsgns, currentUser, ctTrack, onEdit, onDelete, onAssign }) {
   const [showAssign,    setShowAssign]    = useState(false)
   const [showHistModal, setShowHistModal] = useState(false)
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
@@ -1213,6 +1213,35 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
               <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>No active handover — available</span>
             </div>
           )}
+
+          {/* ── Cartrack live tracking ── */}
+          {ctTrack && (() => {
+            const ign = ctTrack.ignition
+            const spd = ctTrack.speed || 0
+            const fuel = ctTrack.fuel?.precentage_left ?? null
+            const loc = ctTrack.location?.position_description
+            const locShort = loc ? loc.split(',').slice(0, 2).join(',').trim() : null
+            const lastSeen = ctTrack.location?.updated || ctTrack.event_ts
+            const statusLabel = ign ? (ctTrack.idling ? 'Idling' : spd > 0 ? `${spd} km/h` : 'Engine On') : 'Engine Off'
+            return (
+              <div style={{ background: ign ? '#F0FDF4' : '#F9FAFB', border: `1px solid ${ign ? '#BBF7D0' : '#E5E7EB'}`, borderRadius: 10, padding: '8px 11px', marginBottom: 10, fontSize: 11 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: locShort ? 4 : 0 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: ign ? '#22C55E' : '#9CA3AF', flexShrink: 0, boxShadow: ign ? '0 0 0 2px #22C55E30' : 'none' }}/>
+                  <span style={{ fontWeight: 700, color: ign ? '#15803D' : '#6B7280', flex: 1 }}>{statusLabel}</span>
+                  {fuel !== null && (
+                    <span style={{ fontWeight: 600, color: fuel < 20 ? '#DC2626' : '#1D4ED8', background: fuel < 20 ? '#FEF2F2' : '#EFF6FF', borderRadius: 20, padding: '1px 7px' }}>
+                      ⛽ {fuel}%
+                    </span>
+                  )}
+                </div>
+                {locShort && (
+                  <div style={{ color: '#4B5563', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingLeft: 13 }}>
+                    📍 {locShort}
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {/* ── Today's assignment pill ── */}
           {assignedEmp ? (
