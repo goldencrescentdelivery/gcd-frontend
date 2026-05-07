@@ -206,7 +206,7 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
               </h3>
               <p style={{ fontSize:12, color:'#A89880', marginTop:3 }}>
                 {isReturn
-                  ? `Returning ${vehicle?.vehicle_plate} — photos taken by receiving driver`
+                  ? `Returning ${vehicle?.vehicle_plate || vehicle?.plate} — photos taken by receiving driver`
                   : 'Document the vehicle you received'}
               </p>
             </div>

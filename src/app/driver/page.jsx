@@ -679,19 +679,15 @@ export default function DriverPortal() {
                     </div>
                     <div style={{ width:44, height:44, borderRadius:12, background:'#DCFCE7', display:'flex', alignItems:'center', justifyContent:'center' }}><Car size={20} color="#10B981"/></div>
                   </div>
-                  <button onClick={() => setHvModal('received')}
-                    style={{ width:'100%', padding:'10px', borderRadius:10, background:'#B8860B', color:'#FFF', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif', border:'none' }}>
-                    Confirm Receipt
+                  <button onClick={() => setHvModal('returned')}
+                    style={{ width:'100%', padding:'10px', borderRadius:10, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#EF4444', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                    Return Vehicle
                   </button>
                 </Card>
               ) : (
                 <Card style={{ textAlign:'center', padding:'20px' }}>
                   <Car size={24} color="#D1D5DB" style={{ margin:'0 auto 8px', display:'block' }}/>
-                  <div style={{ fontSize:13, color:'#9CA3AF', marginBottom:10 }}>No vehicle assigned</div>
-                  <button onClick={() => setHvModal('received')}
-                    style={{ padding:'8px 20px', borderRadius:10, background:'#B8860B', color:'#FFF', fontWeight:600, fontSize:12, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                    Receive Vehicle
-                  </button>
+                  <div style={{ fontSize:13, color:'#9CA3AF' }}>No vehicle assigned</div>
                 </Card>
               )}
 
@@ -784,10 +780,10 @@ export default function DriverPortal() {
               {/* Quick actions */}
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                 {[
-                  { l:'Apply Leave',     icon:Calendar, c:'#F59E0B', bg:'#FFFBEB', action:()=>setLeaveModal(true)   },
-                  { l:'Receive Vehicle', icon:Car,       c:'#2563EB', bg:'#EFF6FF', action:()=>setHvModal('received')},
-                  { l:'My Payslips',     icon:Wallet,    c:'#10B981', bg:'#F0FDF4', action:()=>setTab('pay')         },
-                  { l:'My Leaves',       icon:Calendar,  c:'#7C3AED', bg:'#F5F3FF', action:()=>setTab('leaves')      },
+                  { l:'Apply Leave', icon:Calendar, c:'#F59E0B', bg:'#FFFBEB', action:()=>setLeaveModal(true)   },
+                  { l:'My Payslips', icon:Wallet,   c:'#10B981', bg:'#F0FDF4', action:()=>setTab('pay')         },
+                  { l:'My Leaves',   icon:Calendar, c:'#7C3AED', bg:'#F5F3FF', action:()=>setTab('leaves')      },
+                  { l:'My Vehicle',  icon:Car,      c:'#2563EB', bg:'#EFF6FF', action:()=>setTab('vehicle')     },
                 ].map(a => {
                   const Icon = a.icon
                   return (
@@ -967,10 +963,12 @@ export default function DriverPortal() {
           <div style={{ display:'flex', flexDirection:'column', gap:12, padding:'12px' }} className="fade">
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <h2 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>Vehicle</h2>
-              <button onClick={()=>setHvModal(vehicle?'returned':'received')}
-                style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 14px', borderRadius:20, background:'#B8860B', color:'#FFF', fontWeight:600, fontSize:12, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                <Plus size={13}/> {vehicle?'Return':'Receive'}
-              </button>
+              {(vehicle || effectiveTodayAsgn) && (
+                <button onClick={()=>setHvModal('returned')}
+                  style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 14px', borderRadius:20, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#EF4444', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                  Return Vehicle
+                </button>
+              )}
             </div>
             {effectiveTodayAsgn ? (
               <Card style={{ background:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', border:'1px solid #A7F3D0' }}>
@@ -1088,7 +1086,7 @@ export default function DriverPortal() {
       {leaveModal && <LeaveModal empId={user.emp_id} onClose={()=>setLeaveModal(false)} onSave={handleLeaveSave}/>}
       {hvModal && (
         <HandoverModal
-          modal={{ type:hvModal, vehicle:hvModal==='returned'?vehicle:null }}
+          modal={{ type:hvModal, vehicle:hvModal==='returned'?(vehicle || effectiveTodayAsgn):null }}
           user={user} onClose={()=>setHvModal(null)} onSave={handleHandoverSave}/>
       )}
       {completingHandover && (
