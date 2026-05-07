@@ -76,7 +76,9 @@ function slipData(slip, month) {
   const fmtN = n => Number(n||0).toLocaleString('en-AE',{minimumFractionDigits:2,maximumFractionDigits:2})
   const bonuses    = slip.bonuses    || []
   const deductions = slip.deductions || []
-  const totalHours = Number(slip.total_hours || 0)
+  const totalHours    = Number(slip.total_hours || 0)
+  const hourlyRate_   = Number(slip.hourly_rate || 3.85)
+  const hoursEarnings = parseFloat((totalHours * hourlyRate_).toFixed(2))
   const incentive  = bonuses.filter(b=>b.type==='kpi').reduce((s,b)=>s+Number(b.amount),0)
   const perfBonus  = Number(slip.performance_bonus||0) + bonuses.filter(b=>b.type==='performance').reduce((s,b)=>s+Number(b.amount),0)
   const otherBon   = bonuses.filter(b=>b.type==='other')
@@ -90,8 +92,8 @@ function slipData(slip, month) {
   const absentDays = deductions.filter(d=>d.type==='iloe_fee'||d.type==='iloe_fine').reduce((s,d)=>s+Number(d.amount),0)
   const otherDed   = deductions.filter(d=>d.type==='other').reduce((s,d)=>s+Number(d.amount),0)
   const base       = Number(slip.base_salary||0)
-  const hourlyRate = Number(slip.hourly_rate||3.85)
-  const totalAdd   = base + Number(slip.bonus_total||0) + Number(slip.performance_bonus||0)
+  const hourlyRate = hourlyRate_
+  const totalAdd   = base + hoursEarnings + Number(slip.bonus_total||0) + Number(slip.performance_bonus||0)
   const totalDed   = Number(slip.deduction_total||0)
   const net        = Number(slip.net_pay||(totalAdd - totalDed))
   const isPaid     = slip.payroll_status === 'paid'
@@ -99,12 +101,12 @@ function slipData(slip, month) {
   const monthShort = new Date(month+'-01').toLocaleString('en-US',{month:'short',year:'2-digit'}).replace(' ','-')
   const roleLabel  = {driver:'Delivery Associate',admin:'Admin',hr:'HR Manager',poc:'POC',accountant:'Accountant',manager:'Manager',general_manager:'General Manager'}[slip.role] || slip.role || 'Staff'
   const row = (l1,v1,l2,v2) => `<tr><td class="lbl">${l1}</td><td class="val">${fmtN(v1)}</td><td class="lbl">${l2}</td><td class="val">${fmtN(v2)}</td></tr>`
-  return { fmtN, totalHours, incentive, perfBonus, monthBonus, otherAddition, monthBonusLabel, cashAdv, trafficFine, absentDays, otherDed, base, hourlyRate, totalAdd, totalDed, net, isPaid, paidOn, monthShort, roleLabel, row }
+  return { fmtN, totalHours, hoursEarnings, incentive, perfBonus, monthBonus, otherAddition, monthBonusLabel, cashAdv, trafficFine, absentDays, otherDed, base, hourlyRate, totalAdd, totalDed, net, isPaid, paidOn, monthShort, roleLabel, row }
 }
 
 /* ── Single slip inner HTML (no <html>/<body> wrapper) ── */
 function slipInnerHtml(slip, month, logoUrl) {
-  const { fmtN, totalHours, incentive, perfBonus, monthBonus, otherAddition, monthBonusLabel, cashAdv, trafficFine, absentDays, otherDed, base, hourlyRate, totalAdd, totalDed, net, isPaid, paidOn, monthShort, roleLabel, row } = slipData(slip, month)
+  const { fmtN, totalHours, hoursEarnings, incentive, perfBonus, monthBonus, otherAddition, monthBonusLabel, cashAdv, trafficFine, absentDays, otherDed, base, hourlyRate, totalAdd, totalDed, net, isPaid, paidOn, monthShort, roleLabel, row } = slipData(slip, month)
   return `
   <div class="hdr">
     <img src="${logoUrl}" alt="GCD Logo" onerror="this.style.display='none'"/>
@@ -128,7 +130,7 @@ function slipInnerHtml(slip, month, logoUrl) {
     <tr><th colspan="2">Earnings</th><th colspan="2">Deductions</th></tr>
     ${row('Basic Salary',base,'Cash Advance',cashAdv)}
     ${row('Rate Per Hour',hourlyRate,'Traffic Fine',trafficFine)}
-    ${row('Total Working Hrs',totalHours,'Absent Days',absentDays)}
+    ${row(`Total Working Hrs (${totalHours})`,hoursEarnings,'Absent Days',absentDays)}
     ${row('Incentive',incentive,'Other',otherDed)}
     ${row('Performance Bonus',perfBonus,'Pending Deductions',0)}
     ${row('Other Addition',otherAddition,'Carry Forwarded',0)}
