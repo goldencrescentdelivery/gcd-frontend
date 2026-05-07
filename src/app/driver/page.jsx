@@ -736,19 +736,35 @@ export default function DriverPortal() {
                       ))}
                     </div>
                     {isPendingAccept && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const r = await fetch(`${API}/api/handovers/${ph.id}/accept`, {
-                              method:'PATCH', headers: authHeader()
-                            })
-                            if (!r.ok) { const d=await r.json(); alert(d.error||'Failed to accept'); return }
-                            refreshPending()
-                          } catch(e) { alert(e.message) }
-                        }}
-                        style={{ width:'100%', padding:'10px', borderRadius:10, background:'#D97706', color:'#FFF', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                        Accept Handover
-                      </button>
+                      <div style={{ display:'flex', gap:8 }}>
+                        <button
+                          onClick={async () => {
+                            if (!confirm('Reject this handover? The vehicle will stay with the current driver.')) return
+                            try {
+                              const r = await fetch(`${API}/api/handovers/${ph.id}/reject`, {
+                                method:'PATCH', headers: authHeader()
+                              })
+                              if (!r.ok) { const d=await r.json(); alert(d.error||'Failed to reject'); return }
+                              refreshPending()
+                            } catch(e) { alert(e.message) }
+                          }}
+                          style={{ flex:1, padding:'10px', borderRadius:10, background:'#FEF2F2', color:'#DC2626', fontWeight:700, fontSize:13, border:'1.5px solid #FCA5A5', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                          Reject
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const r = await fetch(`${API}/api/handovers/${ph.id}/accept`, {
+                                method:'PATCH', headers: authHeader()
+                              })
+                              if (!r.ok) { const d=await r.json(); alert(d.error||'Failed to accept'); return }
+                              refreshPending()
+                            } catch(e) { alert(e.message) }
+                          }}
+                          style={{ flex:2, padding:'10px', borderRadius:10, background:'#D97706', color:'#FFF', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                          Accept Handover
+                        </button>
+                      </div>
                     )}
                     {isAccepted && (
                       <button onClick={() => setCompletingHandover(ph)}
