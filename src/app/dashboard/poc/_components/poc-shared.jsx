@@ -462,7 +462,7 @@ export function DeliveryModal({ date, station, existing, onSave, onClose }) {
 // ── SIM Modal ─────────────────────────────────────────────────
 export function SimModal({ sim, emps, station, onSave, onClose }) {
   const isEdit = !!sim
-  const [form, setForm] = useState({ sim_number:sim?.sim_number||'', phone_number:sim?.phone_number||'', carrier:sim?.carrier||'Du', status:sim?.status||'available', emp_id:sim?.emp_id||'', notes:sim?.notes||'', monthly_cost:sim?.monthly_cost||'' })
+  const [form, setForm] = useState({ sim_number:sim?.sim_number||'', phone_number:sim?.phone_number||'', carrier:sim?.carrier||'Du', status:sim?.status||'available', emp_id:sim?.emp_id||'', notes:sim?.notes||'', monthly_cost:sim?.monthly_cost||'', station_code:sim?.station_code||station })
   const [saving,  setSaving]  = useState(false)
   const [err,     setErr]     = useState(null)
   const [confirm, setConfirm] = useState(null)
@@ -471,7 +471,7 @@ export function SimModal({ sim, emps, station, onSave, onClose }) {
   async function doSave() {
     setSaving(true); setErr(null); setConfirm(null)
     try {
-      const body = { ...form, station_code:station, monthly_cost:parseFloat(form.monthly_cost)||0 }
+      const body = { ...form, monthly_cost:parseFloat(form.monthly_cost)||0 }
       const url    = isEdit ? `${API}/api/sims/${sim.id}` : `${API}/api/sims`
       const method = isEdit ? 'PUT' : 'POST'
       const res    = await fetch(url, { method, headers:hdr(), body:JSON.stringify(body) })
@@ -497,7 +497,6 @@ export function SimModal({ sim, emps, station, onSave, onClose }) {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
           <div>
             <h3 style={{ fontWeight:900, fontSize:16, color:'var(--text)' }}>{isEdit?'Edit':'Add'} SIM Card</h3>
-            <p style={{ fontSize:11.5, color:'#A89880', marginTop:2 }}>{station} Station</p>
           </div>
           <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'var(--bg-alt)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
         </div>
@@ -505,9 +504,11 @@ export function SimModal({ sim, emps, station, onSave, onClose }) {
         <div style={{ display:'flex', flexDirection:'column', gap:13 }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
             <div><label className="input-label">SIM Number *</label><input className="input" value={form.sim_number} onChange={e => set('sim_number',e.target.value)} placeholder="SIM ID" autoComplete="off"/></div>
+            <div><label className="input-label">Station</label>
+              <select className="input" value={form.station_code} onChange={e => set('station_code',e.target.value)}>
+                {STATIONS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select></div>
             <div><label className="input-label">Phone Number</label><input className="input" value={form.phone_number} onChange={e => set('phone_number',e.target.value)} placeholder="+971 5X XXX XXXX"/></div>
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
             <div><label className="input-label">Carrier</label>
               <select className="input" value={form.carrier} onChange={e => set('carrier',e.target.value)}>
                 {['Du','Etisalat (e&)','Virgin Mobile','Other'].map(ca => <option key={ca}>{ca}</option>)}
