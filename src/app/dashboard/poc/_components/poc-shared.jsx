@@ -1407,9 +1407,9 @@ function CartrackEventsModal({ registration, plate, onClose }) {
   })()
 
   return createPortal(
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:3000, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:3000, display:'flex', alignItems:'center', justifyContent:'center', padding:'16px' }}
       onClick={e => { if (e.target===e.currentTarget) onClose() }}>
-      <div style={{ background:'var(--card)', borderRadius:'24px 24px 0 0', width:'100%', maxWidth:600, maxHeight:'90vh', display:'flex', flexDirection:'column', animation:'slideUp 0.25s ease' }}>
+      <div style={{ background:'var(--card)', borderRadius:24, width:'100%', maxWidth:600, maxHeight:'90vh', display:'flex', flexDirection:'column', animation:'slideUp 0.25s ease' }}>
         {/* Header */}
         <div style={{ padding:'18px 20px 14px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
           <div style={{ width:40, height:40, borderRadius:12, background:'#EFF6FF', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
