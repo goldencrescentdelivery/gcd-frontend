@@ -27,15 +27,13 @@ export default function SimsPage() {
 
   useEffect(() => { load() }, [load])
 
-  const stationSims = sims.filter(s => s.station_code === station)
-
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:14, animation:'slideUp 0.3s ease' }}>
       <POCHeader
         title="SIM Cards" icon={Smartphone} color="#0D9488"
         station={station} onStationChange={setStation} canSwitch={canSwitch}
         showDate={false}
-        subtitle={`${stationSims.length} SIMs at ${station}`}
+        subtitle={`${sims.length} SIM${sims.length!==1?'s':''} total`}
       />
 
       {loading ? (
@@ -43,7 +41,7 @@ export default function SimsPage() {
           {[1,2,3,4,5,6].map(i => <div key={i} className="skeleton" style={{ height:168, borderRadius:16 }}/>)}
         </div>
       ) : (
-        <SimSection sims={stationSims} emps={emps} station={station} onRefresh={load}/>
+        <SimSection sims={sims} emps={emps} station={station} onRefresh={load}/>
       )}
     </div>
   )

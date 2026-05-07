@@ -28,11 +28,11 @@ export default function FleetPage() {
     const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
     try {
       const [v, a, e, hv, pv] = await Promise.all([
-        fetch(`${API}/api/vehicles?station_code=${station}`, h).then(r => r.json()),
-        fetch(`${API}/api/vehicles/assignments?date=${date}&station_code=${station}`, h).then(r => r.json()),
+        fetch(`${API}/api/vehicles`, h).then(r => r.json()),
+        fetch(`${API}/api/vehicles/assignments?date=${date}`, h).then(r => r.json()),
         fetch(`${API}/api/employees`, h).then(r => r.json()),
-        fetch(`${API}/api/handovers/current?station_code=${station}`, h).then(r => r.ok ? r.json() : { current:[] }),
-        fetch(`${API}/api/handovers?station_code=${station}&status=poc_pending`, h).then(r => r.ok ? r.json() : { handovers:[] }),
+        fetch(`${API}/api/handovers/current`, h).then(r => r.ok ? r.json() : { current:[] }),
+        fetch(`${API}/api/handovers?status=poc_pending`, h).then(r => r.ok ? r.json() : { handovers:[] }),
       ])
       setVehs(v.vehicles||[])
       setAsgns(a.assignments||[])
@@ -67,13 +67,11 @@ export default function FleetPage() {
     } catch { alert('Failed to verify handover') } finally { setVerifying(null) }
   }
 
-  // Server already filters by station; keep a loose client filter as fallback
-  const stationVehs = vehs.filter(v => !v.station_code || v.station_code === station)
-  const active      = stationVehs.filter(v => v.status==='active').length
-  const grounded    = stationVehs.filter(v => v.status!=='active').length
-  const inUse       = currentHVs.length
+  const active   = vehs.filter(v => v.status==='active').length
+  const grounded = vehs.filter(v => v.status!=='active').length
+  const inUse    = currentHVs.length
 
-  const displayVehs = stationVehs.filter(v => {
+  const displayVehs = vehs.filter(v => {
     if (filterStatus === 'active')   return v.status === 'active'
     if (filterStatus === 'down')     return v.status !== 'active'
     if (filterStatus === 'inuse')    return currentHVs.some(h => String(h.vehicle_id)===String(v.id))
@@ -81,7 +79,7 @@ export default function FleetPage() {
   })
 
   const FILTERS = [
-    { id:'all',    label:'All',      count:stationVehs.length },
+    { id:'all',    label:'All',      count:vehs.length },
     { id:'active', label:'Active',   count:active   },
     { id:'down',   label:'Down',     count:grounded },
     { id:'inuse',  label:'In Use',   count:inUse    },

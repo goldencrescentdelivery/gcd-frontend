@@ -910,7 +910,6 @@ function AssignModal({ v, asgn, emps, allAsgns, station, date, onAssign, onClose
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
   // Exclude drivers already assigned to a different vehicle today
   const availableEmps = (emps||[]).filter(e =>
-    e.station_code === station &&
     !(allAsgns||[]).some(a => a.emp_id === e.id && String(a.vehicle_id) !== String(v.id))
   )
   const sc = VSTATUS_COLORS[v.status]||'#A89880'
