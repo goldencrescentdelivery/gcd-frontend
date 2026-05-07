@@ -906,8 +906,11 @@ export function WorkNumModal({ emp, station, sims, onSave, onClose }) {
 const FUEL_LABEL_MAP = { empty:'Empty', quarter:'1/4', half:'1/2', three_quarter:'3/4', full:'Full' }
 
 // ── Assign Modal ─────────────────────────────────────────────
-function AssignModal({ v, asgn, emps, allAsgns, station, date, onAssign, onClose }) {
+function AssignModal({ v, asgn, emps, allAsgns, station, date, currentUser, onAssign, onClose }) {
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
+  const isAdmin = ['admin','manager','general_manager'].includes(currentUser?.role)
+  // Locked if this vehicle is assigned by a different user and current user is not admin
+  const lockedByOther = !isAdmin && asgn?.emp_id && asgn?.assigned_by && String(asgn.assigned_by) !== String(currentUser?.id)
   // Exclude drivers already assigned to a different vehicle today
   const availableEmps = (emps||[]).filter(e =>
     !(allAsgns||[]).some(a => a.emp_id === e.id && String(a.vehicle_id) !== String(v.id))
@@ -956,25 +959,45 @@ function AssignModal({ v, asgn, emps, allAsgns, station, date, onAssign, onClose
             </div>
           )}
 
-          <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>
-            {assignedEmp ? 'Change Driver' : 'Assign Driver'}
-          </div>
-          <DriverSearch
-            employees={availableEmps}
-            value={asgn?.emp_id||''}
-            onChange={id=>{ onAssign(id); onClose() }}
-            placeholder="— Search and select driver —"
-          />
-          {asgn?.emp_id && (
-            <button onClick={()=>{ onAssign(''); onClose() }}
-              style={{ marginTop:10, width:'100%', padding:'11px', borderRadius:10, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#C0392B', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
-              Remove Assignment
-            </button>
+          {lockedByOther ? (
+            <>
+              <div style={{ display:'flex', alignItems:'flex-start', gap:12, padding:'14px', background:'#FEF9C3', border:'1.5px solid #FDE047', borderRadius:14, marginBottom:12 }}>
+                <span style={{ fontSize:20, flexShrink:0 }}>🔒</span>
+                <div>
+                  <div style={{ fontWeight:800, fontSize:13, color:'#713F12', marginBottom:3 }}>Assigned by {asgn.assigned_by_name || 'another POC'}</div>
+                  <div style={{ fontSize:12, color:'#854D0E' }}>
+                    This vehicle is already assigned. Ask <strong>{asgn.assigned_by_name || 'the other POC'}</strong> to remove the assignment from their portal first.
+                  </div>
+                </div>
+              </div>
+              <button onClick={onClose}
+                style={{ marginTop:4, width:'100%', padding:'11px', borderRadius:10, background:'var(--bg-alt)', border:'1px solid var(--border)', color:'var(--text-sub)', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
+                Close
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>
+                {assignedEmp ? 'Change Driver' : 'Assign Driver'}
+              </div>
+              <DriverSearch
+                employees={availableEmps}
+                value={asgn?.emp_id||''}
+                onChange={id=>{ onAssign(id); onClose() }}
+                placeholder="— Search and select driver —"
+              />
+              {asgn?.emp_id && (
+                <button onClick={()=>{ onAssign(''); onClose() }}
+                  style={{ marginTop:10, width:'100%', padding:'11px', borderRadius:10, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#C0392B', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
+                  Remove Assignment
+                </button>
+              )}
+              <button onClick={onClose}
+                style={{ marginTop:8, width:'100%', padding:'11px', borderRadius:10, background:'var(--bg-alt)', border:'1px solid var(--border)', color:'var(--text-sub)', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
+                Cancel
+              </button>
+            </>
           )}
-          <button onClick={onClose}
-            style={{ marginTop:8, width:'100%', padding:'11px', borderRadius:10, background:'var(--bg-alt)', border:'1px solid var(--border)', color:'var(--text-sub)', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
-            Cancel
-          </button>
         </div>
       </div>
     </div>
@@ -1129,7 +1152,7 @@ function VehicleHistoryModal({ v, onClose }) {
 }
 
 // ── Vehicle Card ──────────────────────────────────────────────
-export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, allAsgns, onEdit, onDelete, onAssign }) {
+export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, allAsgns, currentUser, onEdit, onDelete, onAssign }) {
   const [showAssign,    setShowAssign]    = useState(false)
   const [showHistModal, setShowHistModal] = useState(false)
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
@@ -1225,7 +1248,7 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
         </div>
       </div>
 
-      {showAssign && <AssignModal v={v} asgn={asgn} emps={emps} allAsgns={allAsgns} station={station} date={date} onAssign={onAssign} onClose={()=>setShowAssign(false)}/>}
+      {showAssign && <AssignModal v={v} asgn={asgn} emps={emps} allAsgns={allAsgns} station={station} date={date} currentUser={currentUser} onAssign={onAssign} onClose={()=>setShowAssign(false)}/>}
       {showHistModal && <VehicleHistoryModal v={v} onClose={()=>setShowHistModal(false)}/>}
     </>
   )

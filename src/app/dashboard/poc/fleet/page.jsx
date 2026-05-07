@@ -244,7 +244,7 @@ export default function FleetPage() {
                 <VehicleCard
                   v={v} asgn={asgn} currentHandover={curHV}
                   isDown={isDown} sc={sc} sb={sb}
-                  date={date} station={station} emps={emps} allAsgns={asgns}
+                  date={date} station={station} emps={emps} allAsgns={asgns} currentUser={user}
                   onEdit={() => setModal({type:'vehicle-edit',vehicle:v})}
                   onDelete={() => setConfirmDlg({
                     title:'Delete vehicle?',
