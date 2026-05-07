@@ -1155,6 +1155,7 @@ function VehicleHistoryModal({ v, onClose }) {
 export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, allAsgns, currentUser, ctTrack, onEdit, onDelete, onAssign }) {
   const [showAssign,    setShowAssign]    = useState(false)
   const [showHistModal, setShowHistModal] = useState(false)
+  const [showCtEvents,  setShowCtEvents]  = useState(false)
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
   const hasHandover = !!currentHandover
   const BC = { active:'#A7F3D0', grounded:'#FCA5A5', maintenance:'#FDE68A', sold:'#E5E7EB' }
@@ -1216,29 +1217,102 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
 
           {/* ── Cartrack live tracking ── */}
           {ctTrack && (() => {
-            const ign = ctTrack.ignition
-            const spd = ctTrack.speed || 0
-            const fuel = ctTrack.fuel?.precentage_left ?? null
-            const loc = ctTrack.location?.position_description
-            const locShort = loc ? loc.split(',').slice(0, 2).join(',').trim() : null
+            const ign     = ctTrack.ignition
+            const idling  = ctTrack.idling
+            const spd     = ctTrack.speed ?? 0
+            const roadSpd = ctTrack.road_speed ?? 0
+            const speeding = ign && spd > 0 && roadSpd > 0 && spd > roadSpd
+            const odometer = ctTrack.odometer ? Math.round(ctTrack.odometer / 1000) : null
+            const rpm      = ctTrack.rpm ?? null
+            const fuelPct  = ctTrack.fuel?.precentage_left ?? null
+            const vext     = ctTrack.vext ? parseFloat(ctTrack.vext) : null
+            const tcu      = ctTrack.tcu_percentage ?? null
+            const loc      = ctTrack.location?.position_description
+            const locShort = loc ? loc.split(',').slice(0, 3).join(',').trim() : null
+            const driver   = ctTrack.driver
             const lastSeen = ctTrack.location?.updated || ctTrack.event_ts
-            const statusLabel = ign ? (ctTrack.idling ? 'Idling' : spd > 0 ? `${spd} km/h` : 'Engine On') : 'Engine Off'
+
+            const statusLabel = ign ? (idling ? 'IDLING' : spd > 0 ? 'DRIVING' : 'ENGINE ON') : 'STOPPED'
+            const statusClr   = ign ? (idling ? '#B45309' : spd > 0 ? '#15803D' : '#1D4ED8') : '#6B7280'
+            const statusBg    = ign ? (idling ? '#FEF3C7' : spd > 0 ? '#DCFCE7' : '#EFF6FF') : '#F3F4F6'
+            const statusBdr   = ign ? (idling ? '#FDE68A' : spd > 0 ? '#A7F3D0' : '#BFDBFE') : '#E5E7EB'
+
+            const fmtTime = ts => ts ? new Date(ts).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—'
+
             return (
-              <div style={{ background: ign ? '#F0FDF4' : '#F9FAFB', border: `1px solid ${ign ? '#BBF7D0' : '#E5E7EB'}`, borderRadius: 10, padding: '8px 11px', marginBottom: 10, fontSize: 11 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: locShort ? 4 : 0 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: ign ? '#22C55E' : '#9CA3AF', flexShrink: 0, boxShadow: ign ? '0 0 0 2px #22C55E30' : 'none' }}/>
-                  <span style={{ fontWeight: 700, color: ign ? '#15803D' : '#6B7280', flex: 1 }}>{statusLabel}</span>
-                  {fuel !== null && (
-                    <span style={{ fontWeight: 600, color: fuel < 20 ? '#DC2626' : '#1D4ED8', background: fuel < 20 ? '#FEF2F2' : '#EFF6FF', borderRadius: 20, padding: '1px 7px' }}>
-                      ⛽ {fuel}%
+              <div style={{ border:`1.5px solid ${statusBdr}`, borderRadius:12, overflow:'hidden', marginBottom:10 }}>
+                {/* Status bar */}
+                <div style={{ background:statusBg, padding:'7px 12px', display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ width:8, height:8, borderRadius:'50%', background:statusClr, flexShrink:0, boxShadow:ign?`0 0 0 3px ${statusClr}25`:undefined }}/>
+                  <span style={{ fontWeight:800, fontSize:11.5, color:statusClr, flex:1, letterSpacing:'0.05em' }}>{statusLabel}</span>
+                  {spd > 0 && (
+                    <span style={{ fontWeight:800, fontSize:13.5, color:speeding?'#DC2626':'#1D4ED8' }}>
+                      {spd} <span style={{ fontSize:10, fontWeight:600 }}>km/h</span>
                     </span>
                   )}
+                  {roadSpd > 0 && <span style={{ fontSize:10, color:'#9CA3AF' }}>/{roadSpd}</span>}
+                  {speeding && <span style={{ fontSize:9, fontWeight:800, color:'#DC2626', background:'#FEE2E2', borderRadius:20, padding:'1px 7px' }}>SPEEDING</span>}
                 </div>
-                {locShort && (
-                  <div style={{ color: '#4B5563', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingLeft: 13 }}>
-                    📍 {locShort}
+
+                {/* Metrics row */}
+                <div style={{ background:'#FAFCFF', display:'grid', gridTemplateColumns:'1fr 1fr 1fr', borderBottom:`1px solid ${statusBdr}` }}>
+                  {[
+                    { label:'Odometer', value: odometer !== null ? odometer.toLocaleString()+' km' : '—' },
+                    { label:'RPM',      value: rpm !== null && rpm > 0 ? rpm.toLocaleString() : '—' },
+                    { label:'LV Battery', value: vext ? vext.toFixed(1)+'V' : (tcu !== null ? tcu+'%' : '—') },
+                  ].map((m, i) => (
+                    <div key={i} style={{ padding:'8px 10px', borderRight: i < 2 ? `1px solid ${statusBdr}` : undefined }}>
+                      <div style={{ fontSize:9, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:2 }}>{m.label}</div>
+                      <div style={{ fontSize:13, fontWeight:800, color:'#1E293B' }}>{m.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Fuel bar */}
+                {fuelPct !== null && (
+                  <div style={{ background:'#FAFCFF', padding:'8px 12px', borderBottom:`1px solid ${statusBdr}` }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
+                      <span style={{ fontSize:9, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.05em' }}>Fuel</span>
+                      <span style={{ marginLeft:'auto', fontSize:11.5, fontWeight:800, color: fuelPct < 15 ? '#DC2626' : fuelPct < 35 ? '#D97706' : '#16A34A' }}>
+                        {fuelPct}%
+                      </span>
+                    </div>
+                    <div style={{ height:6, background:'#E5E7EB', borderRadius:4, overflow:'hidden' }}>
+                      <div style={{ width:`${Math.min(fuelPct,100)}%`, height:'100%', borderRadius:4, transition:'width 0.4s ease',
+                        background: fuelPct < 15 ? '#EF4444' : fuelPct < 35 ? '#F59E0B' : '#22C55E' }}/>
+                    </div>
                   </div>
                 )}
+
+                {/* Driver from Cartrack */}
+                {driver?.first_name && (
+                  <div style={{ background:'#FAFCFF', padding:'7px 12px', borderBottom:`1px solid ${statusBdr}`, display:'flex', alignItems:'center', gap:7 }}>
+                    <span style={{ fontSize:13 }}>👤</span>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:11.5, fontWeight:700, color:'#1E293B', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{driver.first_name} {driver.last_name}</div>
+                      {driver.phone_number && <div style={{ fontSize:9.5, color:'#9CA3AF', marginTop:1 }}>{driver.phone_number}</div>}
+                    </div>
+                    <span style={{ fontSize:9, fontWeight:700, color:'#6366F1', background:'#EEF2FF', borderRadius:20, padding:'2px 7px', flexShrink:0 }}>Cartrack</span>
+                  </div>
+                )}
+
+                {/* Location */}
+                {locShort && (
+                  <div style={{ background:'#FAFCFF', padding:'7px 12px', borderBottom:`1px solid ${statusBdr}`, display:'flex', alignItems:'flex-start', gap:6 }}>
+                    <span style={{ fontSize:12, flexShrink:0, marginTop:1 }}>📍</span>
+                    <span style={{ fontSize:10.5, color:'#374151', lineHeight:1.5 }}>{locShort}</span>
+                  </div>
+                )}
+
+                {/* Footer: last seen + events button */}
+                <div style={{ background:'#F0F6FF', padding:'6px 10px', display:'flex', alignItems:'center', gap:8 }}>
+                  <span style={{ fontSize:9.5, color:'#6B7280', flex:1 }}>Updated {fmtTime(lastSeen)}</span>
+                  <button
+                    onClick={e => { e.stopPropagation(); setShowCtEvents(true) }}
+                    style={{ fontSize:10.5, fontWeight:700, color:'#2563EB', background:'#DBEAFE', border:'none', borderRadius:20, padding:'4px 11px', cursor:'pointer', fontFamily:'inherit' }}>
+                    📋 Events Today
+                  </button>
+                </div>
               </div>
             )
           })()}
@@ -1279,7 +1353,146 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
 
       {showAssign && <AssignModal v={v} asgn={asgn} emps={emps} allAsgns={allAsgns} station={station} date={date} currentUser={currentUser} onAssign={onAssign} onClose={()=>setShowAssign(false)}/>}
       {showHistModal && <VehicleHistoryModal v={v} onClose={()=>setShowHistModal(false)}/>}
+      {showCtEvents && ctTrack && <CartrackEventsModal registration={ctTrack.registration} plate={v.plate} onClose={()=>setShowCtEvents(false)}/>}
     </>
+  )
+}
+
+// ── Cartrack Events Modal ─────────────────────────────────────
+const EVENT_COLORS = {
+  ROAD_SPEED:       { bg:'#FEE2E2', color:'#DC2626', label:'Road Speed' },
+  SPEEDING:         { bg:'#FEE2E2', color:'#DC2626', label:'Speeding' },
+  HARSH_BRAKING:    { bg:'#FEF3C7', color:'#B45309', label:'Harsh Braking' },
+  HARSH_TURNING:    { bg:'#FEF3C7', color:'#B45309', label:'Harsh Turning' },
+  HARSH_ACCEL:      { bg:'#FEF3C7', color:'#B45309', label:'Harsh Accel.' },
+  EXCESSIVE_RPM:    { bg:'#FEF3C7', color:'#B45309', label:'Excessive RPM' },
+  PANIC:            { bg:'#FCE7F3', color:'#9D174D', label:'Panic' },
+  DOOR_OPEN:        { bg:'#EDE9FE', color:'#5B21B6', label:'Door Open' },
+  DOOR_CLOSE:       { bg:'#EDE9FE', color:'#5B21B6', label:'Door Close' },
+  IGNITION_ON:      { bg:'#DCFCE7', color:'#15803D', label:'Ignition On' },
+  IGNITION_OFF:     { bg:'#F3F4F6', color:'#6B7280', label:'Ignition Off' },
+}
+function evtStyle(desc) {
+  if (!desc) return { bg:'#F3F4F6', color:'#6B7280', label: desc || '—' }
+  const key = Object.keys(EVENT_COLORS).find(k => desc.toUpperCase().includes(k.replace(/_/g,' ').split(' ')[0]))
+  return key ? { ...EVENT_COLORS[key] } : { bg:'#F3F4F6', color:'#6B7280', label: desc.replace(/_/g,' ') }
+}
+
+function CartrackEventsModal({ registration, plate, onClose }) {
+  const [events,  setEvents]  = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+  const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
+
+  useEffect(() => {
+    fetch(`${API}/api/cartrack/events?registration=${encodeURIComponent(registration)}`, h)
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) throw new Error(d.error)
+        setEvents(d.data || [])
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [registration])
+
+  // Compute summary stats from events
+  const stats = (() => {
+    if (!events.length) return null
+    const odos = events.map(e => e.odometer).filter(Boolean)
+    const km = odos.length > 1 ? Math.round((Math.max(...odos) - Math.min(...odos)) / 1000) : 0
+    const maxSpd = Math.max(...events.map(e => e.speed || 0))
+    const speedEvents = events.filter(e => e.road_speeding).length
+    const harshEvents = events.filter(e => e.event_description && /HARSH|EXCESSIVE/.test(e.event_description)).length
+    return { km, maxSpd, speedEvents, harshEvents, total: events.length }
+  })()
+
+  return createPortal(
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:3000, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
+      onClick={e => { if (e.target===e.currentTarget) onClose() }}>
+      <div style={{ background:'var(--card)', borderRadius:'24px 24px 0 0', width:'100%', maxWidth:600, maxHeight:'90vh', display:'flex', flexDirection:'column', animation:'slideUp 0.25s ease' }}>
+        {/* Header */}
+        <div style={{ padding:'18px 20px 14px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
+          <div style={{ width:40, height:40, borderRadius:12, background:'#EFF6FF', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <Truck size={18} color="#2563EB"/>
+          </div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontWeight:900, fontSize:16, color:'var(--text)' }}>{plate} — Today's Events</div>
+            <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:1 }}>Cartrack ID: {registration}</div>
+          </div>
+          <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)' }}>
+            <X size={14}/>
+          </button>
+        </div>
+
+        {loading ? (
+          <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:40 }}>
+            <div style={{ width:32, height:32, border:'3px solid #BFDBFE', borderTopColor:'#2563EB', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
+          </div>
+        ) : error ? (
+          <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:30, color:'#DC2626', fontSize:13 }}>{error}</div>
+        ) : (
+          <>
+            {/* Summary strip */}
+            {stats && (
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:0, borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+                {[
+                  { label:'Events',   value: stats.total,       color:'#1E293B' },
+                  { label:'KM Today', value: stats.km,          color:'#1D4ED8' },
+                  { label:'Max Speed',value: stats.maxSpd+' km/h', color: stats.maxSpd > 80 ? '#DC2626' : '#15803D' },
+                  { label:'Speeding', value: stats.speedEvents, color: stats.speedEvents > 0 ? '#DC2626' : '#15803D' },
+                  { label:'Harsh',    value: stats.harshEvents, color: stats.harshEvents > 0 ? '#B45309' : '#15803D' },
+                ].map((s, i) => (
+                  <div key={i} style={{ padding:'10px 8px', textAlign:'center', borderRight: i < 4 ? '1px solid var(--border)' : undefined, background:'#F8FAFF' }}>
+                    <div style={{ fontSize:14, fontWeight:900, color:s.color }}>{s.value}</div>
+                    <div style={{ fontSize:9, fontWeight:600, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.04em', marginTop:1 }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Events table */}
+            <div style={{ flex:1, overflowY:'auto' }}>
+              {events.length === 0 ? (
+                <div style={{ padding:40, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>No events recorded today</div>
+              ) : (
+                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11.5 }}>
+                  <thead>
+                    <tr style={{ background:'#F8FAFF', position:'sticky', top:0, zIndex:1 }}>
+                      {['Time','Event','Speed','Road Spd','Location'].map(h => (
+                        <th key={h} style={{ padding:'8px 12px', textAlign:'left', fontWeight:700, fontSize:10, color:'#6B7280', textTransform:'uppercase', letterSpacing:'0.05em', borderBottom:'1px solid var(--border)', whiteSpace:'nowrap' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {events.map((ev, i) => {
+                      const st = evtStyle(ev.event_description)
+                      const loc = ev.position_description ? ev.position_description.split(',').slice(0,2).join(',') : '—'
+                      const ts = ev.event_ts ? new Date(ev.event_ts).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—'
+                      return (
+                        <tr key={i} style={{ borderBottom:'1px solid var(--border)', background: i%2===0?'var(--card)':'var(--bg-alt)' }}>
+                          <td style={{ padding:'7px 12px', fontWeight:600, color:'var(--text-sub)', whiteSpace:'nowrap', fontFamily:'monospace', fontSize:11 }}>{ts}</td>
+                          <td style={{ padding:'7px 12px' }}>
+                            <span style={{ background:st.bg, color:st.color, borderRadius:20, padding:'2px 9px', fontWeight:700, fontSize:10.5, whiteSpace:'nowrap' }}>{st.label}</span>
+                          </td>
+                          <td style={{ padding:'7px 12px', fontWeight:700, color: ev.road_speeding ? '#DC2626' : 'var(--text)', whiteSpace:'nowrap' }}>
+                            {ev.speed != null ? ev.speed+' km/h' : '—'}
+                          </td>
+                          <td style={{ padding:'7px 12px', color:'var(--text-muted)', whiteSpace:'nowrap' }}>
+                            {ev.road_speed > 0 ? ev.road_speed+' km/h' : '—'}
+                          </td>
+                          <td style={{ padding:'7px 12px', color:'var(--text-sub)', maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={ev.position_description}>{loc}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>,
+    document.body
   )
 }
 
