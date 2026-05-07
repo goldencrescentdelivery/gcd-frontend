@@ -1431,7 +1431,7 @@ function CartrackEventsModal({ registration, plate, onClose }) {
         ) : error ? (
           <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:30, color:'#DC2626', fontSize:13 }}>{error}</div>
         ) : (
-          <>
+          <div style={{ flex:1, display:'flex', flexDirection:'column', minHeight:0 }}>
             {/* Summary strip */}
             {stats && (
               <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:0, borderBottom:'1px solid var(--border)', flexShrink:0 }}>
@@ -1451,7 +1451,7 @@ function CartrackEventsModal({ registration, plate, onClose }) {
             )}
 
             {/* Events table */}
-            <div style={{ flex:1, overflowY:'auto' }}>
+            <div style={{ flex:1, overflowY:'auto', minHeight:0 }}>
               {events.length === 0 ? (
                 <div style={{ padding:40, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>No events recorded today</div>
               ) : (
@@ -1488,7 +1488,7 @@ function CartrackEventsModal({ registration, plate, onClose }) {
                 </table>
               )}
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>,
