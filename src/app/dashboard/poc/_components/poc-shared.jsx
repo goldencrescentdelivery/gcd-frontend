@@ -902,70 +902,65 @@ function AssignModal({ v, asgn, emps, station, date, onAssign, onClose }) {
   const sb = VSTATUS_BG[v.status]||'#F5F4F1'
   if (typeof document === 'undefined') return null
   return createPortal(
-    <div className="modal-overlay modal-fs">
-      <div className="modal" style={{ padding:0, display:'flex', flexDirection:'column' }}>
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{ maxWidth:480, padding:0, overflow:'hidden' }}>
 
         {/* Header */}
-        <div style={{ background:'linear-gradient(135deg,#FDF6E3,#FFFBEB)', borderBottom:'1px solid #F0D78C', padding:'20px 24px', flexShrink:0 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', maxWidth:600, margin:'0 auto' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-              <div style={{ width:52, height:52, borderRadius:15, background:sb, border:`2px solid ${sc}40`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <Truck size={24} color={sc}/>
+        <div style={{ background:'linear-gradient(135deg,#FDF6E3,#FFFBEB)', borderBottom:'1px solid #F0D78C', padding:'16px 20px' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <div style={{ width:46, height:46, borderRadius:13, background:sb, border:`2px solid ${sc}40`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <Truck size={22} color={sc}/>
               </div>
               <div>
-                <div style={{ fontWeight:900, fontSize:22, color:'#1A1612', letterSpacing:'0.04em', lineHeight:1 }}>{v.plate}</div>
-                <div style={{ fontSize:12, color:'#92400E', marginTop:4 }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'} · {date}</div>
+                <div style={{ fontWeight:900, fontSize:19, color:'#1A1612', letterSpacing:'0.03em', lineHeight:1 }}>{v.plate}</div>
+                <div style={{ fontSize:11.5, color:'#92400E', marginTop:3 }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'} · {date}</div>
               </div>
             </div>
-            <button onClick={onClose} style={{ width:36, height:36, borderRadius:'50%', background:'rgba(0,0,0,0.08)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><X size={16}/></button>
+            <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', background:'rgba(0,0,0,0.07)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><X size={15}/></button>
           </div>
         </div>
 
         {/* Body */}
-        <div style={{ flex:1, overflowY:'auto', padding:'28px 24px' }}>
-          <div style={{ maxWidth:600, margin:'0 auto' }}>
-
-            {/* Current assignment */}
-            {assignedEmp ? (
-              <div style={{ display:'flex', alignItems:'center', gap:14, padding:'16px 18px', background:'#ECFDF5', border:'1.5px solid #A7F3D0', borderRadius:16, marginBottom:24 }}>
-                <div style={{ width:48, height:48, borderRadius:13, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:16, color:'white', flexShrink:0 }}>
-                  {assignedEmp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
-                </div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:'#065F46', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2 }}>Currently Assigned</div>
-                  <div style={{ fontSize:16, fontWeight:800, color:'#064E3B' }}>{assignedEmp.name}</div>
-                </div>
-                <span style={{ fontSize:11, fontWeight:700, color:'#2E7D52', background:'#A7F3D0', borderRadius:100, padding:'4px 12px', flexShrink:0 }}>Active</span>
+        <div style={{ padding:'20px' }}>
+          {/* Current assignment */}
+          {assignedEmp ? (
+            <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'#ECFDF5', border:'1.5px solid #A7F3D0', borderRadius:14, marginBottom:18 }}>
+              <div style={{ width:42, height:42, borderRadius:11, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:14, color:'white', flexShrink:0 }}>
+                {assignedEmp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
               </div>
-            ) : (
-              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 18px', background:'var(--bg-alt)', border:'1.5px dashed var(--border-med)', borderRadius:16, marginBottom:24 }}>
-                <Users size={20} color="var(--text-muted)"/>
-                <span style={{ fontSize:14, color:'var(--text-muted)', fontStyle:'italic' }}>No driver assigned to this vehicle today</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:10, fontWeight:700, color:'#065F46', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:1 }}>Currently Assigned</div>
+                <div style={{ fontSize:14, fontWeight:800, color:'#064E3B', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{assignedEmp.name}</div>
               </div>
-            )}
-
-            <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>
-              {assignedEmp ? 'Change Driver' : 'Assign Driver'}
+              <span style={{ fontSize:10, fontWeight:700, color:'#2E7D52', background:'#A7F3D0', borderRadius:100, padding:'3px 10px', flexShrink:0 }}>Active</span>
             </div>
-            <DriverSearch
-              employees={emps.filter(e=>e.station_code===station)}
-              value={asgn?.emp_id||''}
-              onChange={id=>{ onAssign(id); onClose() }}
-              placeholder="— Search and select driver —"
-            />
+          ) : (
+            <div style={{ display:'flex', alignItems:'center', gap:9, padding:'11px 14px', background:'var(--bg-alt)', border:'1.5px dashed var(--border-med)', borderRadius:14, marginBottom:18 }}>
+              <Users size={16} color="var(--text-muted)"/>
+              <span style={{ fontSize:13, color:'var(--text-muted)', fontStyle:'italic' }}>No driver assigned to this vehicle today</span>
+            </div>
+          )}
 
-            {asgn?.emp_id && (
-              <button onClick={()=>{ onAssign(''); onClose() }}
-                style={{ marginTop:14, width:'100%', padding:'13px', borderRadius:12, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#C0392B', fontWeight:700, fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>
-                Remove Assignment
-              </button>
-            )}
-
-            <button onClick={onClose}
-              style={{ marginTop:10, width:'100%', padding:'13px', borderRadius:12, background:'var(--bg-alt)', border:'1px solid var(--border)', color:'var(--text-sub)', fontWeight:600, fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>
-              Cancel
-            </button>
+          <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>
+            {assignedEmp ? 'Change Driver' : 'Assign Driver'}
           </div>
+          <DriverSearch
+            employees={emps.filter(e=>e.station_code===station)}
+            value={asgn?.emp_id||''}
+            onChange={id=>{ onAssign(id); onClose() }}
+            placeholder="— Search and select driver —"
+          />
+          {asgn?.emp_id && (
+            <button onClick={()=>{ onAssign(''); onClose() }}
+              style={{ marginTop:10, width:'100%', padding:'11px', borderRadius:10, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#C0392B', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
+              Remove Assignment
+            </button>
+          )}
+          <button onClick={onClose}
+            style={{ marginTop:8, width:'100%', padding:'11px', borderRadius:10, background:'var(--bg-alt)', border:'1px solid var(--border)', color:'var(--text-sub)', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
+            Cancel
+          </button>
         </div>
       </div>
     </div>
@@ -1005,39 +1000,38 @@ function VehicleHistoryModal({ v, onClose }) {
   if (typeof document === 'undefined') return null
   return createPortal(
     <>
-    <div className="modal-overlay modal-fs">
-      <div className="modal" style={{ padding:0, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{ maxWidth:560, padding:0, display:'flex', flexDirection:'column', maxHeight:'88vh' }}>
 
         {/* Header */}
-        <div style={{ padding:'20px 24px 16px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', maxWidth:700, margin:'0 auto' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-              <div style={{ width:52, height:52, borderRadius:15, background:sb, border:`2px solid ${sc}30`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <Truck size={24} color={sc}/>
+        <div style={{ padding:'18px 20px 14px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <div style={{ width:46, height:46, borderRadius:13, background:sb, border:`2px solid ${sc}30`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <Truck size={21} color={sc}/>
               </div>
               <div>
-                <div style={{ fontWeight:900, fontSize:22, color:'var(--text)', letterSpacing:'0.04em', lineHeight:1 }}>{v.plate}</div>
-                <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:4 }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
+                <div style={{ fontWeight:900, fontSize:19, color:'var(--text)', letterSpacing:'0.03em', lineHeight:1 }}>{v.plate}</div>
+                <div style={{ fontSize:11.5, color:'var(--text-muted)', marginTop:3 }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
               </div>
             </div>
-            <button onClick={onClose} style={{ width:38, height:38, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)', flexShrink:0 }}><X size={18}/></button>
+            <button onClick={onClose} style={{ width:34, height:34, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)', flexShrink:0 }}><X size={16}/></button>
           </div>
 
           {/* Tabs */}
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginTop:16, background:'var(--bg-alt)', borderRadius:14, padding:4, maxWidth:700, margin:'16px auto 0' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginTop:14, background:'var(--bg-alt)', borderRadius:12, padding:4 }}>
             {[['handovers','Handovers',ArrowLeftRight,handovs.length],['assignments','Assignments',Calendar,asgns.length]].map(([id,label,Icon,count])=>(
-              <button key={id} onClick={()=>setTab(id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:7, padding:'12px', borderRadius:10, border:'none', background:tab===id?'var(--card)':'transparent', color:tab===id?'var(--text)':'var(--text-muted)', fontWeight:tab===id?700:500, fontSize:14, cursor:'pointer', boxShadow:tab===id?'0 2px 8px rgba(0,0,0,0.08)':'none', transition:'all 0.15s', fontFamily:'inherit' }}>
-                <Icon size={15}/>
+              <button key={id} onClick={()=>setTab(id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px 10px', borderRadius:9, border:'none', background:tab===id?'var(--card)':'transparent', color:tab===id?'var(--text)':'var(--text-muted)', fontWeight:tab===id?700:500, fontSize:13, cursor:'pointer', boxShadow:tab===id?'0 1px 4px rgba(0,0,0,0.1)':'none', transition:'all 0.15s', fontFamily:'inherit' }}>
+                <Icon size={13}/>
                 {label}
-                <span style={{ fontSize:11, fontWeight:700, color:tab===id?'#B8860B':'var(--text-muted)', background:tab===id?'#FDF6E3':'var(--border)', borderRadius:100, padding:'2px 8px', minWidth:22, textAlign:'center' }}>{loading?'…':count}</span>
+                <span style={{ fontSize:10, fontWeight:700, color:tab===id?'#B8860B':'var(--text-muted)', background:tab===id?'#FDF6E3':'var(--border)', borderRadius:100, padding:'1px 7px', minWidth:20, textAlign:'center' }}>{loading?'…':count}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Scrollable content */}
-        <div style={{ overflowY:'auto', flex:1, padding:'20px 24px 32px' }}>
-          <div style={{ maxWidth:700, margin:'0 auto' }}>
+        <div style={{ overflowY:'auto', flex:1, padding:'14px 20px 20px' }}>
           {loading ? (
             <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
               {[1,2,3].map(i=><div key={i} className="skeleton" style={{ height:72, borderRadius:14 }}/>)}
@@ -1112,7 +1106,6 @@ function VehicleHistoryModal({ v, onClose }) {
               </div>
             )
           )}
-          </div>
         </div>
       </div>
     </div>
