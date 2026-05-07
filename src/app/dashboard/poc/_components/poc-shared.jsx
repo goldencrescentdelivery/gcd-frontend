@@ -900,7 +900,8 @@ function AssignModal({ v, asgn, emps, station, date, onAssign, onClose }) {
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
   const sc = VSTATUS_COLORS[v.status]||'#A89880'
   const sb = VSTATUS_BG[v.status]||'#F5F4F1'
-  return (
+  if (typeof document === 'undefined') return null
+  return createPortal(
     <div className="modal-overlay modal-fs">
       <div className="modal" style={{ padding:0, display:'flex', flexDirection:'column' }}>
 
@@ -968,7 +969,7 @@ function AssignModal({ v, asgn, emps, station, date, onAssign, onClose }) {
         </div>
       </div>
     </div>
-  )
+  , document.body)
 }
 
 // ── Vehicle History Modal ─────────────────────────────────────
@@ -1001,7 +1002,8 @@ function VehicleHistoryModal({ v, onClose }) {
     }).catch(()=>{}).finally(()=>setLoading(false))
   }, [v.id])
 
-  return (
+  if (typeof document === 'undefined') return null
+  return createPortal(
     <>
     <div className="modal-overlay modal-fs">
       <div className="modal" style={{ padding:0, display:'flex', flexDirection:'column', overflow:'hidden' }}>
@@ -1116,7 +1118,7 @@ function VehicleHistoryModal({ v, onClose }) {
     </div>
     {empModal && <EmpDetailModal emp={empModal} sims={[]} onClose={() => setEmpModal(null)}/>}
     </>
-  )
+  , document.body)
 }
 
 // ── Vehicle Card ──────────────────────────────────────────────
