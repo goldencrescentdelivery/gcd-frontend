@@ -646,10 +646,13 @@ export default function DriverPortal() {
               {/* Quick actions */}
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                 {[
-                  { l:'Apply Leave',  icon:Calendar, c:'#F59E0B', bg:'#FFF7ED', action:()=>setLeaveModal(true)  },
-                  { l:'My Payslips',  icon:FileText,  c:'#10B981', bg:'#F0FDF4', action:()=>setTab('pay')        },
-                  { l:'My Leaves',    icon:Calendar,  c:'#7C3AED', bg:'#F5F3FF', action:()=>setTab('leaves')     },
-                  { l:'My Vehicle',   icon:Car,        c:'#2563EB', bg:'#EFF6FF', action:()=>setTab('vehicle')   },
+                  { l:'Apply Leave',  icon:Plus,       c:'#F59E0B', bg:'#FFF7ED', action:()=>setLeaveModal(true)  },
+                  { l:'Payslips',     icon:FileText,   c:'#10B981', bg:'#F0FDF4', action:()=>setTab('pay')        },
+                  { l:'Leaves',       icon:Calendar,   c:'#7C3AED', bg:'#F5F3FF', action:()=>setTab('leaves')     },
+                  { l:'Vehicle',      icon:Car,        c:'#2563EB', bg:'#EFF6FF', action:()=>setTab('vehicle')    },
+                  { l:'Performance',  icon:BarChart2,  c:'#F97316', bg:'#FFF7ED', action:()=>setTab('perf')       },
+                  { l:'Insurance',    icon:Shield,     c:'#0F766E', bg:'#F0FDFA', action:()=>setTab('insurance')  },
+                  { l:'Notices',      icon:Bell,       c:'#DC2626', bg:'#FEF2F2', action:openNotices              },
                 ].map(a => {
                   const Icon = a.icon
                   return (
