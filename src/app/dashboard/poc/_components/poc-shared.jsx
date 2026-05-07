@@ -101,8 +101,9 @@ export function DriverSearch({ employees, value, onChange, placeholder='Search d
   const [search, setSearch]   = useState('')
   const [pos, setPos]         = useState({})
   const [mounted, setMounted] = useState(false)
-  const ref     = useRef(null)
-  const trigRef = useRef(null)
+  const ref         = useRef(null)
+  const trigRef     = useRef(null)
+  const dropdownRef = useRef(null)
   useEffect(() => { setMounted(true) }, [])
   const selected = employees.find(e => e.id === value)
   const filtered = employees.filter(e =>
@@ -117,7 +118,11 @@ export function DriverSearch({ employees, value, onChange, placeholder='Search d
   }
   useEffect(() => {
     if (!open) return
-    function close(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    function close(e) {
+      const inTrigger  = ref.current      && ref.current.contains(e.target)
+      const inDropdown = dropdownRef.current && dropdownRef.current.contains(e.target)
+      if (!inTrigger && !inDropdown) setOpen(false)
+    }
     function onScroll() { setOpen(false) }
     document.addEventListener('mousedown', close)
     document.addEventListener('scroll', onScroll, true)
