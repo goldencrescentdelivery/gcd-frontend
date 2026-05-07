@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { X, Camera, Check, Car, Fuel, FileText, User, Users } from 'lucide-react'
+import { X, Camera, Check, Car, Fuel, FileText, User, Users, Wrench, ArrowLeftRight } from 'lucide-react'
 
 import { API } from '@/lib/api'
 
@@ -78,10 +78,14 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
   const { type, vehicle } = modal
   const isReturn = type === 'returned'
 
+  // For return flow: user picks between handover-to-driver or park-for-maintenance
+  const [returnMode, setReturnMode] = useState(isReturn ? null : 'receive')
+
   const [vehicles,        setVehicles]        = useState([])
   const [drivers,         setDrivers]         = useState([])
   const [vehicleId,       setVehicleId]       = useState(vehicle?.vehicle_id || '')
   const [receiverEmpId,   setReceiverEmpId]   = useState('')
+  const [parkingLocation, setParkingLocation] = useState('')
   const [photos,          setPhotos]          = useState([null, null, null, null])
   const [fuel,            setFuel]            = useState('half')
   const [odometer,        setOdometer]        = useState('')
@@ -94,7 +98,6 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
 
   const h = { Authorization:`Bearer ${localStorage.getItem('gcd_token')}` }
 
-  // Load vehicles (receive flow) + drivers (return flow)
   useEffect(() => {
     const sc    = user?.station_code
     const today = new Date().toISOString().slice(0, 10)
@@ -132,24 +135,37 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
   function removePhoto(i)    { setPhotos(p => { const n=[...p]; n[i]=null; return n }) }
 
   async function handleSubmit() {
-    if (!isReturn && !vehicleId)           return setErr('Please select a vehicle')
-    if (isReturn  && !receiverEmpId)       return setErr('Please select the receiving driver')
-    if (!isReturn && photos.filter(Boolean).length < 4)
-                                           return setErr('All 4 photos are required (front, back, left side, right side)')
+    const isMaintenance = returnMode === 'maintenance'
+
+    if (!isReturn && !vehicleId)     return setErr('Please select a vehicle')
+    if (returnMode === 'handover' && !receiverEmpId) return setErr('Please select the receiving driver')
+    if (isMaintenance && !parkingLocation.trim())    return setErr('Please enter the parking location')
+
+    const needsPhotos = !isReturn || isMaintenance
+    if (needsPhotos && photos.filter(Boolean).length < 4)
+      return setErr('All 4 photos are required (front, back, left side, right side)')
+
     if (!odometer || isNaN(Number(odometer)) || Number(odometer) <= 0)
-                                           return setErr('Odometer reading is required')
-    if (isReturn && !handoverPerson.trim()) return setErr('Please enter a handover reference (e.g. your name / note)')
+      return setErr('Odometer reading is required')
+    if (returnMode === 'handover' && !handoverPerson.trim())
+      return setErr('Please enter a handover reference (e.g. your name / note)')
+
     setSaving(true); setErr(null)
 
     try {
       const fd = new FormData()
+      const submitType = isMaintenance ? 'maintenance' : type
       fd.append('vehicle_id', isReturn ? vehicle.vehicle_id : vehicleId)
-      fd.append('type', type)
+      fd.append('type', submitType)
       fd.append('fuel_level', fuel)
       fd.append('condition_note', note)
       if (odometer) fd.append('odometer', odometer)
 
-      if (isReturn) {
+      if (isMaintenance) {
+        fd.append('handover_to', parkingLocation)
+        const compressed = await Promise.all(photos.filter(Boolean).map(f => compressImage(f)))
+        compressed.forEach(f => fd.append('photos', f))
+      } else if (isReturn) {
         fd.append('receiver_emp_id', receiverEmpId)
         if (handoverPerson) fd.append('handover_from', handoverPerson)
       } else {
@@ -171,19 +187,23 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
     } catch(e) { setErr(e.message) } finally { setSaving(false) }
   }
 
+  const isMaintenance = returnMode === 'maintenance'
+
   if (done) return (
     <div className="modal-overlay">
       <div className="modal" style={{ maxWidth:340, textAlign:'center', padding:'40px 30px' }}>
-        <div style={{ width:64, height:64, borderRadius:'50%', background:'#ECFDF5', border:'2px solid #A7F3D0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
-          <Check size={30} color="#2E7D52"/>
+        <div style={{ width:64, height:64, borderRadius:'50%', background: isMaintenance ? '#FFF7ED' : '#ECFDF5', border:`2px solid ${isMaintenance ? '#FDE68A' : '#A7F3D0'}`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+          {isMaintenance ? <Wrench size={30} color="#B45309"/> : <Check size={30} color="#2E7D52"/>}
         </div>
         <div style={{ fontWeight:800, fontSize:18, color:'#1A1612', marginBottom:8 }}>
-          {isReturn ? 'Return Submitted!' : 'Handover Recorded!'}
+          {isMaintenance ? 'Parked for Maintenance!' : isReturn ? 'Return Submitted!' : 'Handover Recorded!'}
         </div>
         <div style={{ fontSize:13, color:'#A89880' }}>
-          {isReturn
-            ? 'The receiving driver will be notified to accept and complete the handover.'
-            : 'Record saved successfully.'}
+          {isMaintenance
+            ? `Vehicle parked at ${parkingLocation}. Status updated to maintenance.`
+            : isReturn
+              ? 'The receiving driver will be notified to accept and complete the handover.'
+              : 'Record saved successfully.'}
         </div>
         {photoWarn && (
           <div style={{ marginTop:14, background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, padding:'8px 12px', fontSize:11.5, color:'#92400E' }}>
@@ -194,23 +214,93 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
     </div>
   )
 
+  // Mode picker — shown first when returning a vehicle
+  if (isReturn && returnMode === null) return (
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{ maxWidth:440, padding:0, overflow:'hidden' }}>
+        <div style={{ padding:'20px 22px 16px', background:'linear-gradient(135deg,#FEF2F2,#FFF9F9)' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+            <div>
+              <h3 style={{ fontWeight:900, fontSize:17, color:'#1A1612' }}>Return Vehicle</h3>
+              <p style={{ fontSize:12, color:'#A89880', marginTop:3 }}>
+                {vehicle?.vehicle_plate || vehicle?.plate} — What would you like to do?
+              </p>
+            </div>
+            <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
+          </div>
+        </div>
+        <div style={{ padding:'20px 22px 24px', display:'flex', flexDirection:'column', gap:12 }}>
+          <button onClick={() => setReturnMode('handover')}
+            style={{ display:'flex', alignItems:'center', gap:16, padding:'18px 20px', borderRadius:16, border:'2px solid #B8860B', background:'#FFFBEB', cursor:'pointer', textAlign:'left', width:'100%', fontFamily:'inherit', transition:'all 0.15s' }}>
+            <div style={{ width:48, height:48, borderRadius:14, background:'#FEF3C7', border:'1px solid #FDE68A', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <ArrowLeftRight size={22} color="#B8860B"/>
+            </div>
+            <div>
+              <div style={{ fontWeight:800, fontSize:14, color:'#92400E' }}>Handover to Another Driver</div>
+              <div style={{ fontSize:12, color:'#A89880', marginTop:3 }}>No photos needed — the receiving driver takes them</div>
+            </div>
+          </button>
+
+          <button onClick={() => setReturnMode('maintenance')}
+            style={{ display:'flex', alignItems:'center', gap:16, padding:'18px 20px', borderRadius:16, border:'2px solid #9CA3AF', background:'#F9FAFB', cursor:'pointer', textAlign:'left', width:'100%', fontFamily:'inherit', transition:'all 0.15s' }}>
+            <div style={{ width:48, height:48, borderRadius:14, background:'#F3F4F6', border:'1px solid #E5E7EB', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <Wrench size={22} color="#6B7280"/>
+            </div>
+            <div>
+              <div style={{ fontWeight:800, fontSize:14, color:'#374151' }}>Park for Maintenance</div>
+              <div style={{ fontSize:12, color:'#A89880', marginTop:3 }}>4 photos required — specify where you are parking it</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  const headerBg = isMaintenance
+    ? 'linear-gradient(135deg,#F3F4F6,#F9FAFB)'
+    : isReturn
+      ? 'linear-gradient(135deg,#FEF2F2,#FFF9F9)'
+      : 'linear-gradient(135deg,#ECFDF5,#F0FFF8)'
+
+  const headerTitle = isMaintenance
+    ? '🔧 Park for Maintenance'
+    : isReturn
+      ? '🔑 Handover to Driver'
+      : '🚗 Receive Vehicle'
+
+  const headerSub = isMaintenance
+    ? `Parking ${vehicle?.vehicle_plate || vehicle?.plate} — 4 photos required`
+    : isReturn
+      ? `Returning ${vehicle?.vehicle_plate || vehicle?.plate} — photos taken by receiving driver`
+      : 'Document the vehicle you received'
+
+  const submitBg = isMaintenance
+    ? 'linear-gradient(135deg,#4B5563,#6B7280)'
+    : isReturn
+      ? 'linear-gradient(135deg,#C0392B,#E74C3C)'
+      : 'linear-gradient(135deg,#2E7D52,#22C55E)'
+
+  const submitLabel = isMaintenance ? 'Park for Maintenance' : isReturn ? 'Submit Return' : 'Submit Handover'
+
   return (
     <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal" style={{ maxWidth:480, padding:0, overflow:'hidden' }}>
         {/* Header */}
-        <div style={{ padding:'20px 22px 16px', background:isReturn?'linear-gradient(135deg,#FEF2F2,#FFF9F9)':'linear-gradient(135deg,#ECFDF5,#F0FFF8)' }}>
+        <div style={{ padding:'20px 22px 16px', background:headerBg }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
             <div>
-              <h3 style={{ fontWeight:900, fontSize:17, color:'#1A1612' }}>
-                {isReturn ? '🔑 Return Vehicle' : '🚗 Receive Vehicle'}
-              </h3>
-              <p style={{ fontSize:12, color:'#A89880', marginTop:3 }}>
-                {isReturn
-                  ? `Returning ${vehicle?.vehicle_plate || vehicle?.plate} — photos taken by receiving driver`
-                  : 'Document the vehicle you received'}
-              </p>
+              <h3 style={{ fontWeight:900, fontSize:17, color:'#1A1612' }}>{headerTitle}</h3>
+              <p style={{ fontSize:12, color:'#A89880', marginTop:3 }}>{headerSub}</p>
             </div>
-            <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              {isReturn && (
+                <button onClick={() => { setReturnMode(null); setErr(null) }}
+                  style={{ fontSize:11, color:'#B8860B', background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, padding:'4px 10px', cursor:'pointer', fontFamily:'inherit', fontWeight:600 }}>
+                  ← Back
+                </button>
+              )}
+              <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>
+            </div>
           </div>
         </div>
 
@@ -230,8 +320,8 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
             </div>
           )}
 
-          {/* Return: receiving driver selector */}
-          {isReturn && (
+          {/* Handover to driver: receiving driver selector */}
+          {returnMode === 'handover' && (
             <div>
               <label className="input-label" style={{ display:'flex', alignItems:'center', gap:6 }}><Users size={12}/> Handing Over To (Driver) *</label>
               <select className="input" value={receiverEmpId} onChange={e=>setReceiverEmpId(e.target.value)}>
@@ -246,8 +336,20 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
             </div>
           )}
 
-          {/* Photos — only for receive flow */}
-          {!isReturn && (
+          {/* Maintenance: parking location */}
+          {isMaintenance && (
+            <div>
+              <label className="input-label" style={{ display:'flex', alignItems:'center', gap:6 }}><Wrench size={12}/> Parking Location *</label>
+              <input className="input" value={parkingLocation} onChange={e=>setParkingLocation(e.target.value)}
+                placeholder="e.g. DDB1 yard, Gate 3, Parking Bay 5…" autoComplete="off"/>
+              <p style={{ fontSize:11, color:'#A89880', marginTop:5 }}>
+                Specify exactly where you are leaving the vehicle so it can be located for maintenance.
+              </p>
+            </div>
+          )}
+
+          {/* Photos — required for receive and maintenance */}
+          {(returnMode === 'receive' || isMaintenance) && (
             <div>
               <label className="input-label" style={{ display:'flex', alignItems:'center', gap:6 }}><Camera size={12}/> Vehicle Photos <span style={{color:'#E53E3E'}}>*</span></label>
               <p style={{ fontSize:11, color:'#A89880', marginBottom:10 }}>All 4 photos required — front, back, left side, right side</p>
@@ -259,11 +361,11 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
             </div>
           )}
 
-          {/* Return: info banner about photo restriction */}
-          {isReturn && (
+          {/* Handover to driver: no-photos banner */}
+          {returnMode === 'handover' && (
             <div style={{ background:'#FFF7ED', border:'1px solid #FED7AA', borderRadius:9, padding:'10px 13px', fontSize:12, color:'#92400E', display:'flex', gap:8 }}>
               <span style={{ fontSize:16, flexShrink:0 }}>📷</span>
-              <span>You do not upload photos when returning a vehicle. The receiving driver will take the photos after accepting.</span>
+              <span>You do not upload photos when handing over to a driver. The receiving driver will take the photos after accepting.</span>
             </div>
           )}
 
@@ -289,16 +391,18 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
             <input className="input" type="number" value={odometer} onChange={e=>setOdometer(e.target.value)} placeholder="e.g. 45230"/>
           </div>
 
-          {/* Handover reference (optional for both) */}
-          <div>
-            <label className="input-label" style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <User size={12}/> {isReturn ? 'Your Name / Reference' : 'Received From'}
-              {isReturn && <span style={{ fontSize:10, color:'#A89880', fontWeight:400 }}>(optional)</span>}
-              {!isReturn && <span style={{color:'#E53E3E'}}>*</span>}
-            </label>
-            <input className="input" value={handoverPerson} onChange={e=>setHandoverPerson(e.target.value)}
-              placeholder={isReturn ? 'Your name or note' : 'POC name / station'}/>
-          </div>
+          {/* Handover reference — only for handover-to-driver and receive flows */}
+          {returnMode !== 'maintenance' && (
+            <div>
+              <label className="input-label" style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <User size={12}/> {isReturn ? 'Your Name / Reference' : 'Received From'}
+                {isReturn && <span style={{ fontSize:10, color:'#A89880', fontWeight:400 }}>(optional)</span>}
+                {!isReturn && <span style={{color:'#E53E3E'}}>*</span>}
+              </label>
+              <input className="input" value={handoverPerson} onChange={e=>setHandoverPerson(e.target.value)}
+                placeholder={isReturn ? 'Your name or note' : 'POC name / station'}/>
+            </div>
+          )}
 
           {/* Condition note */}
           <div>
@@ -310,10 +414,10 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
         <div style={{ padding:'14px 22px 20px', borderTop:'1px solid #EAE6DE', display:'flex', gap:10, background:'#FAFAF8' }}>
           <button onClick={onClose} className="btn btn-secondary" style={{ flex:1, justifyContent:'center' }}>Cancel</button>
           <button onClick={handleSubmit} disabled={saving}
-            style={{ flex:2, display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'11px', borderRadius:10, background:isReturn?'linear-gradient(135deg,#C0392B,#E74C3C)':'linear-gradient(135deg,#2E7D52,#22C55E)', color:'white', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity:saving?0.7:1 }}>
+            style={{ flex:2, display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'11px', borderRadius:10, background:submitBg, color:'white', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity:saving?0.7:1 }}>
             {saving
               ? <><span style={{ width:14, height:14, border:'2px solid rgba(255,255,255,0.4)', borderTopColor:'white', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/> Saving…</>
-              : isReturn ? 'Submit Return' : 'Submit Handover'}
+              : submitLabel}
           </button>
         </div>
       </div>
