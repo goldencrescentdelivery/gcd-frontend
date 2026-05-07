@@ -89,6 +89,20 @@ export default function FleetPage() {
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:14, animation:'slideUp 0.3s ease' }}>
+      <style>{`
+        .fleet-stats { display:flex; align-items:center; gap:10; flex-wrap:wrap; }
+        .fleet-stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; flex:1; min-width:0; }
+        .fleet-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+        .fleet-filters { display:flex; gap:4px; overflow-x:auto; }
+        @media(max-width:640px){
+          .fleet-stat-grid { grid-template-columns:repeat(2,1fr); }
+          .fleet-grid { grid-template-columns:1fr !important; }
+          .fleet-filters button { font-size:11px !important; padding:6px 6px !important; }
+        }
+        @media(max-width:900px) and (min-width:641px){
+          .fleet-grid { grid-template-columns:repeat(2,1fr) !important; }
+        }
+      `}</style>
       <POCHeader
         title="Fleet" icon={Truck} color="#3B82F6"
         station={station} onStationChange={setStation} canSwitch={canSwitch}
@@ -97,30 +111,30 @@ export default function FleetPage() {
       />
 
       {/* Stats + Add */}
-      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-        <div style={{ display:'flex', gap:8, flex:1 }}>
+      <div className="fleet-stats">
+        <div className="fleet-stat-grid">
           {[
             { l:'Active',  v:active,            c:'#10B981', bg:'#ECFDF5', bc:'#A7F3D0' },
             { l:'Down',    v:grounded,           c:'#EF4444', bg:'#FEF2F2', bc:'#FCA5A5' },
             { l:'In Use',  v:inUse,              c:'#3B82F6', bg:'#EFF6FF', bc:'#BFDBFE' },
             { l:'Total',   v:stationVehs.length, c:'#6366F1', bg:'#EEF2FF', bc:'#C7D2FE' },
           ].map(s => (
-            <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:12, padding:'10px 10px', textAlign:'center', flex:1 }}>
+            <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:12, padding:'10px', textAlign:'center' }}>
               <div style={{ fontWeight:900, fontSize:20, color:s.c, lineHeight:1 }}>{s.v}</div>
               <div style={{ fontSize:9.5, color:s.c, fontWeight:600, marginTop:3, textTransform:'uppercase', letterSpacing:'0.05em' }}>{s.l}</div>
             </div>
           ))}
         </div>
-        <button className="btn btn-primary" onClick={() => setModal('vehicle-add')} style={{ borderRadius:20, flexShrink:0 }}>
+        <button className="btn btn-primary" onClick={() => setModal('vehicle-add')} style={{ borderRadius:20, flexShrink:0, whiteSpace:'nowrap' }}>
           <Plus size={14}/> Add Vehicle
         </button>
       </div>
 
       {/* Filter tabs */}
-      <div style={{ display:'flex', gap:4, background:'var(--bg-alt)', borderRadius:14, padding:3 }}>
+      <div className="fleet-filters" style={{ background:'var(--bg-alt)', borderRadius:14, padding:3 }}>
         {FILTERS.map(f => (
           <button key={f.id} onClick={() => setFilterStatus(f.id)}
-            style={{ flex:1, padding:'8px 10px', borderRadius:11, border:'none', cursor:'pointer', fontWeight:filterStatus===f.id?700:500, fontSize:12, transition:'all 0.2s', background:filterStatus===f.id?'var(--card)':'transparent', color:filterStatus===f.id?'var(--text)':'var(--text-muted)', boxShadow:filterStatus===f.id?'0 1px 4px rgba(0,0,0,0.1)':'none', fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
+            style={{ flex:'1 0 auto', padding:'8px 10px', borderRadius:11, border:'none', cursor:'pointer', fontWeight:filterStatus===f.id?700:500, fontSize:12, transition:'all 0.2s', background:filterStatus===f.id?'var(--card)':'transparent', color:filterStatus===f.id?'var(--text)':'var(--text-muted)', boxShadow:filterStatus===f.id?'0 1px 4px rgba(0,0,0,0.1)':'none', fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:5, whiteSpace:'nowrap' }}>
             {f.label}
             <span style={{ fontSize:10, fontWeight:700, padding:'1px 6px', borderRadius:20, background:filterStatus===f.id?'#3B82F620':'var(--border)', color:filterStatus===f.id?'#3B82F6':'var(--text-muted)' }}>{f.count}</span>
           </button>
@@ -211,7 +225,7 @@ export default function FleetPage() {
       )}
 
       {loading ? (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:14 }}>
+        <div className="fleet-grid">
           {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height:280, borderRadius:20 }}/>)}
         </div>
       ) : displayVehs.length === 0 ? (
@@ -220,7 +234,7 @@ export default function FleetPage() {
           <div style={{ fontSize:13, fontWeight:600 }}>{filterStatus==='all'?'No vehicles yet — add one above':'No vehicles match this filter'}</div>
         </div>
       ) : (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:14 }}>
+        <div className="fleet-grid">
           {displayVehs.map((v, i) => {
             const asgn    = asgns.find(a => String(a.vehicle_id)===String(v.id))
             const curHV   = currentHVs.find(h => String(h.vehicle_id)===String(v.id))

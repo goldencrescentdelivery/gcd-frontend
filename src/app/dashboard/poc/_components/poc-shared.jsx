@@ -897,12 +897,22 @@ const FUEL_LABEL_MAP = { empty:'Empty', quarter:'1/4', half:'1/2', three_quarter
 
 // ── Vehicle History Modal ─────────────────────────────────────
 function VehicleHistoryModal({ v, onClose }) {
-  const [tab,     setTab]     = useState('assignments')
-  const [asgns,   setAsgns]   = useState([])
-  const [handovs, setHandovs] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [tab,      setTab]      = useState('assignments')
+  const [asgns,    setAsgns]    = useState([])
+  const [handovs,  setHandovs]  = useState([])
+  const [loading,  setLoading]  = useState(true)
+  const [empModal, setEmpModal] = useState(null)
   const sc = VSTATUS_COLORS[v.status]||'#A89880'
   const sb = VSTATUS_BG[v.status]||'#F5F4F1'
+
+  async function openEmp(empId) {
+    if (!empId) return
+    try {
+      const r = await fetch(`${API}/api/employees/${empId}`, { headers: hdr() })
+      const d = await r.json()
+      if (d.employee) setEmpModal(d.employee)
+    } catch {}
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -916,6 +926,7 @@ function VehicleHistoryModal({ v, onClose }) {
   }, [v.id])
 
   return (
+    <>
     <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal" style={{ maxWidth:520 }}>
         {/* Header */}
@@ -963,7 +974,7 @@ function VehicleHistoryModal({ v, onClose }) {
                       {a.emp_id?(a.driver_name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase():'—'}
                     </div>
                     <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{a.driver_name||'— Unassigned —'}</div>
+                      <div onClick={() => openEmp(a.emp_id)} style={{ fontSize:13, fontWeight:700, color:a.emp_id?'#B8860B':'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', cursor:a.emp_id?'pointer':'default', textDecoration:a.emp_id?'underline':'none', textUnderlineOffset:2 }}>{a.driver_name||'— Unassigned —'}</div>
                       <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>{a.date?.slice(0,10)}</div>
                     </div>
                     <span style={{ fontSize:9.5, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:5, padding:'2px 7px', fontWeight:700, flexShrink:0 }}>{a.station_code}</span>
@@ -992,7 +1003,7 @@ function VehicleHistoryModal({ v, onClose }) {
                           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:6, marginBottom:5 }}>
                             <div>
                               <div style={{ fontSize:10.5, fontWeight:700, color:isRec?'#10B981':'#EF4444', textTransform:'uppercase', letterSpacing:'0.06em' }}>{isRec?'Received':'Returned'}</div>
-                              <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', marginTop:1 }}>{h.emp_name}</div>
+                              <div onClick={() => openEmp(h.emp_id)} style={{ fontSize:13, fontWeight:700, color:'#B8860B', marginTop:1, cursor:'pointer', textDecoration:'underline', textUnderlineOffset:2, display:'inline-block' }}>{h.emp_name}</div>
                             </div>
                             <div style={{ fontSize:10.5, color:'var(--text-muted)', textAlign:'right', flexShrink:0 }}>
                               {new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short'})}
@@ -1021,6 +1032,8 @@ function VehicleHistoryModal({ v, onClose }) {
         </div>
       </div>
     </div>
+    {empModal && <EmpDetailModal emp={empModal} sims={[]} onClose={() => setEmpModal(null)}/>}
+  </>
   )
 }
 
@@ -1133,6 +1146,7 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
       </div>
 
       {showHistModal&&<VehicleHistoryModal v={v} onClose={()=>setShowHistModal(false)}/>}
+
     </>
   )
 }
