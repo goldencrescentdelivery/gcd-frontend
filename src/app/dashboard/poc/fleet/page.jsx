@@ -115,7 +115,7 @@ export default function FleetPage() {
             { l:'Active',  v:active,            c:'#10B981', bg:'#ECFDF5', bc:'#A7F3D0' },
             { l:'Down',    v:grounded,           c:'#EF4444', bg:'#FEF2F2', bc:'#FCA5A5' },
             { l:'In Use',  v:inUse,              c:'#3B82F6', bg:'#EFF6FF', bc:'#BFDBFE' },
-            { l:'Total',   v:stationVehs.length, c:'#6366F1', bg:'#EEF2FF', bc:'#C7D2FE' },
+            { l:'Total',   v:vehs.length, c:'#6366F1', bg:'#EEF2FF', bc:'#C7D2FE' },
           ].map(s => (
             <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:12, padding:'10px', textAlign:'center' }}>
               <div style={{ fontWeight:900, fontSize:20, color:s.c, lineHeight:1 }}>{s.v}</div>
