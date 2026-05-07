@@ -9,7 +9,7 @@ import {
   BarChart2, Home, ChevronRight, Check, X, Clock,
   TrendingUp, Shield, Package, FileText, ExternalLink, ZoomIn,
   Phone, Mail, MapPin, Users, CreditCard, User, Building2,
-  Camera, Fuel, ArrowLeftRight
+  Camera, Fuel, ArrowLeftRight, Download, AlertTriangle, Maximize2
 } from 'lucide-react'
 import { useSocket } from '@/lib/socket'
 import { listenForSWReplay } from '@/lib/offline'
@@ -94,7 +94,7 @@ function LeaveModal({ empId, onClose, onSave }) {
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:300, display:'flex', alignItems:'flex-end' }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ width:'100%', maxWidth:480, margin:'0 auto', background:'#FFF', borderRadius:'20px 20px 0 0', padding:'20px 20px 40px', boxShadow:'0 -4px 30px rgba(0,0,0,0.12)' }}>
+      <div style={{ width:'100%', maxWidth:480, margin:'0 auto', background:'#FFF', borderRadius:'24px 24px 0 0', padding:'20px 20px 40px', boxShadow:'0 -4px 30px rgba(0,0,0,0.12)' }}>
         <div style={{ width:36, height:4, background:'#E5E7EB', borderRadius:2, margin:'0 auto 20px' }}/>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
           <h3 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>Apply for Leave</h3>
@@ -123,7 +123,7 @@ function LeaveModal({ empId, onClose, onSave }) {
         <input value={form.reason} onChange={e => set('reason', e.target.value)} placeholder="Reason (optional)"
           style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13, fontFamily:'Poppins,sans-serif', outline:'none', boxSizing:'border-box', background:'#F9FAFB', marginBottom:14 }}/>
         <button onClick={submit} disabled={saving || !form.from_date || !form.to_date}
-          style={{ width:'100%', padding:'13px', borderRadius:12, background:'#B8860B', color:'#FFF', fontWeight:700, fontSize:14, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity: saving || !form.from_date || !form.to_date ? 0.6 : 1 }}>
+          style={{ width:'100%', padding:'13px', borderRadius:12, background:'#111', color:'#FFF', fontWeight:700, fontSize:14, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity: saving || !form.from_date || !form.to_date ? 0.6 : 1 }}>
           {saving ? 'Submitting…' : 'Submit Request'}
         </button>
       </div>
@@ -140,7 +140,7 @@ function Pill({ label, color }) {
 // ── Section card ──────────────────────────────────────────────────
 function Card({ children, style }) {
   return (
-    <div style={{ background:'#FFF', borderRadius:16, border:'1px solid #F0F0EE', padding:'16px', boxShadow:'0 1px 4px rgba(0,0,0,0.05)', ...style }}>
+    <div style={{ background:'#FFF', borderRadius:16, border:'1px solid #EBEBEB', padding:'16px', boxShadow:'0 1px 4px rgba(0,0,0,0.04)', ...style }}>
       {children}
     </div>
   )
@@ -156,7 +156,7 @@ function InfoRow({ label, value }) {
   )
 }
 
-// ── Image helpers (shared with CompleteHandoverSheet) ─────────────
+// ── Image helpers ─────────────────────────────────────────────────
 function dataUrlToFile(dataUrl, name) {
   const [header, b64] = dataUrl.split(',')
   const mime = header.match(/:(.*?);/)[1]
@@ -198,7 +198,7 @@ const FUEL_LEVELS_DRIVER = [
   { v:'full',  l:'Full', pct:100 },
 ]
 
-// ── Photo slot for CompleteHandoverSheet ──────────────────────────
+// ── Photo slot ────────────────────────────────────────────────────
 function DriverPhotoSlot({ index, file, onSelect, onRemove }) {
   const ref = useRef(null)
   const url = file ? URL.createObjectURL(file) : null
@@ -223,7 +223,7 @@ function DriverPhotoSlot({ index, file, onSelect, onRemove }) {
   )
 }
 
-// ── Complete Handover Sheet (Driver B) ────────────────────────────
+// ── Complete Handover Sheet ───────────────────────────────────────
 function CompleteHandoverSheet({ handover, onClose, onDone }) {
   const [photos,   setPhotos]   = useState([null, null, null, null])
   const [fuel,     setFuel]     = useState(handover.fuel_level || 'half')
@@ -247,7 +247,6 @@ function CompleteHandoverSheet({ handover, onClose, onDone }) {
       fd.append('odometer', odometer)
       if (note) fd.append('condition_note', note)
       compressed.forEach(f => fd.append('photos', f))
-
       const res = await fetch(`${API}/api/handovers/${handover.id}/complete`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` },
@@ -263,9 +262,8 @@ function CompleteHandoverSheet({ handover, onClose, onDone }) {
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:300, display:'flex', alignItems:'flex-end' }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ width:'100%', maxWidth:480, margin:'0 auto', background:'#FFF', borderRadius:'20px 20px 0 0', padding:'16px 16px 40px', boxShadow:'0 -4px 30px rgba(0,0,0,0.12)', maxHeight:'90vh', overflowY:'auto' }}>
+      <div style={{ width:'100%', maxWidth:480, margin:'0 auto', background:'#FFF', borderRadius:'24px 24px 0 0', padding:'16px 16px 40px', boxShadow:'0 -4px 30px rgba(0,0,0,0.12)', maxHeight:'90vh', overflowY:'auto' }}>
         <div style={{ width:36, height:4, background:'#E5E7EB', borderRadius:2, margin:'0 auto 16px' }}/>
-
         {done ? (
           <div style={{ textAlign:'center', padding:'30px 0' }}>
             <div style={{ width:56, height:56, borderRadius:'50%', background:'#ECFDF5', border:'2px solid #A7F3D0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px' }}>
@@ -285,49 +283,39 @@ function CompleteHandoverSheet({ handover, onClose, onDone }) {
               </div>
               <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'#F3F4F6', border:'none', cursor:'pointer', fontSize:18, color:'#6B7280' }}>×</button>
             </div>
-
             {err && <div style={{ background:'#FEF2F2', border:'1px solid #FCA5A5', borderRadius:9, padding:'9px 13px', fontSize:12.5, color:'#C0392B', marginBottom:14 }}>{err}</div>}
-
-            {/* Photos */}
             <div style={{ marginBottom:14 }}>
               <div style={{ fontSize:11, fontWeight:700, color:'#374151', marginBottom:6 }}>Vehicle Photos * <span style={{ fontSize:10, fontWeight:400, color:'#9CA3AF' }}>— all 4 required</span></div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>
                 {photos.map((f,i) => <DriverPhotoSlot key={i} index={i} file={f} onSelect={setPhoto} onRemove={rmPhoto}/>)}
               </div>
             </div>
-
-            {/* Fuel */}
             <div style={{ marginBottom:14 }}>
               <div style={{ fontSize:11, fontWeight:700, color:'#374151', marginBottom:6, display:'flex', alignItems:'center', gap:5 }}><Fuel size={11}/> Fuel Level</div>
               <div style={{ display:'flex', gap:5 }}>
                 {FUEL_LEVELS_DRIVER.map(f=>(
                   <button key={f.v} onClick={()=>setFuel(f.v)} type="button"
-                    style={{ flex:1, padding:'7px 3px', borderRadius:9, border:`2px solid ${fuel===f.v?'#B8860B':'#E5E7EB'}`, background:fuel===f.v?'#FDF6E3':'#F9FAFB', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                    <div style={{ fontSize:10, fontWeight:700, color:fuel===f.v?'#B8860B':'#9CA3AF' }}>{f.l}</div>
+                    style={{ flex:1, padding:'7px 3px', borderRadius:9, border:`2px solid ${fuel===f.v?'#111':'#E5E7EB'}`, background:fuel===f.v?'#111':'#F9FAFB', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                    <div style={{ fontSize:10, fontWeight:700, color:fuel===f.v?'#FFF':'#9CA3AF' }}>{f.l}</div>
                   </button>
                 ))}
               </div>
               <div style={{ marginTop:7, height:7, background:'#F3F4F6', borderRadius:10, overflow:'hidden' }}>
-                <div style={{ height:'100%', width:`${FUEL_LEVELS_DRIVER.find(f=>f.v===fuel)?.pct||0}%`, background:'linear-gradient(90deg,#B8860B,#D4A017)', borderRadius:10, transition:'width 0.4s ease' }}/>
+                <div style={{ height:'100%', width:`${FUEL_LEVELS_DRIVER.find(f=>f.v===fuel)?.pct||0}%`, background:'#111', borderRadius:10, transition:'width 0.4s ease' }}/>
               </div>
             </div>
-
-            {/* Odometer */}
             <div style={{ marginBottom:14 }}>
               <div style={{ fontSize:11, fontWeight:700, color:'#374151', marginBottom:6 }}>Odometer (km) *</div>
               <input type="number" value={odometer} onChange={e=>setOdometer(e.target.value)} placeholder="e.g. 45230"
                 style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13, fontFamily:'Poppins,sans-serif', outline:'none', boxSizing:'border-box', background:'#F9FAFB' }}/>
             </div>
-
-            {/* Condition note */}
             <div style={{ marginBottom:18 }}>
               <div style={{ fontSize:11, fontWeight:700, color:'#374151', marginBottom:6 }}>Condition Notes <span style={{ fontWeight:400, color:'#9CA3AF' }}>(optional)</span></div>
               <textarea value={note} onChange={e=>setNote(e.target.value)} rows={2} placeholder="Any damage, issues, or notes…"
                 style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13, fontFamily:'Poppins,sans-serif', outline:'none', boxSizing:'border-box', background:'#F9FAFB', resize:'vertical' }}/>
             </div>
-
             <button onClick={submit} disabled={saving}
-              style={{ width:'100%', padding:'13px', borderRadius:12, background:'linear-gradient(135deg,#2E7D52,#22C55E)', color:'#FFF', fontWeight:700, fontSize:14, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity:saving?0.7:1, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+              style={{ width:'100%', padding:'13px', borderRadius:12, background:'#111', color:'#FFF', fontWeight:700, fontSize:14, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity:saving?0.7:1, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
               {saving ? <><span style={{ width:14, height:14, border:'2px solid rgba(255,255,255,0.4)', borderTopColor:'white', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/> Saving…</> : 'Complete Handover'}
             </button>
           </>
@@ -337,7 +325,7 @@ function CompleteHandoverSheet({ handover, onClose, onDone }) {
   )
 }
 
-// ── Google Drive URL → embeddable preview URL ─────────────────────
+// ── Google Drive URL → embed ──────────────────────────────────────
 function toEmbedUrl(url) {
   if (!url) return null
   const m  = url.match(/\/file\/d\/([^/]+)/)
@@ -354,13 +342,13 @@ function InsuranceTab({ profile }) {
 
   if (!embedUrl) {
     return (
-      <div className="fade" style={{ display:'flex', flexDirection:'column', gap:12 }}>
-        <h2 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>Insurance Card</h2>
-        <Card style={{ textAlign:'center', padding:'40px 20px' }}>
-          <div style={{ width:56, height:56, borderRadius:16, background:'#EFF6FF', border:'1px solid #BFDBFE', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px' }}>
-            <Shield size={24} color="#2563EB"/>
+      <div className="fade" style={{ display:'flex', flexDirection:'column', gap:16 }}>
+        <h2 style={{ fontWeight:700, fontSize:20, color:'#111', margin:0 }}>Digital Insurance Card</h2>
+        <Card style={{ textAlign:'center', padding:'48px 24px' }}>
+          <div style={{ width:64, height:64, borderRadius:20, background:'#EFF6FF', border:'1px solid #BFDBFE', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+            <Shield size={28} color="#2563EB"/>
           </div>
-          <div style={{ fontWeight:700, fontSize:15, color:'#111', marginBottom:6 }}>No insurance card on file</div>
+          <div style={{ fontWeight:700, fontSize:15, color:'#111', marginBottom:8 }}>No insurance card on file</div>
           <div style={{ fontSize:13, color:'#9CA3AF', lineHeight:1.6 }}>
             Your insurance card hasn't been uploaded yet.<br/>Please contact your station admin.
           </div>
@@ -370,34 +358,38 @@ function InsuranceTab({ profile }) {
   }
 
   return (
-    <div className="fade" style={{ display:'flex', flexDirection:'column', gap:12 }}>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <h2 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>Insurance Card</h2>
-        <div style={{ display:'flex', gap:8 }}>
-          <button onClick={() => setZoomed(true)}
-            style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 12px', borderRadius:20, background:'#EFF6FF', border:'1px solid #BFDBFE', color:'#2563EB', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-            <ZoomIn size={13}/> Full Screen
-          </button>
-          <a href={profile?.insurance_url} target="_blank" rel="noreferrer"
-            style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 12px', borderRadius:20, background:'#FFFBEB', border:'1px solid #FDE68A', color:'#B8860B', fontWeight:600, fontSize:12, fontFamily:'Poppins,sans-serif' }}>
-            <ExternalLink size={13}/> Open
-          </a>
-        </div>
+    <div className="fade" style={{ display:'flex', flexDirection:'column', gap:16 }}>
+      <h2 style={{ fontWeight:700, fontSize:20, color:'#111', margin:0 }}>Digital Insurance Card View</h2>
+
+      {/* Action buttons */}
+      <div style={{ display:'flex', gap:10 }}>
+        <button onClick={() => setZoomed(true)}
+          style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:7, padding:'12px', borderRadius:14, background:'#2563EB', color:'#FFF', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+          <Maximize2 size={15}/> Full Screen
+        </button>
+        <a href={profile?.insurance_url} target="_blank" rel="noreferrer"
+          style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:7, padding:'12px', borderRadius:14, background:'#F59E0B', color:'#FFF', fontWeight:700, fontSize:13, textDecoration:'none', fontFamily:'Poppins,sans-serif' }}>
+          <Download size={15}/> Download/Export
+        </a>
       </div>
-      <Card style={{ padding:0, overflow:'hidden', borderRadius:16 }}>
+
+      {/* Card preview */}
+      <div style={{ borderRadius:20, overflow:'hidden', boxShadow:'0 8px 32px rgba(0,0,0,0.12)', border:'1px solid #EBEBEB' }}>
         <iframe src={embedUrl} width="100%" allow="autoplay"
-          style={{ border:'none', display:'block', height:'min(480px, 60vh)' }}
+          style={{ border:'none', display:'block', height:'min(520px, 62vh)' }}
           title="Insurance Card"/>
-      </Card>
+      </div>
+
+      {/* Fullscreen overlay */}
       {zoomed && (
         <div onClick={() => setZoomed(false)}
-          style={{ position:'fixed', inset:0, zIndex:500, background:'rgba(0,0,0,0.92)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16 }}>
+          style={{ position:'fixed', inset:0, zIndex:500, background:'rgba(0,0,0,0.95)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16 }}>
           <button onClick={() => setZoomed(false)}
             style={{ position:'absolute', top:16, right:16, width:36, height:36, borderRadius:'50%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'white' }}>
             <X size={16}/>
           </button>
           <iframe src={embedUrl}
-            style={{ width:'100%', maxWidth:700, height:'85vh', border:'none', borderRadius:12 }}
+            style={{ width:'100%', maxWidth:700, height:'88vh', border:'none', borderRadius:16 }}
             allow="autoplay" title="Insurance Card Full"/>
         </div>
       )}
@@ -477,20 +469,20 @@ export default function DriverPortal() {
       fetch(`${API}${url}`, { headers: hdr, signal: ctrl.signal })
         .then(r => r.json()).then(onData).catch(() => {})
 
-    bg(`/api/leaves`,                                       d => setLeaves(d.leaves || []))
-    bg(`/api/poc/announcements?station_code=${user.station_code}`, d => setNotices(d.announcements || []))
-    bg(`/api/notifications`,                                d => {
+    bg(`/api/leaves`,                                                        d => setLeaves(d.leaves || []))
+    bg(`/api/poc/announcements?station_code=${user.station_code}`,           d => setNotices(d.announcements || []))
+    bg(`/api/notifications`,                                                 d => {
       const list = d.notifications || []
       setNotifications(list)
       setUnreadCount(list.filter(n => !n.read).length)
     })
-    bg(`/api/handovers`,                                    d => {
+    bg(`/api/handovers`,                                                     d => {
       const list = d.handovers || []
       setHandovers(list); setVehicle(findCurrentVehicle(list))
     })
-    bg(`/api/handovers/pending`,                           d => setPendingHandovers(d.pending || []))
-    bg(`/api/performance/${user.emp_id}`,                   d => setPerf(d.history?.[0] || null))
-    bg(`/api/vehicles/assignments/history?emp_id=${user.emp_id}&limit=60`, d => {
+    bg(`/api/handovers/pending`,                                             d => setPendingHandovers(d.pending || []))
+    bg(`/api/performance/${user.emp_id}`,                                    d => setPerf(d.history?.[0] || null))
+    bg(`/api/vehicles/assignments/history?emp_id=${user.emp_id}&limit=60`,   d => {
       const list = d.history || []
       setAsgHistory(list)
       setTodayAsgn(list.find(a => a.date?.slice(0, 10) === today) || null)
@@ -553,9 +545,9 @@ export default function DriverPortal() {
   function handleCompleteDone() { setCompletingHandover(null); refreshHandovers(); refreshPending() }
 
   if (!mounted || !user || loading) return (
-    <div style={{ minHeight:'100vh', background:'#FFF', display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div style={{ minHeight:'100vh', background:'#F0F1F5', display:'flex', alignItems:'center', justifyContent:'center' }}>
       <div style={{ textAlign:'center' }}>
-        <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid #E5E7EB', borderTopColor:'#B8860B', animation:'spin 0.7s linear infinite', margin:'0 auto 12px' }}/>
+        <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid #E5E7EB', borderTopColor:'#111', animation:'spin 0.7s linear infinite', margin:'0 auto 12px' }}/>
         <div style={{ fontSize:13, color:'#9CA3AF' }}>Loading your portal…</div>
       </div>
     </div>
@@ -565,31 +557,27 @@ export default function DriverPortal() {
   const grade        = perf ? getGrade(perf.total_score) : null
   const p            = profile
   const today2       = mounted ? new Date().toISOString().slice(0,10) : ''
-  const onLeaveNow   = leaves.filter(l => l.status==='approved' && l.from_date<=today2 && l.to_date>=today2).length
+  const monthLabel   = new Date().toLocaleString('en-US',{month:'long',year:'numeric'}).toUpperCase()
   const alertCount   = [p?.visa_expiry, p?.license_expiry, p?.iloe_expiry].filter(expiryAlert).length
   const annualUsed   = leaves.filter(l=>l.type==='Annual'&&l.status==='approved').reduce((s,l)=>s+(l.days||0),0)
   const sickUsed     = leaves.filter(l=>l.type==='Sick'&&l.status==='approved').reduce((s,l)=>s+(l.days||0),0)
-  const visaType     = p?.visa_type==='own' ? 'Own Visa' : 'Co. Visa'
-  const visaColor    = p?.visa_type==='own' ? '#0369A1' : '#065F46'
-  const visaBg       = p?.visa_type==='own' ? '#EFF6FF' : '#ECFDF5'
-  // Don't show POC-assigned vehicle if driver has already submitted a return that's in flight
   const hasPendingReturn = handovers.some(h =>
     h.type === 'returned' && ['pending_acceptance','accepted','poc_pending'].includes(h.status)
   )
   const effectiveTodayAsgn = (vehicle || hasPendingReturn) ? null : todayAsgn
 
   return (
-    <div style={{ minHeight:'100vh', background:'#F4F4F3', fontFamily:'Poppins,sans-serif', paddingBottom:'calc(68px + env(safe-area-inset-bottom, 0px))' }}>
+    <div style={{ minHeight:'100vh', background:'#F0F1F5', fontFamily:'Poppins,sans-serif', paddingBottom:'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
 
       {/* ── TOAST ── */}
       {toast && (
         <div onClick={openNotices}
-          style={{ position:'fixed', top:16, left:'50%', transform:'translateX(-50%)', zIndex:200, maxWidth:340, width:'calc(100% - 32px)', background:'#FFF', borderRadius:14, padding:'12px 14px', boxShadow:'0 8px 30px rgba(0,0,0,0.12)', border:'1px solid #F0D78C', cursor:'pointer', animation:'slideUp 0.3s ease', display:'flex', gap:10, alignItems:'flex-start' }}>
-          <div style={{ width:32, height:32, borderRadius:9, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          style={{ position:'fixed', top:16, left:'50%', transform:'translateX(-50%)', zIndex:200, maxWidth:340, width:'calc(100% - 32px)', background:'#FFF', borderRadius:16, padding:'12px 14px', boxShadow:'0 8px 30px rgba(0,0,0,0.12)', border:'1px solid #EBEBEB', cursor:'pointer', animation:'slideUp 0.3s ease', display:'flex', gap:10, alignItems:'flex-start' }}>
+          <div style={{ width:32, height:32, borderRadius:10, background:'#111', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
             <Bell size={15} color="#FFF"/>
           </div>
           <div style={{ minWidth:0 }}>
-            <div style={{ fontWeight:700, fontSize:12.5, color:'#1C1208', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{toast.title}</div>
+            <div style={{ fontWeight:700, fontSize:12.5, color:'#111', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{toast.title}</div>
             <div style={{ fontSize:11.5, color:'#6B7280', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{toast.body}</div>
           </div>
           <button onClick={e => { e.stopPropagation(); setToast(null) }}
@@ -598,102 +586,140 @@ export default function DriverPortal() {
       )}
 
       {/* ── CONTENT ── */}
-      <div style={{ maxWidth:520, margin:'0 auto', padding:'0 0 8px' }}>
+      <div style={{ maxWidth:520, margin:'0 auto' }}>
 
-        {/* HOME */}
+        {/* ════ HOME ════ */}
         {tab === 'home' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:0 }} className="fade">
+          <div className="fade">
 
-            {/* ── Profile Header ── */}
-            <div style={{ background:'#FFF', padding:'20px 16px 0', position:'sticky', top:0, zIndex:50, borderBottom:'1px solid #F0F0EE', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
-
-              {/* Top bar: avatar + name + sign out */}
-              <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:14 }}>
-                <div style={{ width:52, height:52, borderRadius:26, background:'linear-gradient(135deg,#D4A017,#B8860B)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:900, color:'#FFF', flexShrink:0, boxShadow:'0 4px 14px rgba(184,134,11,0.35)' }}>
+            {/* Profile header */}
+            <div style={{ background:'#FFF', padding:'16px 16px 0', position:'sticky', top:0, zIndex:50, borderBottom:'1px solid #F0F0EE', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:12, paddingBottom:14 }}>
+                {/* Avatar */}
+                <div style={{ width:48, height:48, borderRadius:24, background:'#E5E7EB', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:800, color:'#374151', flexShrink:0 }}>
                   {user.name?.slice(0,2).toUpperCase()}
                 </div>
-
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:7, flexWrap:'wrap', marginBottom:3 }}>
-                    <span style={{ fontWeight:900, fontSize:16, color:'#1C1208', letterSpacing:'-0.02em' }}>{user.name}</span>
+                  <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:2 }}>
+                    <span style={{ fontWeight:800, fontSize:15, color:'#111' }}>{user.name}</span>
                     <span style={{ fontSize:10, fontWeight:700, color:'#10B981', background:'#ECFDF5', border:'1px solid #A7F3D0', borderRadius:20, padding:'2px 8px' }}>Active</span>
                   </div>
-                  <div style={{ fontSize:11.5, color:'#9CA3AF', marginBottom:7 }}>Delivery Associate</div>
-                  <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-                    <span style={{ fontSize:10.5, fontWeight:700, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:20, padding:'2px 8px' }}>{user.station_code||'DDB1'}</span>
-                  </div>
+                  <div style={{ fontSize:11.5, color:'#9CA3AF' }}>Delivery Associate</div>
                 </div>
-
                 <button onClick={signOut}
-                  style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 10px', borderRadius:20, background:'#FEF2F2', border:'1px solid #FECACA', color:'#EF4444', fontWeight:600, fontSize:11, cursor:'pointer', fontFamily:'Poppins,sans-serif', flexShrink:0 }}>
+                  style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 12px', borderRadius:20, background:'#FEF2F2', border:'1px solid #FECACA', color:'#EF4444', fontWeight:600, fontSize:11.5, cursor:'pointer', fontFamily:'Poppins,sans-serif', flexShrink:0 }}>
                   <LogOut size={12}/> Out
                 </button>
               </div>
-
             </div>
 
-            {/* Body content */}
-            <div style={{ display:'flex', flexDirection:'column', gap:10, padding:'10px 12px' }}>
+            <div style={{ padding:'12px', display:'flex', flexDirection:'column', gap:12 }}>
 
-              {/* Salary card */}
-              <Card style={{ background:'linear-gradient(135deg,#FFFBEB,#FDF6E3)', border:'1.5px solid #F0D78C' }}>
-                <div style={{ fontSize:10, color:'#B8860B', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:5 }}>
-                  This Month · {new Date().toLocaleString('en-US', { month:'long', year:'numeric' })}
+              {/* Salary card — iridescent dark */}
+              <div style={{ borderRadius:20, overflow:'hidden', position:'relative', background:'linear-gradient(135deg,#F8F4FF 0%,#FFF4F0 25%,#F0FFF8 50%,#F0F4FF 75%,#FFF8F0 100%)', border:'1px solid rgba(0,0,0,0.06)', padding:'20px 18px 16px', boxShadow:'0 4px 20px rgba(0,0,0,0.07)' }}>
+                {/* Shimmer blobs */}
+                <div style={{ position:'absolute', top:-40, right:-40, width:160, height:160, borderRadius:'50%', background:'radial-gradient(circle,rgba(124,58,237,0.12),transparent 70%)', pointerEvents:'none' }}/>
+                <div style={{ position:'absolute', bottom:-30, left:-20, width:120, height:120, borderRadius:'50%', background:'radial-gradient(circle,rgba(59,130,246,0.1),transparent 70%)', pointerEvents:'none' }}/>
+                <div style={{ fontSize:10, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:6 }}>
+                  This Month · {monthLabel}
                 </div>
-                <div className="dp-salary" style={{ fontWeight:900, color:'#92400E', letterSpacing:'-0.04em', marginBottom:4, lineHeight:1.1 }}>{fmtA(net)}</div>
-                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                  <span style={{ fontSize:11.5, color:'#6B7280' }}>Base {fmtA(payroll?.base_salary||0)}</span>
-                  {Number(payroll?.bonus_total)>0     && <span style={{ fontSize:11.5, color:'#10B981' }}>+{fmtA(payroll.bonus_total)}</span>}
-                  {Number(payroll?.deduction_total)>0 && <span style={{ fontSize:11.5, color:'#EF4444' }}>-{fmtA(payroll.deduction_total)}</span>}
+                <div style={{ fontWeight:900, fontSize:38, color:'#111', letterSpacing:'-0.04em', marginBottom:10, lineHeight:1 }}>
+                  {fmtA(net)}
                 </div>
-                <div style={{ marginTop:8 }}>
-                  <span style={{ fontSize:11, fontWeight:600, color:payroll?.payroll_status==='paid'?'#10B981':'#F59E0B', background:payroll?.payroll_status==='paid'?'#ECFDF5':'#FFFBEB', border:`1px solid ${payroll?.payroll_status==='paid'?'#A7F3D0':'#FDE68A'}`, padding:'3px 10px', borderRadius:20 }}>
-                    {payroll?.payroll_status==='paid'?'✓ Paid':'Pending'}
-                  </span>
+                {/* Progress bar with arrow */}
+                <div style={{ position:'relative', marginBottom:12 }}>
+                  <div style={{ height:8, background:'rgba(0,0,0,0.08)', borderRadius:10, overflow:'hidden' }}>
+                    <div style={{ height:'100%', width: net > 0 && payroll?.base_salary > 0 ? `${Math.min(100, Math.round(net / Number(payroll.base_salary) * 85))}%` : '70%', background:'rgba(0,0,0,0.35)', borderRadius:10, transition:'width 0.6s ease' }}/>
+                  </div>
+                  <div style={{ position:'absolute', right:0, top:'50%', transform:'translateY(-50%)', width:26, height:26, borderRadius:'50%', background:'#FFF', boxShadow:'0 2px 8px rgba(0,0,0,0.15)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}
+                    onClick={() => setTab('pay')}>
+                    <ChevronRight size={13} color="#111"/>
+                  </div>
                 </div>
-              </Card>
+                <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+                  <span style={{ fontSize:12, color:'#374151', fontWeight:500 }}>Base {fmtA(payroll?.base_salary||0)}</span>
+                  {Number(payroll?.bonus_total)>0     && <span style={{ fontSize:12, color:'#16A34A', fontWeight:600 }}>+{fmtA(payroll.bonus_total)}</span>}
+                  {Number(payroll?.deduction_total)>0 && <span style={{ fontSize:12, color:'#DC2626', fontWeight:600 }}>−{fmtA(payroll.deduction_total)}</span>}
+                </div>
+              </div>
 
-              {/* Vehicle card */}
-              {vehicle ? (
-                <Card>
-                  <div style={{ fontSize:10.5, fontWeight:700, color:'#10B981', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>Current Vehicle</div>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-                    <div>
-                      <div style={{ fontWeight:800, fontSize:18, color:'#111', letterSpacing:'-0.02em' }}>{vehicle.vehicle_plate || vehicle.plate}</div>
-                      <div style={{ fontSize:12, color:'#9CA3AF', marginTop:2 }}>
-                        {[vehicle.make, vehicle.model].filter(Boolean).join(' ')} · Since {new Date(vehicle.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short'})}
+              {/* Quick actions */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                {[
+                  { l:'Apply Leave',  icon:Calendar, c:'#F59E0B', bg:'#FFF7ED', action:()=>setLeaveModal(true)  },
+                  { l:'My Payslips',  icon:FileText,  c:'#10B981', bg:'#F0FDF4', action:()=>setTab('pay')        },
+                  { l:'My Leaves',    icon:Calendar,  c:'#7C3AED', bg:'#F5F3FF', action:()=>setTab('leaves')     },
+                  { l:'My Vehicle',   icon:Car,        c:'#2563EB', bg:'#EFF6FF', action:()=>setTab('vehicle')   },
+                ].map(a => {
+                  const Icon = a.icon
+                  return (
+                    <button key={a.l} onClick={a.action}
+                      style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 12px', borderRadius:16, background:'#FFF', border:'1px solid #EBEBEB', cursor:'pointer', fontFamily:'Poppins,sans-serif', textAlign:'left', width:'100%', boxShadow:'0 1px 3px rgba(0,0,0,0.04)' }}>
+                      <div style={{ width:36, height:36, borderRadius:10, background:a.bg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        <Icon size={16} color={a.c}/>
+                      </div>
+                      <span style={{ fontWeight:600, fontSize:13, color:'#111', lineHeight:1.3 }}>{a.l}</span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Vehicle Status */}
+              <div>
+                <div style={{ fontWeight:700, fontSize:15, color:'#111', marginBottom:10 }}>Vehicle Status</div>
+                {vehicle ? (
+                  <Card style={{ border:'1px solid #A7F3D0', background:'linear-gradient(135deg,#F0FDF4,#DCFCE7)' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+                      <div style={{ width:48, height:48, borderRadius:14, background:'#DCFCE7', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        <Car size={22} color="#16A34A"/>
+                      </div>
+                      <div>
+                        <div style={{ fontWeight:800, fontSize:17, color:'#111', letterSpacing:'-0.02em' }}>{vehicle.vehicle_plate || vehicle.plate}</div>
+                        <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>
+                          {[vehicle.make, vehicle.model].filter(Boolean).join(' ') || 'Vehicle'} · Since {new Date(vehicle.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short'})}
+                        </div>
                       </div>
                     </div>
-                    <div style={{ width:44, height:44, borderRadius:12, background:'#F0FDF4', display:'flex', alignItems:'center', justifyContent:'center' }}><Car size={20} color="#10B981"/></div>
-                  </div>
-                  <button onClick={() => setHvModal('returned')}
-                    style={{ width:'100%', padding:'10px', borderRadius:10, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#EF4444', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                    Return Vehicle
-                  </button>
-                </Card>
-              ) : effectiveTodayAsgn ? (
-                <Card style={{ background:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', border:'1px solid #A7F3D0' }}>
-                  <div style={{ fontSize:10.5, fontWeight:700, color:'#10B981', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>Assigned Vehicle Today</div>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-                    <div>
-                      <div style={{ fontWeight:800, fontSize:18, color:'#111', letterSpacing:'-0.02em' }}>{effectiveTodayAsgn.plate}</div>
-                      <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{[effectiveTodayAsgn.make,effectiveTodayAsgn.model].filter(Boolean).join(' ')||'Vehicle'}</div>
+                    <button onClick={() => setHvModal('returned')}
+                      style={{ width:'100%', padding:'11px', borderRadius:12, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#DC2626', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                      Return Vehicle
+                    </button>
+                  </Card>
+                ) : effectiveTodayAsgn ? (
+                  <Card style={{ border:'1px solid #BFDBFE', background:'linear-gradient(135deg,#EFF6FF,#DBEAFE)' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+                      <div style={{ width:48, height:48, borderRadius:14, background:'#DBEAFE', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        <Car size={22} color="#2563EB"/>
+                      </div>
+                      <div>
+                        <div style={{ fontWeight:800, fontSize:17, color:'#111' }}>{effectiveTodayAsgn.plate}</div>
+                        <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{[effectiveTodayAsgn.make,effectiveTodayAsgn.model].filter(Boolean).join(' ')||'Vehicle'}</div>
+                      </div>
                     </div>
-                    <div style={{ width:44, height:44, borderRadius:12, background:'#DCFCE7', display:'flex', alignItems:'center', justifyContent:'center' }}><Car size={20} color="#10B981"/></div>
-                  </div>
-                  <button onClick={() => setHvModal('returned')}
-                    style={{ width:'100%', padding:'10px', borderRadius:10, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#EF4444', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                    Return Vehicle
-                  </button>
-                </Card>
-              ) : (
-                <Card style={{ textAlign:'center', padding:'20px' }}>
-                  <Car size={24} color="#D1D5DB" style={{ margin:'0 auto 8px', display:'block' }}/>
-                  <div style={{ fontSize:13, color:'#9CA3AF' }}>No vehicle assigned</div>
-                </Card>
-              )}
+                    <button onClick={() => setHvModal('returned')}
+                      style={{ width:'100%', padding:'11px', borderRadius:12, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#DC2626', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                      Return Vehicle
+                    </button>
+                  </Card>
+                ) : (
+                  <Card style={{ textAlign:'center', padding:'32px 20px' }}>
+                    {/* Car illustration */}
+                    <svg width="88" height="56" viewBox="0 0 88 56" fill="none" style={{ margin:'0 auto 14px', display:'block' }}>
+                      <ellipse cx="44" cy="50" rx="32" ry="5" fill="#E5E7EB" opacity="0.6"/>
+                      <rect x="10" y="24" width="68" height="24" rx="6" fill="#D1D5DB"/>
+                      <path d="M18 24 L28 10 L60 10 L70 24Z" fill="#E5E7EB"/>
+                      <rect x="8" y="36" width="10" height="10" rx="5" fill="#9CA3AF"/>
+                      <rect x="70" y="36" width="10" height="10" rx="5" fill="#9CA3AF"/>
+                      <rect x="20" y="14" width="18" height="10" rx="2" fill="#BFDBFE" opacity="0.8"/>
+                      <rect x="50" y="14" width="18" height="10" rx="2" fill="#BFDBFE" opacity="0.8"/>
+                    </svg>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#374151', marginBottom:4 }}>No vehicle assigned.</div>
+                    <div style={{ fontSize:12, color:'#9CA3AF' }}>Your station will assign a vehicle</div>
+                  </Card>
+                )}
+              </div>
 
-              {/* Pending incoming handovers (Driver B view) */}
+              {/* Pending handovers */}
               {pendingHandovers.map(ph => {
                 const isPendingAccept = ph.status === 'pending_acceptance'
                 const isAccepted      = ph.status === 'accepted'
@@ -712,12 +738,8 @@ export default function DriverPortal() {
                         <ArrowLeftRight size={16} color={iconColor}/>
                       </div>
                       <div>
-                        <div style={{ fontSize:11, fontWeight:700, color: iconColor, textTransform:'uppercase', letterSpacing:'0.06em' }}>
-                          {statusLabel}
-                        </div>
-                        <div style={{ fontSize:12, color:'#374151', fontWeight:600, marginTop:1 }}>
-                          {ph.vehicle_plate || ph.plate} · from {ph.emp_name}
-                        </div>
+                        <div style={{ fontSize:11, fontWeight:700, color: iconColor, textTransform:'uppercase', letterSpacing:'0.06em' }}>{statusLabel}</div>
+                        <div style={{ fontSize:12, color:'#374151', fontWeight:600, marginTop:1 }}>{ph.vehicle_plate || ph.plate} · from {ph.emp_name}</div>
                       </div>
                     </div>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:10 }}>
@@ -727,7 +749,7 @@ export default function DriverPortal() {
                         { l:'ODO',     v: ph.odometer ? `${Number(ph.odometer).toLocaleString()} km` : '—' },
                         { l:'Date',    v: new Date(ph.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short'}) },
                       ].map(c=>(
-                        <div key={c.l} style={{ background:'rgba(255,255,255,0.6)', borderRadius:7, padding:'5px 8px' }}>
+                        <div key={c.l} style={{ background:'rgba(255,255,255,0.6)', borderRadius:8, padding:'6px 8px' }}>
                           <div style={{ fontSize:9, color:'#9CA3AF', fontWeight:700 }}>{c.l}</div>
                           <div style={{ fontSize:11.5, color:'#111', fontWeight:600 }}>{c.v}</div>
                         </div>
@@ -735,38 +757,32 @@ export default function DriverPortal() {
                     </div>
                     {isPendingAccept && (
                       <div style={{ display:'flex', gap:8 }}>
-                        <button
-                          onClick={async () => {
-                            if (!confirm('Reject this handover? The vehicle will stay with the current driver.')) return
+                        <button onClick={async () => {
+                            if (!confirm('Reject this handover?')) return
                             try {
-                              const r = await fetch(`${API}/api/handovers/${ph.id}/reject`, {
-                                method:'PATCH', headers: authHeader()
-                              })
-                              if (!r.ok) { const d=await r.json(); alert(d.error||'Failed to reject'); return }
+                              const r = await fetch(`${API}/api/handovers/${ph.id}/reject`, { method:'PATCH', headers: authHeader() })
+                              if (!r.ok) { const d=await r.json(); alert(d.error||'Failed'); return }
                               refreshPending()
                             } catch(e) { alert(e.message) }
                           }}
-                          style={{ flex:1, padding:'10px', borderRadius:10, background:'#FEF2F2', color:'#DC2626', fontWeight:700, fontSize:13, border:'1.5px solid #FCA5A5', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                          style={{ flex:1, padding:'10px', borderRadius:12, background:'#FEF2F2', color:'#DC2626', fontWeight:700, fontSize:13, border:'1.5px solid #FCA5A5', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
                           Reject
                         </button>
-                        <button
-                          onClick={async () => {
+                        <button onClick={async () => {
                             try {
-                              const r = await fetch(`${API}/api/handovers/${ph.id}/accept`, {
-                                method:'PATCH', headers: authHeader()
-                              })
-                              if (!r.ok) { const d=await r.json(); alert(d.error||'Failed to accept'); return }
+                              const r = await fetch(`${API}/api/handovers/${ph.id}/accept`, { method:'PATCH', headers: authHeader() })
+                              if (!r.ok) { const d=await r.json(); alert(d.error||'Failed'); return }
                               refreshPending()
                             } catch(e) { alert(e.message) }
                           }}
-                          style={{ flex:2, padding:'10px', borderRadius:10, background:'#D97706', color:'#FFF', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                          style={{ flex:2, padding:'10px', borderRadius:12, background:'#D97706', color:'#FFF', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
                           Accept Handover
                         </button>
                       </div>
                     )}
                     {isAccepted && (
                       <button onClick={() => setCompletingHandover(ph)}
-                        style={{ width:'100%', padding:'10px', borderRadius:10, background:'linear-gradient(135deg,#2E7D52,#22C55E)', color:'#FFF', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                        style={{ width:'100%', padding:'10px', borderRadius:12, background:'#16A34A', color:'#FFF', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
                         Upload Photos &amp; Complete
                       </button>
                     )}
@@ -779,64 +795,37 @@ export default function DriverPortal() {
                 )
               })}
 
-              {/* Quick actions */}
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                {[
-                  { l:'Apply Leave', icon:Calendar, c:'#F59E0B', bg:'#FFFBEB', action:()=>setLeaveModal(true)   },
-                  { l:'My Payslips', icon:Wallet,   c:'#10B981', bg:'#F0FDF4', action:()=>setTab('pay')         },
-                  { l:'My Leaves',   icon:Calendar, c:'#7C3AED', bg:'#F5F3FF', action:()=>setTab('leaves')      },
-                  { l:'My Vehicle',  icon:Car,      c:'#2563EB', bg:'#EFF6FF', action:()=>setTab('vehicle')     },
-                ].map(a => {
-                  const Icon = a.icon
-                  return (
-                    <button key={a.l} onClick={a.action}
-                      style={{ display:'flex', alignItems:'center', gap:8, padding:'12px', borderRadius:14, background:a.bg, border:`1px solid ${a.c}20`, cursor:'pointer', fontFamily:'Poppins,sans-serif', textAlign:'left', width:'100%' }}>
-                      <div style={{ width:32, height:32, borderRadius:9, background:`${a.c}18`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                        <Icon size={15} color={a.c}/>
+              {/* Document expiry */}
+              {p && (p.visa_expiry || p.license_expiry || p.iloe_expiry) && (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+                  {[['Visa',p.visa_expiry],['License',p.license_expiry],['ILOE',p.iloe_expiry]].map(([l,d])=>{
+                    const days = d ? differenceInDays(parseISO(d.slice(0,10)), new Date()) : null
+                    const c = days===null?'#9CA3AF':days<0?'#EF4444':days<=30?'#EF4444':days<=90?'#F59E0B':'#10B981'
+                    const bg = days===null?'#F9FAFB':days<0?'#FEF2F2':days<=30?'#FEF2F2':days<=90?'#FFFBEB':'#F0FDF4'
+                    return (
+                      <div key={l} style={{ textAlign:'center', padding:'10px 8px', borderRadius:12, background:bg, border:`1px solid ${c}30` }}>
+                        <div style={{ fontSize:9, fontWeight:800, color:c, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>{l}</div>
+                        <div style={{ fontSize:12, color:c, fontWeight:700 }}>
+                          {d ? (days < 0 ? 'Expired' : days <= 90 ? `${days}d` : 'Valid') : 'N/A'}
+                        </div>
+                        {d && <div style={{ fontSize:9, color:c, opacity:0.6, marginTop:2 }}>{d.slice(0,10)}</div>}
                       </div>
-                      <span className="dp-action-label" style={{ fontWeight:600, color:a.c, lineHeight:1.3 }}>{a.l}</span>
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Profile info cards */}
-              {p && (
-                <>
-                  {/* Document expiry strip */}
-                  {(p.visa_expiry || p.license_expiry || p.iloe_expiry) && (
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
-                      {[['Visa',p.visa_expiry],['License',p.license_expiry],['ILOE',p.iloe_expiry]].map(([l,d])=>{
-                        const days = d ? differenceInDays(parseISO(d.slice(0,10)), new Date()) : null
-                        const isAlert = days !== null && days <= 30
-                        const c = days===null?'#9CA3AF':days<0?'#EF4444':days<=30?'#EF4444':days<=90?'#F59E0B':'#10B981'
-                        const bg = days===null?'#F9FAFB':days<0?'#FEF2F2':days<=30?'#FEF2F2':days<=90?'#FFFBEB':'#F0FDF4'
-                        return (
-                          <div key={l} style={{ textAlign:'center', padding:'10px 8px', borderRadius:12, background:bg, border:`1px solid ${c}30` }}>
-                            <div style={{ fontSize:9, fontWeight:800, color:c, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>{l}</div>
-                            <div style={{ fontSize:12, color:c, fontWeight:700 }}>
-                              {d ? (days < 0 ? 'Expired' : days <= 90 ? `${days}d` : 'Valid') : 'N/A'}
-                            </div>
-                            {d && <div style={{ fontSize:9, color:c, opacity:0.6, marginTop:2 }}>{d.slice(0,10)}</div>}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </>
+                    )
+                  })}
+                </div>
               )}
 
               {/* Latest notice */}
               {notices.length > 0 && (
                 <Card>
-                  <div style={{ fontSize:10.5, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>Latest Notice</div>
+                  <div style={{ fontSize:10, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>Latest Notice</div>
                   <div style={{ fontWeight:600, fontSize:13.5, color:'#111', marginBottom:4 }}>{notices[0].title}</div>
                   <div style={{ fontSize:12.5, color:'#6B7280', lineHeight:1.6 }}>
                     {notices[0].message?.slice(0,120)}{notices[0].message?.length>120?'…':''}
                   </div>
                   {notices.length > 1 && (
                     <button onClick={()=>setTab('notices')}
-                      style={{ marginTop:8, fontSize:12, color:'#B8860B', fontWeight:600, background:'none', border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', padding:0, display:'flex', alignItems:'center', gap:3 }}>
+                      style={{ marginTop:8, fontSize:12, color:'#2563EB', fontWeight:600, background:'none', border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', padding:0, display:'flex', alignItems:'center', gap:3 }}>
                       View all {notices.length} <ChevronRight size={12}/>
                     </button>
                   )}
@@ -846,59 +835,69 @@ export default function DriverPortal() {
           </div>
         )}
 
-        {/* PAYSLIPS */}
+        {/* ════ PAYSLIPS ════ */}
         {tab === 'pay' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:12, padding:'12px' }} className="fade">
-            <h2 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>My Payslip</h2>
+          <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:14 }} className="fade">
+            <h2 style={{ fontWeight:800, fontSize:22, color:'#111', margin:0 }}>My Payslip</h2>
             {!payroll ? (
-              <Card style={{ textAlign:'center', padding:'30px' }}>
-                <Wallet size={28} color="#D1D5DB" style={{ margin:'0 auto 8px', display:'block' }}/>
-                <div style={{ fontSize:13, color:'#9CA3AF' }}>No payroll data this month</div>
+              <Card style={{ textAlign:'center', padding:'40px' }}>
+                <Wallet size={32} color="#D1D5DB" style={{ margin:'0 auto 10px', display:'block' }}/>
+                <div style={{ fontSize:14, color:'#9CA3AF', fontWeight:500 }}>No payroll data this month</div>
               </Card>
             ) : (
               <>
-                <Card style={{ background:'linear-gradient(135deg,#FFFBEB,#FDF6E3)', border:'1.5px solid #F0D78C' }}>
-                  <div style={{ fontSize:10.5, color:'#B8860B', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:4 }}>Net Salary</div>
-                  <div style={{ fontWeight:900, fontSize:28, color:'#92400E', letterSpacing:'-0.04em' }}>{fmtA(net)}</div>
-                  <div style={{ fontSize:12, color:payroll.payroll_status==='paid'?'#10B981':'#F59E0B', marginTop:8, fontWeight:600 }}>
-                    {payroll.payroll_status==='paid'?'✓ Paid this month':'⏳ Pending payment'}
+                {/* Net salary hero */}
+                <div style={{ borderRadius:20, padding:'22px 20px', background:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', border:'1.5px solid #FDE68A', boxShadow:'0 4px 16px rgba(184,134,11,0.12)' }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:'#B45309', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:8 }}>Net Salary</div>
+                  <div style={{ fontWeight:900, fontSize:36, color:'#92400E', letterSpacing:'-0.04em', marginBottom:10 }}>{fmtA(net)}</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color: payroll.payroll_status==='paid' ? '#16A34A' : '#B45309', fontWeight:600 }}>
+                    {payroll.payroll_status==='paid'
+                      ? <><Check size={14}/> Paid this month</>
+                      : <><Clock size={14}/> Pending payment</>
+                    }
                   </div>
-                </Card>
+                </div>
+
+                {/* Breakdown */}
                 <Card>
-                  <div style={{ fontSize:11, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:12 }}>Breakdown</div>
+                  <div style={{ fontSize:10, fontWeight:800, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:14 }}>Breakdown</div>
                   {[
-                    { l:'Base Salary', v:fmtA(payroll.base_salary),                c:'#111'    },
-                    { l:'Bonuses',     v:`+${fmtA(payroll.bonus_total||0)}`,        c:'#10B981' },
-                    { l:'Deductions',  v:`-${fmtA(payroll.deduction_total||0)}`,    c:'#EF4444' },
-                  ].map((r,i)=>(
-                    <div key={r.l} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom:i<2?'1px solid #F3F4F6':'none' }}>
-                      <span style={{ fontSize:13, color:'#6B7280' }}>{r.l}</span>
-                      <span style={{ fontWeight:700, fontSize:13, color:r.c }}>{r.v}</span>
+                    { l:'Base Salary', v:fmtA(payroll.base_salary),             c:'#111'    },
+                    { l:'Bonuses',     v:`+${fmtA(payroll.bonus_total||0)}`,     c:'#16A34A' },
+                    { l:'Deductions',  v:`−${fmtA(payroll.deduction_total||0)}`, c:'#DC2626' },
+                  ].map((r,i) => (
+                    <div key={r.l} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 0', borderBottom: i<2 ? '1px solid #F3F4F6' : 'none' }}>
+                      <span style={{ fontSize:14, color:'#6B7280' }}>{r.l}</span>
+                      <span style={{ fontWeight:700, fontSize:14, color:r.c }}>{r.v}</span>
                     </div>
                   ))}
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 14px', background:'#FFFBEB', borderRadius:10, marginTop:8, border:'1px solid #FDE68A' }}>
-                    <span style={{ fontWeight:700, fontSize:13, color:'#92400E' }}>Net Total</span>
-                    <span style={{ fontWeight:900, fontSize:16, color:'#B8860B' }}>{fmtA(net)}</span>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'13px 16px', background:'#FFFBEB', borderRadius:12, marginTop:10, border:'1px solid #FDE68A' }}>
+                    <span style={{ fontWeight:700, fontSize:14, color:'#92400E' }}>Net Total</span>
+                    <span style={{ fontWeight:900, fontSize:18, color:'#B8860B' }}>{fmtA(net)}</span>
                   </div>
                 </Card>
-                {(payroll.bonuses||[]).length>0&&(
+
+                {/* Additions */}
+                {(payroll.bonuses||[]).length > 0 && (
                   <Card>
-                    <div style={{ fontSize:11, fontWeight:700, color:'#10B981', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>Additions</div>
-                    {payroll.bonuses.map(b=>(
-                      <div key={b.id} style={{ display:'flex', justifyContent:'space-between', padding:'8px 10px', background:'#F0FDF4', borderRadius:9, marginBottom:6 }}>
-                        <span style={{ fontSize:12.5, color:'#065F46' }}>{b.type}{b.description?` — ${b.description}`:''}</span>
-                        <span style={{ fontWeight:700, fontSize:12.5, color:'#10B981' }}>+{fmtA(b.amount)}</span>
+                    <div style={{ fontSize:10, fontWeight:800, color:'#16A34A', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:12 }}>Additions</div>
+                    {payroll.bonuses.map(b => (
+                      <div key={b.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:'#F0FDF4', borderRadius:10, marginBottom:6 }}>
+                        <span style={{ fontSize:13, color:'#065F46', fontWeight:500 }}>{b.type?.charAt(0).toUpperCase()+b.type?.slice(1)}{b.description ? ` — ${b.description}` : ''}</span>
+                        <span style={{ fontWeight:700, fontSize:13, color:'#16A34A' }}>+{fmtA(b.amount)}</span>
                       </div>
                     ))}
                   </Card>
                 )}
-                {(payroll.deductions||[]).length>0&&(
+
+                {/* Deductions */}
+                {(payroll.deductions||[]).length > 0 && (
                   <Card>
-                    <div style={{ fontSize:11, fontWeight:700, color:'#EF4444', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>Deductions</div>
-                    {payroll.deductions.map(d=>(
-                      <div key={d.id} style={{ display:'flex', justifyContent:'space-between', padding:'8px 10px', background:'#FEF2F2', borderRadius:9, marginBottom:6 }}>
-                        <span style={{ fontSize:12.5, color:'#991B1B' }}>{DED_LABELS[d.type]||d.type}{d.description?` — ${d.description}`:''}</span>
-                        <span style={{ fontWeight:700, fontSize:12.5, color:'#EF4444' }}>-{fmtA(d.amount)}</span>
+                    <div style={{ fontSize:10, fontWeight:800, color:'#DC2626', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:12 }}>Deductions</div>
+                    {payroll.deductions.map(d => (
+                      <div key={d.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:'#FEF2F2', borderRadius:10, marginBottom:6 }}>
+                        <span style={{ fontSize:13, color:'#991B1B', fontWeight:500 }}>{DED_LABELS[d.type]||d.type}{d.description ? ` — ${d.description}` : ''}</span>
+                        <span style={{ fontWeight:700, fontSize:13, color:'#DC2626' }}>−{fmtA(d.amount)}</span>
                       </div>
                     ))}
                   </Card>
@@ -908,51 +907,72 @@ export default function DriverPortal() {
           </div>
         )}
 
-        {/* LEAVES */}
+        {/* ════ LEAVES ════ */}
         {tab === 'leaves' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:12, padding:'12px' }} className="fade">
+          <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:14 }} className="fade">
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <h2 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>My Leaves</h2>
+              <h2 style={{ fontWeight:800, fontSize:22, color:'#111', margin:0 }}>My Leaves</h2>
               <button onClick={()=>setLeaveModal(true)}
-                style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 14px', borderRadius:20, background:'#B8860B', color:'#FFF', fontWeight:600, fontSize:12, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                <Plus size={13}/> Apply
+                style={{ display:'flex', alignItems:'center', gap:5, padding:'8px 14px', borderRadius:20, background:'transparent', color:'#111', fontWeight:600, fontSize:12.5, border:'1.5px solid #D1D5DB', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                Apply Leave <Plus size={13}/>
               </button>
             </div>
-            {leaves.length===0 ? (
-              <Card style={{ textAlign:'center', padding:'30px' }}>
-                <Calendar size={28} color="#D1D5DB" style={{ margin:'0 auto 8px', display:'block' }}/>
-                <div style={{ fontSize:13, color:'#9CA3AF' }}>No leave requests yet</div>
+
+            {leaves.length === 0 ? (
+              <Card style={{ textAlign:'center', padding:'48px 24px' }}>
+                <div style={{ width:72, height:72, borderRadius:20, background:'#F3F4F6', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <rect x="4" y="8" width="28" height="24" rx="4" stroke="#9CA3AF" strokeWidth="2"/>
+                    <path d="M4 14h28" stroke="#9CA3AF" strokeWidth="2"/>
+                    <path d="M12 4v8M24 4v8" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M13 22l3 3 7-7" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div style={{ fontWeight:700, fontSize:15, color:'#111', marginBottom:6 }}>No leave requests yet</div>
+                <div style={{ fontSize:13, color:'#9CA3AF', lineHeight:1.6 }}>Your past and future leave requests<br/>will appear here.</div>
               </Card>
-            ) : leaves.map((l,i)=>{
-              const tc=TYPE_COLORS[l.type]||'#6B7280'
-              const sc=l.status==='approved'?'#10B981':l.status==='rejected'?'#EF4444':'#F59E0B'
-              return (
-                <Card key={l.id} style={{ animationDelay:`${i*0.04}s` }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
-                    <span style={{ fontSize:12, fontWeight:700, color:tc, background:`${tc}12`, borderRadius:20, padding:'2px 10px' }}>{l.type}</span>
-                    <span style={{ fontSize:12, fontWeight:700, color:sc, background:`${sc}10`, borderRadius:20, padding:'2px 9px' }}>{l.status}</span>
-                  </div>
-                  <div style={{ fontWeight:600, fontSize:13.5, color:'#111', marginBottom:3 }}>{l.from_date} → {l.to_date}</div>
-                  <div style={{ fontSize:12, color:'#9CA3AF', marginBottom:8 }}>{l.days} day{l.days>1?'s':''}{l.reason?` · ${l.reason}`:''}</div>
-                  <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-                    {[{l:'POC',s:l.poc_status},{l:'HR',s:l.hr_status||l.gm_status},{l:'Manager',s:l.mgr_status}].map(st=>{
-                      const c=st.s==='approved'?'#10B981':st.s==='rejected'?'#EF4444':'#D1D5DB'
-                      return <span key={st.l} style={{ fontSize:10.5, fontWeight:600, color:c, background:`${c}18`, borderRadius:20, padding:'2px 8px' }}>{st.l}: {st.s||'pending'}</span>
-                    })}
-                  </div>
-                </Card>
-              )
-            })}
+            ) : (
+              <Card style={{ padding:0, overflow:'hidden' }}>
+                {leaves.map((l, i) => {
+                  const tc = TYPE_COLORS[l.type] || '#6B7280'
+                  const statusCfg = l.status === 'approved'
+                    ? { c:'#16A34A', bg:'#DCFCE7', label:'Approved' }
+                    : l.status === 'rejected'
+                    ? { c:'#DC2626', bg:'#FEE2E2', label:'Rejected' }
+                    : { c:'#D97706', bg:'#FEF3C7', label:'Pending' }
+                  const fromFmt = new Date(l.from_date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})
+                  const toFmt   = new Date(l.to_date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})
+                  return (
+                    <div key={l.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'14px 16px', borderBottom: i < leaves.length-1 ? '1px solid #F3F4F6' : 'none' }}>
+                      {/* Calendar icon box */}
+                      <div style={{ width:42, height:42, borderRadius:12, background:'#EFF6FF', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        <Calendar size={18} color="#2563EB"/>
+                      </div>
+                      {/* Content */}
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontWeight:700, fontSize:14, color:'#111', marginBottom:2 }}>{l.type} Leave</div>
+                        <div style={{ fontSize:12, color:'#6B7280' }}>{fromFmt} – {toFmt}</div>
+                      </div>
+                      {/* Status pill */}
+                      <span style={{ fontSize:12, fontWeight:700, color:statusCfg.c, background:statusCfg.bg, borderRadius:20, padding:'4px 12px', flexShrink:0 }}>
+                        {statusCfg.label}
+                      </span>
+                    </div>
+                  )
+                })}
+              </Card>
+            )}
+            <p style={{ fontSize:12.5, color:'#9CA3AF', textAlign:'center', margin:0 }}>Need to take time off? Apply for a new leave.</p>
           </div>
         )}
 
-        {/* PERFORMANCE */}
+        {/* ════ PERFORMANCE ════ */}
         {tab === 'perf' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:12, padding:'12px' }} className="fade">
-            <h2 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>Performance</h2>
-            <Card style={{ textAlign:'center', padding:'50px 24px' }}>
-              <div style={{ width:64, height:64, borderRadius:20, background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)', border:'1px solid #F0D78C', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
-                <BarChart2 size={28} color="#B8860B"/>
+          <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:14 }} className="fade">
+            <h2 style={{ fontWeight:800, fontSize:22, color:'#111', margin:0 }}>Performance</h2>
+            <Card style={{ textAlign:'center', padding:'52px 24px' }}>
+              <div style={{ width:72, height:72, borderRadius:20, background:'linear-gradient(135deg,#FDF6E3,#FEF3D0)', border:'1px solid #F0D78C', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 18px' }}>
+                <BarChart2 size={30} color="#B8860B"/>
               </div>
               <div style={{ fontWeight:800, fontSize:18, color:'#111', marginBottom:8 }}>Coming Soon</div>
               <div style={{ fontSize:13, color:'#9CA3AF', lineHeight:1.6 }}>Performance tracking is being set up.<br/>Check back soon.</div>
@@ -960,100 +980,154 @@ export default function DriverPortal() {
           </div>
         )}
 
-        {/* VEHICLE */}
+        {/* ════ VEHICLE ════ */}
         {tab === 'vehicle' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:12, padding:'12px' }} className="fade">
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <h2 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>Vehicle</h2>
-              {(vehicle || effectiveTodayAsgn) && (
-                <button onClick={()=>setHvModal('returned')}
-                  style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 14px', borderRadius:20, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#EF4444', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                  Return Vehicle
-                </button>
-              )}
-            </div>
-            {effectiveTodayAsgn ? (
-              <Card style={{ background:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', border:'1px solid #A7F3D0' }}>
-                <div style={{ fontSize:10, fontWeight:700, color:'#10B981', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:6 }}>Today's Assigned Vehicle</div>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <div>
-                    <div style={{ fontWeight:800, fontSize:20, color:'#111', letterSpacing:'-0.02em' }}>{effectiveTodayAsgn.plate}</div>
-                    <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{[effectiveTodayAsgn.make,effectiveTodayAsgn.model,effectiveTodayAsgn.year].filter(Boolean).join(' ')||'Vehicle'}</div>
+          <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:14 }} className="fade">
+            <h2 style={{ fontWeight:800, fontSize:22, color:'#111', margin:0 }}>Vehicle Assignment and Logs</h2>
+
+            {/* Assigned vehicle card */}
+            {(vehicle || effectiveTodayAsgn) ? (() => {
+              const v = vehicle || effectiveTodayAsgn
+              const plate = v.vehicle_plate || v.plate || '—'
+              const makeModel = [v.make, v.model].filter(Boolean).join(' ') || 'Vehicle'
+              const assignedOn = v.submitted_at || v.date
+                ? new Date(v.submitted_at || v.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
+                : '—'
+              return (
+                <Card>
+                  <div style={{ display:'flex', gap:14, marginBottom:14 }}>
+                    {/* Vehicle illustration */}
+                    <div style={{ width:100, height:80, background:'#F8FAFC', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, border:'1px solid #E5E7EB' }}>
+                      <svg width="68" height="44" viewBox="0 0 68 44" fill="none">
+                        <ellipse cx="34" cy="40" rx="26" ry="4" fill="#E5E7EB" opacity="0.7"/>
+                        <rect x="6" y="18" width="56" height="20" rx="5" fill="#CBD5E1"/>
+                        <path d="M12 18 L20 6 L48 6 L56 18Z" fill="#94A3B8"/>
+                        <rect x="4" y="28" width="8" height="8" rx="4" fill="#64748B"/>
+                        <rect x="56" y="28" width="8" height="8" rx="4" fill="#64748B"/>
+                        <rect x="14" y="9" width="14" height="9" rx="2" fill="#BFDBFE" opacity="0.9"/>
+                        <rect x="40" y="9" width="14" height="9" rx="2" fill="#BFDBFE" opacity="0.9"/>
+                        <rect x="10" y="22" width="8" height="4" rx="2" fill="#FCD34D"/>
+                        <rect x="50" y="22" width="8" height="4" rx="2" fill="#F87171"/>
+                      </svg>
+                    </div>
+                    {/* Details */}
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:2 }}>Assigned:</div>
+                      <div style={{ fontWeight:800, fontSize:16, color:'#111', marginBottom:6 }}>{makeModel}</div>
+                      <div style={{ fontSize:12.5, color:'#374151', marginBottom:3 }}>
+                        <span style={{ color:'#9CA3AF' }}>License Plate: </span>{plate}
+                      </div>
+                      <div style={{ fontSize:12.5, color:'#374151' }}>
+                        <span style={{ color:'#9CA3AF' }}>Assigned on: </span>{assignedOn}
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ width:44, height:44, borderRadius:12, background:'#DCFCE7', display:'flex', alignItems:'center', justifyContent:'center' }}><Car size={20} color="#10B981"/></div>
-                </div>
-                <div style={{ marginTop:8, fontSize:11, color:'#6B7280' }}>Assigned by station · {effectiveTodayAsgn.date?.slice(0,10)}</div>
-              </Card>
-            ) : (
-              <Card style={{ textAlign:'center', padding:'14px', background:'#FAFAF9', border:'1px dashed #D1D5DB' }}>
-                <Car size={18} color="#D1D5DB" style={{ margin:'0 auto 5px', display:'block' }}/>
-                <div style={{ fontSize:12, color:'#9CA3AF' }}>No vehicle assigned by station today</div>
+                  <button onClick={() => setHvModal('returned')}
+                    style={{ width:'100%', padding:'12px', borderRadius:12, background:'#2563EB', color:'#FFF', fontWeight:700, fontSize:14, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                    Report Issue / Return Vehicle
+                  </button>
+                </Card>
+              )
+            })() : (
+              <Card style={{ textAlign:'center', padding:'32px 20px' }}>
+                <svg width="88" height="56" viewBox="0 0 88 56" fill="none" style={{ margin:'0 auto 14px', display:'block' }}>
+                  <ellipse cx="44" cy="50" rx="32" ry="5" fill="#E5E7EB" opacity="0.6"/>
+                  <rect x="10" y="24" width="68" height="24" rx="6" fill="#D1D5DB"/>
+                  <path d="M18 24 L28 10 L60 10 L70 24Z" fill="#E5E7EB"/>
+                  <rect x="8" y="36" width="10" height="10" rx="5" fill="#9CA3AF"/>
+                  <rect x="70" y="36" width="10" height="10" rx="5" fill="#9CA3AF"/>
+                  <rect x="20" y="14" width="18" height="10" rx="2" fill="#BFDBFE" opacity="0.8"/>
+                  <rect x="50" y="14" width="18" height="10" rx="2" fill="#BFDBFE" opacity="0.8"/>
+                </svg>
+                <div style={{ fontWeight:600, fontSize:14, color:'#374151', marginBottom:4 }}>No vehicle assigned.</div>
+                <div style={{ fontSize:12, color:'#9CA3AF' }}>Your station will assign a vehicle for today</div>
               </Card>
             )}
-            {asgHistory.length>0&&(
+
+            {/* Handover log — timeline */}
+            {handovers.length > 0 && (
               <div>
-                <div style={{ fontSize:11, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8 }}>Assignment History</div>
-                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                  {asgHistory.map(a=>(
-                    <div key={a.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, background:'#FFF', border:'1px solid #F0F0EE' }}>
-                      <div style={{ width:36, height:36, borderRadius:10, background:'#FDF6E3', border:'1px solid #F0D78C', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Car size={16} color="#B8860B"/></div>
+                <div style={{ fontWeight:700, fontSize:16, color:'#111', marginBottom:14 }}>Handover Log</div>
+                <Card style={{ padding:'16px 14px' }}>
+                  {handovers.map((h, i) => {
+                    const isLast = i === handovers.length - 1
+                    const isReceived = h.type === 'received'
+                    const dateStr = new Date(h.submitted_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
+                    const actionLabel = isReceived
+                      ? `Received from ${h.emp_name || 'Station'}`
+                      : `Handed Over to ${h.emp_name || 'Station'}`
+                    return (
+                      <div key={h.id} style={{ display:'flex', gap:12 }}>
+                        {/* Timeline indicator */}
+                        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', width:36, flexShrink:0 }}>
+                          <div style={{ width:36, height:36, borderRadius:'50%', background:'#EFF6FF', border:'2px solid #BFDBFE', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, zIndex:1 }}>
+                            <Car size={15} color="#2563EB"/>
+                          </div>
+                          {!isLast && <div style={{ width:2, flex:1, background:'#E5E7EB', minHeight:20, marginTop:2 }}/>}
+                        </div>
+                        {/* Content */}
+                        <div style={{ paddingBottom: isLast ? 0 : 18, flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:12, color:'#9CA3AF', marginBottom:2 }}>{dateStr}</div>
+                          <div style={{ fontWeight:700, fontSize:14, color:'#111', marginBottom: h.condition_note ? 3 : 0 }}>{actionLabel}</div>
+                          {h.condition_note && <div style={{ fontSize:12, color:'#6B7280' }}>Condition: {h.condition_note}</div>}
+                          {h.fuel_level && !h.condition_note && <div style={{ fontSize:12, color:'#6B7280' }}>Fuel: {{ empty:'Empty', quarter:'1/4', half:'1/2', three_quarter:'3/4', full:'Full' }[h.fuel_level] || h.fuel_level}</div>}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </Card>
+              </div>
+            )}
+
+            {/* Assignment history */}
+            {asgHistory.length > 0 && (
+              <div>
+                <div style={{ fontWeight:700, fontSize:16, color:'#111', marginBottom:10 }}>Assignment History</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {asgHistory.map(a => (
+                    <div key={a.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderRadius:14, background:'#FFF', border:'1px solid #EBEBEB' }}>
+                      <div style={{ width:36, height:36, borderRadius:10, background:'#EFF6FF', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        <Car size={16} color="#2563EB"/>
+                      </div>
                       <div style={{ flex:1, minWidth:0 }}>
                         <div style={{ fontWeight:700, fontSize:13, color:'#111' }}>{a.plate}</div>
                         <div style={{ fontSize:11, color:'#9CA3AF', marginTop:1 }}>{[a.make,a.model].filter(Boolean).join(' ')}</div>
                       </div>
                       <div style={{ textAlign:'right', flexShrink:0 }}>
                         <div style={{ fontSize:12, fontWeight:600, color:'#374151' }}>{a.date?.slice(0,10)}</div>
-                        <div style={{ fontSize:10, color:'#B8860B', marginTop:1 }}>{a.station_code}</div>
+                        <div style={{ fontSize:10, color:'#2563EB', marginTop:1 }}>{a.station_code}</div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            <div>
-              <div style={{ fontSize:11, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8 }}>Handover Log</div>
-              {handovers.length===0 ? (
-                <Card style={{ textAlign:'center', padding:'20px' }}>
-                  <Car size={24} color="#D1D5DB" style={{ margin:'0 auto 8px', display:'block' }}/>
-                  <div style={{ fontSize:12, color:'#9CA3AF' }}>No handovers yet</div>
-                </Card>
-              ) : handovers.map(h=>(
-                <Card key={h.id} style={{ marginBottom:6 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-                    <span style={{ fontWeight:700, fontSize:15, color:'#111' }}>{h.vehicle_plate||h.plate||'—'}</span>
-                    <Pill label={h.type} color={h.type==='received'?'#10B981':'#EF4444'}/>
-                  </div>
-                  <div style={{ fontSize:12, color:'#9CA3AF' }}>{new Date(h.submitted_at).toLocaleString('en-AE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
-                  {h.fuel_level&&<div style={{ fontSize:12, color:'#6B7280', marginTop:4 }}>Fuel: {h.fuel_level}</div>}
-                </Card>
-              ))}
-            </div>
           </div>
         )}
 
-        {/* INSURANCE */}
-        {tab==='insurance' && (
-          <div style={{ padding:'12px' }}>
+        {/* ════ INSURANCE ════ */}
+        {tab === 'insurance' && (
+          <div style={{ padding:'16px' }}>
             <InsuranceTab profile={profile}/>
           </div>
         )}
 
-        {/* NOTICES */}
-        {tab==='notices' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:12, padding:'12px' }} className="fade">
-            <h2 style={{ fontWeight:700, fontSize:17, color:'#111', margin:0 }}>Notices</h2>
-            {notices.length===0 ? (
-              <Card style={{ textAlign:'center', padding:'30px' }}>
-                <Bell size={28} color="#D1D5DB" style={{ margin:'0 auto 8px', display:'block' }}/>
-                <div style={{ fontSize:13, color:'#9CA3AF' }}>No notices from your station</div>
+        {/* ════ NOTICES ════ */}
+        {tab === 'notices' && (
+          <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:14 }} className="fade">
+            <h2 style={{ fontWeight:800, fontSize:22, color:'#111', margin:0 }}>Notices</h2>
+            {notices.length === 0 ? (
+              <Card style={{ textAlign:'center', padding:'40px' }}>
+                <Bell size={32} color="#D1D5DB" style={{ margin:'0 auto 10px', display:'block' }}/>
+                <div style={{ fontSize:14, color:'#9CA3AF' }}>No notices from your station</div>
               </Card>
-            ) : notices.map(n=>(
+            ) : notices.map(n => (
               <Card key={n.id}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
-                  <span style={{ fontWeight:700, fontSize:13.5, color:'#111' }}>{n.title}</span>
-                  <span style={{ fontSize:10.5, color:'#9CA3AF', flexShrink:0, marginLeft:8 }}>{n.created_at?.slice(0,10)}</span>
+                  <span style={{ fontWeight:700, fontSize:14, color:'#111' }}>{n.title}</span>
+                  <span style={{ fontSize:11, color:'#9CA3AF', flexShrink:0, marginLeft:8 }}>{n.created_at?.slice(0,10)}</span>
                 </div>
-                <div style={{ fontSize:12.5, color:'#6B7280', lineHeight:1.6 }}>{n.message}</div>
+                <div style={{ fontSize:13, color:'#6B7280', lineHeight:1.6 }}>{n.message}</div>
               </Card>
             ))}
           </div>
@@ -1061,23 +1135,24 @@ export default function DriverPortal() {
       </div>
 
       {/* ── BOTTOM NAV ── */}
-      <nav style={{ position:'fixed', bottom:0, left:0, right:0, background:'#FFF', borderTop:'1px solid #F0F0EE', display:'flex', zIndex:100, boxShadow:'0 -2px 12px rgba(0,0,0,0.06)', paddingBottom:'env(safe-area-inset-bottom,0px)' }}>
+      <nav style={{ position:'fixed', bottom:0, left:0, right:0, background:'#FFF', borderTop:'1px solid #F0F0EE', display:'flex', zIndex:100, boxShadow:'0 -4px 16px rgba(0,0,0,0.06)', paddingBottom:'env(safe-area-inset-bottom,0px)' }}>
         {TABS.map(t => {
           const Icon   = t.icon
           const active = tab === t.id
           const isNotices = t.id === 'notices'
           return (
             <button key={t.id} onClick={isNotices ? openNotices : () => setTab(t.id)}
-              style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'8px 1px 10px', border:'none', background:active?'#FFFBEB':'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', transition:'all 0.15s', minWidth:0 }}>
-              <span className="dp-nav-icon" style={{ position:'relative' }}>
-                <Icon size={18} color={active?'#B8860B':'#9CA3AF'} strokeWidth={active?2.5:1.8}/>
-                {isNotices && unreadCount>0 && (
+              style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'9px 1px 10px', border:'none', background:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', minWidth:0, position:'relative' }}>
+              {active && <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:24, height:3, background:'#111', borderRadius:'0 0 4px 4px' }}/>}
+              <span style={{ position:'relative' }}>
+                <Icon size={19} color={active ? '#111' : '#9CA3AF'} strokeWidth={active ? 2.5 : 1.8}/>
+                {isNotices && unreadCount > 0 && (
                   <span style={{ position:'absolute', top:-4, right:-5, minWidth:14, height:14, borderRadius:7, background:'#EF4444', color:'#FFF', fontSize:8, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', padding:'0 3px', lineHeight:1 }}>
-                    {unreadCount>9?'9+':unreadCount}
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </span>
-              <span className="dp-nav-label" style={{ fontWeight:active?700:500, color:active?'#B8860B':'#9CA3AF', marginTop:2, lineHeight:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'100%', padding:'0 1px' }}>
+              <span className="dp-nav-label" style={{ fontWeight: active ? 700 : 500, color: active ? '#111' : '#9CA3AF', marginTop:3, fontSize:9.5, lineHeight:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'100%', padding:'0 1px' }}>
                 {t.label}
               </span>
             </button>
