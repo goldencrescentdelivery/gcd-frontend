@@ -359,7 +359,7 @@ export function AnnModal({ ann, onSave, onClose }) {
 
 // ── Vehicle Modal ─────────────────────────────────────────────
 export function VehicleModal({ vehicle, station, onSave, onClose }) {
-  const [form, setForm] = useState({ plate:'', make:'', model:'', year:'', status:'active', grounded_reason:'', grounded_since:'', grounded_until:'', notes:'', ...vehicle })
+  const [form, setForm] = useState({ plate:'', make:'', model:'', year:'', status:'active', grounded_reason:'', grounded_since:'', grounded_until:'', notes:'', station_code: vehicle?.station_code || station, ...vehicle })
   const [saving,setSaving] = useState(false)
   const set = (k,v) => setForm(p => ({...p,[k]:v}))
   async function handleSave() {
@@ -367,7 +367,7 @@ export function VehicleModal({ vehicle, station, onSave, onClose }) {
     setSaving(true)
     try {
       const url = vehicle ? `${API}/api/vehicles/${vehicle.id}` : `${API}/api/vehicles`
-      const res = await fetch(url, { method:vehicle?'PUT':'POST', headers:hdr(), body:JSON.stringify({...form, station_code:station}) })
+      const res = await fetch(url, { method:vehicle?'PUT':'POST', headers:hdr(), body:JSON.stringify({...form}) })
       if (!res.ok) throw new Error((await res.json()).error)
       onSave()
     } catch(e) { alert(e.message) } finally { setSaving(false) }
@@ -381,6 +381,10 @@ export function VehicleModal({ vehicle, station, onSave, onClose }) {
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           <div><label className="input-label">Plate No. *</label><input className="input" value={form.plate} onChange={e => set('plate',e.target.value.toUpperCase())} placeholder="DXB A 12345" autoComplete="off"/></div>
+          <div><label className="input-label">Station</label>
+            <select className="input" value={form.station_code||station} onChange={e => set('station_code',e.target.value)}>
+              {STATIONS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select></div>
           <div><label className="input-label">Status</label>
             <select className="input" value={form.status} onChange={e => set('status',e.target.value)}>
               <option value="active">Active</option><option value="grounded">Grounded</option>
