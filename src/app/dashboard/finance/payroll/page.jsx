@@ -830,11 +830,6 @@ export default function PayrollPage() {
         ))
       }
 
-      {/* Footer */}
-      <div style={{ textAlign:'center', padding:'8px 0 4px', borderTop:'1px solid rgba(0,0,0,0.06)', marginTop:8 }}>
-        <span style={{ fontSize:10.5, color:'#C4B49A', fontWeight:500 }}>Made with ❤️ by Waleed &nbsp;·&nbsp; v{APP_VERSION}</span>
-      </div>
-
       {modal==='bonus'        && <BonusModal     employees={employees} month={month} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal==='deduction'    && <DeductionModal employees={employees} month={month} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
       {modal?.type==='salary' && <SalaryModal    emp={modal.emp}       onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
