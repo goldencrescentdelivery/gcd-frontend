@@ -901,7 +901,7 @@ function AssignModal({ v, asgn, emps, station, date, onAssign, onClose }) {
   const sc = VSTATUS_COLORS[v.status]||'#A89880'
   const sb = VSTATUS_BG[v.status]||'#F5F4F1'
   return (
-    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div className="modal-overlay modal-fs" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal" style={{ maxWidth:420, padding:0, overflow:'hidden' }}>
         {/* Header */}
         <div style={{ background:'linear-gradient(135deg,#FDF6E3,#FFFBEB)', borderBottom:'1px solid #F0D78C', padding:'18px 20px' }}>
@@ -987,16 +987,11 @@ function VehicleHistoryModal({ v, onClose }) {
 
   return (
     <>
-    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()} style={{ alignItems:'flex-end', padding:0 }}>
-      <div style={{ width:'100%', maxWidth:560, margin:'0 auto', background:'var(--card)', borderRadius:'24px 24px 0 0', maxHeight:'90vh', display:'flex', flexDirection:'column', animation:'slideUp 0.3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.15)' }}>
-
-        {/* Drag handle */}
-        <div style={{ display:'flex', justifyContent:'center', paddingTop:12, paddingBottom:4, flexShrink:0 }}>
-          <div style={{ width:40, height:4, borderRadius:100, background:'var(--border-med)' }}/>
-        </div>
+    <div className="modal-overlay modal-fs" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{ maxWidth:560, padding:0, display:'flex', flexDirection:'column', overflow:'hidden' }}>
 
         {/* Header */}
-        <div style={{ padding:'10px 20px 14px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+        <div style={{ padding:'18px 20px 14px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
               <div style={{ width:46, height:46, borderRadius:14, background:sb, border:`2px solid ${sc}30`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
