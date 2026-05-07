@@ -895,9 +895,69 @@ export function WorkNumModal({ emp, station, sims, onSave, onClose }) {
 // ── Fuel labels (shared) ──────────────────────────────────────
 const FUEL_LABEL_MAP = { empty:'Empty', quarter:'1/4', half:'1/2', three_quarter:'3/4', full:'Full' }
 
+// ── Assign Modal ─────────────────────────────────────────────
+function AssignModal({ v, asgn, emps, station, date, onAssign, onClose }) {
+  const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
+  const sc = VSTATUS_COLORS[v.status]||'#A89880'
+  const sb = VSTATUS_BG[v.status]||'#F5F4F1'
+  return (
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{ maxWidth:420, padding:0, overflow:'hidden' }}>
+        {/* Header */}
+        <div style={{ background:'linear-gradient(135deg,#FDF6E3,#FFFBEB)', borderBottom:'1px solid #F0D78C', padding:'18px 20px' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <div style={{ width:44, height:44, borderRadius:13, background:sb, border:`2px solid ${sc}40`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <Truck size={20} color={sc}/>
+              </div>
+              <div>
+                <div style={{ fontWeight:900, fontSize:18, color:'#1A1612', letterSpacing:'0.04em' }}>{v.plate}</div>
+                <div style={{ fontSize:11, color:'#92400E' }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'} · {date}</div>
+              </div>
+            </div>
+            <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', background:'rgba(0,0,0,0.06)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={15}/></button>
+          </div>
+        </div>
+
+        <div style={{ padding:'20px' }}>
+          {/* Current assignment */}
+          {assignedEmp && (
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', background:'#ECFDF5', border:'1px solid #A7F3D0', borderRadius:12, marginBottom:16 }}>
+              <div style={{ width:38, height:38, borderRadius:10, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:13, color:'white', flexShrink:0 }}>
+                {assignedEmp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:'#065F46', textTransform:'uppercase', letterSpacing:'0.06em' }}>Currently Assigned</div>
+                <div style={{ fontSize:13.5, fontWeight:800, color:'#064E3B', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{assignedEmp.name}</div>
+              </div>
+              <span style={{ fontSize:10, fontWeight:700, color:'#2E7D52', background:'#A7F3D0', borderRadius:100, padding:'2px 8px' }}>Active</span>
+            </div>
+          )}
+
+          <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8 }}>
+            {assignedEmp ? 'Change Driver' : 'Assign Driver'}
+          </div>
+          <DriverSearch
+            employees={emps.filter(e=>e.station_code===station)}
+            value={asgn?.emp_id||''}
+            onChange={id=>{ onAssign(id); onClose() }}
+            placeholder="— Search and select driver —"
+          />
+          {asgn?.emp_id && (
+            <button onClick={()=>{ onAssign(''); onClose() }}
+              style={{ marginTop:10, width:'100%', padding:'10px', borderRadius:10, background:'#FEF2F2', border:'1.5px solid #FECACA', color:'#C0392B', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
+              Remove Assignment
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Vehicle History Modal ─────────────────────────────────────
 function VehicleHistoryModal({ v, onClose }) {
-  const [tab,      setTab]      = useState('assignments')
+  const [tab,      setTab]      = useState('handovers')
   const [asgns,    setAsgns]    = useState([])
   const [handovs,  setHandovs]  = useState([])
   const [loading,  setLoading]  = useState(true)
@@ -927,100 +987,84 @@ function VehicleHistoryModal({ v, onClose }) {
 
   return (
     <>
-    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal" style={{ maxWidth:520 }}>
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()} style={{ alignItems:'flex-end', padding:0 }}>
+      <div style={{ width:'100%', maxWidth:560, margin:'0 auto', background:'var(--card)', borderRadius:'24px 24px 0 0', maxHeight:'90vh', display:'flex', flexDirection:'column', animation:'slideUp 0.3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.15)' }}>
+
+        {/* Drag handle */}
+        <div style={{ display:'flex', justifyContent:'center', paddingTop:12, paddingBottom:4, flexShrink:0 }}>
+          <div style={{ width:40, height:4, borderRadius:100, background:'var(--border-med)' }}/>
+        </div>
+
         {/* Header */}
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:46, height:46, borderRadius:14, background:sb, border:`1.5px solid ${sc}30`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-              <Truck size={20} color={sc}/>
+        <div style={{ padding:'10px 20px 14px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <div style={{ width:46, height:46, borderRadius:14, background:sb, border:`2px solid ${sc}30`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <Truck size={21} color={sc}/>
+              </div>
+              <div>
+                <div style={{ fontWeight:900, fontSize:20, color:'var(--text)', letterSpacing:'0.04em', lineHeight:1 }}>{v.plate}</div>
+                <div style={{ fontSize:11.5, color:'var(--text-muted)', marginTop:3 }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
+              </div>
             </div>
-            <div>
-              <div style={{ fontWeight:900, fontSize:18, color:'var(--text)', letterSpacing:'0.04em' }}>{v.plate}</div>
-              <div style={{ fontSize:11.5, color:'var(--text-muted)' }}>{[v.make,v.model,v.year].filter(Boolean).join(' ')||'Vehicle'}</div>
-            </div>
+            <button onClick={onClose} style={{ width:34, height:34, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)' }}><X size={16}/></button>
           </div>
-          <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={16}/></button>
+
+          {/* Tabs */}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginTop:14, background:'var(--bg-alt)', borderRadius:14, padding:4 }}>
+            {[['handovers','Handovers',ArrowLeftRight,handovs.length],['assignments','Assignments',Calendar,asgns.length]].map(([id,label,Icon,count])=>(
+              <button key={id} onClick={()=>setTab(id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', borderRadius:10, border:'none', background:tab===id?'var(--card)':'transparent', color:tab===id?'var(--text)':'var(--text-muted)', fontWeight:tab===id?700:500, fontSize:13, cursor:'pointer', boxShadow:tab===id?'0 2px 8px rgba(0,0,0,0.08)':'none', transition:'all 0.15s', fontFamily:'inherit' }}>
+                <Icon size={14}/>
+                {label}
+                <span style={{ fontSize:10.5, fontWeight:700, color:tab===id?'#B8860B':'var(--text-muted)', background:tab===id?'#FDF6E3':'var(--border)', borderRadius:100, padding:'1px 7px', minWidth:20, textAlign:'center' }}>{loading?'…':count}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div style={{ display:'flex', gap:4, background:'var(--bg-alt)', borderRadius:12, padding:3, marginBottom:14 }}>
-          {[['assignments','Assignments',Calendar],['handovers','Handovers',ArrowLeftRight]].map(([id,label,Icon])=>(
-            <button key={id} onClick={()=>setTab(id)}
-              style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'8px 10px', borderRadius:9, border:'none', background:tab===id?'var(--card)':'transparent', color:tab===id?'var(--text)':'var(--text-muted)', fontWeight:tab===id?700:500, fontSize:12.5, cursor:'pointer', boxShadow:tab===id?'0 1px 4px rgba(0,0,0,0.1)':'none', transition:'all 0.15s', fontFamily:'inherit' }}>
-              <Icon size={13}/> {label}
-              <span style={{ fontSize:10, fontWeight:700, color:tab===id?'var(--gold)':'var(--text-muted)', background:tab===id?'var(--amber-bg)':'var(--border)', borderRadius:20, padding:'0px 6px', marginLeft:2 }}>
-                {id==='assignments'?asgns.length:handovs.length}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <div style={{ maxHeight:400, overflowY:'auto' }}>
+        {/* Scrollable content */}
+        <div style={{ overflowY:'auto', flex:1, padding:'14px 16px 24px' }}>
           {loading ? (
-            <div style={{ padding:'30px 0', textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>Loading history…</div>
-          ) : tab==='assignments' ? (
-            asgns.length===0 ? (
-              <div style={{ padding:'30px 0', textAlign:'center', color:'var(--text-muted)' }}>
-                <Calendar size={32} style={{ margin:'0 auto 10px', display:'block', opacity:0.2 }}/>
-                <div style={{ fontSize:13, fontWeight:600 }}>No assignment history</div>
-              </div>
-            ) : (
-              <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
-                {asgns.map((a,i)=>(
-                  <div key={a.id||i} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:11, background:'var(--bg-alt)', border:'1px solid var(--border)', animation:`slideUp 0.2s ${Math.min(i,15)*0.03}s ease both` }}>
-                    <div style={{ width:36, height:36, borderRadius:10, background:a.emp_id?'linear-gradient(135deg,#FDF6E3,#FEF3D0)':'var(--bg-alt)', border:a.emp_id?'1px solid #F0D78C':'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:a.emp_id?'#B8860B':'var(--text-muted)', flexShrink:0 }}>
-                      {a.emp_id?(a.driver_name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase():'—'}
-                    </div>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div onClick={() => openEmp(a.emp_id)} style={{ fontSize:13, fontWeight:700, color:a.emp_id?'#B8860B':'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', cursor:a.emp_id?'pointer':'default', textDecoration:a.emp_id?'underline':'none', textUnderlineOffset:2 }}>{a.driver_name||'— Unassigned —'}</div>
-                      <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>{a.date?.slice(0,10)}</div>
-                    </div>
-                    <span style={{ fontSize:9.5, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:5, padding:'2px 7px', fontWeight:700, flexShrink:0 }}>{a.station_code}</span>
-                  </div>
-                ))}
-              </div>
-            )
-          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {[1,2,3].map(i=><div key={i} className="skeleton" style={{ height:72, borderRadius:14 }}/>)}
+            </div>
+          ) : tab==='handovers' ? (
             handovs.length===0 ? (
-              <div style={{ padding:'30px 0', textAlign:'center', color:'var(--text-muted)' }}>
-                <ArrowLeftRight size={32} style={{ margin:'0 auto 10px', display:'block', opacity:0.2 }}/>
-                <div style={{ fontSize:13, fontWeight:600 }}>No handover history</div>
+              <div style={{ padding:'40px 20px', textAlign:'center' }}>
+                <ArrowLeftRight size={36} style={{ margin:'0 auto 12px', display:'block', opacity:0.15 }}/>
+                <div style={{ fontSize:14, fontWeight:600, color:'var(--text-muted)' }}>No handover history</div>
               </div>
             ) : (
-              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                 {handovs.map((h,i)=>{
                   const isRec = h.type==='received'
+                  const accentColor = isRec?'#10B981':'#EF4444'
+                  const accentBg    = isRec?'#ECFDF5':'#FEF2F2'
+                  const accentBdr   = isRec?'#A7F3D0':'#FECACA'
                   return (
-                    <div key={h.id} style={{ borderRadius:12, overflow:'hidden', border:`1px solid ${isRec?'#A7F3D0':'#FECACA'}`, animation:`slideUp 0.2s ${Math.min(i,15)*0.03}s ease both` }}>
-                      <div style={{ height:3, background:isRec?'#10B981':'#EF4444' }}/>
-                      <div style={{ padding:'10px 12px', display:'flex', gap:10, alignItems:'flex-start' }}>
-                        <div style={{ width:34, height:34, borderRadius:10, background:isRec?'#ECFDF5':'#FEF2F2', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                          {isRec?<ArrowDownToLine size={14} color="#10B981"/>:<ArrowUpFromLine size={14} color="#EF4444"/>}
+                    <div key={h.id} style={{ borderRadius:14, background:'var(--bg-alt)', border:`1px solid ${accentBdr}`, overflow:'hidden', animation:`slideUp 0.25s ${Math.min(i,10)*0.04}s ease both` }}>
+                      <div style={{ height:3, background:accentColor }}/>
+                      <div style={{ padding:'12px 14px' }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:8 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:10, flex:1, minWidth:0 }}>
+                            <div style={{ width:38, height:38, borderRadius:11, background:accentBg, border:`1px solid ${accentBdr}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                              {isRec?<ArrowDownToLine size={16} color={accentColor}/>:<ArrowUpFromLine size={16} color={accentColor}/>}
+                            </div>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ fontSize:10, fontWeight:700, color:accentColor, textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:2 }}>{isRec?'Received':'Returned'}</div>
+                              <button onClick={()=>openEmp(h.emp_id)} style={{ fontSize:14, fontWeight:800, color:'#B8860B', background:'none', border:'none', padding:0, cursor:'pointer', fontFamily:'inherit', textAlign:'left', textDecoration:'underline', textUnderlineOffset:2, maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{h.emp_name||'—'}</button>
+                            </div>
+                          </div>
+                          <div style={{ textAlign:'right', flexShrink:0 }}>
+                            <div style={{ fontSize:12, fontWeight:700, color:'var(--text)' }}>{new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short'})}</div>
+                            <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>{new Date(h.submitted_at).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit'})}</div>
+                          </div>
                         </div>
-                        <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:6, marginBottom:5 }}>
-                            <div>
-                              <div style={{ fontSize:10.5, fontWeight:700, color:isRec?'#10B981':'#EF4444', textTransform:'uppercase', letterSpacing:'0.06em' }}>{isRec?'Received':'Returned'}</div>
-                              <div onClick={() => openEmp(h.emp_id)} style={{ fontSize:13, fontWeight:700, color:'#B8860B', marginTop:1, cursor:'pointer', textDecoration:'underline', textUnderlineOffset:2, display:'inline-block' }}>{h.emp_name}</div>
-                            </div>
-                            <div style={{ fontSize:10.5, color:'var(--text-muted)', textAlign:'right', flexShrink:0 }}>
-                              {new Date(h.submitted_at).toLocaleDateString('en-AE',{day:'numeric',month:'short'})}
-                              <br/>{new Date(h.submitted_at).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit'})}
-                            </div>
-                          </div>
-                          <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-                            {h.fuel_level&&<span style={{ fontSize:10.5, color:'#B45309', background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:5, padding:'1px 7px', fontWeight:600 }}>
-                              Fuel: {FUEL_LABEL_MAP[h.fuel_level]||h.fuel_level}
-                            </span>}
-                            {h.odometer&&<span style={{ fontSize:10.5, color:'#1D4ED8', background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:5, padding:'1px 7px', fontWeight:600 }}>
-                              {Number(h.odometer).toLocaleString()} km
-                            </span>}
-                            {(h.handover_from||h.handover_to)&&<span style={{ fontSize:10.5, color:'var(--text-muted)' }}>
-                              {isRec?'From:':'To:'} {h.handover_from||h.handover_to}
-                            </span>}
-                          </div>
+                        <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:10 }}>
+                          {h.fuel_level&&<span style={{ fontSize:11, color:'#B45309', background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:100, padding:'2px 9px', fontWeight:700 }}>⛽ {FUEL_LABEL_MAP[h.fuel_level]||h.fuel_level}</span>}
+                          {h.odometer&&<span style={{ fontSize:11, color:'#1D4ED8', background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:100, padding:'2px 9px', fontWeight:700 }}>🔢 {Number(h.odometer).toLocaleString()} km</span>}
+                          {(h.handover_from||h.handover_to)&&<span style={{ fontSize:11, color:'var(--text-muted)', background:'var(--border)', borderRadius:100, padding:'2px 9px', fontWeight:600 }}>{isRec?'From':'To'}: {h.handover_from||h.handover_to}</span>}
+                          <span style={{ fontSize:11, fontWeight:700, color:h.status==='completed'?'#2E7D52':h.status==='rejected'?'#C0392B':'#B8860B', background:h.status==='completed'?'#ECFDF5':h.status==='rejected'?'#FEF2F2':'#FDF6E3', border:`1px solid ${h.status==='completed'?'#A7F3D0':h.status==='rejected'?'#FECACA':'#F0D78C'}`, borderRadius:100, padding:'2px 9px', textTransform:'capitalize' }}>{h.status}</span>
                         </div>
                       </div>
                     </div>
@@ -1028,12 +1072,37 @@ function VehicleHistoryModal({ v, onClose }) {
                 })}
               </div>
             )
+          ) : (
+            asgns.length===0 ? (
+              <div style={{ padding:'40px 20px', textAlign:'center' }}>
+                <Calendar size={36} style={{ margin:'0 auto 12px', display:'block', opacity:0.15 }}/>
+                <div style={{ fontSize:14, fontWeight:600, color:'var(--text-muted)' }}>No assignment history</div>
+              </div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                {asgns.map((a,i)=>(
+                  <div key={a.id||i} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:14, background:'var(--bg-alt)', border:'1px solid var(--border)', animation:`slideUp 0.25s ${Math.min(i,10)*0.04}s ease both` }}>
+                    <div style={{ width:40, height:40, borderRadius:12, background:a.emp_id?'linear-gradient(135deg,#FDF6E3,#FEF3D0)':'var(--bg-alt)', border:a.emp_id?'2px solid #F0D78C':'2px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color:a.emp_id?'#B8860B':'var(--text-muted)', flexShrink:0 }}>
+                      {a.emp_id?(a.driver_name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase():'—'}
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      {a.emp_id
+                        ? <button onClick={()=>openEmp(a.emp_id)} style={{ fontSize:14, fontWeight:800, color:'#B8860B', background:'none', border:'none', padding:0, cursor:'pointer', fontFamily:'inherit', textDecoration:'underline', textUnderlineOffset:2, textAlign:'left', maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{a.driver_name}</button>
+                        : <div style={{ fontSize:13, fontWeight:600, color:'var(--text-muted)' }}>— Unassigned —</div>
+                      }
+                      <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:2 }}>{a.date?.slice(0,10)}</div>
+                    </div>
+                    <span style={{ fontSize:10, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:100, padding:'3px 9px', fontWeight:700, flexShrink:0 }}>{a.station_code}</span>
+                  </div>
+                ))}
+              </div>
+            )
           )}
         </div>
       </div>
     </div>
     {empModal && <EmpDetailModal emp={empModal} sims={[]} onClose={() => setEmpModal(null)}/>}
-  </>
+    </>
   )
 }
 
@@ -1048,21 +1117,19 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
 
   return (
     <>
-      <div style={{
-        background:'var(--card)', borderRadius:16,
-        border:`1.5px solid ${bc}`,
-        boxShadow:'var(--shadow)',
-        transition:'transform 0.15s, box-shadow 0.15s',
-      }}
+      <div style={{ background:'var(--card)', borderRadius:16, border:`1.5px solid ${bc}`, boxShadow:'var(--shadow)', transition:'transform 0.15s, box-shadow 0.15s', overflow:'hidden' }}
         onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='var(--shadow-md)' }}
         onMouseLeave={e=>{ e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='var(--shadow)' }}>
 
-        <div style={{ padding:'15px 16px 13px' }}>
+        {/* ── Top accent bar ── */}
+        <div style={{ height:3, background:hasHandover?'#10B981':sc }}/>
+
+        <div style={{ padding:'14px 16px 12px' }}>
           {/* ── Header ── */}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:11 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <div style={{ width:46, height:46, borderRadius:13, background:sb, border:`1.5px solid ${sc}40`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <Truck size={21} color={sc}/>
+              <div style={{ width:44, height:44, borderRadius:13, background:sb, border:`1.5px solid ${sc}40`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <Truck size={20} color={sc}/>
               </div>
               <div>
                 <div style={{ fontWeight:900, fontSize:17, color:'var(--text)', letterSpacing:'0.03em', lineHeight:1 }}>{v.plate}</div>
@@ -1070,10 +1137,10 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
               </div>
             </div>
             <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:5 }}>
-              <span style={{ fontSize:11, fontWeight:700, color:sc, background:sb, padding:'3px 10px', borderRadius:100, border:`1px solid ${sc}40`, textTransform:'capitalize' }}>{v.status}</span>
+              <span style={{ fontSize:10.5, fontWeight:700, color:sc, background:sb, padding:'3px 10px', borderRadius:100, border:`1px solid ${sc}40`, textTransform:'capitalize' }}>{v.status}</span>
               <div style={{ display:'flex', gap:4 }}>
-                <button onClick={e=>{e.stopPropagation();onEdit()}} style={{ width:28, height:28, borderRadius:'50%', background:'var(--card)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)' }}><Pencil size={11}/></button>
-                <button onClick={e=>{e.stopPropagation();onDelete()}} style={{ width:28, height:28, borderRadius:'50%', background:'#FEF2F2', border:'1px solid #FECACA', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#C0392B' }}><Trash2 size={11}/></button>
+                <button onClick={e=>{e.stopPropagation();onEdit()}} style={{ width:26, height:26, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)' }}><Pencil size={10}/></button>
+                <button onClick={e=>{e.stopPropagation();onDelete()}} style={{ width:26, height:26, borderRadius:'50%', background:'#FEF2F2', border:'1px solid #FECACA', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#C0392B' }}><Trash2 size={10}/></button>
               </div>
             </div>
           </div>
@@ -1085,68 +1152,59 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
             </div>
           )}
 
-          {/* ── Handover status ── */}
+          {/* ── Handover / live driver status ── */}
           {hasHandover ? (
-            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 11px', background:'#ECFDF5', border:'1px solid #A7F3D0', borderRadius:10 }}>
-              <ArrowLeftRight size={13} color="#2E7D52" style={{ flexShrink:0 }}/>
+            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 11px', background:'#ECFDF5', border:'1px solid #A7F3D0', borderRadius:10, marginBottom:10 }}>
+              <div style={{ width:8, height:8, borderRadius:'50%', background:'#10B981', flexShrink:0, boxShadow:'0 0 0 3px #A7F3D040' }}/>
               <div style={{ flex:1, minWidth:0 }}>
                 <div style={{ fontSize:12.5, fontWeight:800, color:'#064E3B', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{currentHandover.emp_name}</div>
-                <div style={{ fontSize:10, color:'#065F46' }}>
-                  {new Date(currentHandover.submitted_at).toLocaleString('en-AE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
-                  {currentHandover.fuel_level&&` · ${FUEL_LABEL_MAP[currentHandover.fuel_level]||currentHandover.fuel_level}`}
-                </div>
+                <div style={{ fontSize:10, color:'#065F46' }}>{new Date(currentHandover.submitted_at).toLocaleString('en-AE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}{currentHandover.fuel_level&&` · ${FUEL_LABEL_MAP[currentHandover.fuel_level]||currentHandover.fuel_level}`}</div>
               </div>
               <span style={{ fontSize:9, fontWeight:800, color:'#2E7D52', background:'#A7F3D0', borderRadius:100, padding:'2px 8px', flexShrink:0 }}>Live</span>
             </div>
           ) : (
-            <div style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 11px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 11px', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10, marginBottom:10 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background:'#D1D5DB', flexShrink:0 }}/>
-              <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>No active handover — vehicle available</span>
+              <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>No active handover — available</span>
+            </div>
+          )}
+
+          {/* ── Today's assignment pill ── */}
+          {assignedEmp ? (
+            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 10px', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:10 }}>
+              <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:11, color:'white', flexShrink:0 }}>
+                {assignedEmp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+              </div>
+              <span style={{ fontSize:12, fontWeight:700, color:'#92400E', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{assignedEmp.name}</span>
+              <span style={{ fontSize:9.5, fontWeight:700, color:'#B8860B', background:'rgba(184,134,11,0.12)', borderRadius:100, padding:'2px 7px' }}>Assigned</span>
+            </div>
+          ) : (
+            <div style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 10px', background:'var(--bg-alt)', border:'1px dashed var(--border-med)', borderRadius:10 }}>
+              <Users size={13} color="var(--text-muted)"/>
+              <span style={{ fontSize:11.5, color:'var(--text-muted)', fontStyle:'italic' }}>No driver assigned today</span>
             </div>
           )}
         </div>
 
-        {/* ── Footer: assignment + history ── */}
-        <div style={{ borderTop:'1px solid var(--border)', padding:'10px 14px 12px', background:'var(--bg)' }}>
-          <div style={{ fontSize:9, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:7, display:'flex', alignItems:'center', gap:4 }}>
-            <Clock size={9}/> Assigned — {date}
-          </div>
-
-          {assignedEmp ? (
-            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
-              <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:11, color:'white', flexShrink:0 }}>
-                {assignedEmp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
-              </div>
-              <span style={{ fontSize:12.5, fontWeight:700, color:'#92400E', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{assignedEmp.name}</span>
-              <button onClick={()=>setShowAssign(p=>!p)} style={{ padding:'4px 10px', borderRadius:100, background:'rgba(184,134,11,0.1)', border:'1px solid rgba(184,134,11,0.3)', color:'#B8860B', fontSize:10.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>
-                Change
-              </button>
-            </div>
-          ) : (
-            <div onClick={()=>setShowAssign(p=>!p)} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 11px', background:'var(--bg-alt)', border:`1.5px dashed ${showAssign?'var(--gold)':'var(--border-med)'}`, borderRadius:10, cursor:'pointer', marginBottom:8, transition:'border-color 0.2s' }}>
-              <Users size={13} color="var(--text-muted)"/>
-              <span style={{ fontSize:12, color:'var(--text-muted)', fontStyle:'italic', flex:1 }}>Unassigned — tap to assign</span>
-              <ChevronDown size={13} color="var(--text-muted)" style={{ transition:'transform 0.2s', transform:showAssign?'rotate(180deg)':'none' }}/>
-            </div>
-          )}
-
-          {showAssign&&(
-            <div style={{ marginBottom:8, animation:'slideUp 0.2s ease' }}>
-              <DriverSearch employees={emps.filter(e=>e.station_code===station)} value={asgn?.emp_id||''} onChange={id=>{ onAssign(id); setShowAssign(false) }} placeholder="— Unassigned —"/>
-            </div>
-          )}
-
-          <button onClick={()=>setShowHistModal(true)} style={{ display:'flex', alignItems:'center', gap:6, width:'100%', padding:'8px 12px', borderRadius:10, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', fontSize:12, fontWeight:600, color:'var(--text-sub)', fontFamily:'inherit', transition:'border-color 0.15s, color 0.15s' }}
-            onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--gold)';e.currentTarget.style.color='var(--gold)'}}
-            onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--text-sub)'}}>
-            <History size={12}/> View Full History
-            <ChevronRight size={12} style={{ marginLeft:'auto' }}/>
+        {/* ── Two action buttons ── */}
+        <div style={{ borderTop:'1px solid var(--border)', display:'grid', gridTemplateColumns:'1fr 1fr' }}>
+          <button onClick={()=>setShowAssign(true)}
+            style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'11px', background:'transparent', border:'none', borderRight:'1px solid var(--border)', cursor:'pointer', fontFamily:'inherit', fontSize:12.5, fontWeight:700, color:'#B8860B', transition:'background 0.15s' }}
+            onMouseEnter={e=>e.currentTarget.style.background='#FDF6E320'}
+            onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+            <Users size={13}/> Assign
+          </button>
+          <button onClick={()=>setShowHistModal(true)}
+            style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'11px', background:'transparent', border:'none', cursor:'pointer', fontFamily:'inherit', fontSize:12.5, fontWeight:700, color:'var(--text-sub)', transition:'background 0.15s' }}
+            onMouseEnter={e=>e.currentTarget.style.background='var(--bg-alt)'}
+            onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+            <History size={13}/> History
           </button>
         </div>
       </div>
 
-      {showHistModal&&<VehicleHistoryModal v={v} onClose={()=>setShowHistModal(false)}/>}
-
+      {showAssign && <AssignModal v={v} asgn={asgn} emps={emps} station={station} date={date} onAssign={onAssign} onClose={()=>setShowAssign(false)}/>}
+      {showHistModal && <VehicleHistoryModal v={v} onClose={()=>setShowHistModal(false)}/>}
     </>
   )
 }
