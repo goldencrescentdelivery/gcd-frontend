@@ -121,13 +121,24 @@ export default function HandoverModal({ modal, user, onClose, onSave }) {
     }
 
     if (isReturn) {
-      fetch(`${API}/api/employees/for-handover`, { headers:h })
-        .then(r=>r.json())
-        .then(d => {
-          const all = (d.employees || []).filter(Boolean)
-          setDrivers(all.filter(e => String(e.id) !== String(user?.emp_id)))
-        })
-        .catch(()=>{})
+      const today = new Date().toISOString().slice(0, 10)
+      Promise.all([
+        fetch(`${API}/api/employees/for-handover`, { headers:h }).then(r=>r.json()),
+        fetch(`${API}/api/handovers/current`, { headers:h }).then(r=>r.ok?r.json():{current:[]}),
+        fetch(`${API}/api/vehicles/assignments?date=${today}`, { headers:h }).then(r=>r.ok?r.json():{assignments:[]}),
+      ]).then(([empData, hvData, aData]) => {
+        const all = (empData.employees || []).filter(Boolean)
+        // Drivers who currently hold a vehicle via accepted handover
+        const hvDriverIds = new Set((hvData.current||[]).map(h => String(h.receiver_emp_id)).filter(Boolean))
+        // Drivers with an admin vehicle assignment today
+        const asgnDriverIds = new Set((aData.assignments||[]).filter(a=>a.emp_id).map(a => String(a.emp_id)))
+        setDrivers(all.filter(e =>
+          String(e.id) !== String(user?.emp_id) &&
+          e.station_code === user?.station_code &&
+          !hvDriverIds.has(String(e.id)) &&
+          !asgnDriverIds.has(String(e.id))
+        ))
+      }).catch(()=>{})
     }
   }, [isReturn, user])
 

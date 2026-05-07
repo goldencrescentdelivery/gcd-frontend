@@ -20,6 +20,7 @@ export default function FleetPage() {
   const [modal,          setModal]         = useState(null)
   const [confirmDlg,     setConfirmDlg]    = useState(null)
   const [filterStatus,       setFilterStatus]      = useState('all')
+  const [search,             setSearch]            = useState('')
   const [pendingVerifications, setPendingVerifications] = useState([])
   const [verifying,          setVerifying]         = useState(null)
 
@@ -72,9 +73,19 @@ export default function FleetPage() {
   const inUse    = currentHVs.length
 
   const displayVehs = vehs.filter(v => {
-    if (filterStatus === 'active')   return v.status === 'active'
-    if (filterStatus === 'down')     return v.status !== 'active'
-    if (filterStatus === 'inuse')    return currentHVs.some(h => String(h.vehicle_id)===String(v.id))
+    if (filterStatus === 'active') { if (v.status !== 'active') return false }
+    else if (filterStatus === 'down')   { if (v.status === 'active') return false }
+    else if (filterStatus === 'inuse')  { if (!currentHVs.some(h => String(h.vehicle_id)===String(v.id))) return false }
+    if (search) {
+      const q = search.toLowerCase()
+      const asgn = asgns.find(a => String(a.vehicle_id)===String(v.id))
+      if (
+        !v.plate?.toLowerCase().includes(q) &&
+        !v.make?.toLowerCase().includes(q) &&
+        !v.model?.toLowerCase().includes(q) &&
+        !asgn?.driver_name?.toLowerCase().includes(q)
+      ) return false
+    }
     return true
   })
 
@@ -108,20 +119,17 @@ export default function FleetPage() {
         subtitle="Vehicle status, assignments & handover history"
       />
 
-      {/* Stats + Add */}
-      <div className="fleet-stats">
-        <div className="fleet-stat-grid">
-          {[
-            { l:'Active',  v:active,            c:'#10B981', bg:'#ECFDF5', bc:'#A7F3D0' },
-            { l:'Down',    v:grounded,           c:'#EF4444', bg:'#FEF2F2', bc:'#FCA5A5' },
-            { l:'In Use',  v:inUse,              c:'#3B82F6', bg:'#EFF6FF', bc:'#BFDBFE' },
-            { l:'Total',   v:vehs.length, c:'#6366F1', bg:'#EEF2FF', bc:'#C7D2FE' },
-          ].map(s => (
-            <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:12, padding:'10px', textAlign:'center' }}>
-              <div style={{ fontWeight:900, fontSize:20, color:s.c, lineHeight:1 }}>{s.v}</div>
-              <div style={{ fontSize:9.5, color:s.c, fontWeight:600, marginTop:3, textTransform:'uppercase', letterSpacing:'0.05em' }}>{s.l}</div>
-            </div>
-          ))}
+      {/* Search + Add */}
+      <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+        <div style={{ flex:1, position:'relative' }}>
+          <svg style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', pointerEvents:'none' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input
+            className="input"
+            style={{ paddingLeft:34, fontSize:13 }}
+            placeholder="Search plate, make, model or driver…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
         <button className="btn btn-primary" onClick={() => setModal('vehicle-add')} style={{ borderRadius:20, flexShrink:0, whiteSpace:'nowrap' }}>
           <Plus size={14}/> Add Vehicle

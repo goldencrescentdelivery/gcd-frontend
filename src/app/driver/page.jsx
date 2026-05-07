@@ -34,6 +34,8 @@ function findCurrentVehicle(handovers) {
     !handovers.find(h2 =>
       h2.vehicle_id === h.vehicle_id &&
       h2.type === 'returned' &&
+      h2.status !== 'pending_acceptance' &&
+      h2.status !== 'rejected' &&
       new Date(h2.submitted_at) > new Date(h.submitted_at)
     )
   ) || null
