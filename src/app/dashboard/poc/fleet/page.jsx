@@ -50,10 +50,11 @@ export default function FleetPage() {
   const loadEtisalat = useCallback(async () => {
     try {
       const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
-      const res = await fetch(`${API}/api/etisalat/live`, h)
+      // Call Vercel-side proxy (avoids Railway→Etisalat network block)
+      const res = await fetch(`/api/etisalat/live`, h)
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        console.error('[etisalat] live failed:', res.status, err.detail || err.error)
+        console.error('[etisalat] live failed:', res.status, err.detail || err.error || err.message || err)
         return
       }
       const json = await res.json()
