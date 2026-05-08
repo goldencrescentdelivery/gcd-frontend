@@ -1215,22 +1215,23 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
             </div>
           )}
 
-          {/* ── Cartrack live tracking ── */}
+          {/* ── TouchTracks live tracking ── */}
           {ctTrack && (() => {
-            const ign     = ctTrack.ignition
-            const idling  = ctTrack.idling
-            const spd     = ctTrack.speed ?? 0
-            const roadSpd = ctTrack.road_speed ?? 0
+            const ign     = ctTrack.ignition ?? ctTrack.ignitionStatus
+            const idling  = ctTrack.idling ?? ctTrack.isIdling
+            const spd     = ctTrack.speed ?? ctTrack.currentSpeed ?? 0
+            const roadSpd = ctTrack.road_speed ?? ctTrack.roadSpeed ?? 0
             const speeding = ign && spd > 0 && roadSpd > 0 && spd > roadSpd
-            const odometer = ctTrack.odometer ? Math.round(ctTrack.odometer / 1000) : null
+            const rawOdo   = ctTrack.odometer ?? ctTrack.odometerReading
+            const odometer = rawOdo ? Math.round(rawOdo / 1000) : null
             const rpm      = ctTrack.rpm ?? null
-            const fuelPct  = ctTrack.fuel?.precentage_left ?? null
+            const fuelPct  = ctTrack.fuel?.precentage_left ?? ctTrack.fuelLevel ?? null
             const vext     = ctTrack.vext ? parseFloat(ctTrack.vext) : null
             const tcu      = ctTrack.tcu_percentage ?? null
-            const loc      = ctTrack.location?.position_description
+            const loc      = ctTrack.location?.position_description ?? ctTrack.address ?? ctTrack.location
             const locShort = loc ? loc.split(',').slice(0, 3).join(',').trim() : null
             const driver   = ctTrack.driver
-            const lastSeen = ctTrack.location?.updated || ctTrack.event_ts
+            const lastSeen = ctTrack.location?.updated || ctTrack.lastUpdated || ctTrack.updatedAt || ctTrack.event_ts
 
             const statusLabel = ign ? (idling ? 'IDLING' : spd > 0 ? 'DRIVING' : 'ENGINE ON') : 'STOPPED'
             const statusClr   = ign ? (idling ? '#B45309' : spd > 0 ? '#15803D' : '#1D4ED8') : '#6B7280'
@@ -1284,7 +1285,7 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
                   </div>
                 )}
 
-                {/* Driver from Cartrack */}
+                {/* Driver from TouchTracks */}
                 {driver?.first_name && (
                   <div style={{ background:'#FAFCFF', padding:'7px 12px', borderBottom:`1px solid ${statusBdr}`, display:'flex', alignItems:'center', gap:7 }}>
                     <span style={{ fontSize:13 }}>👤</span>
@@ -1292,7 +1293,7 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
                       <div style={{ fontSize:11.5, fontWeight:700, color:'#1E293B', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{driver.first_name} {driver.last_name}</div>
                       {driver.phone_number && <div style={{ fontSize:9.5, color:'#9CA3AF', marginTop:1 }}>{driver.phone_number}</div>}
                     </div>
-                    <span style={{ fontSize:9, fontWeight:700, color:'#6366F1', background:'#EEF2FF', borderRadius:20, padding:'2px 7px', flexShrink:0 }}>Cartrack</span>
+                    <span style={{ fontSize:9, fontWeight:700, color:'#6366F1', background:'#EEF2FF', borderRadius:20, padding:'2px 7px', flexShrink:0 }}>TouchTracks</span>
                   </div>
                 )}
 
@@ -1353,12 +1354,12 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
 
       {showAssign && <AssignModal v={v} asgn={asgn} emps={emps} allAsgns={allAsgns} station={station} date={date} currentUser={currentUser} onAssign={onAssign} onClose={()=>setShowAssign(false)}/>}
       {showHistModal && <VehicleHistoryModal v={v} onClose={()=>setShowHistModal(false)}/>}
-      {showCtEvents && ctTrack && <CartrackEventsModal registration={ctTrack.registration} plate={v.plate} onClose={()=>setShowCtEvents(false)}/>}
+      {showCtEvents && ctTrack && <TTHistoryModal vehicleId={ctTrack.vehicleId || ctTrack.id} plate={v.plate} onClose={()=>setShowCtEvents(false)}/>}
     </>
   )
 }
 
-// ── Cartrack Events Modal ─────────────────────────────────────
+// ── TouchTracks History Modal ─────────────────────────────────
 const EVENT_COLORS = {
   ROAD_SPEED:       { bg:'#FEE2E2', color:'#DC2626', label:'Road Speed' },
   SPEEDING:         { bg:'#FEE2E2', color:'#DC2626', label:'Speeding' },
@@ -1378,14 +1379,16 @@ function evtStyle(desc) {
   return key ? { ...EVENT_COLORS[key] } : { bg:'#F3F4F6', color:'#6B7280', label: desc.replace(/_/g,' ') }
 }
 
-function CartrackEventsModal({ registration, plate, onClose }) {
+function TTHistoryModal({ vehicleId, plate, onClose }) {
   const [events,  setEvents]  = useState([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
   const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
+  const today = new Date().toISOString().slice(0, 10)
 
   useEffect(() => {
-    fetch(`${API}/api/cartrack/events?registration=${encodeURIComponent(registration)}`, h)
+    if (!vehicleId) { setError('No vehicle ID'); setLoading(false); return }
+    fetch(`${API}/api/touchtracks/history?vehicleId=${encodeURIComponent(vehicleId)}&date=${today}`, h)
       .then(r => r.json())
       .then(d => {
         if (d.error) throw new Error(d.error)
@@ -1393,16 +1396,16 @@ function CartrackEventsModal({ registration, plate, onClose }) {
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
-  }, [registration])
+  }, [vehicleId])
 
   // Compute summary stats from events
   const stats = (() => {
     if (!events.length) return null
-    const odos = events.map(e => e.odometer).filter(Boolean)
+    const odos = events.map(e => e.odometer || e.odometerReading).filter(Boolean)
     const km = odos.length > 1 ? Math.round((Math.max(...odos) - Math.min(...odos)) / 1000) : 0
-    const maxSpd = Math.max(...events.map(e => e.speed || 0))
-    const speedEvents = events.filter(e => e.road_speeding).length
-    const harshEvents = events.filter(e => e.event_description && /HARSH|EXCESSIVE/.test(e.event_description)).length
+    const maxSpd = Math.max(...events.map(e => e.speed || e.currentSpeed || 0))
+    const speedEvents = events.filter(e => e.road_speeding || e.roadSpeeding).length
+    const harshEvents = events.filter(e => (e.event_description || e.eventType || e.eventDescription || '') && /HARSH|EXCESSIVE/.test(e.event_description || e.eventType || e.eventDescription || '')).length
     return { km, maxSpd, speedEvents, harshEvents, total: events.length }
   })()
 
@@ -1416,8 +1419,8 @@ function CartrackEventsModal({ registration, plate, onClose }) {
             <Truck size={18} color="#2563EB"/>
           </div>
           <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontWeight:900, fontSize:16, color:'var(--text)' }}>{plate} — Today's Events</div>
-            <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:1 }}>Cartrack ID: {registration}</div>
+            <div style={{ fontWeight:900, fontSize:16, color:'var(--text)' }}>{plate} — Today's History</div>
+            <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:1 }}>TouchTracks vehicle ID: {vehicleId || '—'}</div>
           </div>
           <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)' }}>
             <X size={14}/>
@@ -1464,23 +1467,33 @@ function CartrackEventsModal({ registration, plate, onClose }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {[...events].sort((a,b) => (b.event_ts||'').localeCompare(a.event_ts||'')).map((ev, i) => {
-                      const st = evtStyle(ev.event_description)
-                      const loc = ev.position_description ? ev.position_description.split(',').slice(0,2).join(',') : '—'
-                      const ts = ev.event_ts ? new Date(ev.event_ts).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—'
+                    {[...events].sort((a,b) => {
+                      const ta = b.dateTime || b.event_ts || b.timestamp || ''
+                      const tb = a.dateTime || a.event_ts || a.timestamp || ''
+                      return ta.localeCompare(tb)
+                    }).map((ev, i) => {
+                      const evDesc = ev.eventType || ev.event_description || ev.eventDescription || ''
+                      const st = evtStyle(evDesc)
+                      const rawLoc = ev.address || ev.position_description || ev.location || ''
+                      const loc = rawLoc ? rawLoc.split(',').slice(0,2).join(',') : '—'
+                      const rawTs = ev.dateTime || ev.event_ts || ev.timestamp || ''
+                      const ts = rawTs ? new Date(rawTs).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—'
+                      const spd = ev.speed ?? ev.currentSpeed ?? null
+                      const roadSpd = ev.road_speed ?? ev.roadSpeed ?? null
+                      const isSpeeding = ev.road_speeding || ev.roadSpeeding || false
                       return (
                         <tr key={i} style={{ borderBottom:'1px solid var(--border)', background: i%2===0?'var(--card)':'var(--bg-alt)' }}>
                           <td style={{ padding:'7px 12px', fontWeight:600, color:'var(--text-sub)', whiteSpace:'nowrap', fontFamily:'monospace', fontSize:11 }}>{ts}</td>
                           <td style={{ padding:'7px 12px' }}>
                             <span style={{ background:st.bg, color:st.color, borderRadius:20, padding:'2px 9px', fontWeight:700, fontSize:10.5, whiteSpace:'nowrap' }}>{st.label}</span>
                           </td>
-                          <td style={{ padding:'7px 12px', fontWeight:700, color: ev.road_speeding ? '#DC2626' : 'var(--text)', whiteSpace:'nowrap' }}>
-                            {ev.speed != null ? ev.speed+' km/h' : '—'}
+                          <td style={{ padding:'7px 12px', fontWeight:700, color: isSpeeding ? '#DC2626' : 'var(--text)', whiteSpace:'nowrap' }}>
+                            {spd != null ? spd+' km/h' : '—'}
                           </td>
                           <td style={{ padding:'7px 12px', color:'var(--text-muted)', whiteSpace:'nowrap' }}>
-                            {ev.road_speed > 0 ? ev.road_speed+' km/h' : '—'}
+                            {roadSpd > 0 ? roadSpd+' km/h' : '—'}
                           </td>
-                          <td style={{ padding:'7px 12px', color:'var(--text-sub)', maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={ev.position_description}>{loc}</td>
+                          <td style={{ padding:'7px 12px', color:'var(--text-sub)', maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={rawLoc}>{loc}</td>
                         </tr>
                       )
                     })}
