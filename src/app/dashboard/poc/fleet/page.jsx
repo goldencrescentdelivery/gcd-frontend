@@ -72,11 +72,12 @@ export default function FleetPage() {
     } catch (e) { console.error('[etisalat] error:', e.message) }
   }, [])
 
-  useEffect(() => {
-    loadEtisalat()
-    const id = setInterval(loadEtisalat, 60_000)
-    return () => clearInterval(id)
-  }, [loadEtisalat])
+  // Etisalat integration temporarily disabled for performance testing
+  // useEffect(() => {
+  //   loadEtisalat()
+  //   const id = setInterval(loadEtisalat, 60_000)
+  //   return () => clearInterval(id)
+  // }, [loadEtisalat])
 
   async function assignVehicle(vId, eId) {
     try {
