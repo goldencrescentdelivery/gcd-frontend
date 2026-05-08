@@ -57,16 +57,17 @@ export default function FleetPage() {
         return
       }
       const json = await res.json()
-      const rows = json.rows || json.result?.rows || []
+      const rows = json.rows || []
       const norm = p => (p || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()
-      const stripEmirate = p => (p || '').replace(/^[A-Za-z]{2,3}-/, '')
       const map = {}
       for (const v of rows) {
         if (!v.name) continue
-        map[norm(v.name)] = v
-        map[norm(stripEmirate(v.name))] = v
+        const base = norm(v.name)
+        map[base] = v
+        // Strip leading 2-3 char emirate prefix e.g. DXB- → AA23965
+        const stripped = norm(v.name.replace(/^[A-Za-z]{2,3}-/, ''))
+        if (stripped !== base) map[stripped] = v
       }
-      console.log('[etisalat] OK — rows:', rows.length)
       setCtMap(map)
     } catch (e) { console.error('[etisalat] error:', e.message) }
   }, [])
