@@ -147,7 +147,7 @@ export default function OfficePage() {
 
   useEffect(() => { load() }, [load])
 
-  const canEdit = ['admin','general_manager','hr'].includes(userRole)
+  const canEdit = ['admin','general_manager','hr','accountant'].includes(userRole)
 
   async function deleteDoc(id) {
     if (!confirm('Delete this document?')) return

@@ -30,6 +30,7 @@ function getQrUrl(value, size = 96) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=1&data=${encodeURIComponent(value)}`
 }
 function buildVerificationBlock(l, origin, size = 96) {
+  if (l.show_qr === false) return ''
   const verifyUrl = getVerifyUrl(l, origin)
   if (!verifyUrl) return ''
   const qrUrl = getQrUrl(verifyUrl, size)
@@ -106,7 +107,7 @@ function buildPrintHTML(l, origin) {
   const showStamp = l.show_stamp !== false
 
   // Inline QR — placed at end of content flow so it only appears on the last page
-  const verifyUrl = getVerifyUrl(l, origin)
+  const verifyUrl = l.show_qr !== false ? getVerifyUrl(l, origin) : ''
   const printQr = verifyUrl ? `
     <div style="display:flex;justify-content:flex-end;margin-top:28px">
       <div style="text-align:center;font-family:Arial,sans-serif">
@@ -256,6 +257,7 @@ export default function LettersPage() {
   const [body,      setBody]      = useState('')
   const [showSign,  setShowSign]  = useState(true)
   const [showStamp, setShowStamp] = useState(true)
+  const [showQr,    setShowQr]    = useState(true)
   const [signerName,     setSignerName]     = useState('')
   const [signerTitle,    setSignerTitle]    = useState('')
   const [signatureData,  setSignatureData]  = useState(null)
@@ -266,7 +268,7 @@ export default function LettersPage() {
     date, to_name: toName, subject, greeting, body,
     ref_no: editingLetter?.ref_no || 'GCD/LTR/PREVIEW',
     id: editingLetter?.id || null,
-    show_sign: showSign, show_stamp: showStamp,
+    show_sign: showSign, show_stamp: showStamp, show_qr: showQr,
     signer_name: signerName, signer_title: signerTitle, signature_data: signatureData,
   }
   const SCALE = 0.61
@@ -280,7 +282,7 @@ export default function LettersPage() {
   function resetForm() {
     setDate(TODAY()); setToName(''); setSubject('')
     setGreeting('Dear Sir / Madam,'); setBody('')
-    setShowSign(true); setShowStamp(true)
+    setShowSign(true); setShowStamp(true); setShowQr(true)
     setSignerName(''); setSignerTitle(''); setSignatureData(null)
     setEditingId(null); setSubmitted(false)
   }
@@ -352,6 +354,7 @@ export default function LettersPage() {
     setBody(letter.body || '')
     setShowSign(letter.show_sign !== false)
     setShowStamp(letter.show_stamp !== false)
+    setShowQr(letter.show_qr !== false)
     setSignerName(letter.signer_name || '')
     setSignerTitle(letter.signer_title || '')
     setSignatureData(letter.signature_data || null)
@@ -366,7 +369,7 @@ export default function LettersPage() {
     try {
       const payload = {
         date, to_name: toName || null, subject: subject || null, greeting, body,
-        show_sign: showSign, show_stamp: showStamp,
+        show_sign: showSign, show_stamp: showStamp, show_qr: showQr,
         signer_name: signerName || null,
         signer_title: signerTitle || null,
         signature_data: signatureData || null,
@@ -515,6 +518,7 @@ export default function LettersPage() {
             <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Letter Options</div>
             <Toggle checked={showSign}  onChange={setShowSign}  label="Include Signature"/>
             <Toggle checked={showStamp} onChange={setShowStamp} label="Include Stamp"/>
+            <Toggle checked={showQr}    onChange={setShowQr}    label="Include QR Code"/>
           </div>
 
           {/* Signature details */}

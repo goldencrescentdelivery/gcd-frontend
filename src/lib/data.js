@@ -34,9 +34,11 @@ export const NAV = [
 
   // ── Finance ───────────────────────────────────────────────────
   { type:'section', label:'Finance', roles:['admin','accountant','general_manager','hr','poc'] },
-  { label:'Payroll',    href:'/dashboard/finance/payroll',    icon:'Wallet',   roles:['admin','accountant'] },
-  { label:'Expenses',   href:'/dashboard/finance/expenses',   icon:'Receipt',  roles:['admin','accountant'] },
-  { label:'Petty Cash', href:'/dashboard/finance/petty-cash', icon:'Banknote', roles:['admin','accountant','general_manager','hr','poc'] },
+  { label:'Payroll',          href:'/dashboard/finance/payroll',    icon:'Wallet',     roles:['admin','accountant'] },
+  { label:'Expenses',         href:'/dashboard/finance/expenses',   icon:'Receipt',    roles:['admin','accountant'] },
+  { label:'Petty Cash',       href:'/dashboard/finance/petty-cash', icon:'Banknote',   roles:['admin','accountant','general_manager','hr','poc'] },
+  { label:'Staff Attendance', href:'/dashboard/finance/attendance', icon:'Clock',      roles:['admin','accountant'] },
+  { label:'SIM Cards',        href:'/dashboard/finance/sims',       icon:'Smartphone', roles:['admin','accountant'] },
 
   // ── Operations ────────────────────────────────────────────────
   { type:'section', label:'Operations', roles:['admin','general_manager','poc','manager'] },
