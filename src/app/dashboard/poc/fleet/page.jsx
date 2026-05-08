@@ -46,18 +46,16 @@ export default function FleetPage() {
 
   useEffect(() => { load() }, [load])
 
-  // Etisalat live tracking — called directly from the browser (only UAE browsers can reach the server)
+  // Etisalat live tracking — proxied via Railway backend (needs EU region to reach Etisalat UAE)
   const loadEtisalat = useCallback(async () => {
     try {
-      const res = await fetch(
-        'https://iotmobility.etisalatdigital.ae/Thingworx/Things/PostgreSQL/Services/GetVehicleByClientNameAndFilter_APIByAppKey',
-        {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'appKey': '8a3745a8-f755-417d-8049-e57d13041789' },
-          body:    JSON.stringify({ Username: 'GCDS', PageNumber: '1', PlateFilter: '' }),
-        }
-      )
-      if (!res.ok) { console.error('[etisalat] HTTP', res.status); return }
+      const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
+      const res = await fetch(`${API}/api/etisalat/live`, h)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        console.error('[etisalat] failed:', res.status, err.detail || err.error)
+        return
+      }
       const json = await res.json()
       const rows = json.rows || json.result?.rows || []
       const norm = p => (p || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()
@@ -68,9 +66,9 @@ export default function FleetPage() {
         map[norm(v.name)] = v
         map[norm(stripEmirate(v.name))] = v
       }
-      console.log('[etisalat] direct OK — rows:', rows.length)
+      console.log('[etisalat] OK — rows:', rows.length)
       setCtMap(map)
-    } catch (e) { console.error('[etisalat] direct error:', e.message) }
+    } catch (e) { console.error('[etisalat] error:', e.message) }
   }, [])
 
   useEffect(() => {
