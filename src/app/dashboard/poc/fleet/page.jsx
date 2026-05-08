@@ -32,9 +32,9 @@ export default function FleetPage() {
       const [v, a, e, hv, pv] = await Promise.all([
         fetch(`${API}/api/vehicles`, h).then(r => r.json()),
         fetch(`${API}/api/vehicles/assignments?date=${date}`, h).then(r => r.json()),
-        fetch(`${API}/api/employees`, h).then(r => r.json()),
+        fetch(`${API}/api/employees/for-handover`, h).then(r => r.json()),
         fetch(`${API}/api/handovers/current`, h).then(r => r.ok ? r.json() : { current:[] }),
-        fetch(`${API}/api/handovers?status=poc_pending`, h).then(r => r.ok ? r.json() : { handovers:[] }),
+        fetch(`${API}/api/handovers?status=poc_pending&limit=50`, h).then(r => r.ok ? r.json() : { handovers:[] }),
       ])
       setVehs(v.vehicles||[])
       setAsgns(a.assignments||[])
@@ -42,7 +42,7 @@ export default function FleetPage() {
       setCurrentHVs(hv.current||[])
       setPendingVerifications((pv.handovers||[]).filter(h => h.status === 'poc_pending' && h.type === 'returned'))
     } catch(e) { console.error(e) } finally { setLoading(false) }
-  }, [date, station])
+  }, [date])
 
   useEffect(() => { load() }, [load])
 
@@ -215,7 +215,7 @@ export default function FleetPage() {
                   {[pv.photo_1, pv.photo_2, pv.photo_3, pv.photo_4].map((url, i) => (
                     url
                       ? <a key={i} href={url} target="_blank" rel="noreferrer" style={{ aspectRatio:'1', borderRadius:9, overflow:'hidden', display:'block', border:'1px solid #DDD6FE' }}>
-                          <img src={url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                          <img src={url} alt="" loading="lazy" decoding="async" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
                         </a>
                       : <div key={i} style={{ aspectRatio:'1', borderRadius:9, background:'#EDE9FE', border:'1px dashed #C4B5FD', display:'flex', alignItems:'center', justifyContent:'center' }}>
                           <span style={{ fontSize:9, color:'#A78BFA' }}>{['F','B','L','R'][i]}</span>
