@@ -22,6 +22,12 @@ const DED_LABELS  = { traffic_fine:'Traffic Fine', iloe_fee:'ILOE Fee', iloe_fin
 
 function fmt(n)  { return Number(n || 0).toLocaleString('en-US') }
 function fmtA(n) { return `AED ${fmt(n)}` }
+function localDateKey(date = new Date()) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
 
 function authHeader() {
   return { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` }
@@ -445,6 +451,23 @@ export default function DriverPortal() {
       .then(r => r.json()).then(d => setPendingHandovers(d.pending || [])).catch(() => {})
   }, [])
 
+  const refreshAssignments = useCallback(() => {
+    if (!user?.emp_id) return
+    const today = localDateKey()
+    const h = authHeader()
+    Promise.all([
+      fetch(`${API}/api/vehicles/assignments?date=${today}&emp_id=${encodeURIComponent(user.emp_id)}`, { headers: h })
+        .then(r => r.json()).catch(() => ({ assignments: [] })),
+      fetch(`${API}/api/vehicles/assignments/history?emp_id=${encodeURIComponent(user.emp_id)}&limit=60`, { headers: h })
+        .then(r => r.json()).catch(() => ({ history: [] })),
+    ]).then(([current, history]) => {
+      const direct = (current.assignments || []).find(a => String(a.emp_id) === String(user.emp_id))
+      const list = history.history || []
+      setAsgHistory(list)
+      setTodayAsgn(direct || list.find(a => a.date?.slice(0, 10) === today) || null)
+    }).catch(() => {})
+  }, [user?.emp_id])
+
   useEffect(() => {
     if (authLoading) return
     if (!user) { router.replace('/login'); return }
@@ -452,7 +475,7 @@ export default function DriverPortal() {
 
     const hdr   = authHeader()
     const month = new Date().toISOString().slice(0, 7)
-    const today = new Date().toISOString().slice(0, 10)
+    const today = localDateKey()
     const ctrl  = new AbortController()
 
     Promise.all([
@@ -482,10 +505,14 @@ export default function DriverPortal() {
     })
     bg(`/api/handovers/pending`,                                             d => setPendingHandovers(d.pending || []))
     bg(`/api/performance/${user.emp_id}`,                                    d => setPerf(d.history?.[0] || null))
-    bg(`/api/vehicles/assignments/history?emp_id=${user.emp_id}&limit=60`,   d => {
+    bg(`/api/vehicles/assignments?date=${today}&emp_id=${encodeURIComponent(user.emp_id)}`, d => {
+      const direct = (d.assignments || []).find(a => String(a.emp_id) === String(user.emp_id))
+      setTodayAsgn(direct || null)
+    })
+    bg(`/api/vehicles/assignments/history?emp_id=${encodeURIComponent(user.emp_id)}&limit=60`,   d => {
       const list = d.history || []
       setAsgHistory(list)
-      setTodayAsgn(list.find(a => a.date?.slice(0, 10) === today) || null)
+      setTodayAsgn(prev => prev || list.find(a => a.date?.slice(0, 10) === today) || null)
     })
 
     return () => ctrl.abort()
@@ -504,6 +531,7 @@ export default function DriverPortal() {
     'handover:completed':    () => { refreshPending(); refreshHandovers() },
     'handover:poc-approved': () => { refreshPending(); refreshHandovers() },
     'handover:poc-rejected': () => { refreshPending(); refreshHandovers() },
+    'vehicle:assigned':      () => { refreshAssignments() },
   })
 
   useEffect(() => {
@@ -556,7 +584,7 @@ export default function DriverPortal() {
   const net          = payroll ? Number(payroll.base_salary||0) + Number(payroll.bonus_total||0) - Number(payroll.deduction_total||0) : 0
   const grade        = perf ? getGrade(perf.total_score) : null
   const p            = profile
-  const today2       = mounted ? new Date().toISOString().slice(0,10) : ''
+  const today2       = mounted ? localDateKey() : ''
   const monthLabel   = new Date().toLocaleString('en-US',{month:'long',year:'numeric'}).toUpperCase()
   const alertCount   = [p?.visa_expiry, p?.license_expiry, p?.iloe_expiry].filter(expiryAlert).length
   const annualUsed   = leaves.filter(l=>l.type==='Annual'&&l.status==='approved').reduce((s,l)=>s+(l.days||0),0)
