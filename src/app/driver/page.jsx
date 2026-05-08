@@ -456,7 +456,7 @@ export default function DriverPortal() {
     const today = localDateKey()
     const h = authHeader()
     Promise.all([
-      fetch(`${API}/api/vehicles/assignments?date=${today}&emp_id=${encodeURIComponent(user.emp_id)}`, { headers: h })
+      fetch(`${API}/api/vehicles/assignments/current?date=${today}&emp_id=${encodeURIComponent(user.emp_id)}`, { headers: h })
         .then(r => r.json()).catch(() => ({ assignments: [] })),
       fetch(`${API}/api/vehicles/assignments/history?emp_id=${encodeURIComponent(user.emp_id)}&limit=60`, { headers: h })
         .then(r => r.json()).catch(() => ({ history: [] })),
@@ -505,7 +505,7 @@ export default function DriverPortal() {
     })
     bg(`/api/handovers/pending`,                                             d => setPendingHandovers(d.pending || []))
     bg(`/api/performance/${user.emp_id}`,                                    d => setPerf(d.history?.[0] || null))
-    bg(`/api/vehicles/assignments?date=${today}&emp_id=${encodeURIComponent(user.emp_id)}`, d => {
+    bg(`/api/vehicles/assignments/current?date=${today}&emp_id=${encodeURIComponent(user.emp_id)}`, d => {
       const direct = (d.assignments || []).find(a => String(a.emp_id) === String(user.emp_id))
       setTodayAsgn(direct || null)
     })
