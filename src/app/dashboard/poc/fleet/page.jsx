@@ -46,32 +46,31 @@ export default function FleetPage() {
 
   useEffect(() => { load() }, [load])
 
-  // Etisalat live tracking — fetch once then refresh every 60 s
+  // Etisalat live tracking — called directly from the browser (only UAE browsers can reach the server)
   const loadEtisalat = useCallback(async () => {
     try {
-      const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
-      // Call Vercel-side proxy (avoids Railway→Etisalat network block)
-      const res = await fetch(`/api/etisalat/live`, h)
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        console.error('[etisalat] live failed:', res.status, err.detail || err.error || err.message || err)
-        return
-      }
+      const res = await fetch(
+        'https://iotmobility.etisalatdigital.ae/Thingworx/Things/PostgreSQL/Services/GetVehicleByClientNameAndFilter_APIByAppKey',
+        {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'appKey': '8a3745a8-f755-417d-8049-e57d13041789' },
+          body:    JSON.stringify({ Username: 'GCDS', PageNumber: '1', PlateFilter: '' }),
+        }
+      )
+      if (!res.ok) { console.error('[etisalat] HTTP', res.status); return }
       const json = await res.json()
-      // ThingWorx returns { rows: [...] } at top level or wrapped in result/data
-      const rows = json.rows || json.result?.rows || json.data?.rows || (Array.isArray(json.data) ? json.data : [])
+      const rows = json.rows || json.result?.rows || []
       const norm = p => (p || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()
-      // Etisalat plates include emirate prefix (e.g. "DXB-AA-23965")
-      // Our DB stores without prefix (e.g. "AA-23965"), so index by both forms
       const stripEmirate = p => (p || '').replace(/^[A-Za-z]{2,3}-/, '')
       const map = {}
       for (const v of rows) {
         if (!v.name) continue
-        map[norm(v.name)] = v              // full key  e.g. DXBAA23965
-        map[norm(stripEmirate(v.name))] = v // no-prefix e.g. AA23965
+        map[norm(v.name)] = v
+        map[norm(stripEmirate(v.name))] = v
       }
+      console.log('[etisalat] direct OK — rows:', rows.length)
       setCtMap(map)
-    } catch (e) { console.error('[etisalat] load error', e) }
+    } catch (e) { console.error('[etisalat] direct error:', e.message) }
   }, [])
 
   useEffect(() => {
