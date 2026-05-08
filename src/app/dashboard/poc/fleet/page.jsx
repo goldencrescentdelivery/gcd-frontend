@@ -23,7 +23,7 @@ export default function FleetPage() {
   const [search,             setSearch]            = useState('')
   const [pendingVerifications, setPendingVerifications] = useState([])
   const [verifying,          setVerifying]         = useState(null)
-  const [ctMap,              setCtMap]             = useState({}) // normalized plate → cartrack status
+  const [ctMap,              setCtMap]             = useState({}) // normalized plate → touchtracks live data
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -46,25 +46,25 @@ export default function FleetPage() {
 
   useEffect(() => { load() }, [load])
 
-  // Cartrack live tracking — fetch once then refresh every 60 s
-  const loadCartrack = useCallback(async () => {
+  // TouchTracks live tracking — fetch once then refresh every 60 s
+  const loadTouchTracks = useCallback(async () => {
     try {
       const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
-      const res = await fetch(`${API}/api/cartrack/status`, h)
+      const res = await fetch(`${API}/api/touchtracks/live`, h)
       if (!res.ok) return
       const json = await res.json()
       const norm = p => (p || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()
       const map = {}
-      for (const v of (json.data || [])) map[norm(v.registration)] = v
+      for (const v of (json.data || [])) map[norm(v.vehiclePlateNumber)] = v
       setCtMap(map)
-    } catch { /* silently ignore cartrack errors */ }
+    } catch { /* silently ignore tracking errors */ }
   }, [])
 
   useEffect(() => {
-    loadCartrack()
-    const id = setInterval(loadCartrack, 60_000)
+    loadTouchTracks()
+    const id = setInterval(loadTouchTracks, 60_000)
     return () => clearInterval(id)
-  }, [loadCartrack])
+  }, [loadTouchTracks])
 
   async function assignVehicle(vId, eId) {
     try {
