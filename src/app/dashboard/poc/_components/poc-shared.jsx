@@ -1152,7 +1152,7 @@ function VehicleHistoryModal({ v, onClose }) {
 }
 
 // ── Vehicle Card ──────────────────────────────────────────────
-export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, allAsgns, currentUser, ctTrack, onEdit, onDelete, onAssign }) {
+export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, allAsgns, currentUser, onEdit, onDelete, onAssign }) {
   const [showAssign,    setShowAssign]    = useState(false)
   const [showHistModal, setShowHistModal] = useState(false)
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
@@ -1214,73 +1214,6 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
             </div>
           )}
 
-          {/* ── Etisalat live tracking ── */}
-          {ctTrack && (() => {
-            // Etisalat status codes: 0=no signal, 1=moving, 2=idle, 3=stop, 4=towing
-            const etStatus = ctTrack.status ?? ctTrack.acc ?? 0
-            const spd      = ctTrack.gpsspeed ?? ctTrack.speed ?? 0
-            const odometer = ctTrack.virtualodometer ?? null  // already in km
-            const loc      = ctTrack.address || null
-            const locShort = loc ? loc.split(',').slice(0, 3).join(',').trim() : null
-            const driverName = ctTrack.drivername && ctTrack.drivername !== 'N/A' ? ctTrack.drivername : null
-            const duration   = ctTrack.duration || null
-            const lastSeen   = ctTrack.lastcommunication || null
-
-            const STATUS_MAP = {
-              0: { label:'NO SIGNAL', clr:'#9CA3AF', bg:'#F3F4F6', bdr:'#E5E7EB' },
-              1: { label:'DRIVING',   clr:'#15803D', bg:'#DCFCE7', bdr:'#A7F3D0' },
-              2: { label:'IDLING',    clr:'#B45309', bg:'#FEF3C7', bdr:'#FDE68A' },
-              3: { label:'STOPPED',   clr:'#6B7280', bg:'#F3F4F6', bdr:'#E5E7EB' },
-              4: { label:'TOWING',    clr:'#D97706', bg:'#FFFBEB', bdr:'#FDE68A' },
-            }
-            const { label:statusLabel, clr:statusClr, bg:statusBg, bdr:statusBdr } = STATUS_MAP[etStatus] || STATUS_MAP[0]
-
-            return (
-              <div style={{ border:`1.5px solid ${statusBdr}`, borderRadius:12, overflow:'hidden', marginBottom:10 }}>
-                {/* Status bar */}
-                <div style={{ background:statusBg, padding:'7px 12px', display:'flex', alignItems:'center', gap:8 }}>
-                  <div style={{ width:8, height:8, borderRadius:'50%', background:statusClr, flexShrink:0, boxShadow:etStatus!==0?`0 0 0 3px ${statusClr}25`:undefined }}/>
-                  <span style={{ fontWeight:800, fontSize:11.5, color:statusClr, flex:1, letterSpacing:'0.05em' }}>{statusLabel}</span>
-                  {spd > 0 && (
-                    <span style={{ fontWeight:800, fontSize:13.5, color:'#1D4ED8' }}>
-                      {spd} <span style={{ fontSize:10, fontWeight:600 }}>km/h</span>
-                    </span>
-                  )}
-                  {duration && <span style={{ fontSize:9.5, color:statusClr, fontWeight:700 }}>{duration}</span>}
-                </div>
-
-                {/* Odometer */}
-                {odometer !== null && (
-                  <div style={{ background:'#FAFCFF', padding:'8px 12px', borderBottom:`1px solid ${statusBdr}`, display:'flex', alignItems:'center', gap:6 }}>
-                    <span style={{ fontSize:9, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.05em' }}>Odometer</span>
-                    <span style={{ marginLeft:'auto', fontSize:12, fontWeight:800, color:'#1E293B' }}>{Number(odometer).toLocaleString()} km</span>
-                  </div>
-                )}
-
-                {/* Driver */}
-                {driverName && (
-                  <div style={{ background:'#FAFCFF', padding:'7px 12px', borderBottom:`1px solid ${statusBdr}`, display:'flex', alignItems:'center', gap:7 }}>
-                    <span style={{ fontSize:13 }}>👤</span>
-                    <span style={{ fontSize:11.5, fontWeight:700, color:'#1E293B', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{driverName}</span>
-                    <span style={{ fontSize:9, fontWeight:700, color:'#6366F1', background:'#EEF2FF', borderRadius:20, padding:'2px 7px', flexShrink:0 }}>e&amp; tracker</span>
-                  </div>
-                )}
-
-                {/* Location */}
-                {locShort && (
-                  <div style={{ background:'#FAFCFF', padding:'7px 12px', borderBottom:`1px solid ${statusBdr}`, display:'flex', alignItems:'flex-start', gap:6 }}>
-                    <span style={{ fontSize:12, flexShrink:0, marginTop:1 }}>📍</span>
-                    <span style={{ fontSize:10.5, color:'#374151', lineHeight:1.5 }}>{locShort}</span>
-                  </div>
-                )}
-
-                {/* Footer: last seen */}
-                <div style={{ background:'#F0F6FF', padding:'6px 12px' }}>
-                  <span style={{ fontSize:9.5, color:'#6B7280' }}>Updated {lastSeen || '—'}</span>
-                </div>
-              </div>
-            )
-          })()}
 
           {/* ── Today's assignment pill ── */}
           {assignedEmp ? (

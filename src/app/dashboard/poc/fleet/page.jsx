@@ -19,11 +19,10 @@ export default function FleetPage() {
   const [loading,        setLoading]       = useState(true)
   const [modal,          setModal]         = useState(null)
   const [confirmDlg,     setConfirmDlg]    = useState(null)
-  const [filterStatus,       setFilterStatus]      = useState('all')
-  const [search,             setSearch]            = useState('')
+  const [filterStatus,   setFilterStatus]  = useState('all')
+  const [search,         setSearch]        = useState('')
   const [pendingVerifications, setPendingVerifications] = useState([])
-  const [verifying,          setVerifying]         = useState(null)
-  const [ctMap,              setCtMap]             = useState({}) // normalized plate → Etisalat live data
+  const [verifying,      setVerifying]     = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -45,39 +44,6 @@ export default function FleetPage() {
   }, [date])
 
   useEffect(() => { load() }, [load])
-
-  // Etisalat live tracking — proxied via Railway backend (needs EU region to reach Etisalat UAE)
-  const loadEtisalat = useCallback(async () => {
-    try {
-      const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
-      const res = await fetch(`${API}/api/etisalat/live`, h)
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        console.error('[etisalat] failed:', res.status, err.detail || err.error)
-        return
-      }
-      const json = await res.json()
-      const rows = json.rows || []
-      const norm = p => (p || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()
-      const map = {}
-      for (const v of rows) {
-        if (!v.name) continue
-        const base = norm(v.name)
-        map[base] = v
-        // Strip leading 2-3 char emirate prefix e.g. DXB- → AA23965
-        const stripped = norm(v.name.replace(/^[A-Za-z]{2,3}-/, ''))
-        if (stripped !== base) map[stripped] = v
-      }
-      setCtMap(map)
-    } catch (e) { console.error('[etisalat] error:', e.message) }
-  }, [])
-
-  // Etisalat integration temporarily disabled for performance testing
-  // useEffect(() => {
-  //   loadEtisalat()
-  //   const id = setInterval(loadEtisalat, 60_000)
-  //   return () => clearInterval(id)
-  // }, [loadEtisalat])
 
   async function assignVehicle(vId, eId) {
     try {
@@ -124,21 +90,18 @@ export default function FleetPage() {
   })
 
   const FILTERS = [
-    { id:'all',    label:'All',      count:vehs.length },
-    { id:'active', label:'Active',   count:active   },
-    { id:'down',   label:'Down',     count:grounded },
-    { id:'inuse',  label:'In Use',   count:inUse    },
+    { id:'all',    label:'All',    count:vehs.length },
+    { id:'active', label:'Active', count:active   },
+    { id:'down',   label:'Down',   count:grounded },
+    { id:'inuse',  label:'In Use', count:inUse    },
   ]
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:14, animation:'slideUp 0.3s ease' }}>
       <style>{`
-        .fleet-stats { display:flex; align-items:center; gap:10; flex-wrap:wrap; }
-        .fleet-stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; flex:1; min-width:0; }
         .fleet-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
         .fleet-filters { display:flex; gap:4px; overflow-x:auto; }
         @media(max-width:640px){
-          .fleet-stat-grid { grid-template-columns:repeat(2,1fr); }
           .fleet-grid { grid-template-columns:1fr !important; }
           .fleet-filters button { font-size:11px !important; padding:6px 6px !important; }
         }
@@ -276,19 +239,17 @@ export default function FleetPage() {
       ) : (
         <div className="fleet-grid">
           {displayVehs.map((v, i) => {
-            const asgn    = asgns.find(a => String(a.vehicle_id)===String(v.id))
-            const curHV   = currentHVs.find(h => String(h.vehicle_id)===String(v.id))
-            const isDown  = v.status !== 'active'
-            const sc      = VSTATUS_COLORS[v.status]||'#A89880'
-            const sb      = VSTATUS_BG[v.status]||'#F5F4F1'
-            const norm    = p => (p||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase()
-            const ctTrack = ctMap[norm(v.plate)] || null
+            const asgn   = asgns.find(a => String(a.vehicle_id)===String(v.id))
+            const curHV  = currentHVs.find(h => String(h.vehicle_id)===String(v.id))
+            const isDown = v.status !== 'active'
+            const sc     = VSTATUS_COLORS[v.status]||'#A89880'
+            const sb     = VSTATUS_BG[v.status]||'#F5F4F1'
             return (
               <div key={v.id} style={{ animation:`slideUp 0.3s ${Math.min(i,10)*0.05}s ease both` }}>
                 <VehicleCard
                   v={v} asgn={asgn} currentHandover={curHV}
                   isDown={isDown} sc={sc} sb={sb}
-                  date={date} station={station} emps={emps} allAsgns={asgns} currentUser={user} ctTrack={ctTrack}
+                  date={date} station={station} emps={emps} allAsgns={asgns} currentUser={user}
                   onEdit={() => setModal({type:'vehicle-edit',vehicle:v})}
                   onDelete={() => setConfirmDlg({
                     title:'Delete vehicle?',
