@@ -51,7 +51,11 @@ export default function FleetPage() {
     try {
       const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
       const res = await fetch(`${API}/api/etisalat/live`, h)
-      if (!res.ok) return
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        console.error('[etisalat] live failed:', res.status, err.detail || err.error)
+        return
+      }
       const json = await res.json()
       // ThingWorx returns { rows: [...] } at top level or wrapped in result/data
       const rows = json.rows || json.result?.rows || json.data?.rows || (Array.isArray(json.data) ? json.data : [])
