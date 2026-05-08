@@ -1155,7 +1155,6 @@ function VehicleHistoryModal({ v, onClose }) {
 export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, allAsgns, currentUser, ctTrack, onEdit, onDelete, onAssign }) {
   const [showAssign,    setShowAssign]    = useState(false)
   const [showHistModal, setShowHistModal] = useState(false)
-  const [showCtEvents,  setShowCtEvents]  = useState(false)
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
   const hasHandover = !!currentHandover
   const BC = { active:'#A7F3D0', grounded:'#FCA5A5', maintenance:'#FDE68A', sold:'#E5E7EB' }
@@ -1215,85 +1214,55 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
             </div>
           )}
 
-          {/* ── TouchTracks live tracking ── */}
+          {/* ── Etisalat live tracking ── */}
           {ctTrack && (() => {
-            const ign     = ctTrack.ignition ?? ctTrack.ignitionStatus
-            const idling  = ctTrack.idling ?? ctTrack.isIdling
-            const spd     = ctTrack.speed ?? ctTrack.currentSpeed ?? 0
-            const roadSpd = ctTrack.road_speed ?? ctTrack.roadSpeed ?? 0
-            const speeding = ign && spd > 0 && roadSpd > 0 && spd > roadSpd
-            const rawOdo   = ctTrack.odometer ?? ctTrack.odometerReading
-            const odometer = rawOdo ? Math.round(rawOdo / 1000) : null
-            const rpm      = ctTrack.rpm ?? null
-            const fuelPct  = ctTrack.fuel?.precentage_left ?? ctTrack.fuelLevel ?? null
-            const vext     = ctTrack.vext ? parseFloat(ctTrack.vext) : null
-            const tcu      = ctTrack.tcu_percentage ?? null
-            const loc      = ctTrack.location?.position_description ?? ctTrack.address ?? ctTrack.location
+            // Etisalat status codes: 0=no signal, 1=moving, 2=idle, 3=stop, 4=towing
+            const etStatus = ctTrack.status ?? ctTrack.acc ?? 0
+            const spd      = ctTrack.gpsspeed ?? ctTrack.speed ?? 0
+            const odometer = ctTrack.virtualodometer ?? null  // already in km
+            const loc      = ctTrack.address || null
             const locShort = loc ? loc.split(',').slice(0, 3).join(',').trim() : null
-            const driver   = ctTrack.driver
-            const lastSeen = ctTrack.location?.updated || ctTrack.lastUpdated || ctTrack.updatedAt || ctTrack.event_ts
+            const driverName = ctTrack.drivername && ctTrack.drivername !== 'N/A' ? ctTrack.drivername : null
+            const duration   = ctTrack.duration || null
+            const lastSeen   = ctTrack.lastcommunication || null
 
-            const statusLabel = ign ? (idling ? 'IDLING' : spd > 0 ? 'DRIVING' : 'ENGINE ON') : 'STOPPED'
-            const statusClr   = ign ? (idling ? '#B45309' : spd > 0 ? '#15803D' : '#1D4ED8') : '#6B7280'
-            const statusBg    = ign ? (idling ? '#FEF3C7' : spd > 0 ? '#DCFCE7' : '#EFF6FF') : '#F3F4F6'
-            const statusBdr   = ign ? (idling ? '#FDE68A' : spd > 0 ? '#A7F3D0' : '#BFDBFE') : '#E5E7EB'
-
-            const fmtTime = ts => ts ? new Date(ts).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—'
+            const STATUS_MAP = {
+              0: { label:'NO SIGNAL', clr:'#9CA3AF', bg:'#F3F4F6', bdr:'#E5E7EB' },
+              1: { label:'DRIVING',   clr:'#15803D', bg:'#DCFCE7', bdr:'#A7F3D0' },
+              2: { label:'IDLING',    clr:'#B45309', bg:'#FEF3C7', bdr:'#FDE68A' },
+              3: { label:'STOPPED',   clr:'#6B7280', bg:'#F3F4F6', bdr:'#E5E7EB' },
+              4: { label:'TOWING',    clr:'#D97706', bg:'#FFFBEB', bdr:'#FDE68A' },
+            }
+            const { label:statusLabel, clr:statusClr, bg:statusBg, bdr:statusBdr } = STATUS_MAP[etStatus] || STATUS_MAP[0]
 
             return (
               <div style={{ border:`1.5px solid ${statusBdr}`, borderRadius:12, overflow:'hidden', marginBottom:10 }}>
                 {/* Status bar */}
                 <div style={{ background:statusBg, padding:'7px 12px', display:'flex', alignItems:'center', gap:8 }}>
-                  <div style={{ width:8, height:8, borderRadius:'50%', background:statusClr, flexShrink:0, boxShadow:ign?`0 0 0 3px ${statusClr}25`:undefined }}/>
+                  <div style={{ width:8, height:8, borderRadius:'50%', background:statusClr, flexShrink:0, boxShadow:etStatus!==0?`0 0 0 3px ${statusClr}25`:undefined }}/>
                   <span style={{ fontWeight:800, fontSize:11.5, color:statusClr, flex:1, letterSpacing:'0.05em' }}>{statusLabel}</span>
                   {spd > 0 && (
-                    <span style={{ fontWeight:800, fontSize:13.5, color:speeding?'#DC2626':'#1D4ED8' }}>
+                    <span style={{ fontWeight:800, fontSize:13.5, color:'#1D4ED8' }}>
                       {spd} <span style={{ fontSize:10, fontWeight:600 }}>km/h</span>
                     </span>
                   )}
-                  {roadSpd > 0 && <span style={{ fontSize:10, color:'#9CA3AF' }}>/{roadSpd}</span>}
-                  {speeding && <span style={{ fontSize:9, fontWeight:800, color:'#DC2626', background:'#FEE2E2', borderRadius:20, padding:'1px 7px' }}>SPEEDING</span>}
+                  {duration && <span style={{ fontSize:9.5, color:statusClr, fontWeight:700 }}>{duration}</span>}
                 </div>
 
-                {/* Metrics row */}
-                <div style={{ background:'#FAFCFF', display:'grid', gridTemplateColumns:'1fr 1fr 1fr', borderBottom:`1px solid ${statusBdr}` }}>
-                  {[
-                    { label:'Odometer', value: odometer !== null ? odometer.toLocaleString()+' km' : '—' },
-                    { label:'RPM',      value: rpm !== null && rpm > 0 ? rpm.toLocaleString() : '—' },
-                    { label:'LV Battery', value: vext ? vext.toFixed(1)+'V' : (tcu !== null ? tcu+'%' : '—') },
-                  ].map((m, i) => (
-                    <div key={i} style={{ padding:'8px 10px', borderRight: i < 2 ? `1px solid ${statusBdr}` : undefined }}>
-                      <div style={{ fontSize:9, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:2 }}>{m.label}</div>
-                      <div style={{ fontSize:13, fontWeight:800, color:'#1E293B' }}>{m.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Fuel bar */}
-                {fuelPct !== null && (
-                  <div style={{ background:'#FAFCFF', padding:'8px 12px', borderBottom:`1px solid ${statusBdr}` }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
-                      <span style={{ fontSize:9, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.05em' }}>Fuel</span>
-                      <span style={{ marginLeft:'auto', fontSize:11.5, fontWeight:800, color: fuelPct < 15 ? '#DC2626' : fuelPct < 35 ? '#D97706' : '#16A34A' }}>
-                        {fuelPct}%
-                      </span>
-                    </div>
-                    <div style={{ height:6, background:'#E5E7EB', borderRadius:4, overflow:'hidden' }}>
-                      <div style={{ width:`${Math.min(fuelPct,100)}%`, height:'100%', borderRadius:4, transition:'width 0.4s ease',
-                        background: fuelPct < 15 ? '#EF4444' : fuelPct < 35 ? '#F59E0B' : '#22C55E' }}/>
-                    </div>
+                {/* Odometer */}
+                {odometer !== null && (
+                  <div style={{ background:'#FAFCFF', padding:'8px 12px', borderBottom:`1px solid ${statusBdr}`, display:'flex', alignItems:'center', gap:6 }}>
+                    <span style={{ fontSize:9, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.05em' }}>Odometer</span>
+                    <span style={{ marginLeft:'auto', fontSize:12, fontWeight:800, color:'#1E293B' }}>{Number(odometer).toLocaleString()} km</span>
                   </div>
                 )}
 
-                {/* Driver from TouchTracks */}
-                {driver?.first_name && (
+                {/* Driver */}
+                {driverName && (
                   <div style={{ background:'#FAFCFF', padding:'7px 12px', borderBottom:`1px solid ${statusBdr}`, display:'flex', alignItems:'center', gap:7 }}>
                     <span style={{ fontSize:13 }}>👤</span>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontSize:11.5, fontWeight:700, color:'#1E293B', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{driver.first_name} {driver.last_name}</div>
-                      {driver.phone_number && <div style={{ fontSize:9.5, color:'#9CA3AF', marginTop:1 }}>{driver.phone_number}</div>}
-                    </div>
-                    <span style={{ fontSize:9, fontWeight:700, color:'#6366F1', background:'#EEF2FF', borderRadius:20, padding:'2px 7px', flexShrink:0 }}>TouchTracks</span>
+                    <span style={{ fontSize:11.5, fontWeight:700, color:'#1E293B', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{driverName}</span>
+                    <span style={{ fontSize:9, fontWeight:700, color:'#6366F1', background:'#EEF2FF', borderRadius:20, padding:'2px 7px', flexShrink:0 }}>e&amp; tracker</span>
                   </div>
                 )}
 
@@ -1305,14 +1274,9 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
                   </div>
                 )}
 
-                {/* Footer: last seen + events button */}
-                <div style={{ background:'#F0F6FF', padding:'6px 10px', display:'flex', alignItems:'center', gap:8 }}>
-                  <span style={{ fontSize:9.5, color:'#6B7280', flex:1 }}>Updated {fmtTime(lastSeen)}</span>
-                  <button
-                    onClick={e => { e.stopPropagation(); setShowCtEvents(true) }}
-                    style={{ fontSize:10.5, fontWeight:700, color:'#2563EB', background:'#DBEAFE', border:'none', borderRadius:20, padding:'4px 11px', cursor:'pointer', fontFamily:'inherit' }}>
-                    📋 Events Today
-                  </button>
+                {/* Footer: last seen */}
+                <div style={{ background:'#F0F6FF', padding:'6px 12px' }}>
+                  <span style={{ fontSize:9.5, color:'#6B7280' }}>Updated {lastSeen || '—'}</span>
                 </div>
               </div>
             )
@@ -1354,158 +1318,7 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
 
       {showAssign && <AssignModal v={v} asgn={asgn} emps={emps} allAsgns={allAsgns} station={station} date={date} currentUser={currentUser} onAssign={onAssign} onClose={()=>setShowAssign(false)}/>}
       {showHistModal && <VehicleHistoryModal v={v} onClose={()=>setShowHistModal(false)}/>}
-      {showCtEvents && ctTrack && <TTHistoryModal vehicleId={ctTrack.vehicleId || ctTrack.id} plate={v.plate} onClose={()=>setShowCtEvents(false)}/>}
     </>
-  )
-}
-
-// ── TouchTracks History Modal ─────────────────────────────────
-const EVENT_COLORS = {
-  ROAD_SPEED:       { bg:'#FEE2E2', color:'#DC2626', label:'Road Speed' },
-  SPEEDING:         { bg:'#FEE2E2', color:'#DC2626', label:'Speeding' },
-  HARSH_BRAKING:    { bg:'#FEF3C7', color:'#B45309', label:'Harsh Braking' },
-  HARSH_TURNING:    { bg:'#FEF3C7', color:'#B45309', label:'Harsh Turning' },
-  HARSH_ACCEL:      { bg:'#FEF3C7', color:'#B45309', label:'Harsh Accel.' },
-  EXCESSIVE_RPM:    { bg:'#FEF3C7', color:'#B45309', label:'Excessive RPM' },
-  PANIC:            { bg:'#FCE7F3', color:'#9D174D', label:'Panic' },
-  DOOR_OPEN:        { bg:'#EDE9FE', color:'#5B21B6', label:'Door Open' },
-  DOOR_CLOSE:       { bg:'#EDE9FE', color:'#5B21B6', label:'Door Close' },
-  IGNITION_ON:      { bg:'#DCFCE7', color:'#15803D', label:'Ignition On' },
-  IGNITION_OFF:     { bg:'#F3F4F6', color:'#6B7280', label:'Ignition Off' },
-}
-function evtStyle(desc) {
-  if (!desc) return { bg:'#F3F4F6', color:'#6B7280', label: desc || '—' }
-  const key = Object.keys(EVENT_COLORS).find(k => desc.toUpperCase().includes(k.replace(/_/g,' ').split(' ')[0]))
-  return key ? { ...EVENT_COLORS[key] } : { bg:'#F3F4F6', color:'#6B7280', label: desc.replace(/_/g,' ') }
-}
-
-function TTHistoryModal({ vehicleId, plate, onClose }) {
-  const [events,  setEvents]  = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState(null)
-  const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
-  const today = new Date().toISOString().slice(0, 10)
-
-  useEffect(() => {
-    if (!vehicleId) { setError('No vehicle ID'); setLoading(false); return }
-    fetch(`${API}/api/touchtracks/history?vehicleId=${encodeURIComponent(vehicleId)}&date=${today}`, h)
-      .then(r => r.json())
-      .then(d => {
-        if (d.error) throw new Error(d.error)
-        setEvents(d.data || [])
-      })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [vehicleId])
-
-  // Compute summary stats from events
-  const stats = (() => {
-    if (!events.length) return null
-    const odos = events.map(e => e.odometer || e.odometerReading).filter(Boolean)
-    const km = odos.length > 1 ? Math.round((Math.max(...odos) - Math.min(...odos)) / 1000) : 0
-    const maxSpd = Math.max(...events.map(e => e.speed || e.currentSpeed || 0))
-    const speedEvents = events.filter(e => e.road_speeding || e.roadSpeeding).length
-    const harshEvents = events.filter(e => (e.event_description || e.eventType || e.eventDescription || '') && /HARSH|EXCESSIVE/.test(e.event_description || e.eventType || e.eventDescription || '')).length
-    return { km, maxSpd, speedEvents, harshEvents, total: events.length }
-  })()
-
-  return createPortal(
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:3000, display:'flex', alignItems:'center', justifyContent:'center', padding:'16px' }}
-      onClick={e => { if (e.target===e.currentTarget) onClose() }}>
-      <div style={{ background:'var(--card)', borderRadius:24, width:'100%', maxWidth:600, maxHeight:'90vh', display:'flex', flexDirection:'column', overflow:'hidden', animation:'slideUp 0.25s ease' }}>
-        {/* Header */}
-        <div style={{ padding:'18px 20px 14px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
-          <div style={{ width:40, height:40, borderRadius:12, background:'#EFF6FF', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-            <Truck size={18} color="#2563EB"/>
-          </div>
-          <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontWeight:900, fontSize:16, color:'var(--text)' }}>{plate} — Today's History</div>
-            <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:1 }}>TouchTracks vehicle ID: {vehicleId || '—'}</div>
-          </div>
-          <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)' }}>
-            <X size={14}/>
-          </button>
-        </div>
-
-        {loading ? (
-          <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:40 }}>
-            <div style={{ width:32, height:32, border:'3px solid #BFDBFE', borderTopColor:'#2563EB', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
-          </div>
-        ) : error ? (
-          <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:30, color:'#DC2626', fontSize:13 }}>{error}</div>
-        ) : (
-          <div style={{ flex:1, display:'flex', flexDirection:'column', minHeight:0 }}>
-            {/* Summary strip */}
-            {stats && (
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:0, borderBottom:'1px solid var(--border)', flexShrink:0 }}>
-                {[
-                  { label:'Events',   value: stats.total,       color:'#1E293B' },
-                  { label:'KM Today', value: stats.km,          color:'#1D4ED8' },
-                  { label:'Max Speed',value: stats.maxSpd+' km/h', color: stats.maxSpd > 80 ? '#DC2626' : '#15803D' },
-                  { label:'Speeding', value: stats.speedEvents, color: stats.speedEvents > 0 ? '#DC2626' : '#15803D' },
-                  { label:'Harsh',    value: stats.harshEvents, color: stats.harshEvents > 0 ? '#B45309' : '#15803D' },
-                ].map((s, i) => (
-                  <div key={i} style={{ padding:'10px 8px', textAlign:'center', borderRight: i < 4 ? '1px solid var(--border)' : undefined, background:'#F8FAFF' }}>
-                    <div style={{ fontSize:14, fontWeight:900, color:s.color }}>{s.value}</div>
-                    <div style={{ fontSize:9, fontWeight:600, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.04em', marginTop:1 }}>{s.label}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Events table */}
-            <div style={{ flex:1, overflowY:'auto', minHeight:0 }}>
-              {events.length === 0 ? (
-                <div style={{ padding:40, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>No events recorded today</div>
-              ) : (
-                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11.5 }}>
-                  <thead>
-                    <tr style={{ background:'#F8FAFF', position:'sticky', top:0, zIndex:1 }}>
-                      {['Time','Event','Speed','Road Spd','Location'].map(h => (
-                        <th key={h} style={{ padding:'8px 12px', textAlign:'left', fontWeight:700, fontSize:10, color:'#6B7280', textTransform:'uppercase', letterSpacing:'0.05em', borderBottom:'1px solid var(--border)', whiteSpace:'nowrap' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...events].sort((a,b) => {
-                      const ta = b.dateTime || b.event_ts || b.timestamp || ''
-                      const tb = a.dateTime || a.event_ts || a.timestamp || ''
-                      return ta.localeCompare(tb)
-                    }).map((ev, i) => {
-                      const evDesc = ev.eventType || ev.event_description || ev.eventDescription || ''
-                      const st = evtStyle(evDesc)
-                      const rawLoc = ev.address || ev.position_description || ev.location || ''
-                      const loc = rawLoc ? rawLoc.split(',').slice(0,2).join(',') : '—'
-                      const rawTs = ev.dateTime || ev.event_ts || ev.timestamp || ''
-                      const ts = rawTs ? new Date(rawTs).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—'
-                      const spd = ev.speed ?? ev.currentSpeed ?? null
-                      const roadSpd = ev.road_speed ?? ev.roadSpeed ?? null
-                      const isSpeeding = ev.road_speeding || ev.roadSpeeding || false
-                      return (
-                        <tr key={i} style={{ borderBottom:'1px solid var(--border)', background: i%2===0?'var(--card)':'var(--bg-alt)' }}>
-                          <td style={{ padding:'7px 12px', fontWeight:600, color:'var(--text-sub)', whiteSpace:'nowrap', fontFamily:'monospace', fontSize:11 }}>{ts}</td>
-                          <td style={{ padding:'7px 12px' }}>
-                            <span style={{ background:st.bg, color:st.color, borderRadius:20, padding:'2px 9px', fontWeight:700, fontSize:10.5, whiteSpace:'nowrap' }}>{st.label}</span>
-                          </td>
-                          <td style={{ padding:'7px 12px', fontWeight:700, color: isSpeeding ? '#DC2626' : 'var(--text)', whiteSpace:'nowrap' }}>
-                            {spd != null ? spd+' km/h' : '—'}
-                          </td>
-                          <td style={{ padding:'7px 12px', color:'var(--text-muted)', whiteSpace:'nowrap' }}>
-                            {roadSpd > 0 ? roadSpd+' km/h' : '—'}
-                          </td>
-                          <td style={{ padding:'7px 12px', color:'var(--text-sub)', maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={rawLoc}>{loc}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>,
-    document.body
   )
 }
 

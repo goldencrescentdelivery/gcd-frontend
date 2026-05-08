@@ -23,7 +23,7 @@ export default function FleetPage() {
   const [search,             setSearch]            = useState('')
   const [pendingVerifications, setPendingVerifications] = useState([])
   const [verifying,          setVerifying]         = useState(null)
-  const [ctMap,              setCtMap]             = useState({}) // normalized plate → touchtracks live data
+  const [ctMap,              setCtMap]             = useState({}) // normalized plate → Etisalat live data
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -46,25 +46,27 @@ export default function FleetPage() {
 
   useEffect(() => { load() }, [load])
 
-  // TouchTracks live tracking — fetch once then refresh every 60 s
-  const loadTouchTracks = useCallback(async () => {
+  // Etisalat live tracking — fetch once then refresh every 60 s
+  const loadEtisalat = useCallback(async () => {
     try {
       const h = { headers: { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` } }
-      const res = await fetch(`${API}/api/touchtracks/live`, h)
+      const res = await fetch(`${API}/api/etisalat/live`, h)
       if (!res.ok) return
       const json = await res.json()
       const norm = p => (p || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()
       const map = {}
-      for (const v of (json.data || [])) map[norm(v.vehiclePlateNumber)] = v
+      // API returns { rows: [...] } inside data
+      const rows = json.rows || (json.data?.rows) || json.data || []
+      for (const v of rows) map[norm(v.name)] = v
       setCtMap(map)
     } catch { /* silently ignore tracking errors */ }
   }, [])
 
   useEffect(() => {
-    loadTouchTracks()
-    const id = setInterval(loadTouchTracks, 60_000)
+    loadEtisalat()
+    const id = setInterval(loadEtisalat, 60_000)
     return () => clearInterval(id)
-  }, [loadTouchTracks])
+  }, [loadEtisalat])
 
   async function assignVehicle(vId, eId) {
     try {
