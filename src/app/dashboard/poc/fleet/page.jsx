@@ -53,13 +53,20 @@ export default function FleetPage() {
       const res = await fetch(`${API}/api/etisalat/live`, h)
       if (!res.ok) return
       const json = await res.json()
+      // ThingWorx returns { rows: [...] } at top level or wrapped in result/data
+      const rows = json.rows || json.result?.rows || json.data?.rows || (Array.isArray(json.data) ? json.data : [])
       const norm = p => (p || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+      // Etisalat plates include emirate prefix (e.g. "DXB-AA-23965")
+      // Our DB stores without prefix (e.g. "AA-23965"), so index by both forms
+      const stripEmirate = p => (p || '').replace(/^[A-Za-z]{2,3}-/, '')
       const map = {}
-      // API returns { rows: [...] } inside data
-      const rows = json.rows || (json.data?.rows) || json.data || []
-      for (const v of rows) map[norm(v.name)] = v
+      for (const v of rows) {
+        if (!v.name) continue
+        map[norm(v.name)] = v              // full key  e.g. DXBAA23965
+        map[norm(stripEmirate(v.name))] = v // no-prefix e.g. AA23965
+      }
       setCtMap(map)
-    } catch { /* silently ignore tracking errors */ }
+    } catch (e) { console.error('[etisalat] load error', e) }
   }, [])
 
   useEffect(() => {
