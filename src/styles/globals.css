@@ -559,8 +559,7 @@ a { text-decoration:none; color:inherit; }
   .sidebar.mobile-open { transform:translateX(0); }
   .sidebar-overlay { display:block; }
   .sidebar-collapse-btn { display:none !important; }
-  .page-content { padding:18px 16px 90px; }
-  .mobile-bottomnav { display:flex; justify-content:space-around; }
+  .page-content { padding:18px 16px 24px; }
   .four-kpi-grid      { grid-template-columns:repeat(2,1fr) !important; }
   .exp-emp-grid       { grid-template-columns:1fr !important; }
   .quick-actions-grid { grid-template-columns:repeat(4,1fr) !important; }
@@ -615,7 +614,7 @@ a { text-decoration:none; color:inherit; }
   .mob.kpi-wrap { display:block !important; }
   .desk      { display:none !important; }
   .hide-mobile { display:none !important; }
-  .page-content { padding:14px 12px 90px; }
+  .page-content { padding:14px 12px 20px; }
   .modal { padding:18px; max-height:95vh; }
   .two-col-glass   { grid-template-columns:1fr !important; }
   .three-col-glass { grid-template-columns:1fr !important; }

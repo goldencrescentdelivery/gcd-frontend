@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import {
   Users, Package, Car, Wallet, AlertTriangle,
   ChevronRight, TrendingUp, Smartphone,
@@ -285,26 +285,25 @@ export default function OverviewPage() {
         )}
 
         {/* ══ DELIVERY CHART ════════════════════════════════════════ */}
-        <div className="ov-card">
-          <div className="ov-card-hd">
+        <div className="ov-card" style={{ overflow:'hidden' }}>
+          {/* Header */}
+          <div style={{ padding:'20px 24px 0', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
             <div>
               <div className="ov-card-title">Delivery Trend — Last 6 Months</div>
-              <div className="ov-card-sub">DDB1 (Pulser) vs DXE6 (CRET) comparison</div>
+              <div className="ov-card-sub">Project-wise comparison · DDB1 vs DXE6</div>
             </div>
-            {chart.length > 0 && (
-              <div style={{ display:'flex', alignItems:'center', gap:14, flexShrink:0 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                  <div style={{ width:10, height:10, borderRadius:3, background:'#F59E0B' }}/>
-                  <span style={{ fontSize:11.5, color:'var(--text-muted)', fontWeight:600 }}>DDB1</span>
+            <div style={{ display:'flex', gap:8, flexShrink:0 }}>
+              {[{c:'#F59E0B', label:'DDB1 (Pulser)'}, {c:'#38BDF8', label:'DXE6 (CRET)'}].map(({ c, label }) => (
+                <div key={label} style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 11px', borderRadius:20, background:`${c}12`, border:`1px solid ${c}30` }}>
+                  <div style={{ width:8, height:8, borderRadius:2, background:c }}/>
+                  <span style={{ fontSize:11, color:c, fontWeight:700 }}>{label}</span>
                 </div>
-                <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                  <div style={{ width:10, height:10, borderRadius:3, background:'#38BDF8' }}/>
-                  <span style={{ fontSize:11.5, color:'var(--text-muted)', fontWeight:600 }}>DXE6</span>
-                </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
-          <div className="ov-chart">
+
+          {/* Chart area */}
+          <div style={{ padding:'16px 12px 8px' }}>
             {!mounted || chart.length === 0 ? (
               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', padding:'40px 24px', textAlign:'center' }}>
                 <div style={{ width:52, height:52, borderRadius:16, background:'var(--amber-bg)', border:'1px solid var(--gold-border)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
@@ -314,21 +313,72 @@ export default function OverviewPage() {
                 <div style={{ fontSize:12.5, color:'var(--text-muted)' }}>Records will appear once deliveries are logged.</div>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={chart} barSize={20} barCategoryGap="32%">
-                  <XAxis dataKey="month" tick={{ fontSize:11, fill:'var(--text-muted)', fontWeight:600 }} axisLine={false} tickLine={false}/>
-                  <YAxis tick={{ fontSize:11, fill:'var(--text-muted)' }} axisLine={false} tickLine={false} width={36}/>
-                  <Tooltip
-                    contentStyle={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:10, fontSize:12, boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}
-                    labelStyle={{ fontWeight:700, color:'var(--text)', marginBottom:4 }}
-                    cursor={{ fill:'var(--bg-alt)', radius:4 }}
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={chart} barSize={22} barCategoryGap="36%" margin={{ top:8, right:8, left:0, bottom:0 }}>
+                  <defs>
+                    <linearGradient id="gradDDB1" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor="#F59E0B" stopOpacity={1}/>
+                      <stop offset="100%" stopColor="#F59E0B" stopOpacity={0.55}/>
+                    </linearGradient>
+                    <linearGradient id="gradDXE6" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor="#38BDF8" stopOpacity={1}/>
+                      <stop offset="100%" stopColor="#38BDF8" stopOpacity={0.55}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" strokeOpacity={0.7}/>
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize:11, fill:'var(--text-muted)', fontWeight:600, fontFamily:'inherit' }}
+                    axisLine={false} tickLine={false}
+                    tickFormatter={v => {
+                      const [y, m] = v.split('-')
+                      return new Date(+y, +m-1).toLocaleDateString('en-US', { month:'short' })
+                    }}
                   />
-                  <Bar dataKey="DDB1" name="DDB1 (Pulser)" fill="#F59E0B" radius={[5,5,0,0]}/>
-                  <Bar dataKey="DXE6" name="DXE6 (CRET)"   fill="#38BDF8" radius={[5,5,0,0]}/>
+                  <YAxis
+                    tick={{ fontSize:11, fill:'var(--text-muted)', fontFamily:'inherit' }}
+                    axisLine={false} tickLine={false} width={38}
+                    tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}
+                  />
+                  <Tooltip
+                    cursor={{ fill:'rgba(184,134,11,0.06)', rx:6 }}
+                    contentStyle={{
+                      background:'var(--card)',
+                      border:'1px solid var(--border)',
+                      borderRadius:12,
+                      fontSize:12,
+                      boxShadow:'0 8px 24px rgba(0,0,0,0.10)',
+                      padding:'10px 14px',
+                    }}
+                    labelStyle={{ fontWeight:700, color:'var(--text)', marginBottom:6, fontSize:12 }}
+                    labelFormatter={v => {
+                      const [y, m] = v.split('-')
+                      return new Date(+y, +m-1).toLocaleDateString('en-US', { month:'long', year:'numeric' })
+                    }}
+                    formatter={(val, name) => [Number(val).toLocaleString(), name]}
+                  />
+                  <Bar dataKey="DDB1" name="DDB1 (Pulser)" fill="url(#gradDDB1)" radius={[7,7,0,0]}/>
+                  <Bar dataKey="DXE6" name="DXE6 (CRET)"   fill="url(#gradDXE6)" radius={[7,7,0,0]}/>
                 </BarChart>
               </ResponsiveContainer>
             )}
           </div>
+
+          {/* Summary strip */}
+          {chart.length > 0 && (() => {
+            const totDDB1 = chart.reduce((s, r) => s + (r.DDB1||0), 0)
+            const totDXE6 = chart.reduce((s, r) => s + (r.DXE6||0), 0)
+            return (
+              <div style={{ display:'flex', borderTop:'1px solid var(--border)', background:'var(--bg-alt)' }}>
+                {[{ label:'Total DDB1', value:totDDB1.toLocaleString(), c:'#F59E0B' }, { label:'Total DXE6', value:totDXE6.toLocaleString(), c:'#38BDF8' }, { label:'Combined', value:(totDDB1+totDXE6).toLocaleString(), c:'var(--text)' }].map(({ label, value, c }) => (
+                  <div key={label} style={{ flex:1, padding:'12px 20px', borderRight:'1px solid var(--border)', textAlign:'center' }}>
+                    <div style={{ fontWeight:800, fontSize:16, color:c, letterSpacing:'-0.03em' }}>{value}</div>
+                    <div style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:2, fontWeight:600 }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
         </div>
 
         {/* ══ AGENTS + FLEET ════════════════════════════════════════ */}

@@ -84,19 +84,6 @@ export default function DashboardLayout({ children }) {
         </main>
       </div>
 
-      {/* Mobile bottom nav */}
-      <nav className="mobile-bottomnav">
-        {BOTTOM_NAV.filter(item=>!item.roles||item.roles.includes(user?.role)).map(item=>{
-          const Icon   = item.icon
-          const active = pathname.startsWith(item.href)
-          return (
-            <Link key={item.href} href={item.href} className={active?'active':''}>
-              <Icon size={19} strokeWidth={active?2.5:1.8}/>
-              <span>{item.label}</span>
-            </Link>
-          )
-        })}
-      </nav>
     </div>
     </AlertsProvider>
   )
