@@ -67,9 +67,11 @@ export default function Topbar({ onMenuClick }) {
   }
 
   const [dark, setDark] = useState(false)
+  const [dateStr, setDateStr] = useState('')
 
   useEffect(() => {
     setDark(document.documentElement.getAttribute('data-theme') === 'dark')
+    setDateStr(new Date().toLocaleDateString('en-AE',{weekday:'short',day:'numeric',month:'short',year:'numeric'}))
   }, [])
 
   function toggleTheme() {
@@ -99,7 +101,7 @@ export default function Topbar({ onMenuClick }) {
       <div style={{ flex:1, minWidth:0 }}>
         <div className="topbar-title" style={{ fontWeight:700, fontSize:16, color:'var(--text)', letterSpacing:'-0.01em', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{title}</div>
         <div className="topbar-date" style={{ fontSize:10.5, color:'var(--text-muted)', marginTop:1 }}>
-          {new Date().toLocaleDateString('en-AE',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
+          {dateStr}
         </div>
       </div>
 
