@@ -26,8 +26,7 @@ export const NAV = [
   { type:'section', label:'HR Management', roles:['admin','general_manager','hr','accountant'] },
   { label:'DAs',           href:'/dashboard/hr/employees',  icon:'UserCircle',  roles:['admin','general_manager','hr','accountant'], alertKey:'employees' },
   { label:'Admins',        href:'/dashboard/hr/admins',     icon:'Shield',      roles:['admin','general_manager','hr','accountant'] },
-  { label:'Attendance',    href:'/dashboard/hr/attendance', icon:'Clock',       roles:['admin','general_manager','hr'] },
-  { label:'Leaves',        href:'/dashboard/hr/leaves',     icon:'CalendarOff', roles:['admin','general_manager','hr'], alertKey:'leaves' },
+  { label:'Leaves',        href:'/dashboard/hr/leaves',     icon:'CalendarOff', roles:['admin','general_manager','hr','accountant'], alertKey:'leaves' },
   { label:'Documents',     href:'/dashboard/hr/documents',  icon:'FileText',    roles:['admin','hr'] },
   { label:'Compliance',    href:'/dashboard/hr/compliance', icon:'ShieldCheck', roles:['admin','hr'] },
   { label:'User Accounts', href:'/dashboard/hr/users',      icon:'KeyRound',    roles:['admin'] },
@@ -38,7 +37,7 @@ export const NAV = [
   { label:'Expenses',         href:'/dashboard/finance/expenses',   icon:'Receipt',    roles:['admin','accountant'] },
   { label:'Petty Cash',       href:'/dashboard/finance/petty-cash', icon:'Banknote',   roles:['admin','accountant','general_manager','hr','poc'] },
   { label:'Staff Attendance', href:'/dashboard/finance/attendance', icon:'Clock',      roles:['admin','accountant'] },
-  { label:'SIM Cards',        href:'/dashboard/finance/sims',       icon:'Smartphone', roles:['admin','accountant'] },
+  { label:'SIM Cards',        href:'/dashboard/finance/sims',       icon:'Smartphone', roles:['admin'] },
 
   // ── Operations ────────────────────────────────────────────────
   { type:'section', label:'Operations', roles:['admin','general_manager','poc','manager'] },
