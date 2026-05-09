@@ -27,7 +27,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" dir="ltr" className={poppins.variable}>
+    <html lang="en" dir="ltr" className={poppins.variable} suppressHydrationWarning>
       <head />
       <body>
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('gcd_theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}})()` }} />
