@@ -33,18 +33,18 @@ function authHeader() {
   return { Authorization: `Bearer ${localStorage.getItem('gcd_token')}` }
 }
 
-function findCurrentVehicle(handovers) {
-  return handovers.find(h =>
+function findAllCurrentVehicles(handovers) {
+  return handovers.filter(h =>
     h.type === 'received' &&
     (h.status === 'completed' || h.status === 'poc_pending') &&
     !handovers.find(h2 =>
-      h2.vehicle_id === h.vehicle_id &&
+      String(h2.vehicle_id) === String(h.vehicle_id) &&
       h2.type === 'returned' &&
       h2.status !== 'pending_acceptance' &&
       h2.status !== 'rejected' &&
       new Date(h2.submitted_at) > new Date(h.submitted_at)
     )
-  ) || null
+  )
 }
 
 function urlBase64ToUint8Array(base64String) {
@@ -415,7 +415,6 @@ export default function DriverPortal() {
   const [payroll,       setPayroll]       = useState(null)
   const [leaves,        setLeaves]        = useState([])
   const [notices,       setNotices]       = useState([])
-  const [vehicle,       setVehicle]       = useState(null)
   const [handovers,     setHandovers]     = useState([])
   const [perf,          setPerf]          = useState(null)
   const [todayAsgn,     setTodayAsgn]     = useState(null)
@@ -440,9 +439,7 @@ export default function DriverPortal() {
   const refreshHandovers = useCallback(() => {
     fetch(`${API}/api/handovers`, { headers: authHeader() })
       .then(r => r.json()).then(d => {
-        const list = d.handovers || []
-        setHandovers(list)
-        setVehicle(findCurrentVehicle(list))
+        setHandovers(d.handovers || [])
       }).catch(() => {})
   }, [])
 
@@ -500,8 +497,7 @@ export default function DriverPortal() {
       setUnreadCount(list.filter(n => !n.read).length)
     })
     bg(`/api/handovers`,                                                     d => {
-      const list = d.handovers || []
-      setHandovers(list); setVehicle(findCurrentVehicle(list))
+      setHandovers(d.handovers || [])
     })
     bg(`/api/handovers/pending`,                                             d => setPendingHandovers(d.pending || []))
     bg(`/api/performance/${user.emp_id}`,                                    d => setPerf(d.history?.[0] || null))
@@ -589,9 +585,15 @@ export default function DriverPortal() {
   const alertCount   = [p?.visa_expiry, p?.license_expiry, p?.iloe_expiry].filter(expiryAlert).length
   const annualUsed   = leaves.filter(l=>l.type==='Annual'&&l.status==='approved').reduce((s,l)=>s+(l.days||0),0)
   const sickUsed     = leaves.filter(l=>l.type==='Sick'&&l.status==='approved').reduce((s,l)=>s+(l.days||0),0)
-  const hasPendingReturn = handovers.some(h =>
-    h.type === 'returned' && ['pending_acceptance','accepted','poc_pending'].includes(h.status)
+  const allCurrentVehicles = findAllCurrentVehicles(handovers)
+  const vehicle      = allCurrentVehicles[0] || null
+  const hasTwoVehicles = allCurrentVehicles.length >= 2
+  const myPendingReturn = handovers.find(h =>
+    h.type === 'returned' &&
+    String(h.emp_id) === String(user.emp_id) &&
+    ['pending_acceptance','accepted','poc_pending'].includes(h.status)
   )
+  const hasPendingReturn = !!myPendingReturn
   const effectiveTodayAsgn = (vehicle || hasPendingReturn) ? null : todayAsgn
 
   return (
@@ -698,7 +700,50 @@ export default function DriverPortal() {
               {/* Vehicle Status */}
               <div>
                 <div style={{ fontWeight:700, fontSize:15, color:'#111', marginBottom:10 }}>Vehicle Status</div>
-                {vehicle ? (
+
+                {hasTwoVehicles && (
+                  <div style={{ background:'#FEF2F2', border:'1.5px solid #FCA5A5', borderRadius:14, padding:'12px 14px', display:'flex', gap:10, alignItems:'flex-start', marginBottom:10 }}>
+                    <AlertTriangle size={18} color="#DC2626" style={{ flexShrink:0, marginTop:1 }}/>
+                    <div>
+                      <div style={{ fontWeight:800, fontSize:13.5, color:'#DC2626', marginBottom:2 }}>You have {allCurrentVehicles.length} vehicles assigned</div>
+                      <div style={{ fontSize:12, color:'#991B1B', lineHeight:1.5 }}>You must return one vehicle before receiving another.</div>
+                    </div>
+                  </div>
+                )}
+
+                {myPendingReturn ? (
+                  myPendingReturn.status === 'pending_acceptance' ? (
+                    <Card style={{ border:'1px solid #FDE68A', background:'linear-gradient(135deg,#FFFBEB,#FEF3C7)' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+                        <div style={{ width:48, height:48, borderRadius:14, background:'#FEF3C7', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                          <ArrowLeftRight size={22} color="#D97706"/>
+                        </div>
+                        <div>
+                          <div style={{ fontWeight:800, fontSize:17, color:'#111', letterSpacing:'-0.02em' }}>{myPendingReturn.vehicle_plate || '—'}</div>
+                          <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>Return submitted to {myPendingReturn.receiver_name || 'driver'}</div>
+                        </div>
+                      </div>
+                      <div style={{ padding:'9px 12px', background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:10, fontSize:12.5, color:'#92400E', fontWeight:600, textAlign:'center' }}>
+                        ⏳ Awaiting {myPendingReturn.receiver_name || 'the driver'} to accept
+                      </div>
+                    </Card>
+                  ) : (
+                    <Card style={{ border:'1px solid #A7F3D0', background:'linear-gradient(135deg,#ECFDF5,#D1FAE5)' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+                        <div style={{ width:48, height:48, borderRadius:'50%', background:'#DCFCE7', border:'2px solid #A7F3D0', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                          <Check size={22} color="#16A34A"/>
+                        </div>
+                        <div>
+                          <div style={{ fontWeight:800, fontSize:17, color:'#111' }}>{myPendingReturn.vehicle_plate} Returned</div>
+                          <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>Accepted by {myPendingReturn.receiver_name || 'driver'}</div>
+                        </div>
+                      </div>
+                      <div style={{ padding:'9px 12px', background:'#D1FAE5', border:'1px solid #A7F3D0', borderRadius:10, fontSize:12.5, color:'#065F46', fontWeight:700, textAlign:'center' }}>
+                        ✓ Handover successful — you&apos;re all done!
+                      </div>
+                    </Card>
+                  )
+                ) : vehicle ? (
                   <Card style={{ border:'1px solid #A7F3D0', background:'linear-gradient(135deg,#F0FDF4,#DCFCE7)' }}>
                     <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
                       <div style={{ width:48, height:48, borderRadius:14, background:'#DCFCE7', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -734,7 +779,6 @@ export default function DriverPortal() {
                   </Card>
                 ) : (
                   <Card style={{ textAlign:'center', padding:'32px 20px' }}>
-                    {/* Car illustration */}
                     <svg width="88" height="56" viewBox="0 0 88 56" fill="none" style={{ margin:'0 auto 14px', display:'block' }}>
                       <ellipse cx="44" cy="50" rx="32" ry="5" fill="#E5E7EB" opacity="0.6"/>
                       <rect x="10" y="24" width="68" height="24" rx="6" fill="#D1D5DB"/>
@@ -1016,8 +1060,69 @@ export default function DriverPortal() {
           <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:14 }} className="fade">
             <h2 style={{ fontWeight:800, fontSize:22, color:'#111', margin:0 }}>Vehicle Assignment and Logs</h2>
 
+            {hasTwoVehicles && (
+              <div style={{ background:'#FEF2F2', border:'1.5px solid #FCA5A5', borderRadius:14, padding:'12px 14px', display:'flex', gap:10, alignItems:'flex-start' }}>
+                <AlertTriangle size={18} color="#DC2626" style={{ flexShrink:0, marginTop:1 }}/>
+                <div>
+                  <div style={{ fontWeight:800, fontSize:13.5, color:'#DC2626', marginBottom:2 }}>You have {allCurrentVehicles.length} vehicles assigned</div>
+                  <div style={{ fontSize:12, color:'#991B1B', lineHeight:1.5 }}>You must return one vehicle before receiving another.</div>
+                </div>
+              </div>
+            )}
+
             {/* Assigned vehicle card */}
-            {(vehicle || effectiveTodayAsgn) ? (() => {
+            {myPendingReturn ? (
+              <>
+                {myPendingReturn.status === 'pending_acceptance' && (vehicle || effectiveTodayAsgn) && (() => {
+                  const v = vehicle || effectiveTodayAsgn
+                  const plate = v.vehicle_plate || v.plate || myPendingReturn.vehicle_plate || '—'
+                  const makeModel = [v.make, v.model].filter(Boolean).join(' ') || 'Vehicle'
+                  const assignedOn = v.submitted_at || v.date
+                    ? new Date(v.submitted_at || v.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
+                    : '—'
+                  return (
+                    <Card>
+                      <div style={{ display:'flex', gap:14, marginBottom:10 }}>
+                        <div style={{ width:100, height:80, background:'#F8FAFC', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, border:'1px solid #E5E7EB' }}>
+                          <svg width="68" height="44" viewBox="0 0 68 44" fill="none">
+                            <ellipse cx="34" cy="40" rx="26" ry="4" fill="#E5E7EB" opacity="0.7"/>
+                            <rect x="6" y="18" width="56" height="20" rx="5" fill="#CBD5E1"/>
+                            <path d="M12 18 L20 6 L48 6 L56 18Z" fill="#94A3B8"/>
+                            <rect x="4" y="28" width="8" height="8" rx="4" fill="#64748B"/>
+                            <rect x="56" y="28" width="8" height="8" rx="4" fill="#64748B"/>
+                            <rect x="14" y="9" width="14" height="9" rx="2" fill="#BFDBFE" opacity="0.9"/>
+                            <rect x="40" y="9" width="14" height="9" rx="2" fill="#BFDBFE" opacity="0.9"/>
+                            <rect x="10" y="22" width="8" height="4" rx="2" fill="#FCD34D"/>
+                            <rect x="50" y="22" width="8" height="4" rx="2" fill="#F87171"/>
+                          </svg>
+                        </div>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:2 }}>Currently assigned:</div>
+                          <div style={{ fontWeight:800, fontSize:16, color:'#111', marginBottom:6 }}>{makeModel}</div>
+                          <div style={{ fontSize:12.5, color:'#374151', marginBottom:3 }}><span style={{ color:'#9CA3AF' }}>Plate: </span>{plate}</div>
+                          <div style={{ fontSize:12.5, color:'#374151' }}><span style={{ color:'#9CA3AF' }}>Since: </span>{assignedOn}</div>
+                        </div>
+                      </div>
+                      <div style={{ padding:'10px 12px', background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:10, fontSize:12.5, color:'#92400E', fontWeight:600, textAlign:'center' }}>
+                        ⏳ Return submitted — awaiting {myPendingReturn.receiver_name || 'driver'} to accept
+                      </div>
+                    </Card>
+                  )
+                })()}
+                {myPendingReturn.status !== 'pending_acceptance' && (
+                  <Card style={{ border:'1px solid #A7F3D0', background:'linear-gradient(135deg,#ECFDF5,#D1FAE5)', textAlign:'center', padding:'32px 20px' }}>
+                    <div style={{ width:56, height:56, borderRadius:'50%', background:'#DCFCE7', border:'2px solid #A7F3D0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
+                      <Check size={26} color="#16A34A"/>
+                    </div>
+                    <div style={{ fontWeight:800, fontSize:18, color:'#111', marginBottom:4 }}>{myPendingReturn.vehicle_plate} Returned</div>
+                    <div style={{ fontSize:13, color:'#6B7280', marginBottom:14 }}>Accepted by {myPendingReturn.receiver_name || 'driver'}</div>
+                    <div style={{ padding:'10px 12px', background:'#D1FAE5', border:'1px solid #A7F3D0', borderRadius:10, fontSize:12.5, color:'#065F46', fontWeight:700 }}>
+                      ✓ Handover successful — you&apos;re all done!
+                    </div>
+                  </Card>
+                )}
+              </>
+            ) : (vehicle || effectiveTodayAsgn) ? (() => {
               const v = vehicle || effectiveTodayAsgn
               const plate = v.vehicle_plate || v.plate || '—'
               const makeModel = [v.make, v.model].filter(Boolean).join(' ') || 'Vehicle'
@@ -1027,7 +1132,6 @@ export default function DriverPortal() {
               return (
                 <Card>
                   <div style={{ display:'flex', gap:14, marginBottom:14 }}>
-                    {/* Vehicle illustration */}
                     <div style={{ width:100, height:80, background:'#F8FAFC', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, border:'1px solid #E5E7EB' }}>
                       <svg width="68" height="44" viewBox="0 0 68 44" fill="none">
                         <ellipse cx="34" cy="40" rx="26" ry="4" fill="#E5E7EB" opacity="0.7"/>
@@ -1041,7 +1145,6 @@ export default function DriverPortal() {
                         <rect x="50" y="22" width="8" height="4" rx="2" fill="#F87171"/>
                       </svg>
                     </div>
-                    {/* Details */}
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:2 }}>Assigned:</div>
                       <div style={{ fontWeight:800, fontSize:16, color:'#111', marginBottom:6 }}>{makeModel}</div>
