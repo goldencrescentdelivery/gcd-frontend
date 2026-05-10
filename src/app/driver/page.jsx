@@ -72,6 +72,7 @@ function expiryAlert(ds) {
 
 const TABS = [
   { id:'home',      label:'Home',        icon:Home      },
+  { id:'att',       label:'Attendance',  icon:Clock     },
   { id:'pay',       label:'Payslips',    icon:Wallet    },
   { id:'leaves',    label:'Leaves',      icon:Calendar  },
   { id:'perf',      label:'Performance', icon:BarChart2 },
@@ -413,6 +414,7 @@ export default function DriverPortal() {
   const [loading,       setLoading]       = useState(true)
   const [profile,       setProfile]       = useState(null)
   const [payroll,       setPayroll]       = useState(null)
+  const [attEarnings,   setAttEarnings]   = useState(null)
   const [leaves,        setLeaves]        = useState([])
   const [notices,       setNotices]       = useState([])
   const [handovers,     setHandovers]     = useState([])
@@ -476,12 +478,14 @@ export default function DriverPortal() {
     const ctrl  = new AbortController()
 
     Promise.all([
-      fetch(`${API}/api/payroll?month=${month}`,   { headers: hdr, signal: ctrl.signal }).then(r => r.json()).catch(() => ({ payroll: [] })),
-      fetch(`${API}/api/employees/${user.emp_id}`, { headers: hdr, signal: ctrl.signal }).then(r => r.json()).catch(() => ({ employee: null })),
-    ]).then(([pr, emp]) => {
+      fetch(`${API}/api/payroll?month=${month}`,             { headers: hdr, signal: ctrl.signal }).then(r => r.json()).catch(() => ({ payroll: [] })),
+      fetch(`${API}/api/employees/${user.emp_id}`,           { headers: hdr, signal: ctrl.signal }).then(r => r.json()).catch(() => ({ employee: null })),
+      fetch(`${API}/api/attendance/earnings?month=${month}`, { headers: hdr, signal: ctrl.signal }).then(r => r.json()).catch(() => null),
+    ]).then(([pr, emp, ae]) => {
       const slip = (pr.payroll || []).find(p => p.id === user.emp_id || p.emp_id === user.emp_id)
       setPayroll(slip || null)
       setProfile(emp.employee || null)
+      setAttEarnings(ae || null)
       setLoading(false)
     })
 
@@ -578,6 +582,13 @@ export default function DriverPortal() {
   )
 
   const net          = payroll ? Number(payroll.base_salary||0) + Number(payroll.bonus_total||0) - Number(payroll.deduction_total||0) : 0
+  const isShipmentEmp = profile?.station_code === 'DXE6'
+  const attRecords   = attEarnings?.records || []
+  const attPresent   = attRecords.filter(r => r.status === 'present').length
+  const attAbsent    = attRecords.filter(r => r.status === 'absent').length
+  const attLeave     = attRecords.filter(r => r.status === 'leave').length
+  const totalUnits   = attRecords.filter(r => r.status === 'present').reduce((s,r) => s + parseFloat(r.cycle_hours||0), 0)
+  const variablePay  = attRecords.reduce((s,r) => s + parseFloat(r.earnings||0), 0)
   const grade        = perf ? getGrade(perf.total_score) : null
   const p            = profile
   const today2       = mounted ? localDateKey() : ''
@@ -910,6 +921,83 @@ export default function DriverPortal() {
           </div>
         )}
 
+        {/* ════ ATTENDANCE ════ */}
+        {tab === 'att' && (
+          <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:14 }} className="fade">
+            <h2 style={{ fontWeight:800, fontSize:22, color:'#111', margin:0 }}>My Attendance</h2>
+            <div style={{ fontSize:12, color:'#9CA3AF', marginTop:-8 }}>{monthLabel}</div>
+
+            {/* Monthly summary */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+              {[
+                { label:'Present', value:attPresent, color:'#059669', bg:'#ECFDF5', border:'#A7F3D0' },
+                { label:'Absent',  value:attAbsent,  color:'#DC2626', bg:'#FEF2F2', border:'#FCA5A5' },
+                { label:'Leave',   value:attLeave,   color:'#D97706', bg:'#FFFBEB', border:'#FCD34D' },
+              ].map(s => (
+                <div key={s.label} style={{ background:s.bg, border:`1px solid ${s.border}`, borderRadius:14, padding:'14px 10px', textAlign:'center' }}>
+                  <div style={{ fontSize:28, fontWeight:900, color:s.color, letterSpacing:'-0.05em' }}>{s.value}</div>
+                  <div style={{ fontSize:11, fontWeight:600, color:s.color, opacity:0.8 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Variable pay summary */}
+            <div style={{ background:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', border:'1.5px solid #FDE68A', borderRadius:16, padding:'18px 16px' }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'#B45309', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:4 }}>
+                {isShipmentEmp ? 'Total Shipments This Month' : 'Total Hours This Month'}
+              </div>
+              <div style={{ fontWeight:900, fontSize:32, color:'#92400E', letterSpacing:'-0.04em' }}>
+                {totalUnits > 0 ? (isShipmentEmp ? `${Math.round(totalUnits)} shipments` : `${totalUnits.toFixed(1)}h`) : '—'}
+              </div>
+              <div style={{ marginTop:10, paddingTop:10, borderTop:'1px solid #FDE68A', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ fontSize:13, color:'#92400E', fontWeight:600 }}>Variable pay so far</span>
+                <span style={{ fontWeight:900, fontSize:18, color:'#B8860B' }}>{fmtA(variablePay)}</span>
+              </div>
+              <div style={{ fontSize:11, color:'#B45309', marginTop:4, opacity:0.7 }}>
+                {isShipmentEmp ? 'shipments × AED 0.50' : 'hours × AED 3.85'} + AED 2,000 base = monthly salary
+              </div>
+            </div>
+
+            {/* Daily records */}
+            {attRecords.length > 0 ? (
+              <div style={{ background:'#FFF', border:'1px solid #EBEBEB', borderRadius:16, overflow:'hidden', boxShadow:'0 1px 4px rgba(0,0,0,0.04)' }}>
+                <div style={{ padding:'12px 16px', borderBottom:'1px solid #F3F4F6', fontSize:11, fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.08em' }}>Daily Records</div>
+                {[...attRecords].sort((a,b) => b.date.localeCompare(a.date)).map(r => {
+                  const sColor = { present:'#059669', absent:'#DC2626', leave:'#D97706' }[r.status] || '#9CA3AF'
+                  const sBg    = { present:'#ECFDF5', absent:'#FEF2F2', leave:'#FFFBEB' }[r.status] || '#F9FAFB'
+                  const units  = parseFloat(r.cycle_hours || 0)
+                  const dLabel = new Date(r.date + 'T00:00:00').toLocaleDateString('en-AE', { weekday:'short', day:'numeric', month:'short' })
+                  return (
+                    <div key={r.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', borderBottom:'1px solid #F9FAFB' }}>
+                      <div>
+                        <div style={{ fontSize:13, fontWeight:600, color:'#111' }}>{dLabel}</div>
+                        {units > 0 && r.status === 'present' && (
+                          <div style={{ fontSize:11, color:'#9CA3AF', marginTop:1 }}>
+                            {isShipmentEmp ? `${Math.round(units)} shipments` : `${units}h worked`}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:3 }}>
+                        <span style={{ fontSize:11, fontWeight:700, color:sColor, background:sBg, padding:'3px 10px', borderRadius:20 }}>
+                          {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                        </span>
+                        {r.status === 'present' && parseFloat(r.earnings||0) > 0 && (
+                          <span style={{ fontSize:11, fontWeight:600, color:'#B8860B' }}>{fmtA(parseFloat(r.earnings).toFixed(2))}</span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div style={{ background:'#FFF', border:'1px solid #EBEBEB', borderRadius:16, padding:'40px 20px', textAlign:'center' }}>
+                <Clock size={28} color="#D1D5DB" style={{ margin:'0 auto 10px', display:'block' }}/>
+                <div style={{ fontSize:14, color:'#9CA3AF', fontWeight:500 }}>No attendance records this month</div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ════ PAYSLIPS ════ */}
         {tab === 'pay' && (
           <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:14 }} className="fade">
@@ -933,9 +1021,23 @@ export default function DriverPortal() {
                   </div>
                 </div>
 
+                {/* Variable pay from attendance */}
+                {attEarnings && variablePay > 0 && (
+                  <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:14, padding:'14px 16px' }}>
+                    <div style={{ fontSize:10, fontWeight:700, color:'#065F46', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:6 }}>Variable Pay This Month</div>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <span style={{ fontSize:12, color:'#065F46' }}>
+                        {isShipmentEmp ? `${Math.round(totalUnits)} shipments × AED 0.50` : `${totalUnits.toFixed(1)}h × AED 3.85`}
+                      </span>
+                      <span style={{ fontWeight:800, fontSize:16, color:'#16A34A' }}>{fmtA(variablePay.toFixed(2))}</span>
+                    </div>
+                    <div style={{ fontSize:10, color:'#6B7280', marginTop:4 }}>Added to AED 2,000 base → monthly salary</div>
+                  </div>
+                )}
+
                 {/* Breakdown */}
                 <Card>
-                  <div style={{ fontSize:10, fontWeight:800, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:14 }}>Breakdown</div>
+                  <div style={{ fontSize:10, fontWeight:800, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:14 }}>Payroll Breakdown</div>
                   {[
                     { l:'Base Salary', v:fmtA(payroll.base_salary),             c:'#111'    },
                     { l:'Bonuses',     v:`+${fmtA(payroll.bonus_total||0)}`,     c:'#16A34A' },

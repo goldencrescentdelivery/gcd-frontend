@@ -348,7 +348,7 @@ export default function AttendancePage() {
           ) : filtEmp.map(emp => {
             const a           = att.find(x => x.emp_id === emp.id)
             const units       = parseFloat(a?.cycle_hours || 0)
-            const payType     = a?.pay_type || 'hourly'
+            const isShipment  = a?.station_code === 'DXE6'
             const statusColor = { present:'#059669', absent:'#DC2626', leave:'#D97706' }[a?.status] || 'var(--text-muted)'
             const statusBg    = { present:'#ECFDF5', absent:'#FEF2F2', leave:'#FFFBEB' }[a?.status] || 'var(--bg-alt)'
             const statusBorder = { present:'#A7F3D0', absent:'#FCA5A5', leave:'#FCD34D' }[a?.status] || 'var(--border)'
@@ -377,7 +377,7 @@ export default function AttendancePage() {
                         </span>
                         {units > 0 && a.status === 'present' && (
                           <div style={{ fontSize:11, color:'var(--text-muted)' }}>
-                            {payType === 'shipment' ? `${units} shipments` : `${units}h`} · AED {parseFloat(a.earnings||0).toFixed(0)}
+                            {isShipment ? `${units} shipments` : `${units}h`} · AED {parseFloat(a.earnings||0).toFixed(0)}
                           </div>
                         )}
                       </>
