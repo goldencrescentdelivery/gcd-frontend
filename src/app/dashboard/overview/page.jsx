@@ -5,8 +5,8 @@ import { useAuth } from '@/lib/auth'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import {
   Users, Package, Car, Wallet, AlertTriangle,
-  ChevronRight, TrendingUp, Smartphone,
-  Receipt, Zap, ScrollText, Activity
+  ChevronRight, Smartphone,
+  Receipt, ScrollText, Activity
 } from 'lucide-react'
 import Link from 'next/link'
 import { API } from '@/lib/api'
@@ -56,8 +56,8 @@ export default function OverviewPage() {
         fetch(`${API}/api/analytics/deliveries-chart?months=6`, {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/expenses?month=${month}`,             {headers:hdr()}).then(r=>r.json()),
         fetch(`${API}/api/sims/stats`,                          {headers:hdr()}).then(r=>r.json()),
-        fetch(`${API}/api/letters`,                             {headers:hdr()}).then(r=>r.json()),
-        fetch(`${API}/api/vehicles`,                            {headers:hdr()}).then(r=>r.json()),
+        fetch(`${API}/api/letters?status=pending&limit=5`,      {headers:hdr()}).then(r=>r.json()),
+        fetch(`${API}/api/vehicles/stats`,                      {headers:hdr()}).then(r=>r.json()),
       ])
       const sumData   = sumRes.status   === 'fulfilled' ? sumRes.value   : {}
       const chartData = chartRes.status === 'fulfilled' ? chartRes.value : {}
@@ -71,14 +71,14 @@ export default function OverviewPage() {
       setExpenses(expData.expenses || [])
       setSimStats(simData.stats || null)
       setSimByStation(simData.by_station || [])
-      setPendingLetters((letData.letters || []).filter(l => l.status === 'pending'))
+      setPendingLetters(letData.letters || [])
 
-      const vehicles = fleetData.vehicles || []
+      const vs = fleetData.stats || {}
       setFleetStats({
-        total:       vehicles.length,
-        active:      vehicles.filter(v => v.status === 'active').length,
-        grounded:    vehicles.filter(v => v.status === 'grounded').length,
-        maintenance: vehicles.filter(v => v.status === 'maintenance').length,
+        total:       parseInt(vs.total       || 0),
+        active:      parseInt(vs.active      || 0),
+        grounded:    parseInt(vs.grounded    || 0),
+        maintenance: parseInt(vs.maintenance || 0),
       })
     } catch(e) { console.error(e) } finally { setLoading(false) }
   }, [])
@@ -592,9 +592,9 @@ export default function OverviewPage() {
               { l:'Employees',   href:'/dashboard/hr/employees',    c:'#F59E0B', icon:Users },
               { l:'Payroll',     href:'/dashboard/finance/payroll', c:'#38BDF8', icon:Wallet },
               { l:'Expenses',    href:'/dashboard/finance/expenses',c:'#10B981', icon:Receipt },
-              { l:'Performance', href:'/dashboard/performance',     c:'#A78BFA', icon:TrendingUp },
-              { l:'Damage',      href:'/dashboard/damage',          c:'#EF4444', icon:AlertTriangle },
-              { l:'Advances',    href:'/dashboard/advances',        c:'#F97316', icon:Zap },
+              { l:'SIM Cards',   href:'/dashboard/poc/sims',        c:'#A78BFA', icon:Smartphone },
+              { l:'Fleet',       href:'/dashboard/poc/fleet',       c:'#06B6D4', icon:Car },
+              { l:'Leaves',      href:'/dashboard/hr/leaves',       c:'#F97316', icon:ScrollText },
             ].map(({ l, href, c, icon:Icon }) => (
               <Link key={l} href={href} className="ov-qa-item"
                 style={{ background:`${c}10`, border:`1px solid ${c}22` }}
