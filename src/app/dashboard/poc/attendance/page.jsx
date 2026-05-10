@@ -170,14 +170,14 @@ export default function AttendancePage() {
     }
     setConfirmDlg({
       title:`Mark ${unlogged.length} DA${unlogged.length !== 1 ? 's' : ''} as Present?`,
-      message:`Cycle A · 5 hours. Creates records for ${unlogged.length} unlogged DA${unlogged.length !== 1 ? 's' : ''}.`,
+      message:`Creates attendance records for ${unlogged.length} unlogged DA${unlogged.length !== 1 ? 's' : ''}. Hours/shipments not set — edit each record to add them.`,
       confirmLabel:'Mark Present', danger:false,
       onConfirm: async () => {
         setConfirmDlg(null); setBulkLoading(true)
         try {
           await fetch(`${API}/api/attendance/bulk`, {
             method:'POST', headers:hdr(),
-            body:JSON.stringify({ records: unlogged.map(e => ({ emp_id:e.id, date, status:'present', cycle:'A', cycle_hours:'5' })) })
+            body:JSON.stringify({ records: unlogged.map(e => ({ emp_id:e.id, date, status:'present' })) })
           })
           load(); loadWeek()
         } catch { } finally { setBulkLoading(false) }
@@ -226,7 +226,6 @@ export default function AttendancePage() {
         .patt-row:last-child { border-bottom:none; }
         .patt-row-main { display:flex; align-items:center; gap:12px; padding:13px 16px; }
         .patt-row-actions { padding:8px 12px; background:var(--bg-alt); border-top:1px solid var(--border); display:flex; gap:6px; justify-content:flex-end; }
-        .patt-cycle-row { padding:7px 16px; background:var(--bg-alt); border-top:1px solid var(--border); display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
 
         /* Responsive */
         @media (max-width:768px) {
@@ -260,7 +259,7 @@ export default function AttendancePage() {
                 </div>
                 <h1 className="patt-hero-title">POC Attendance</h1>
               </div>
-              <div className="patt-hero-sub">{displayDate} · Daily DA attendance & duty cycles</div>
+              <div className="patt-hero-sub">{displayDate} · DDB1: hours-based · DXE6: shipment-based</div>
               <div className="patt-station-row">
                 <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)', fontWeight:600, letterSpacing:'0.05em' }}>STATION</span>
                 {canSwitch ? STATIONS.map(s => (
@@ -348,7 +347,8 @@ export default function AttendancePage() {
             <div style={{ textAlign:'center', padding:50, color:'var(--text-muted)' }}>No DAs found for {station}</div>
           ) : filtEmp.map(emp => {
             const a           = att.find(x => x.emp_id === emp.id)
-            const hrs         = a?.total_hours || a?.cycle_hours || 0
+            const units       = parseFloat(a?.cycle_hours || 0)
+            const payType     = a?.pay_type || 'hourly'
             const statusColor = { present:'#059669', absent:'#DC2626', leave:'#D97706' }[a?.status] || 'var(--text-muted)'
             const statusBg    = { present:'#ECFDF5', absent:'#FEF2F2', leave:'#FFFBEB' }[a?.status] || 'var(--bg-alt)'
             const statusBorder = { present:'#A7F3D0', absent:'#FCA5A5', leave:'#FCD34D' }[a?.status] || 'var(--border)'
@@ -375,7 +375,11 @@ export default function AttendancePage() {
                           <span style={{ width:6, height:6, borderRadius:3, background:statusColor }}/>
                           {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
                         </span>
-                        {hrs > 0 && <div style={{ fontSize:11, color:'var(--text-muted)' }}>{hrs}h · AED {parseFloat(a.earnings||0).toFixed(0)}</div>}
+                        {units > 0 && a.status === 'present' && (
+                          <div style={{ fontSize:11, color:'var(--text-muted)' }}>
+                            {payType === 'shipment' ? `${units} shipments` : `${units}h`} · AED {parseFloat(a.earnings||0).toFixed(0)}
+                          </div>
+                        )}
                       </>
                     ) : (
                       <span style={{ fontSize:11.5, color:'var(--text-muted)', background:'var(--bg-alt)', border:'1px solid var(--border)', padding:'5px 12px', borderRadius:20, fontWeight:500 }}>Not logged</span>
@@ -386,18 +390,6 @@ export default function AttendancePage() {
                     </button>
                   </div>
                 </div>
-
-                {/* Cycle tags */}
-                {(a?.cycle || a?.is_rescue) && (
-                  <div className="patt-cycle-row">
-                    {a.cycle?.split(',').filter(Boolean).map(c => (
-                      <span key={c} style={{ fontSize:11, fontWeight:700, color:'#B8860B', background:'#FDF6E3', border:'1px solid #F0D78C', borderRadius:6, padding:'2px 8px' }}>{c}</span>
-                    ))}
-                    {a.is_rescue && (
-                      <span style={{ fontSize:11, fontWeight:700, color:'#1D6FA4', background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:6, padding:'2px 8px' }}>🆘 {a.rescue_hours}h Rescue</span>
-                    )}
-                  </div>
-                )}
 
                 {/* Edit / Remove */}
                 {a && (

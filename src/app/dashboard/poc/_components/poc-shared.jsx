@@ -12,9 +12,6 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import { API } from '@/lib/api'
 
 // ── Constants ─────────────────────────────────────────────────
-export const CYCLES       = ['A','B','C','Beset','MR','FM','Rescue']
-export const CYCLE_H      = { A:5, B:4, C:5, Beset:5, MR:4, FM:5 }
-export const MAX_HRS      = 10
 export const VSTATUS_COLORS = { active:'#2E7D52', grounded:'#C0392B', maintenance:'#B45309', sold:'#A89880' }
 export const VSTATUS_BG     = { active:'#ECFDF5', grounded:'#FEF2F2', maintenance:'#FFFBEB', sold:'#F5F4F1' }
 
@@ -176,76 +173,45 @@ export function DriverSearch({ employees, value, onChange, placeholder='Search d
   )
 }
 
-// ── Cycle Selector ────────────────────────────────────────────
-export function CycleSelector({ selected, onChange, rescueHours, onRescueHours }) {
-  const hasRescue = selected.includes('Rescue')
-  const regHrs    = selected.filter(c => c!=='Rescue').reduce((s,c) => s+(CYCLE_H[c]||0), 0)
-  const resHrs    = hasRescue ? (parseFloat(rescueHours)||0) : 0
-  const total     = regHrs + resHrs
-  const overMax   = !hasRescue && total > MAX_HRS
-  function toggle(c) { onChange(selected.includes(c) ? selected.filter(x => x!==c) : [...selected, c]) }
-  return (
-    <div>
-      <label className="input-label">Duty Cycles <span style={{ color:'var(--text-muted)', textTransform:'none', letterSpacing:0, fontSize:10, fontWeight:400 }}>— select multiple</span></label>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:10 }}>
-        {CYCLES.map(c => {
-          const on = selected.includes(c)
-          return (
-            <button key={c} type="button" onClick={() => toggle(c)}
-              style={{ padding:'11px 6px', borderRadius:12, border:`2px solid ${on?'var(--gold)':'var(--border-med)'}`, background:on?'var(--amber-bg)':'var(--bg-alt)', color:on?'var(--gold)':'var(--text-sub)', fontSize:12, fontWeight:700, cursor:'pointer', textAlign:'center', transition:'all 0.18s ease', transform:on?'scale(1.05)':'scale(1)', boxShadow:on?'0 4px 12px rgba(184,134,11,0.2)':'none' }}>
-              {c}
-              <div style={{ fontSize:9.5, fontWeight:500, color:on?'var(--gold)':'var(--text-muted)', marginTop:2 }}>{c==='Rescue'?'custom':`${CYCLE_H[c]}h`}</div>
-            </button>
-          )
-        })}
-      </div>
-      {hasRescue && (
-        <div style={{ marginBottom:10 }}>
-          <label className="input-label">Rescue Hours</label>
-          <input className="input" type="number" step="0.25" min="0.25" value={rescueHours} onChange={e => onRescueHours(e.target.value)} placeholder="e.g. 3.5"/>
-        </div>
-      )}
-      {total > 0 && (
-        <div style={{ padding:'11px 14px', borderRadius:10, background:overMax?'var(--red-bg)':'var(--green-bg)', border:`1px solid ${overMax?'var(--red-border)':'var(--green-border)'}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <span style={{ fontSize:13, fontWeight:700, color:overMax?'var(--red)':'var(--green)' }}>
-            {overMax ? `⚠️ ${total}h exceeds ${MAX_HRS}h limit` : `✓ ${total}h total`}
-          </span>
-          {selected.length > 0 && <span style={{ fontSize:11, color:overMax?'var(--red)':'var(--green)', fontWeight:500 }}>{selected.filter(c=>c!=='Rescue').join(' + ')}{hasRescue?' + Rescue':''}</span>}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ── Attendance Modal ──────────────────────────────────────────
 export function AttModal({ employees, station, date, editRecord, onSave, onClose }) {
-  const isEdit = !!editRecord
-  const [empId,  setEmpId]  = useState(editRecord?.emp_id||'')
-  const [status, setStatus] = useState(editRecord?.status||'present')
-  const [cycles, setCycles] = useState(editRecord?.cycles||[])
-  const [rescue, setRescue] = useState(editRecord?.rescue_hours||'')
-  const [wType,  setWType]  = useState(editRecord?.worker_type||'driver')
+  const isEdit   = !!editRecord
+  const isDXE6   = station === 'DXE6'
+  const [empId,      setEmpId]      = useState(editRecord?.emp_id||'')
+  const [status,     setStatus]     = useState(editRecord?.status||'present')
+  const [hoursWkd,   setHoursWkd]   = useState(() => {
+    if (editRecord?.pay_type === 'hourly' && editRecord?.cycle_hours) return String(editRecord.cycle_hours)
+    return ''
+  })
+  const [shipments,  setShipments]  = useState(() => {
+    if (editRecord?.pay_type === 'shipment' && editRecord?.cycle_hours) return String(editRecord.cycle_hours)
+    return ''
+  })
   const [note,   setNote]   = useState(editRecord?.note||'')
   const [saving, setSaving] = useState(false)
   const [err,    setErr]    = useState(null)
-  const isDXE6 = station === 'DXE6'
-  const selEmp = employees.find(e => e.id===empId)
-  const rate   = parseFloat(selEmp?.hourly_rate||3.85)
-  const regHrs = cycles.filter(c => c!=='Rescue').reduce((s,c) => s+(CYCLE_H[c]||0), 0)
-  const resHrs = cycles.includes('Rescue') ? (parseFloat(rescue)||0) : 0
-  const total  = regHrs + resHrs
-  const est    = isDXE6 ? (wType==='helper'?90:115) : total>0 ? (total*rate).toFixed(2) : null
+
+  const selEmp     = employees.find(e => e.id === empId)
+  const basicSal   = parseFloat(selEmp?.salary || 0)
+  const hoursNum   = parseFloat(hoursWkd) || 0
+  const shipNum    = parseInt(shipments) || 0
+  const estEarnings = status === 'present'
+    ? isDXE6
+      ? shipNum > 0 ? (basicSal + shipNum * 0.5).toFixed(2) : null
+      : hoursNum > 0 ? (basicSal + hoursNum * 3.85).toFixed(2) : null
+    : null
+
   async function handleSave() {
     if (!empId) return setErr('Select a driver')
-    if (!isDXE6 && status==='present' && cycles.length===0) return setErr('Select at least one cycle')
+    if (status === 'present') {
+      if (isDXE6 && (!shipments || shipNum < 0)) return setErr('Enter shipments returned')
+      if (!isDXE6 && (!hoursWkd || hoursNum <= 0)) return setErr('Enter hours worked')
+    }
     setErr(null); setSaving(true)
     try {
-      const regCycles  = cycles.filter(c => c!=='Rescue')
-      const hasRescue  = cycles.includes('Rescue')
-      const totalHours = regCycles.reduce((s,c) => s+(CYCLE_H[c]||0), 0) + (hasRescue ? (parseFloat(rescue)||0) : 0)
       const body = isDXE6
-        ? { emp_id:empId, date: date||editRecord?.date, status, note, pay_type:'daily', worker_type:wType }
-        : { emp_id:empId, date: date||editRecord?.date, status, note, cycle: regCycles.join(',')||null, cycle_hours: status==='present'&&totalHours>0 ? totalHours : null, is_rescue: hasRescue, rescue_hours: hasRescue ? (rescue||null) : null }
+        ? { emp_id:empId, date: date||editRecord?.date, status, note, shipments_returned: status==='present' ? shipNum : undefined }
+        : { emp_id:empId, date: date||editRecord?.date, status, note, hours_worked: status==='present' ? hoursNum : undefined }
       const url    = isEdit ? `${API}/api/attendance/${editRecord.id}` : `${API}/api/attendance`
       const method = isEdit ? 'PUT' : 'POST'
       const res    = await fetch(url, { method, headers:hdr(), body:JSON.stringify(body) })
@@ -254,13 +220,14 @@ export function AttModal({ employees, station, date, editRecord, onSave, onClose
       onSave()
     } catch(e) { setErr(e.message) } finally { setSaving(false) }
   }
+
   return (
     <div className="modal-overlay" onClick={e => e.target===e.currentTarget&&onClose()}>
       <div className="modal" style={{ maxWidth:460 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
           <div>
             <h3 style={{ fontWeight:800, fontSize:16, color:'var(--text)' }}>{isEdit?'Edit':'Log'} Attendance</h3>
-            <div style={{ fontSize:11, color:'var(--gold)', fontWeight:600, marginTop:1 }}>📍 {station} Station</div>
+            <div style={{ fontSize:11, color:'var(--gold)', fontWeight:600, marginTop:1 }}>📍 {station} — {isDXE6 ? 'CRET (Shipment-based)' : 'Pulser (Hours-based)'}</div>
           </div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={17}/></button>
         </div>
@@ -285,30 +252,29 @@ export function AttModal({ employees, station, date, editRecord, onSave, onClose
               ))}
             </div>
           </div>
-          {status==='present' && isDXE6 && (
+          {status === 'present' && isDXE6 && (
             <div>
-              <label className="input-label">Worker Type</label>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                {[{v:'driver',l:'🚗 Driver',r:'AED 115'},{v:'helper',l:'🔧 Helper',r:'AED 90'}].map(t => (
-                  <button key={t.v} type="button" onClick={() => setWType(t.v)}
-                    style={{ padding:'12px', borderRadius:11, border:`2px solid ${wType===t.v?'var(--gold)':'var(--border-med)'}`, background:wType===t.v?'var(--amber-bg)':'var(--bg-alt)', color:wType===t.v?'var(--gold)':'var(--text-sub)', fontWeight:600, cursor:'pointer', transition:'all 0.18s', textAlign:'center' }}>
-                    <div style={{ fontSize:13 }}>{t.l}</div>
-                    <div style={{ fontSize:11, fontWeight:700, color:wType===t.v?'var(--green)':'var(--text-muted)', marginTop:2 }}>{t.r}/day</div>
-                  </button>
-                ))}
-              </div>
+              <label className="input-label">Shipments Returned *</label>
+              <input className="input" type="number" min="0" step="1" value={shipments}
+                onChange={e => setShipments(e.target.value)} placeholder="e.g. 12"/>
             </div>
           )}
-          {status==='present' && !isDXE6 && (
-            <CycleSelector selected={cycles} onChange={setCycles} rescueHours={rescue} onRescueHours={setRescue}/>
+          {status === 'present' && !isDXE6 && (
+            <div>
+              <label className="input-label">Hours Worked *</label>
+              <input className="input" type="number" min="0" step="0.5" value={hoursWkd}
+                onChange={e => setHoursWkd(e.target.value)} placeholder="e.g. 8.5"/>
+            </div>
           )}
-          {est && status==='present' && (
+          {estEarnings && status === 'present' && (
             <div style={{ background:'var(--green-bg)', border:'1px solid var(--green-border)', borderRadius:12, padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div>
                 <div style={{ fontSize:11, color:'var(--green)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Estimated Earnings</div>
-                <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:1 }}>{isDXE6?'Daily rate':`${total}h × AED ${rate}/hr`}</div>
+                <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:1 }}>
+                  {isDXE6 ? `Basic AED ${basicSal} + ${shipNum} × 0.5` : `Basic AED ${basicSal} + ${hoursNum}h × 3.85`}
+                </div>
               </div>
-              <div style={{ fontSize:22, fontWeight:900, color:'var(--green)', letterSpacing:'-0.03em' }}>AED {est}</div>
+              <div style={{ fontSize:22, fontWeight:900, color:'var(--green)', letterSpacing:'-0.03em' }}>AED {estEarnings}</div>
             </div>
           )}
           <div><label className="input-label">Note (optional)</label><input className="input" value={note} onChange={e => setNote(e.target.value)} placeholder="Any notes…"/></div>
