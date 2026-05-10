@@ -37,6 +37,7 @@ export const NAV = [
   { label:'Expenses',         href:'/dashboard/finance/expenses',   icon:'Receipt',    roles:['admin','accountant'] },
   { label:'Petty Cash',       href:'/dashboard/finance/petty-cash', icon:'Banknote',   roles:['admin','accountant','general_manager','hr','poc'] },
   { label:'Staff Attendance', href:'/dashboard/finance/attendance', icon:'Clock',      roles:['admin','accountant'] },
+  { label:'Customers',        href:'/dashboard/finance/customers',  icon:'Building2',  roles:['admin','accountant'] },
 
   // ── Operations ────────────────────────────────────────────────
   { type:'section', label:'Operations', roles:['admin','general_manager','poc','manager'] },

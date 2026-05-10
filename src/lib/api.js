@@ -214,6 +214,15 @@ export const shiftApi = {
   delete: (id)        => api.delete(`/api/shifts/${id}`),
 }
 
+// Customers
+export const customerApi = {
+  list:   (params={}) => api.get(`/api/customers?${new URLSearchParams(params)}`),
+  get:    (id)        => api.get(`/api/customers/${id}`),
+  create: (data)      => api.post('/api/customers', data),
+  update: (id, data)  => api.put(`/api/customers/${id}`, data),
+  delete: (id)        => api.delete(`/api/customers/${id}`),
+}
+
 // Backup
 export const backupApi = {
   stats:    ()   => api.get('/api/backup/stats'),
