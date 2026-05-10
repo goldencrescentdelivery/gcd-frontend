@@ -191,14 +191,12 @@ export function AttModal({ employees, station, date, editRecord, onSave, onClose
   const [saving, setSaving] = useState(false)
   const [err,    setErr]    = useState(null)
 
-  const selEmp     = employees.find(e => e.id === empId)
-  const basicSal   = parseFloat(selEmp?.salary || 0)
   const hoursNum   = parseFloat(hoursWkd) || 0
   const shipNum    = parseInt(shipments) || 0
   const estEarnings = status === 'present'
     ? isDXE6
-      ? shipNum > 0 ? (basicSal + shipNum * 0.5).toFixed(2) : null
-      : hoursNum > 0 ? (basicSal + hoursNum * 3.85).toFixed(2) : null
+      ? shipNum > 0 ? (shipNum * 0.5).toFixed(2) : null
+      : hoursNum > 0 ? (hoursNum * 3.85).toFixed(2) : null
     : null
 
   async function handleSave() {
@@ -271,7 +269,7 @@ export function AttModal({ employees, station, date, editRecord, onSave, onClose
               <div>
                 <div style={{ fontSize:11, color:'var(--green)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Estimated Earnings</div>
                 <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:1 }}>
-                  {isDXE6 ? `Basic AED ${basicSal} + ${shipNum} × 0.5` : `Basic AED ${basicSal} + ${hoursNum}h × 3.85`}
+                  {isDXE6 ? `${shipNum} shipments × AED 0.50` : `${hoursNum}h × AED 3.85`}
                 </div>
               </div>
               <div style={{ fontSize:22, fontWeight:900, color:'var(--green)', letterSpacing:'-0.03em' }}>AED {estEarnings}</div>
