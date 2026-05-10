@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
 import { API } from '@/lib/api'
-import { ScrollText, Plus, ChevronLeft, User, Trash2, Pencil, CheckCircle, Clock, Send, Download } from 'lucide-react'
+import { ScrollText, Plus, ChevronLeft, User, Trash2, Pencil, CheckCircle, Clock, Send, Download, Calendar, Eye, FileText } from 'lucide-react'
 
 const hdr = () => ({ Authorization: `Bearer ${localStorage.getItem('gcd_token')}` })
 const TODAY = () => new Date().toISOString().split('T')[0]
@@ -41,18 +41,15 @@ function buildVerificationBlock(l, origin, size = 96) {
     </div>`
 }
 
-// ── Preview / Print HTML ─────────────────────────────────────────
 function buildLetterHTML(l, origin) {
-  const bodyHtml  = buildBodyHtml(l.body)
-  const showSign  = l.show_sign  !== false
-  const showStamp = l.show_stamp !== false
+  const bodyHtml   = buildBodyHtml(l.body)
+  const showSign   = l.show_sign  !== false
+  const showStamp  = l.show_stamp !== false
   const verifyBlock = buildVerificationBlock(l, origin, 82)
   return `<div style="width:794px;min-height:1123px;background:#fff;font-family:Georgia,serif;font-size:13.5px;color:#1a1a1a;position:relative;padding-bottom:130px;box-sizing:border-box;overflow:hidden">
-
   <div style="position:absolute;top:-30%;left:-30%;width:160%;height:160%;pointer-events:none;z-index:0;
     background-image:url('${origin}/watermark.png');background-repeat:repeat;background-size:90px auto;
     transform:rotate(-18deg);opacity:0.045"></div>
-
   <div style="position:relative;z-index:1">
   <div style="padding:28px 40px 16px;display:flex;align-items:center;gap:18px;border-bottom:2.5px solid #B8860B">
     <img src="${origin}/logo.webp" style="height:58px;object-fit:contain" alt="" onerror="this.style.display='none'"/>
@@ -60,7 +57,6 @@ function buildLetterHTML(l, origin) {
       Golden Crescent <span style="color:#B8860B">Delivery Services</span> LLC
     </div>
   </div>
-
   <div style="padding:28px 40px 0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;font-size:11.5px;font-family:Arial,sans-serif;color:#555">
       <span style="font-weight:700;color:#333">Ref: ${l.ref_no || '—'}</span>
@@ -83,7 +79,6 @@ function buildLetterHTML(l, origin) {
   </div>
   </div>
   ${verifyBlock}
-
   <div style="position:absolute;bottom:0;left:0;right:0;width:100%;padding:16px 40px;background:#f0ede6;border-top:2px solid #B8860B;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;box-sizing:border-box">
     <div>
       <div style="font-size:8px;letter-spacing:2.5px;font-weight:700;color:#B8860B;font-family:Arial,sans-serif;text-transform:uppercase;margin-bottom:5px">ADDRESS</div>
@@ -105,8 +100,6 @@ function buildPrintHTML(l, origin) {
   const bodyHtml  = buildBodyHtml(l.body)
   const showSign  = l.show_sign  !== false
   const showStamp = l.show_stamp !== false
-
-  // Inline QR — placed at end of content flow so it only appears on the last page
   const verifyUrl = l.show_qr !== false ? getVerifyUrl(l, origin) : ''
   const printQr = verifyUrl ? `
     <div style="display:flex;justify-content:flex-end;margin-top:28px">
@@ -138,7 +131,6 @@ function buildPrintHTML(l, origin) {
 </head>
 <body>
 <div class="wm"></div>
-
 <table class="lt">
   <thead>
     <tr><td>
@@ -192,7 +184,6 @@ function buildPrintHTML(l, origin) {
     </td></tr>
   </tbody>
 </table>
-
 <script>
 window.onload=function(){
   var imgs=document.images,n=imgs.length,d=0
@@ -238,30 +229,236 @@ function Toggle({ checked, onChange, label }) {
   )
 }
 
+const PAGE_CSS = `
+  /* ── Hero ── */
+  .ltr-hero {
+    background: linear-gradient(135deg, #0f1623 0%, #1a2535 50%, #1e3a5f 100%);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .ltr-hero-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .ltr-hero-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: rgba(184,134,11,0.15);
+    border: 1px solid rgba(184,134,11,0.3);
+    display: flex; align-items: center; justify-content: center;
+    color: #B8860B;
+    flex-shrink: 0;
+  }
+  .ltr-hero-title { font-size: 20px; font-weight: 800; color: white; margin: 0; }
+  .ltr-hero-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin: 3px 0 0; }
+  .ltr-new-btn {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 7px;
+    padding: 10px 20px; border-radius: 10px;
+    border: none; background: #B8860B; color: white;
+    font-weight: 700; font-size: 13px; cursor: pointer;
+    font-family: Poppins, sans-serif; white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .ltr-new-btn:hover { background: #9a7209; }
+
+  /* ── KPI tiles ── */
+  .ltr-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .ltr-kpi {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .ltr-kpi-val {
+    font-size: 28px; font-weight: 800; line-height: 1.1;
+  }
+  .ltr-kpi-label {
+    font-size: 10px; color: rgba(255,255,255,0.45);
+    font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; margin-top: 4px;
+  }
+
+  /* ── Cards ── */
+  .ltr-cards { display: flex; flex-direction: column; gap: 12px; }
+  .ltr-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .ltr-card:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.09); transform: translateY(-1px); }
+  .ltr-card-pending { border-color: #FDE68A88; }
+  .ltr-card-accent { width: 4px; flex-shrink: 0; }
+  .ltr-card-body { flex: 1; padding: 14px 16px; min-width: 0; }
+  .ltr-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .ltr-card-info { min-width: 0; }
+  .ltr-ref {
+    font-size: 12px; font-weight: 800; color: #B8860B;
+    font-family: monospace; letter-spacing: 0.03em;
+  }
+  .ltr-subject {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    margin-top: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 460px;
+  }
+  .ltr-subject-empty { color: var(--text-muted); font-style: italic; font-weight: 400; }
+  .ltr-card-meta {
+    display: flex; flex-wrap: wrap; gap: 6px 16px;
+    font-size: 11.5px; color: var(--text-muted);
+    align-items: center; margin-bottom: 12px;
+  }
+  .ltr-meta-item { display: flex; align-items: center; gap: 4px; }
+  .ltr-card-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  /* ── Buttons ── */
+  .ltr-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 11.5px; font-weight: 600; cursor: pointer;
+    font-family: Poppins, sans-serif; white-space: nowrap;
+    transition: opacity 0.15s, transform 0.1s;
+    border: 1px solid transparent;
+  }
+  .ltr-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .ltr-btn:active { transform: translateY(0); }
+  .ltr-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+  .ltr-btn-approve { border-color: #FDE68A; background: #FFFBEB; color: #92400E; }
+  .ltr-btn-dl      { border-color: #B8860B; background: #FEF9EE; color: #92400E; }
+  .ltr-btn-edit    { border-color: #93C5FD; background: #EFF6FF; color: #2563EB; }
+  .ltr-btn-del     { border-color: #FCA5A5; background: #FEF2F2; color: #EF4444; padding: 6px 10px; }
+
+  /* ── Badges ── */
+  .ltr-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .ltr-badge-pending  { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; }
+  .ltr-badge-approved { background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; }
+
+  /* ── Skeleton ── */
+  @keyframes ltr-pulse { 0%,100%{opacity:.45} 50%{opacity:.85} }
+  .ltr-skel { animation: ltr-pulse 1.5s ease infinite; background: var(--card); border-radius: 12px; }
+
+  /* ── Compose ── */
+  .cmp-wrap { display: flex; flex-direction: column; height: calc(100vh - 100px); }
+  .cmp-toolbar {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0; flex-wrap: wrap;
+  }
+  .cmp-back-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 7px 12px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    font-size: 12px; cursor: pointer; font-family: Poppins, sans-serif;
+  }
+  .cmp-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .cmp-approval-badge {
+    font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+    background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E;
+  }
+  .cmp-dl-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 16px; border-radius: 9px;
+    border: 1px solid #B8860B; background: white; color: #B8860B;
+    font-weight: 700; font-size: 13px; cursor: pointer; font-family: Poppins, sans-serif;
+  }
+  .cmp-save-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 20px; border-radius: 9px;
+    border: none; color: white;
+    font-weight: 700; font-size: 13px; cursor: pointer; font-family: Poppins, sans-serif;
+  }
+  .cmp-preview-btn {
+    display: none; align-items: center; gap: 5px;
+    padding: 7px 13px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    font-size: 12px; cursor: pointer; font-family: Poppins, sans-serif; font-weight: 600;
+  }
+  .cmp-body {
+    display: grid; grid-template-columns: 320px 1fr;
+    gap: 20px; flex: 1; overflow: hidden; padding-top: 16px;
+  }
+  .cmp-form-panel {
+    overflow-y: auto; display: flex; flex-direction: column; gap: 13px; padding-right: 4px;
+  }
+  .cmp-preview-panel {
+    overflow-y: auto; background: #d8d8d8; border-radius: 10px;
+    padding: 20px; display: flex; justify-content: center; align-items: flex-start;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .ltr-hero { padding: 16px; border-radius: 12px; }
+    .ltr-kpi-val { font-size: 22px; }
+    .ltr-kpi { padding: 10px 14px; }
+    .ltr-card-top { flex-direction: column; gap: 8px; }
+    .ltr-subject { max-width: 100%; }
+
+    .cmp-preview-btn { display: flex; }
+    .cmp-body { grid-template-columns: 1fr; }
+    .cmp-preview-panel { display: none; }
+    .cmp-preview-panel.cmp-show { display: flex; }
+    .cmp-form-panel.cmp-hide { display: none; }
+    .cmp-save-btn { font-size: 12px; padding: 8px 14px; }
+    .cmp-dl-btn   { font-size: 12px; padding: 8px 12px; }
+  }
+
+  @media (max-width: 520px) {
+    .ltr-kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .ltr-kpi:last-child { grid-column: span 2; }
+    .ltr-new-btn { padding: 8px 14px; font-size: 12px; }
+    .ltr-btn { padding: 5px 10px; font-size: 11px; }
+    .cmp-approval-badge { display: none; }
+    .ltr-card-body { padding: 12px 14px; }
+  }
+`
+
 export default function LettersPage() {
   const { user } = useAuth()
   const isAdmin  = user?.role === 'admin'
 
-  const [view,      setView]      = useState('list')
-  const [letters,   setLetters]   = useState([])
-  const [loading,   setLoading]   = useState(true)
-  const [saving,    setSaving]    = useState(false)
-  const [editingId, setEditingId] = useState(null)
-  const [submitted, setSubmitted] = useState(false)
+  const [view,         setView]         = useState('list')
+  const [letters,      setLetters]      = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [saving,       setSaving]       = useState(false)
+  const [editingId,    setEditingId]    = useState(null)
+  const [submitted,    setSubmitted]    = useState(false)
+  const [showPreview,  setShowPreview]  = useState(false)
+  const [downloading,  setDownloading]  = useState(false)
 
-  // form fields
-  const [date,      setDate]      = useState(TODAY())
-  const [toName,    setToName]    = useState('')
-  const [subject,   setSubject]   = useState('')
-  const [greeting,  setGreeting]  = useState('Dear Sir / Madam,')
-  const [body,      setBody]      = useState('')
-  const [showSign,  setShowSign]  = useState(true)
-  const [showStamp, setShowStamp] = useState(true)
-  const [showQr,    setShowQr]    = useState(true)
-  const [signerName,     setSignerName]     = useState('')
-  const [signerTitle,    setSignerTitle]    = useState('')
-  const [signatureData,  setSignatureData]  = useState(null)
-  const [downloading,    setDownloading]    = useState(false)
+  const [date,          setDate]          = useState(TODAY())
+  const [toName,        setToName]        = useState('')
+  const [subject,       setSubject]       = useState('')
+  const [greeting,      setGreeting]      = useState('Dear Sir / Madam,')
+  const [body,          setBody]          = useState('')
+  const [showSign,      setShowSign]      = useState(true)
+  const [showStamp,     setShowStamp]     = useState(true)
+  const [showQr,        setShowQr]        = useState(true)
+  const [signerName,    setSignerName]    = useState('')
+  const [signerTitle,   setSignerTitle]   = useState('')
+  const [signatureData, setSignatureData] = useState(null)
 
   const editingLetter = editingId ? letters.find(l => l.id === editingId) : null
   const draft = {
@@ -284,7 +481,7 @@ export default function LettersPage() {
     setGreeting('Dear Sir / Madam,'); setBody('')
     setShowSign(true); setShowStamp(true); setShowQr(true)
     setSignerName(''); setSignerTitle(''); setSignatureData(null)
-    setEditingId(null); setSubmitted(false)
+    setEditingId(null); setSubmitted(false); setShowPreview(false)
   }
 
   function handleSignatureUpload(e) {
@@ -360,6 +557,7 @@ export default function LettersPage() {
     setSignatureData(letter.signature_data || null)
     setEditingId(letter.id)
     setSubmitted(false)
+    setShowPreview(false)
     setView('compose')
   }
 
@@ -374,7 +572,6 @@ export default function LettersPage() {
         signer_title: signerTitle || null,
         signature_data: signatureData || null,
       }
-
       let saved
       if (editingId) {
         const r = await fetch(`${API}/api/letters/${editingId}`, {
@@ -397,10 +594,8 @@ export default function LettersPage() {
         saved = d.letter
         setLetters(prev => [saved, ...prev])
       }
-
       if (isAdmin) {
-        setView('list')
-        resetForm()
+        setView('list'); resetForm()
         await downloadPDF(saved)
       } else {
         setSubmitted(true)
@@ -433,131 +628,138 @@ export default function LettersPage() {
 
   // ── Submitted confirmation ────────────────────────────────────
   if (view === 'compose' && submitted) return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16, padding:'80px 20px', textAlign:'center' }}>
-      <div style={{ width:72, height:72, borderRadius:'50%', background:'#FFFBEB', border:'2px solid #FDE68A', display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <CheckCircle size={34} color="#B8860B"/>
+    <>
+      <style>{PAGE_CSS}</style>
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16, padding:'80px 20px', textAlign:'center' }}>
+        <div style={{ width:72, height:72, borderRadius:'50%', background:'#FFFBEB', border:'2px solid #FDE68A', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <CheckCircle size={34} color="#B8860B"/>
+        </div>
+        <div style={{ fontWeight:800, fontSize:18, color:'var(--text)' }}>Submitted for Approval</div>
+        <div style={{ fontSize:13, color:'var(--text-muted)', maxWidth:320 }}>
+          Your letter has been saved and sent to the admin for approval. Once approved, it can be printed.
+        </div>
+        <button onClick={() => { setView('list'); resetForm() }}
+          style={{ marginTop:8, padding:'10px 28px', borderRadius:10, border:'none', background:'#B8860B', color:'white', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+          Back to Letters
+        </button>
       </div>
-      <div style={{ fontWeight:800, fontSize:18, color:'var(--text)' }}>Submitted for Approval</div>
-      <div style={{ fontSize:13, color:'var(--text-muted)', maxWidth:320 }}>
-        Your letter has been saved and sent to the admin for approval. Once approved, it can be printed.
-      </div>
-      <button onClick={() => { setView('list'); resetForm() }}
-        style={{ marginTop:8, padding:'10px 28px', borderRadius:10, border:'none', background:'#B8860B', color:'white', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-        Back to Letters
-      </button>
-    </div>
+    </>
   )
 
   // ── Compose view ──────────────────────────────────────────────
   if (view === 'compose') return (
-    <div style={{ display:'flex', flexDirection:'column', gap:0, height:'calc(100vh - 100px)' }}>
+    <>
+      <style>{PAGE_CSS}</style>
+      <div className="cmp-wrap">
 
-      {/* toolbar */}
-      <div style={{ display:'flex', alignItems:'center', gap:12, paddingBottom:14, borderBottom:'1px solid var(--border)', flexShrink:0 }}>
-        <button onClick={() => { setView('list'); resetForm() }}
-          style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 12px', borderRadius:8, border:'1px solid var(--border)', background:'var(--card)', color:'var(--text)', fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-          <ChevronLeft size={13}/> Back
-        </button>
-        <span style={{ fontSize:14, fontWeight:700, color:'var(--text)' }}>
-          {editingId ? 'Edit Letter' : 'New Letter'}
-        </span>
-        {!isAdmin && (
-          <span style={{ fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:20, background:'#FFFBEB', border:'1px solid #FDE68A', color:'#92400E' }}>
-            Requires admin approval to print
-          </span>
-        )}
-        <div style={{ flex:1 }}/>
-        {isAdmin && editingId && (
-          <button onClick={() => downloadPDF(draft)} disabled={downloading}
-            style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:9, border:'1px solid #B8860B', background:'white', color:'#B8860B', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity: downloading ? 0.6 : 1 }}>
-            <Download size={14}/>{downloading ? 'Generating…' : 'Download PDF'}
+        {/* Toolbar */}
+        <div className="cmp-toolbar">
+          <button onClick={() => { setView('list'); resetForm() }} className="cmp-back-btn">
+            <ChevronLeft size={13}/> Back
           </button>
-        )}
-        <button onClick={handleSave} disabled={!body.trim() || saving}
-          style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 20px', borderRadius:9, border:'none', background: isAdmin ? '#B8860B' : '#6366F1', color:'white', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif', opacity:(!body.trim() || saving) ? 0.55 : 1 }}>
-          {isAdmin ? <Download size={14}/> : <Send size={14}/>}
-          {saving
-            ? (isAdmin ? (editingId ? 'Updating…' : 'Saving…') : 'Submitting…')
-            : (isAdmin ? (editingId ? 'Update & Download PDF' : 'Save & Download PDF') : 'Submit for Approval')}
-        </button>
-      </div>
-
-      {/* two-column */}
-      <div style={{ display:'grid', gridTemplateColumns:'320px 1fr', gap:20, flex:1, overflow:'hidden', paddingTop:16 }}>
-
-        {/* form */}
-        <div style={{ overflowY:'auto', display:'flex', flexDirection:'column', gap:13, paddingRight:4 }}>
-          <div>
-            <label style={labelStyle}>Date</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle}/>
-          </div>
-          <div>
-            <label style={labelStyle}>To (Recipient)</label>
-            <input value={toName} onChange={e => setToName(e.target.value)}
-              placeholder="e.g. The Manager, ABC Company" style={inputStyle}/>
-            <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:3 }}>Leave blank → "To Whom It May Concern"</div>
-          </div>
-          <div>
-            <label style={labelStyle}>Subject (Re:)</label>
-            <input value={subject} onChange={e => setSubject(e.target.value)}
-              placeholder="e.g. Service Introduction" style={inputStyle}/>
-          </div>
-          <div>
-            <label style={labelStyle}>Greeting</label>
-            <input value={greeting} onChange={e => setGreeting(e.target.value)} style={inputStyle}/>
-          </div>
-          <div>
-            <label style={labelStyle}>Letter Body <span style={{ color:'#E53E3E' }}>*</span></label>
-            <textarea value={body} onChange={e => setBody(e.target.value)} rows={14}
-              placeholder="Write your letter content here…"
-              style={{ ...inputStyle, fontFamily:'Georgia,serif', lineHeight:1.75, resize:'vertical', padding:'10px 11px' }}/>
-          </div>
-
-          {/* Sign & Stamp toggles */}
-          <div style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10, padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
-            <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Letter Options</div>
-            <Toggle checked={showSign}  onChange={setShowSign}  label="Include Signature"/>
-            <Toggle checked={showStamp} onChange={setShowStamp} label="Include Stamp"/>
-            <Toggle checked={showQr}    onChange={setShowQr}    label="Include QR Code"/>
-          </div>
-
-          {/* Signature details */}
-          {showSign && (
-            <div style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10, padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
-              <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Signatory</div>
-              <div>
-                <label style={labelStyle}>Name</label>
-                <input value={signerName} onChange={e => setSignerName(e.target.value)}
-                  placeholder="e.g. John Smith" style={inputStyle}/>
-              </div>
-              <div>
-                <label style={labelStyle}>Title / Position</label>
-                <input value={signerTitle} onChange={e => setSignerTitle(e.target.value)}
-                  placeholder="e.g. Operations Manager" style={inputStyle}/>
-              </div>
-              <div>
-                <label style={labelStyle}>Signature Image</label>
-                <input type="file" accept="image/*" onChange={handleSignatureUpload}
-                  style={{ fontSize:11.5, color:'var(--text)', fontFamily:'Poppins,sans-serif' }}/>
-                {signatureData && (
-                  <div style={{ marginTop:8, background:'white', border:'1px solid var(--border)', borderRadius:6, padding:6, display:'inline-block' }}>
-                    <img src={signatureData} style={{ height:56, display:'block' }} alt="Signature preview"/>
-                  </div>
-                )}
-              </div>
-            </div>
+          <span className="cmp-title">{editingId ? 'Edit Letter' : 'New Letter'}</span>
+          {!isAdmin && (
+            <span className="cmp-approval-badge">Requires admin approval to print</span>
           )}
+          <div style={{ flex:1 }}/>
+          {/* Mobile preview toggle */}
+          <button
+            onClick={() => setShowPreview(p => !p)}
+            className="cmp-preview-btn"
+            style={{ display:'flex' }}>
+            <Eye size={13}/>{showPreview ? 'Form' : 'Preview'}
+          </button>
+          {isAdmin && editingId && (
+            <button onClick={() => downloadPDF(draft)} disabled={downloading} className="cmp-dl-btn">
+              <Download size={14}/>{downloading ? 'Generating…' : 'Download PDF'}
+            </button>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={!body.trim() || saving}
+            className="cmp-save-btn"
+            style={{ background: isAdmin ? '#B8860B' : '#6366F1', opacity:(!body.trim() || saving) ? 0.55 : 1 }}>
+            {isAdmin ? <Download size={14}/> : <Send size={14}/>}
+            {saving
+              ? (isAdmin ? (editingId ? 'Updating…' : 'Saving…') : 'Submitting…')
+              : (isAdmin ? (editingId ? 'Update & Download PDF' : 'Save & Download PDF') : 'Submit for Approval')}
+          </button>
         </div>
 
-        {/* live preview */}
-        <div style={{ overflowY:'auto', background:'#d8d8d8', borderRadius:10, padding:20, display:'flex', justifyContent:'center', alignItems:'flex-start' }}>
-          <div style={{ width: 794 * SCALE, flexShrink:0, boxShadow:'0 4px 24px rgba(0,0,0,0.18)', borderRadius:2, overflow:'hidden', background:'white' }}>
-            <div style={{ transform:`scale(${SCALE})`, transformOrigin:'top left', width:794, pointerEvents:'none' }}
-              dangerouslySetInnerHTML={{ __html: buildLetterHTML(draft, typeof window !== 'undefined' ? window.location.origin : '') }}/>
+        {/* Two-column body */}
+        <div className="cmp-body">
+
+          {/* Form panel */}
+          <div className={`cmp-form-panel${showPreview ? ' cmp-hide' : ''}`}>
+            <div>
+              <label style={labelStyle}>Date</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle}/>
+            </div>
+            <div>
+              <label style={labelStyle}>To (Recipient)</label>
+              <input value={toName} onChange={e => setToName(e.target.value)}
+                placeholder="e.g. The Manager, ABC Company" style={inputStyle}/>
+              <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:3 }}>Leave blank → "To Whom It May Concern"</div>
+            </div>
+            <div>
+              <label style={labelStyle}>Subject (Re:)</label>
+              <input value={subject} onChange={e => setSubject(e.target.value)}
+                placeholder="e.g. Service Introduction" style={inputStyle}/>
+            </div>
+            <div>
+              <label style={labelStyle}>Greeting</label>
+              <input value={greeting} onChange={e => setGreeting(e.target.value)} style={inputStyle}/>
+            </div>
+            <div>
+              <label style={labelStyle}>Letter Body <span style={{ color:'#E53E3E' }}>*</span></label>
+              <textarea value={body} onChange={e => setBody(e.target.value)} rows={14}
+                placeholder="Write your letter content here…"
+                style={{ ...inputStyle, fontFamily:'Georgia,serif', lineHeight:1.75, resize:'vertical', padding:'10px 11px' }}/>
+            </div>
+            <div style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10, padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
+              <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Letter Options</div>
+              <Toggle checked={showSign}  onChange={setShowSign}  label="Include Signature"/>
+              <Toggle checked={showStamp} onChange={setShowStamp} label="Include Stamp"/>
+              <Toggle checked={showQr}    onChange={setShowQr}    label="Include QR Code"/>
+            </div>
+            {showSign && (
+              <div style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10, padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
+                <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Signatory</div>
+                <div>
+                  <label style={labelStyle}>Name</label>
+                  <input value={signerName} onChange={e => setSignerName(e.target.value)}
+                    placeholder="e.g. John Smith" style={inputStyle}/>
+                </div>
+                <div>
+                  <label style={labelStyle}>Title / Position</label>
+                  <input value={signerTitle} onChange={e => setSignerTitle(e.target.value)}
+                    placeholder="e.g. Operations Manager" style={inputStyle}/>
+                </div>
+                <div>
+                  <label style={labelStyle}>Signature Image</label>
+                  <input type="file" accept="image/*" onChange={handleSignatureUpload}
+                    style={{ fontSize:11.5, color:'var(--text)', fontFamily:'Poppins,sans-serif' }}/>
+                  {signatureData && (
+                    <div style={{ marginTop:8, background:'white', border:'1px solid var(--border)', borderRadius:6, padding:6, display:'inline-block' }}>
+                      <img src={signatureData} style={{ height:56, display:'block' }} alt="Signature preview"/>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Preview panel */}
+          <div className={`cmp-preview-panel${showPreview ? ' cmp-show' : ''}`}>
+            <div style={{ width: 794 * SCALE, flexShrink:0, boxShadow:'0 4px 24px rgba(0,0,0,0.18)', borderRadius:2, overflow:'hidden', background:'white' }}>
+              <div style={{ transform:`scale(${SCALE})`, transformOrigin:'top left', width:794, pointerEvents:'none' }}
+                dangerouslySetInnerHTML={{ __html: buildLetterHTML(draft, typeof window !== 'undefined' ? window.location.origin : '') }}/>
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
+    </>
   )
 
   // ── List view ─────────────────────────────────────────────────
@@ -568,108 +770,128 @@ export default function LettersPage() {
   const pending = letters.filter(l => l.status === 'pending').length
 
   return (
-    <div>
-      {/* stats + action */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr auto', gap:12, marginBottom:20, alignItems:'stretch' }}>
-        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:12, padding:'12px 16px' }}>
-          <div style={{ fontSize:10, color:'var(--text-muted)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em' }}>Total Letters</div>
-          <div style={{ fontSize:28, fontWeight:800, color:'#B8860B', lineHeight:1.1, marginTop:3 }}>{letters.length}</div>
+    <>
+      <style>{PAGE_CSS}</style>
+
+      {/* Hero */}
+      <div className="ltr-hero">
+        <div className="ltr-hero-top">
+          <div className="ltr-hero-icon">
+            <ScrollText size={20}/>
+          </div>
+          <div>
+            <div className="ltr-hero-title">Office Letters</div>
+            <div className="ltr-hero-sub">Official correspondence · GCD/LTR format</div>
+          </div>
+          <button onClick={() => { resetForm(); setView('compose') }} className="ltr-new-btn">
+            <Plus size={15}/> New Letter
+          </button>
         </div>
-        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:12, padding:'12px 16px' }}>
-          <div style={{ fontSize:10, color:'var(--text-muted)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em' }}>This Month</div>
-          <div style={{ fontSize:28, fontWeight:800, color:'#6366F1', lineHeight:1.1, marginTop:3 }}>{thisMonth}</div>
+
+        <div className="ltr-kpi-grid">
+          <div className="ltr-kpi">
+            <div className="ltr-kpi-val" style={{ color:'#B8860B' }}>{letters.length}</div>
+            <div className="ltr-kpi-label">Total Letters</div>
+          </div>
+          <div className="ltr-kpi">
+            <div className="ltr-kpi-val" style={{ color:'#818CF8' }}>{thisMonth}</div>
+            <div className="ltr-kpi-label">This Month</div>
+          </div>
+          <div className="ltr-kpi">
+            <div className="ltr-kpi-val" style={{ color: pending > 0 ? '#F59E0B' : 'rgba(255,255,255,0.35)' }}>{pending}</div>
+            <div className="ltr-kpi-label">Pending Approval</div>
+          </div>
         </div>
-        <div style={{ background: pending > 0 ? '#FFFBEB' : 'var(--card)', border:`1px solid ${pending > 0 ? '#FDE68A' : 'var(--border)'}`, borderRadius:12, padding:'12px 16px' }}>
-          <div style={{ fontSize:10, color: pending > 0 ? '#92400E' : 'var(--text-muted)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em' }}>Pending Approval</div>
-          <div style={{ fontSize:28, fontWeight:800, color: pending > 0 ? '#D97706' : 'var(--text-muted)', lineHeight:1.1, marginTop:3 }}>{pending}</div>
-        </div>
-        <button onClick={() => { resetForm(); setView('compose') }}
-          style={{ display:'flex', alignItems:'center', gap:8, padding:'0 24px', borderRadius:12, border:'none', background:'#B8860B', color:'white', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-          <Plus size={15}/> New Letter
-        </button>
       </div>
 
-      {/* table */}
+      {/* Content */}
       {loading ? (
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          {[1,2,3].map(i => <div key={i} style={{ height:54, background:'var(--card)', borderRadius:10, opacity:0.5, animation:'pulse 1.5s ease infinite' }}/>)}
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {[1,2,3].map(i => (
+            <div key={i} className="ltr-skel" style={{ height:100, opacity: 1 - i * 0.15 }}/>
+          ))}
         </div>
       ) : letters.length === 0 ? (
-        <div style={{ textAlign:'center', padding:'60px 20px', color:'var(--text-muted)' }}>
-          <ScrollText size={40} style={{ margin:'0 auto 12px', display:'block', opacity:0.2 }}/>
-          <div style={{ fontWeight:600, fontSize:14 }}>No letters generated yet</div>
-          <div style={{ fontSize:12, marginTop:4 }}>Click "New Letter" to create your first official letter</div>
+        <div style={{ textAlign:'center', padding:'70px 20px', color:'var(--text-muted)' }}>
+          <div style={{ width:64, height:64, borderRadius:'50%', background:'var(--card)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+            <FileText size={28} style={{ opacity:0.25 }}/>
+          </div>
+          <div style={{ fontWeight:700, fontSize:15, color:'var(--text)', marginBottom:6 }}>No letters yet</div>
+          <div style={{ fontSize:13, marginBottom:20 }}>Create your first official letter using the button above.</div>
+          <button onClick={() => { resetForm(); setView('compose') }}
+            style={{ padding:'10px 24px', borderRadius:10, border:'none', background:'#B8860B', color:'white', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+            <Plus size={13} style={{ display:'inline', marginRight:6, verticalAlign:'middle' }}/>
+            New Letter
+          </button>
         </div>
       ) : (
-        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:12, overflow:'hidden' }}>
-          <table style={{ width:'100%', borderCollapse:'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom:'1px solid var(--border)', background:'var(--bg-alt)' }}>
-                {['Ref No.','Date','To','Subject','Status','Generated By','Created',''].map(h => (
-                  <th key={h} style={{ padding:'10px 14px', textAlign:'left', fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.05em', whiteSpace:'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {letters.map((l, i) => {
-                const isPending = l.status === 'pending'
-                return (
-                  <tr key={l.id} style={{ borderBottom: i < letters.length - 1 ? '1px solid var(--border)' : 'none', background: isPending ? '#FFFBEB44' : 'transparent' }}>
-                    <td style={{ padding:'10px 14px', fontSize:12, fontWeight:700, color:'#B8860B', fontFamily:'monospace', whiteSpace:'nowrap' }}>{l.ref_no}</td>
-                    <td style={{ padding:'10px 14px', fontSize:12, color:'var(--text)', whiteSpace:'nowrap' }}>{fmtDate(l.date)}</td>
-                    <td style={{ padding:'10px 14px', fontSize:12, color:'var(--text)', maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{l.to_name || <span style={{ color:'var(--text-muted)' }}>To Whom It May Concern</span>}</td>
-                    <td style={{ padding:'10px 14px', fontSize:12, color:'var(--text)', maxWidth:180, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{l.subject || <span style={{ color:'var(--text-muted)' }}>—</span>}</td>
-                    <td style={{ padding:'10px 14px', whiteSpace:'nowrap' }}>
-                      {isPending ? (
-                        <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:10.5, fontWeight:700, padding:'2px 9px', borderRadius:20, background:'#FFFBEB', border:'1px solid #FDE68A', color:'#92400E' }}>
-                          <Clock size={10}/> Pending
-                        </span>
-                      ) : (
-                        <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:10.5, fontWeight:700, padding:'2px 9px', borderRadius:20, background:'#ECFDF5', border:'1px solid #A7F3D0', color:'#065F46' }}>
-                          <CheckCircle size={10}/> Approved
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ padding:'10px 14px', fontSize:12, color:'var(--text-muted)', whiteSpace:'nowrap' }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:5 }}><User size={11}/>{l.created_by_name || '—'}</div>
-                    </td>
-                    <td style={{ padding:'10px 14px', fontSize:11.5, color:'var(--text-muted)', whiteSpace:'nowrap' }}>{fmtShort(l.created_at)}</td>
-                    <td style={{ padding:'10px 14px' }}>
-                      <div style={{ display:'flex', gap:6 }}>
-                        {/* Admin: approve & print pending letters */}
-                        {isAdmin && isPending && (
-                          <button onClick={() => handleApprove(l)}
-                            style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px', borderRadius:7, border:'1px solid #FDE68A', background:'#FFFBEB', color:'#92400E', fontSize:11.5, cursor:'pointer', fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap', fontWeight:600 }}>
-                            <CheckCircle size={11}/> Approve & Download PDF
-                          </button>
-                        )}
-                        {!isPending && (
-                          <button onClick={() => downloadPDF(l)} disabled={downloading}
-                            style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px', borderRadius:7, border:'1px solid #B8860B', background:'#FFFBEB', color:'#92400E', fontSize:11.5, cursor:'pointer', fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap', opacity: downloading ? 0.6 : 1 }}>
-                            <Download size={11}/> {downloading ? 'Generating…' : 'Download PDF'}
-                          </button>
-                        )}
-                        {canEdit(l) && (
-                          <button onClick={() => loadEdit(l)}
-                            style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:7, border:'1px solid #93C5FD', background:'#EFF6FF', color:'#2563EB', fontSize:11.5, cursor:'pointer', whiteSpace:'nowrap' }}>
-                            <Pencil size={11}/> Edit
-                          </button>
-                        )}
-                        {isAdmin && (
-                          <button onClick={() => handleDelete(l.id)}
-                            style={{ display:'flex', alignItems:'center', padding:'5px 8px', borderRadius:7, border:'1px solid #FCA5A5', background:'#FEF2F2', color:'#EF4444', fontSize:11.5, cursor:'pointer' }}>
-                            <Trash2 size={11}/>
-                          </button>
-                        )}
+        <div className="ltr-cards">
+          {letters.map(l => {
+            const isPending = l.status === 'pending'
+            return (
+              <div key={l.id} className={`ltr-card${isPending ? ' ltr-card-pending' : ''}`}>
+                <div className="ltr-card-accent" style={{ background: isPending ? '#F59E0B' : '#B8860B' }}/>
+                <div className="ltr-card-body">
+
+                  {/* Top row: ref+subject / badge */}
+                  <div className="ltr-card-top">
+                    <div className="ltr-card-info">
+                      <div className="ltr-ref">{l.ref_no}</div>
+                      <div className={`ltr-subject${!l.subject ? ' ltr-subject-empty' : ''}`}>
+                        {l.subject || 'No subject'}
                       </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                    </div>
+                    <span className={`ltr-badge ${isPending ? 'ltr-badge-pending' : 'ltr-badge-approved'}`}>
+                      {isPending ? <Clock size={10}/> : <CheckCircle size={10}/>}
+                      {isPending ? 'Pending' : 'Approved'}
+                    </span>
+                  </div>
+
+                  {/* Meta */}
+                  <div className="ltr-card-meta">
+                    <span className="ltr-meta-item">
+                      <Calendar size={11}/>
+                      {fmtDate(l.date)}
+                    </span>
+                    <span className="ltr-meta-item">
+                      <User size={11}/>
+                      {l.to_name || 'To Whom It May Concern'}
+                    </span>
+                    <span className="ltr-meta-item" style={{ color:'var(--text-muted)', opacity:0.7 }}>
+                      {l.created_by_name || '—'} · {fmtShort(l.created_at)}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="ltr-card-actions">
+                    {isAdmin && isPending && (
+                      <button onClick={() => handleApprove(l)} className="ltr-btn ltr-btn-approve">
+                        <CheckCircle size={11}/> Approve &amp; Download PDF
+                      </button>
+                    )}
+                    {!isPending && (
+                      <button onClick={() => downloadPDF(l)} disabled={downloading} className="ltr-btn ltr-btn-dl">
+                        <Download size={11}/>{downloading ? 'Generating…' : 'Download PDF'}
+                      </button>
+                    )}
+                    {canEdit(l) && (
+                      <button onClick={() => loadEdit(l)} className="ltr-btn ltr-btn-edit">
+                        <Pencil size={11}/> Edit
+                      </button>
+                    )}
+                    {isAdmin && (
+                      <button onClick={() => handleDelete(l.id)} className="ltr-btn ltr-btn-del">
+                        <Trash2 size={11}/>
+                      </button>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
-    </div>
+    </>
   )
 }
