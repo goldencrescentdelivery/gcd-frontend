@@ -429,7 +429,7 @@ function EntryModal({ type, customer, entry, onSave, onClose }) {
         const vat = parseFloat(k === 'vat' ? v : next.vat)
         if (!isNaN(amt)) {
           if (k === 'invoice_amount' && next.vat === '') {
-            const autoVat = Math.round(amt * 5) / 100
+            const autoVat = customer?.trn_no ? Math.round(amt * 5) / 100 : 0
             next.vat = String(autoVat)
             next.grand_total = String(amt + autoVat)
           } else if (!isNaN(vat)) {
