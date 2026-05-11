@@ -644,28 +644,29 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
   ]
 
   // ── Sub-components ──────────────────────────────────────────
-  function Section({ title, children }) {
+  function Section({ title, icon: SIcon, children }) {
     return (
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, overflow:'hidden' }}>
-        <div style={{ padding:'10px 16px', borderBottom:'1px solid var(--border)', background:'var(--bg-alt)' }}>
-          <span style={{ fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.08em', color:'var(--text-muted)' }}>{title}</span>
+        <div style={{ padding:'9px 16px', borderBottom:'1px solid var(--border)', background:'var(--bg-alt)', display:'flex', alignItems:'center', gap:7 }}>
+          {SIcon && <SIcon size={11} color="var(--text-muted)"/>}
+          <span style={{ fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.09em', color:'var(--text-muted)' }}>{title}</span>
         </div>
-        <div style={{ padding:'4px 0' }}>{children}</div>
+        <div>{children}</div>
       </div>
     )
   }
 
-  function InfoItem({ icon: Icon, label, value, href, mono }) {
+  function InfoRow({ icon: Icon, label, value, href, mono, accent }) {
     const val = typeof value === 'object' ? JSON.stringify(value) : value
     const display = href && val
-      ? <a href={href} style={{ fontSize:12.5, fontWeight:600, color:'var(--gold)', textDecoration:'none', wordBreak:'break-all' }}>{val}</a>
-      : <span style={{ fontSize:12.5, fontWeight:600, color: val ? 'var(--text)' : 'var(--text-muted)', fontFamily: mono ? 'monospace' : 'inherit', wordBreak:'break-all' }}>{val || '—'}</span>
+      ? <a href={href} style={{ fontSize:13, fontWeight:600, color:'#B8860B', textDecoration:'none', wordBreak:'break-all' }}>{val}</a>
+      : <span style={{ fontSize:13, fontWeight:600, color: val ? (accent||'var(--text)') : 'var(--text-muted)', fontFamily: mono ? 'monospace' : 'inherit', wordBreak:'break-all' }}>{val || '—'}</span>
     return (
-      <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px', borderBottom:'1px solid var(--border)' }}>
-        <div style={{ width:28, height:28, borderRadius:8, background:'var(--bg-alt)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-          {Icon && <Icon size={12} color="var(--text-muted)"/>}
+      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'11px 16px', borderBottom:'1px solid var(--border)' }}>
+        <div style={{ width:30, height:30, borderRadius:9, background:'var(--bg-alt)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          {Icon && <Icon size={13} color="var(--text-muted)"/>}
         </div>
-        <span style={{ fontSize:11.5, color:'var(--text-muted)', minWidth:92, flexShrink:0 }}>{label}</span>
+        <span style={{ fontSize:12, color:'var(--text-muted)', minWidth:100, flexShrink:0 }}>{label}</span>
         {display}
       </div>
     )
@@ -674,66 +675,81 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
   function DocRow({ label, date }) {
     const chip = docChip(date)
     const days = docDays(date)
+    const isAlert = chip && (days === null || days <= 30)
     return (
-      <div style={{ display:'flex', alignItems:'center', padding:'11px 16px', borderBottom:'1px solid var(--border)', gap:8 }}>
+      <div style={{ display:'flex', alignItems:'center', padding:'12px 16px', borderBottom:'1px solid var(--border)', gap:10 }}>
         <div style={{ flex:1 }}>
-          <div style={{ fontSize:12.5, fontWeight:600, color:'var(--text)', marginBottom:1 }}>{label}</div>
-          <div style={{ fontSize:11, color:'var(--text-muted)' }}>{date ? date.slice(0,10) : 'Not on file'}</div>
+          <div style={{ fontSize:13, fontWeight:600, color:'var(--text)' }}>{label}</div>
+          <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:2 }}>{date ? date.slice(0,10) : 'Not on file'}</div>
         </div>
         {chip
-          ? <span style={{ fontSize:10.5, fontWeight:700, color:chip.c, background:chip.bg, border:`1px solid ${chip.bc}`, borderRadius:99, padding:'3px 10px', flexShrink:0 }}>
+          ? <span style={{ fontSize:11, fontWeight:700, color:chip.c, background:chip.bg, border:`1px solid ${chip.bc}`, borderRadius:99, padding:'3px 12px', flexShrink:0 }}>
               {days !== null && days < 0 ? 'Expired' : chip.label}
             </span>
-          : <span style={{ fontSize:10.5, color:'var(--text-muted)' }}>—</span>}
+          : <span style={{ fontSize:11, color:'var(--text-muted)', padding:'3px 12px' }}>—</span>}
       </div>
     )
   }
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', height:'100%', fontFamily:'Poppins,sans-serif' }}>
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', fontFamily:'Poppins,sans-serif', overflow:'hidden' }}>
 
-      {/* ══ HEADER ══════════════════════════════════════════════ */}
-      <div style={{ background:`linear-gradient(135deg,${sbg} 0%,var(--card) 65%)`, padding:'20px 22px 16px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
-        <div style={{ display:'flex', alignItems:'flex-start', gap:16, marginBottom: alertCount > 0 ? 14 : 0 }}>
+      {/* ══ DARK HERO HEADER ════════════════════════════════════ */}
+      <div style={{ background:'linear-gradient(135deg,#0f1623 0%,#1a2535 55%,#1e3a5f 100%)', padding:'20px 22px 18px', flexShrink:0 }}>
 
-          {/* Rounded-square avatar */}
+        {/* Top row: avatar + name + actions */}
+        <div style={{ display:'flex', alignItems:'flex-start', gap:14, marginBottom:16 }}>
           <div style={{ position:'relative', flexShrink:0 }}>
-            <div style={{ width:68, height:68, borderRadius:20, background:`linear-gradient(145deg,${sc}25,${sc}50)`, border:`2px solid ${sbc}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:900, color:sc, letterSpacing:'-0.02em', boxShadow:`0 6px 20px ${sc}22` }}>
+            <div style={{ width:58, height:58, borderRadius:16, background:`linear-gradient(145deg,${sc}30,${sc}60)`, border:`2px solid ${sc}60`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, fontWeight:900, color:'white', letterSpacing:'-0.02em', boxShadow:`0 6px 20px ${sc}35` }}>
               {emp.name?.slice(0,2).toUpperCase()}
             </div>
-            <div style={{ position:'absolute', bottom:-3, right:-3, width:16, height:16, borderRadius:'50%', background:s.dot, border:'2.5px solid var(--card)', boxShadow:'0 1px 4px rgba(0,0,0,0.15)' }}/>
+            <div style={{ position:'absolute', bottom:-2, right:-2, width:14, height:14, borderRadius:'50%', background:s.dot, border:'2.5px solid #0f1623', boxShadow:'0 1px 4px rgba(0,0,0,0.4)' }}/>
           </div>
 
-          {/* Identity */}
           <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:7, flexWrap:'wrap', marginBottom:3 }}>
-              <h2 style={{ margin:0, fontSize:19, fontWeight:900, color:'var(--text)', letterSpacing:'-0.03em', lineHeight:1.2 }}>{emp.name}</h2>
-              <span style={{ fontSize:10.5, fontWeight:700, color:s.c, background:s.bg, border:`1.5px solid ${s.bc}`, borderRadius:99, padding:'2px 9px' }}>{s.l}</span>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
+              <h2 style={{ margin:0, fontSize:18, fontWeight:900, color:'white', letterSpacing:'-0.03em', lineHeight:1.2 }}>{emp.name}</h2>
+              <span style={{ fontSize:10, fontWeight:700, color:s.c, background:`${s.c}22`, border:`1px solid ${s.c}50`, borderRadius:99, padding:'2px 9px' }}>{s.l}</span>
             </div>
-            <div style={{ fontSize:11.5, color:'var(--text-muted)', marginBottom:8 }}>
-              {emp.role} · {emp.station_code || 'DDB1'} · <span style={{ fontFamily:'monospace', fontSize:11 }}>#{emp.id}</span>
+            <div style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', marginBottom:8 }}>
+              {emp.role} · {emp.station_code||'DDB1'} · <span style={{ fontFamily:'monospace', fontSize:10.5 }}>#{emp.id}</span>
             </div>
             <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-              {emp.project_type && <span style={{ fontSize:10, fontWeight:700, color:'#7C3AED', background:'var(--purple-bg)', border:'1px solid var(--purple-border)', borderRadius:99, padding:'2px 8px' }}>{emp.project_type.toUpperCase()}</span>}
-              {emp.visa_type && <span style={{ fontSize:10, fontWeight:600, color:emp.visa_type==='own'?'#0369A1':'#065F46', background:emp.visa_type==='own'?'#EFF6FF':'#ECFDF5', border:`1px solid ${emp.visa_type==='own'?'#BAE6FD':'#A7F3D0'}`, borderRadius:99, padding:'2px 8px' }}>{emp.visa_type==='own'?'Own Visa':'Co. Visa'}</span>}
-              {serviceDays > 0 && <span style={{ fontSize:10, color:'var(--text-muted)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:99, padding:'2px 8px' }}>{serviceStr} service</span>}
+              {emp.project_type && <span style={{ fontSize:10, fontWeight:700, color:'#A78BFA', background:'rgba(139,92,246,0.15)', border:'1px solid rgba(139,92,246,0.3)', borderRadius:99, padding:'2px 8px' }}>{emp.project_type.toUpperCase()}</span>}
+              {emp.visa_type && <span style={{ fontSize:10, fontWeight:600, color:emp.visa_type==='own'?'#60A5FA':'#34D399', background:emp.visa_type==='own'?'rgba(96,165,250,0.12)':'rgba(52,211,153,0.12)', border:`1px solid ${emp.visa_type==='own'?'rgba(96,165,250,0.3)':'rgba(52,211,153,0.3)'}`, borderRadius:99, padding:'2px 8px' }}>{emp.visa_type==='own'?'Own Visa':'Co. Visa'}</span>}
+              {serviceDays > 0 && <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:99, padding:'2px 8px' }}>{serviceStr}</span>}
             </div>
           </div>
 
-          {/* Actions */}
           <div style={{ display:'flex', gap:6, flexShrink:0 }}>
             {userRole !== 'accountant' && (
-              <button onClick={onEdit} style={{ padding:'8px 16px', borderRadius:100, background:'var(--gold)', color:'#fff', fontWeight:700, fontSize:12.5, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>Edit</button>
+              <button onClick={onEdit} style={{ padding:'8px 18px', borderRadius:10, background:'#B8860B', color:'white', fontWeight:700, fontSize:12.5, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif', boxShadow:'0 2px 10px rgba(184,134,11,0.4)' }}>Edit</button>
             )}
-            <button onClick={onClose} className="btn-close" style={{ width:36, height:36 }}><X size={15}/></button>
+            <button onClick={onClose} style={{ width:36, height:36, borderRadius:10, background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.14)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.6)' }}><X size={15}/></button>
           </div>
+        </div>
+
+        {/* KPI tiles */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
+          {[
+            { label:'Service',    v: serviceDays > 0 ? serviceStr : '—',                                             sub: emp.joined ? emp.joined.slice(0,10) : 'No join date',   c:'#60A5FA' },
+            { label:'Status',     v: onLeaveNow > 0 ? 'On Leave' : s.l,                                              sub: onLeaveNow > 0 ? 'Currently away' : 'Working',           c: onLeaveNow>0?'#FBBF24':s.dot },
+            { label:'Leave Used', v: leavesLoad ? '…' : `${usedAnnual}d`,                                            sub: leavesLoad ? '' : `${Math.max(0,30-usedAnnual)}d left`,  c:'#A78BFA' },
+            { label:'Documents',  v: alertCount > 0 ? `${alertCount} Alert${alertCount>1?'s':''}` : 'All OK',        sub: alertCount > 0 ? 'Needs renewal' : 'Up to date',         c: alertCount>0?'#F87171':'#34D399' },
+          ].map(m => (
+            <div key={m.label} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'12px 14px' }}>
+              <div style={{ fontSize:16, fontWeight:900, color:m.c, letterSpacing:'-0.03em', lineHeight:1, marginBottom:4 }}>{m.v}</div>
+              <div style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.07em' }}>{m.label}</div>
+              <div style={{ fontSize:9.5, color:m.c, opacity:0.7, marginTop:3 }}>{m.sub}</div>
+            </div>
+          ))}
         </div>
 
         {/* Alert banner */}
         {alertCount > 0 && (
-          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 13px', background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:10 }}>
-            <AlertTriangle size={13} color="#DC2626" style={{ flexShrink:0 }}/>
-            <span style={{ fontSize:12, fontWeight:700, color:'#DC2626' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 13px', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:10, marginTop:12 }}>
+            <AlertTriangle size={13} color="#F87171" style={{ flexShrink:0 }}/>
+            <span style={{ fontSize:12, fontWeight:700, color:'#F87171' }}>
               {[emp.visa_expiry && docDays(emp.visa_expiry) !== null && docDays(emp.visa_expiry) <= 30 && 'Visa',
                 emp.license_expiry && docDays(emp.license_expiry) !== null && docDays(emp.license_expiry) <= 30 && 'License',
                 emp.iloe_expiry && docDays(emp.iloe_expiry) !== null && docDays(emp.iloe_expiry) <= 30 && 'ILOE',
@@ -744,141 +760,112 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
       </div>
 
       {/* ══ TABS ════════════════════════════════════════════════ */}
-      <div className="slider-track" style={{ display:'flex', overflowX:'auto', padding:'0 18px', borderBottom:'1px solid var(--border)', flexShrink:0, background:'var(--bg-alt)', scrollbarWidth:'none' }}>
+      <div style={{ display:'flex', overflowX:'auto', borderBottom:'1px solid var(--border)', flexShrink:0, background:'var(--card)', scrollbarWidth:'none', padding:'0 4px' }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            style={{ padding:'10px 14px', fontSize:12, fontWeight:tab===t.id?700:500, color:tab===t.id?'var(--gold)':'var(--text-muted)', background:'none', border:'none', borderBottom:`2.5px solid ${tab===t.id?'var(--gold)':'transparent'}`, cursor:'pointer', fontFamily:'Poppins,sans-serif', marginBottom:-1, whiteSpace:'nowrap', flexShrink:0, transition:'all 0.15s' }}>
+            style={{ padding:'11px 16px', fontSize:12.5, fontWeight:tab===t.id?700:500, color:tab===t.id?'#B8860B':'var(--text-muted)', background:'none', border:'none', borderBottom:`2.5px solid ${tab===t.id?'#B8860B':'transparent'}`, cursor:'pointer', fontFamily:'Poppins,sans-serif', marginBottom:-1, whiteSpace:'nowrap', flexShrink:0, transition:'all 0.15s' }}>
             {t.l}
           </button>
         ))}
       </div>
 
-      {/* ══ CONTENT ═════════════════════════════════════════════ */}
-      <div style={{ flex:1, overflowY:'auto', padding:'18px 20px', display:'flex', flexDirection:'column', gap:14 }}>
+      {/* ══ SCROLLABLE CONTENT ══════════════════════════════════ */}
+      <div style={{ flex:1, overflowY:'auto', padding:'16px 18px', display:'flex', flexDirection:'column', gap:12 }}>
 
         {/* ════ OVERVIEW ════ */}
         {tab === 'overview' && (<>
 
-          {/* 4 metric cards */}
-          <div style={{ display:'grid', gridTemplateColumns:`repeat(${isMobile?2:4},1fr)`, gap:10 }}>
-            {[
-              { label:'Service',    v: serviceDays > 0 ? serviceStr : '—',             sub: emp.joined ? `From ${emp.joined.slice(0,10)}` : 'No join date',                      c:'#2563EB', bg:'#EFF6FF' },
-              { label:'Status',     v: onLeaveNow > 0 ? 'On Leave' : s.l,              sub: onLeaveNow > 0 ? 'Currently away' : `Since ${emp.joined?.slice(0,10)||'—'}`,         c: onLeaveNow>0?'#D97706':s.c, bg: onLeaveNow>0?'#FFFBEB':s.bg },
-              { label:'Leave Used', v: leavesLoad ? '…' : `${usedAnnual}d`,            sub: leavesLoad ? '' : `${Math.max(0,30-usedAnnual)} days remaining`,                     c:'#7C3AED', bg:'#F5F3FF' },
-              { label:'Documents',  v: alertCount > 0 ? `${alertCount} Alert${alertCount>1?'s':''}` : 'All OK', sub: alertCount>0?'Needs renewal':'Up to date', c: alertCount>0?'#DC2626':'#059669', bg: alertCount>0?'#FEF2F2':'#F0FDF4' },
-            ].map(m => (
-              <div key={m.label} style={{ background:m.bg, border:'1px solid var(--border)', borderRadius:12, padding:'12px 14px', textAlign:'center' }}>
-                <div style={{ fontWeight:900, fontSize:16, color:m.c, letterSpacing:'-0.03em', lineHeight:1 }}>{m.v}</div>
-                <div style={{ fontSize:9.5, fontWeight:700, color:'var(--text-muted)', marginTop:4, textTransform:'uppercase', letterSpacing:'0.05em' }}>{m.label}</div>
-                <div style={{ fontSize:9.5, color:m.c, opacity:0.75, marginTop:3 }}>{m.sub}</div>
-              </div>
-            ))}
-          </div>
-
           {/* Contact + Employment 2-col */}
           <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:12 }}>
-            <Section title="Contact">
-              <InfoItem icon={Phone}      label="Mobile"      value={emp.phone}       href={emp.phone?`tel:${emp.phone}`:null}/>
-              <InfoItem icon={Phone}      label="Work Phone"  value={emp.work_number} href={emp.work_number?`tel:${emp.work_number}`:null}/>
-              <InfoItem icon={Mail}       label="Email"       value={emp.email_id}    href={emp.email_id?`mailto:${emp.email_id}`:null}/>
-              <InfoItem icon={CreditCard} label="Passport"    value={emp.passport_no} mono/>
+            <Section title="Contact" icon={Phone}>
+              <InfoRow icon={Phone}      label="Mobile"      value={emp.phone}       href={emp.phone?`tel:${emp.phone}`:null}/>
+              <InfoRow icon={Phone}      label="Work SIM"    value={emp.work_number} href={emp.work_number?`tel:${emp.work_number}`:null}/>
+              <InfoRow icon={Mail}       label="Email"       value={emp.email_id}    href={emp.email_id?`mailto:${emp.email_id}`:null}/>
+              <InfoRow icon={CreditCard} label="Passport"    value={emp.passport_no} mono/>
             </Section>
 
-            <Section title="Employment">
-              <InfoItem icon={Building2}  label="Station"      value={emp.station_code}/>
-              <InfoItem icon={Briefcase}  label="Project"      value={emp.project_type ? emp.project_type.charAt(0).toUpperCase()+emp.project_type.slice(1) : null}/>
-              <InfoItem icon={Calendar}   label="Join Date"    value={emp.joined?.slice(0,10)}/>
-              <InfoItem icon={Wallet}     label="Base Salary"  value={emp.salary ? `AED ${Number(emp.salary).toLocaleString('en-US')}` : null}/>
-              {emp.project_type==='pulser' && <InfoItem icon={TrendingUp} label="Hourly Rate" value={emp.hourly_rate?`AED ${emp.hourly_rate}/hr`:null}/>}
-              {emp.project_type==='cret'   && <InfoItem icon={TrendingUp} label="Ship. Rate"  value={emp.per_shipment_rate?`AED ${emp.per_shipment_rate}/pkg`:null}/>}
+            <Section title="Employment" icon={Briefcase}>
+              <InfoRow icon={Building2}  label="Station"     value={emp.station_code}/>
+              <InfoRow icon={Briefcase}  label="Project"     value={emp.project_type ? emp.project_type.charAt(0).toUpperCase()+emp.project_type.slice(1) : null}/>
+              <InfoRow icon={Calendar}   label="Join Date"   value={emp.joined?.slice(0,10)}/>
+              <InfoRow icon={Wallet}     label="Base Salary" value={emp.salary ? `AED ${Number(emp.salary).toLocaleString('en-US')}` : null} accent="#B8860B"/>
+              {emp.project_type==='pulser' && <InfoRow icon={TrendingUp} label="Hourly Rate"  value={emp.hourly_rate?`AED ${emp.hourly_rate}/hr`:null}/>}
+              {emp.project_type==='cret'   && <InfoRow icon={TrendingUp} label="Ship. Rate"   value={emp.per_shipment_rate?`AED ${emp.per_shipment_rate}/pkg`:null}/>}
             </Section>
           </div>
 
           {/* Documents */}
-          <Section title="Document Expiry">
+          <Section title="Document Expiry" icon={FileText}>
             <DocRow label="UAE Visa"        date={emp.visa_expiry}/>
             <DocRow label="Driving License" date={emp.license_expiry}/>
             <DocRow label="ILOE"            date={emp.iloe_expiry}/>
             {emp.insurance_url && (
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'11px 16px' }}>
-                <div style={{ fontSize:12.5, fontWeight:600, color:'var(--text)' }}>Insurance Card</div>
-                <a href={emp.insurance_url} target="_blank" rel="noreferrer" style={{ display:'flex', alignItems:'center', gap:5, fontSize:11.5, fontWeight:700, color:'var(--gold)', textDecoration:'none' }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px' }}>
+                <span style={{ fontSize:13, fontWeight:600, color:'var(--text)' }}>Insurance Card</span>
+                <a href={emp.insurance_url} target="_blank" rel="noreferrer" style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, fontWeight:700, color:'#B8860B', textDecoration:'none' }}>
                   View <ExternalLink size={11}/>
                 </a>
               </div>
             )}
           </Section>
 
-          {/* Leave Balance progress bars */}
-          <Section title="Leave Balance">
-            <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:14 }}>
-              {[
-                { label:'Annual Leave', used:usedAnnual, total:30, c:'#7C3AED' },
-                { label:'Sick Leave',   used:usedSick,   total:15, c:'#2563EB' },
-              ].map(lb => (
-                <div key={lb.label}>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                    <span style={{ fontSize:12.5, fontWeight:600, color:'var(--text)' }}>{lb.label}</span>
-                    <span style={{ fontSize:11.5, color:'var(--text-muted)' }}>{leavesLoad ? '…' : `${lb.used} / ${lb.total} days`}</span>
-                  </div>
-                  <div style={{ height:7, borderRadius:99, background:'var(--border)', overflow:'hidden' }}>
-                    {!leavesLoad && <div style={{ height:'100%', width:`${Math.min(100,(lb.used/lb.total)*100)}%`, background:lb.c, borderRadius:99, transition:'width 0.6s cubic-bezier(0.16,1,0.3,1)' }}/>}
-                  </div>
-                  <div style={{ fontSize:10.5, color:lb.c, marginTop:5, fontWeight:600 }}>
-                    {!leavesLoad && `${Math.max(0,lb.total-lb.used)} days remaining`}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          {/* Attendance this month */}
-          <Section title="Attendance — This Month">
-            <div style={{ padding:'14px 16px' }}>
-              {attLoad ? (
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
-                  {[1,2,3].map(i => <div key={i} className="sk" style={{ height:56, borderRadius:10 }}/>)}
-                </div>
-              ) : (
-                <>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:14 }}>
-                    {[
-                      { l:'Present', v:attPresent, c:'#059669', bg:'#F0FDF4' },
-                      { l:'Absent',  v:attAbsent,  c:'#DC2626', bg:'#FEF2F2' },
-                      { l:'Leave',   v:attLeave,   c:'#D97706', bg:'#FFFBEB' },
-                    ].map(a => (
-                      <div key={a.l} style={{ textAlign:'center', padding:'10px 8px', borderRadius:10, background:a.bg, border:'1px solid var(--border)' }}>
-                        <div style={{ fontWeight:900, fontSize:22, color:a.c, lineHeight:1 }}>{a.v}</div>
-                        <div style={{ fontSize:10, fontWeight:600, color:a.c, opacity:0.8, marginTop:4 }}>{a.l}</div>
-                      </div>
-                    ))}
-                  </div>
-                  {attendance.length > 0 ? (
-                    <div style={{ display:'flex', gap:3, flexWrap:'wrap' }}>
-                      {attendance.slice(0,31).map((a, i) => {
-                        const c = a.status==='present'?'#059669':a.status==='absent'?'#DC2626':'#D97706'
-                        return <div key={i} title={`${a.date?.slice(0,10)} · ${a.status}`} style={{ width:9, height:24, borderRadius:3, background:c, opacity:0.85, flexShrink:0 }}/>
-                      })}
+          {/* Leave Balance + Attendance side by side */}
+          <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:12 }}>
+            <Section title="Leave Balance" icon={Calendar}>
+              <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:14 }}>
+                {[
+                  { label:'Annual Leave', used:usedAnnual, total:30, c:'#7C3AED' },
+                  { label:'Sick Leave',   used:usedSick,   total:15, c:'#2563EB' },
+                ].map(lb => (
+                  <div key={lb.label}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:7 }}>
+                      <span style={{ fontSize:12.5, fontWeight:600, color:'var(--text)' }}>{lb.label}</span>
+                      <span style={{ fontSize:11.5, color:'var(--text-muted)', fontWeight:500 }}>{leavesLoad ? '…' : `${lb.used} / ${lb.total}d`}</span>
                     </div>
-                  ) : (
-                    <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center' }}>No attendance records this month</div>
-                  )}
-                </>
-              )}
-            </div>
-          </Section>
+                    <div style={{ height:8, borderRadius:99, background:'var(--border)', overflow:'hidden' }}>
+                      {!leavesLoad && <div style={{ height:'100%', width:`${Math.min(100,(lb.used/lb.total)*100)}%`, background:`linear-gradient(90deg,${lb.c}aa,${lb.c})`, borderRadius:99, transition:'width 0.6s cubic-bezier(0.16,1,0.3,1)' }}/>}
+                    </div>
+                    <div style={{ fontSize:10.5, color:lb.c, marginTop:5, fontWeight:700 }}>
+                      {!leavesLoad && `${Math.max(0,lb.total-lb.used)} days remaining`}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
 
-          {/* Edit / Delete */}
-          {userRole !== 'accountant' && (
-            <div style={{ display:'flex', gap:10 }}>
-              <button onClick={onEdit} style={{ flex:1, padding:'12px', borderRadius:100, background:'var(--gold)', color:'#fff', fontWeight:700, fontSize:13.5, border:'none', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                Edit Profile
-              </button>
-              <button onClick={onDelete} style={{ padding:'12px 20px', borderRadius:100, background:'#FEF2F2', color:'#DC2626', fontWeight:700, fontSize:13.5, border:'1px solid #FECACA', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
-                Delete
-              </button>
-            </div>
-          )}
+            <Section title="Attendance — This Month" icon={Clock}>
+              <div style={{ padding:'14px 16px' }}>
+                {attLoad ? (
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+                    {[1,2,3].map(i => <div key={i} className="sk" style={{ height:52, borderRadius:10 }}/>)}
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:12 }}>
+                      {[
+                        { l:'Present', v:attPresent, c:'#059669', bg:'#F0FDF4' },
+                        { l:'Absent',  v:attAbsent,  c:'#DC2626', bg:'#FEF2F2' },
+                        { l:'Leave',   v:attLeave,   c:'#D97706', bg:'#FFFBEB' },
+                      ].map(a => (
+                        <div key={a.l} style={{ textAlign:'center', padding:'9px 6px', borderRadius:10, background:a.bg, border:'1px solid var(--border)' }}>
+                          <div style={{ fontWeight:900, fontSize:20, color:a.c, lineHeight:1 }}>{a.v}</div>
+                          <div style={{ fontSize:9.5, fontWeight:600, color:a.c, opacity:0.8, marginTop:4 }}>{a.l}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {attendance.length > 0 && (
+                      <div style={{ display:'flex', gap:3, flexWrap:'wrap' }}>
+                        {attendance.slice(0,31).map((a, i) => {
+                          const c = a.status==='present'?'#059669':a.status==='absent'?'#DC2626':'#D97706'
+                          return <div key={i} title={`${a.date?.slice(0,10)} · ${a.status}`} style={{ width:8, height:22, borderRadius:3, background:c, opacity:0.8, flexShrink:0 }}/>
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </Section>
+          </div>
         </>)}
 
         {/* ════ LEAVES ════ */}
