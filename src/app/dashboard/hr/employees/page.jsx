@@ -1,12 +1,12 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { empApi } from '@/lib/api'
 import { useSocket } from '@/lib/socket'
 import {
   Search, Plus, X, Pencil, Trash2, Phone, User, Building2,
   AlertCircle, CheckCircle2, Briefcase, CreditCard, Calendar,
   Users, Receipt, ExternalLink, Shield, ChevronRight, Truck, ArrowLeftRight,
-  Mail, MapPin, Clock, AlertTriangle, Wallet, TrendingUp, FileText
+  Mail, MapPin, Clock, AlertTriangle, Wallet, TrendingUp, FileText, RefreshCw
 } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
 
@@ -211,7 +211,7 @@ function EmpModal({ emp, onSave, onClose, mode }) {
   }
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay" style={{ zIndex:9999 }}>
       <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:540, maxHeight:'92vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'var(--shadow-lg)', border:'1px solid var(--border)' }}>
         {/* Header */}
         <div style={{ padding:'20px 24px 0', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
@@ -1088,59 +1088,55 @@ function EmpCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole }
   const vt       = emp.visa_type || 'company'
   const isOwn    = vt === 'own'
 
+  const bc   = hasAlert ? '#EF4444' : isSelected ? sc : s.dot
+  const glow = hasAlert ? '#EF444420' : isSelected ? `${sc}28` : `${s.dot}18`
+
   return (
     <div onClick={onClick}
       style={{
         background:'var(--card)',
-        border:`1px solid ${isSelected ? sc : hasAlert ? 'var(--red-border)' : 'var(--border)'}`,
+        border:`2px solid ${bc}`,
         borderRadius:16,
         overflow:'hidden',
         cursor:'pointer',
-        transition:'box-shadow 0.18s, border-color 0.18s, transform 0.18s',
-        boxShadow: isSelected ? `0 0 0 3px ${sc}22, 0 6px 24px rgba(0,0,0,0.08)` : 'none',
+        transition:'box-shadow 0.18s, transform 0.18s',
+        boxShadow:`0 0 0 1px ${glow}, 0 4px 16px rgba(0,0,0,0.06)`,
         display:'flex',
         flexDirection:'column',
         animation:`slideUp 0.25s ${Math.min(index,12)*0.025}s ease both`,
       }}
       onMouseEnter={e => {
         if (!isSelected) {
-          e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.10)'
-          e.currentTarget.style.borderColor = hasAlert ? 'var(--red)' : `${sc}55`
-          e.currentTarget.style.transform = 'translateY(-1px)'
+          e.currentTarget.style.transform = 'translateY(-2px)'
+          e.currentTarget.style.boxShadow = `0 0 0 1px ${glow}, 0 10px 28px rgba(0,0,0,0.10)`
         }
       }}
       onMouseLeave={e => {
         if (!isSelected) {
-          e.currentTarget.style.boxShadow = 'none'
-          e.currentTarget.style.borderColor = hasAlert ? 'var(--red-border)' : 'var(--border)'
           e.currentTarget.style.transform = 'translateY(0)'
+          e.currentTarget.style.boxShadow = `0 0 0 1px ${glow}, 0 4px 16px rgba(0,0,0,0.06)`
         }
       }}>
 
-      {/* Status accent bar */}
-      <div style={{ height:3, background: hasAlert ? '#EF4444' : s.dot, flexShrink:0 }}/>
-
       {/* Main content */}
-      <div style={{ padding:'14px 16px 0', display:'flex', gap:12, alignItems:'flex-start' }}>
+      <div style={{ padding:'16px 16px 12px', display:'flex', gap:12, alignItems:'flex-start' }}>
         {/* Avatar with completion ring */}
         <div style={{ position:'relative', flexShrink:0 }}>
-          <div style={{ width:52, height:52, borderRadius:15, background:`linear-gradient(135deg,${sbg},var(--card))`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:900, color:sc }}>
+          <div style={{ width:52, height:52, borderRadius:14, background:`linear-gradient(135deg,${bc}22,${bc}40)`, border:`1.5px solid ${bc}45`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:900, color:bc, letterSpacing:'-0.02em' }}>
             {emp.name?.slice(0,2).toUpperCase()}
             <CompletionRing pct={pct} size={52} stroke={3}/>
           </div>
-          <div style={{ position:'absolute', bottom:-2, right:-2, width:12, height:12, borderRadius:'50%', background: hasAlert ? '#EF4444' : s.dot, border:'2.5px solid var(--card)' }}/>
+          <div style={{ position:'absolute', bottom:-2, right:-2, width:12, height:12, borderRadius:'50%', background:hasAlert?'#EF4444':s.dot, border:'2.5px solid var(--card)' }}/>
         </div>
 
-        {/* Name + badges */}
+        {/* Identity */}
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:6, marginBottom:6 }}>
+          <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:6, marginBottom:4 }}>
             <span style={{ fontWeight:800, fontSize:14, color:'var(--text)', lineHeight:1.25, wordBreak:'break-word' }}>{emp.name}</span>
-            <span style={{ fontSize:9.5, fontWeight:700, color:s.c, background:s.bg, border:`1px solid ${s.bc}`, borderRadius:20, padding:'2px 8px', flexShrink:0, whiteSpace:'nowrap' }}>
-              {s.l}
-            </span>
+            <span style={{ fontSize:9.5, fontWeight:700, color:s.c, background:s.bg, border:`1px solid ${s.bc}`, borderRadius:20, padding:'2px 8px', flexShrink:0, whiteSpace:'nowrap' }}>{s.l}</span>
           </div>
-          <div style={{ display:'flex', gap:5, flexWrap:'wrap', marginBottom:10 }}>
-            <span style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:6, padding:'2px 7px', fontFamily:'monospace' }}>{emp.id}</span>
+          <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', fontFamily:'monospace', marginBottom:7 }}>#{emp.id}</div>
+          <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
             {emp.station_code && (
               <span style={{ fontSize:10, fontWeight:700, color:sc, background:sbg, border:`1px solid ${sbc}`, borderRadius:6, padding:'2px 7px' }}>{emp.station_code}</span>
             )}
@@ -1157,30 +1153,27 @@ function EmpCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole }
         </div>
       </div>
 
-      {/* Contact + action footer */}
+      {/* Footer */}
       <div style={{ margin:'0 16px 14px', borderTop:'1px solid var(--border)', paddingTop:10, display:'flex', alignItems:'center', gap:8 }}>
-        {/* Personal phone */}
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontSize:9, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:2 }}>Personal</div>
-          <div style={{ fontSize:11.5, fontWeight:600, color: emp.phone ? 'var(--text)' : 'var(--text-muted)', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+          <div style={{ fontSize:11.5, fontWeight:600, color:emp.phone?'var(--text)':'var(--text-muted)', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
             {emp.phone || '—'}
           </div>
         </div>
-        {/* Work SIM */}
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontSize:9, fontWeight:700, color:'#7C3AED', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:2 }}>Work SIM</div>
-          <div style={{ fontSize:11.5, fontWeight:600, color: emp.work_number ? '#7C3AED' : 'var(--text-muted)', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+          <div style={{ fontSize:11.5, fontWeight:600, color:emp.work_number?'#7C3AED':'var(--text-muted)', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
             {emp.work_number || '—'}
           </div>
         </div>
-        {/* Edit / Delete */}
         {userRole !== 'accountant' && (
           <div style={{ display:'flex', gap:4, flexShrink:0 }}>
-            <button onClick={e => { e.stopPropagation(); onEdit(emp) }}
+            <button onClick={e=>{e.stopPropagation();onEdit(emp)}}
               style={{ width:30, height:30, borderRadius:8, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)' }}>
               <Pencil size={11}/>
             </button>
-            <button onClick={e => { e.stopPropagation(); onDelete(emp) }}
+            <button onClick={e=>{e.stopPropagation();onDelete(emp)}}
               style={{ width:30, height:30, borderRadius:8, background:'var(--red-bg)', border:'1px solid var(--red-border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--red)' }}>
               <Trash2 size={11}/>
             </button>
@@ -1193,23 +1186,15 @@ function EmpCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole }
 
 /* ══ MAIN PAGE ═══════════════════════════════════════════════ */
 export default function EmployeesPage() {
-  const [employees, setEmployees] = useState([])
-  const [loading,   setLoading]   = useState(true)
-  const [search,    setSearch]    = useState('')
-  const [station,   setStation]   = useState('All')
-  const [selected,  setSelected]  = useState(null)
-  const [modal,     setModal]     = useState(null)
-  const [userRole,  setUserRole]  = useState(null)
-  const [isMobile,  setIsMobile]  = useState(false)
-  const [page,      setPage]      = useState(1)
+  const [allEmployees, setAllEmployees] = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [search,       setSearch]       = useState('')
+  const [station,      setStation]      = useState('All')
+  const [selected,     setSelected]     = useState(null)
+  const [modal,        setModal]        = useState(null)
+  const [userRole,     setUserRole]     = useState(null)
+  const [page,         setPage]         = useState(1)
   const PAGE_SIZE = 24
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
 
   useEffect(() => {
     try { const t=localStorage.getItem('gcd_token'); if(t){const p=JSON.parse(atob(t.split('.')[1]));setUserRole(p.role)} } catch(e){}
@@ -1218,27 +1203,30 @@ export default function EmployeesPage() {
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      const params = {}
-      if (search)          params.search       = search
-      if (station!=='All') params.station_code = station
-      const data = await empApi.list(params)
-      setEmployees((data.employees||[]).filter(e => (e.role||'').toLowerCase() === 'driver'))
-      setSelected(s => s ? (data.employees.find(e => e.id === s.id) || s) : null)
+      const data = await empApi.list({})
+      setAllEmployees((data.employees||[]).filter(e=>(e.role||'').toLowerCase()==='driver'))
     } catch(e) { console.error(e) } finally { setLoading(false) }
-  }, [search, station])
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  // Client-side filtering — instant, no network round-trips
+  const employees = useMemo(() => allEmployees
+    .filter(e => station==='All' || e.station_code===station)
+    .filter(e => !search || [e.name,e.id,e.work_number,e.phone,e.nationality].some(f=>(f||'').toLowerCase().includes(search.toLowerCase())))
+  , [allEmployees, search, station])
 
   useEffect(() => { setPage(1) }, [search, station])
-  useEffect(() => { const t=setTimeout(load,300); return()=>clearTimeout(t) }, [load])
 
   useSocket({
-    'employee:created': e      => setEmployees(p=>[...p,e]),
-    'employee:updated': e      => { setEmployees(p=>p.map(x=>x.id===e.id?e:x)); setSelected(s=>s?.id===e.id?e:s) },
-    'employee:deleted': ({id}) => { setEmployees(p=>p.filter(x=>x.id!==id)); setSelected(s=>s?.id===id?null:s) },
+    'employee:created': e      => { if((e.role||'').toLowerCase()==='driver') setAllEmployees(p=>[...p,e]) },
+    'employee:updated': e      => { setAllEmployees(p=>p.map(x=>x.id===e.id?e:x)); setSelected(s=>s?.id===e.id?e:s) },
+    'employee:deleted': ({id}) => { setAllEmployees(p=>p.filter(x=>x.id!==id)); setSelected(s=>s?.id===id?null:s) },
   })
 
   async function handleDelete(emp) {
     if (!confirm(`Delete ${emp.name}? This cannot be undone.`)) return
-    try { await empApi.delete(emp.id); setEmployees(p=>p.filter(e=>e.id!==emp.id)); if(selected?.id===emp.id) setSelected(null) }
+    try { await empApi.delete(emp.id); setAllEmployees(p=>p.filter(e=>e.id!==emp.id)); if(selected?.id===emp.id) setSelected(null) }
     catch(e) { alert(e.message) }
   }
 
@@ -1246,73 +1234,111 @@ export default function EmployeesPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const paginated  = employees.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE)
 
-  const active  = employees.filter(e=>e.status==='active').length
-  const onLeave = employees.filter(e=>e.status==='on_leave').length
-  const alerts  = employees.filter(e=>{ const v=expiry(e.visa_expiry); return v&&(v.label==='Expired'||parseInt(v.label)<=60) }).length
+  const active  = allEmployees.filter(e=>e.status==='active').length
+  const onLeave = allEmployees.filter(e=>e.status==='on_leave').length
+  const alerts  = allEmployees.filter(e=>{const v=expiry(e.visa_expiry);return v&&(v.label==='Expired'||parseInt(v.label)<=60)}).length
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-      {/* Main column */}
-      <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+    <div style={{ display:'flex', flexDirection:'column' }}>
+      <style>{`
+        .emp-hero{background:linear-gradient(135deg,#0f1623 0%,#1a2535 50%,#1e3a5f 100%);padding:28px 28px 0;position:relative;overflow:hidden}
+        .emp-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 20%,rgba(184,134,11,0.12) 0%,transparent 60%);pointer-events:none}
+        .emp-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+        .emp-kpi{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 12px;text-align:center;backdrop-filter:blur(8px)}
+        .emp-station-pills{display:flex;gap:6px;padding:14px 0 0;align-items:center}
+        .emp-pill{padding:5px 14px;border-radius:20px;border:1.5px solid;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:Poppins,sans-serif;background:transparent}
+        .emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+        @media(max-width:640px){
+          .emp-kpi-grid{grid-template-columns:repeat(2,1fr)}
+          .emp-grid{grid-template-columns:1fr}
+          .emp-hero{padding:20px 16px 0}
+          .emp-search-bar{padding:12px 16px !important}
+          .emp-cards-wrap{padding:16px !important}
+        }
+      `}</style>
 
-        {/* Action bar */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
-          <p style={{ fontSize:12.5, color:'var(--text-muted)' }}>{total} DAs · {active} active</p>
-          {userRole !== 'accountant' && (
-            <button className="btn btn-primary" onClick={()=>setModal({mode:'add',emp:null})} style={{ borderRadius:24, flexShrink:0 }}>
-              <Plus size={14}/> Add DA
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <div className="emp-hero">
+        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}}>
+          <div>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
+              <div style={{width:34,height:34,borderRadius:10,background:'rgba(184,134,11,0.18)',border:'1px solid rgba(184,134,11,0.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <Users size={17} color="#B8860B"/>
+              </div>
+              <h1 style={{fontSize:22,fontWeight:900,color:'#fff',margin:0,letterSpacing:'-0.03em'}}>DAs</h1>
+            </div>
+            <p style={{fontSize:12.5,color:'rgba(255,255,255,0.45)',margin:0}}>
+              {loading ? 'Loading…' : `${allEmployees.length} Delivery Associates`}
+            </p>
+          </div>
+          <div style={{display:'flex',gap:8,flexShrink:0,paddingTop:4}}>
+            <button onClick={load} title="Refresh"
+              style={{width:36,height:36,borderRadius:10,background:'rgba(255,255,255,0.08)',border:'1px solid rgba(255,255,255,0.15)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(255,255,255,0.7)'}}>
+              <RefreshCw size={14}/>
             </button>
-          )}
+            {userRole !== 'accountant' && (
+              <button className="btn btn-primary" onClick={()=>setModal({mode:'add',emp:null})} style={{borderRadius:24,flexShrink:0}}>
+                <Plus size={14}/> Add DA
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:10 }}>
+        {/* KPI tiles */}
+        <div className="emp-kpi-grid">
           {[
-            {l:'Total',   v:total,   c:'var(--text)', bg:'var(--bg-alt)',     bc:'var(--border)'     },
-            {l:'Active',  v:active,  c:'#10B981',    bg:'#F0FDF4',           bc:'#A7F3D0'           },
-            {l:'On Leave',v:onLeave, c:'#F59E0B',    bg:'#FFFBEB',           bc:'#FDE68A'           },
-            {l:'Alerts',  v:alerts,  c:'#EF4444',    bg:'var(--red-bg)',     bc:'var(--red-border)' },
-          ].map((s,i)=>(
-            <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:13, padding:'14px 12px', textAlign:'center', transition:'all 0.2s' }}>
-              <div style={{ fontWeight:900, fontSize:22, color:s.c, letterSpacing:'-0.04em', lineHeight:1 }}>{s.v}</div>
-              <div style={{ fontSize:10.5, color:s.c, fontWeight:600, marginTop:4, opacity:0.8 }}>{s.l}</div>
+            {l:'Total',   v:loading?'…':allEmployees.length, c:'#fff',    sub:'All DAs'           },
+            {l:'Active',  v:loading?'…':active,              c:'#10B981', sub:'On duty'            },
+            {l:'On Leave',v:loading?'…':onLeave,             c:'#F59E0B', sub:'Away'               },
+            {l:'Alerts',  v:loading?'…':alerts, c:alerts>0?'#EF4444':'#10B981', sub:alerts>0?'Attention needed':'All clear'},
+          ].map(k=>(
+            <div key={k.l} className="emp-kpi">
+              <div style={{fontWeight:900,fontSize:24,color:k.c,letterSpacing:'-0.04em',lineHeight:1}}>{k.v}</div>
+              <div style={{fontSize:9.5,fontWeight:700,color:'rgba(255,255,255,0.45)',textTransform:'uppercase',letterSpacing:'0.06em',marginTop:4}}>{k.l}</div>
+              <div style={{fontSize:9.5,color:k.c,opacity:0.7,marginTop:2}}>{k.sub}</div>
             </div>
           ))}
         </div>
 
-        {/* Search + filter */}
-        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-          <div style={{ flex:'1 1 200px', position:'relative' }}>
-            <Search size={14} style={{ position:'absolute',left:13,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)',pointerEvents:'none' }}/>
-            <input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, ID, work number…" autoComplete="off" style={{ paddingLeft:38, borderRadius:24 }}/>
-            {search&&<button onClick={()=>setSearch('')} style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',padding:0,display:'flex' }}><X size={13}/></button>}
-          </div>
-          <div style={{ display:'flex', gap:5 }}>
-            {STATIONS.map(s=>{
-              const col=SC_COLOR[s]||'var(--text-sub)', isOn=station===s
-              return (
-                <button key={s} onClick={()=>setStation(s)}
-                  style={{ padding:'7px 14px',borderRadius:20,fontSize:12,fontWeight:isOn?700:500,cursor:'pointer',border:`1.5px solid ${isOn?col:'var(--border)'}`,background:isOn?(SC_BG[s]||'var(--amber-bg)'):'var(--card)',color:isOn?col:'var(--text-muted)',transition:'all 0.15s',whiteSpace:'nowrap' }}>
-                  {s}
-                </button>
-              )
-            })}
-          </div>
+        {/* Station pills */}
+        <div className="emp-station-pills">
+          {STATIONS.map(s=>{
+            const col=SC_COLOR[s]||'rgba(255,255,255,0.6)', isOn=station===s
+            return (
+              <button key={s} onClick={()=>setStation(s)} className="emp-pill"
+                style={{borderColor:isOn?col:'rgba(255,255,255,0.2)',background:isOn?`${col}22`:'rgba(255,255,255,0.04)',color:isOn?col:'rgba(255,255,255,0.5)'}}>
+                {s}
+              </button>
+            )
+          })}
+          <div style={{flex:1}}/>
+          {!loading && <span style={{fontSize:11,color:'rgba(255,255,255,0.3)',paddingBottom:2}}>{total} shown</span>}
         </div>
+      </div>
 
-        {/* List */}
+      {/* ── Search ───────────────────────────────────────────────── */}
+      <div className="emp-search-bar" style={{padding:'14px 28px',background:'var(--bg-alt)',borderBottom:'1px solid var(--border)'}}>
+        <div style={{position:'relative',maxWidth:480}}>
+          <Search size={14} style={{position:'absolute',left:13,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)',pointerEvents:'none'}}/>
+          <input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, ID, phone, nationality…" autoComplete="off" style={{paddingLeft:38,borderRadius:24,width:'100%'}}/>
+          {search && <button onClick={()=>setSearch('')} style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',padding:0,display:'flex'}}><X size={13}/></button>}
+        </div>
+      </div>
+
+      {/* ── Cards ────────────────────────────────────────────────── */}
+      <div className="emp-cards-wrap" style={{padding:'20px 28px'}}>
         {loading ? (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))', gap:12 }}>
-            {[1,2,3,4,5,6].map(i=><div key={i} className="sk" style={{ height:158, borderRadius:16 }}/>)}
+          <div className="emp-grid">
+            {[1,2,3,4,5,6].map(i=><div key={i} className="sk" style={{height:150,borderRadius:16}}/>)}
           </div>
         ) : employees.length===0 ? (
-          <div style={{ textAlign:'center', padding:'60px 20px' }}>
-            <Search size={40} style={{ margin:'0 auto 12px', display:'block', opacity:0.15 }}/>
-            <div style={{ fontWeight:700, fontSize:15, color:'var(--text-sub)' }}>{search?`No results for "${search}"`:'No DAs found'}</div>
+          <div style={{textAlign:'center',padding:'60px 20px'}}>
+            <Users size={40} style={{margin:'0 auto 12px',display:'block',opacity:0.15}}/>
+            <div style={{fontWeight:700,fontSize:15,color:'var(--text-sub)'}}>{search?`No results for "${search}"`:'No DAs found'}</div>
           </div>
         ) : (
           <>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))', gap:12 }}>
+            <div className="emp-grid">
               {paginated.map((emp,i)=>(
                 <EmpCard key={emp.id} emp={emp} index={i}
                   isSelected={selected?.id===emp.id}
@@ -1322,10 +1348,10 @@ export default function EmployeesPage() {
                   userRole={userRole}/>
               ))}
             </div>
-            {totalPages > 1 && (
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, paddingTop:8 }}>
+            {totalPages>1 && (
+              <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,paddingTop:16}}>
                 <button className="btn btn-secondary btn-sm" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1}>‹ Prev</button>
-                <span style={{ fontSize:12.5, color:'var(--text-muted)' }}>Page {page} of {totalPages}</span>
+                <span style={{fontSize:12.5,color:'var(--text-muted)'}}>Page {page} of {totalPages}</span>
                 <button className="btn btn-secondary btn-sm" onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages}>Next ›</button>
               </div>
             )}
@@ -1333,13 +1359,13 @@ export default function EmployeesPage() {
         )}
       </div>
 
-      {/* Detail drawer — right-side panel */}
+      {/* ── Detail drawer ────────────────────────────────────────── */}
       {selected && (
         <div className="emp-drawer-overlay">
           <div className="emp-drawer-backdrop" onClick={()=>setSelected(null)}/>
           <div className="emp-drawer-panel">
             <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
-              onSelectEmployee={id=>{ const t=employees.find(e=>e.id===id); if(t) setSelected(t) }}/>
+              onSelectEmployee={id=>{const t=allEmployees.find(e=>e.id===id);if(t)setSelected(t)}}/>
           </div>
         </div>
       )}
