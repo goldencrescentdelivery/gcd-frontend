@@ -1126,12 +1126,9 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
 
   return (
     <>
-      <div style={{ background:'var(--card)', borderRadius:16, border:`1.5px solid ${bc}`, boxShadow:'var(--shadow)', transition:'transform 0.15s, box-shadow 0.15s', overflow:'hidden' }}
-        onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='var(--shadow-md)' }}
-        onMouseLeave={e=>{ e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='var(--shadow)' }}>
-
-        {/* ── Top accent bar ── */}
-        <div style={{ height:3, background:hasHandover?'#10B981':sc }}/>
+      <div style={{ background:'var(--card)', borderRadius:16, border:`2px solid ${hasHandover?'#10B981':sc}`, boxShadow:`0 0 0 1px ${hasHandover?'#10B98120':sc+'18'}, var(--shadow)`, transition:'transform 0.15s, box-shadow 0.15s', overflow:'hidden' }}
+        onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow=`0 0 0 1px ${hasHandover?'#10B98120':sc+'18'}, var(--shadow-md)` }}
+        onMouseLeave={e=>{ e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow=`0 0 0 1px ${hasHandover?'#10B98120':sc+'18'}, var(--shadow)` }}>
 
         <div style={{ padding:'14px 16px 12px' }}>
           {/* ── Header ── */}
