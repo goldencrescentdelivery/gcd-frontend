@@ -223,6 +223,14 @@ export const customerApi = {
   delete: (id)        => api.delete(`/api/customers/${id}`),
 }
 
+// Customer Invoices
+export const customerInvoiceApi = {
+  list:   (customerId) => api.get(`/api/customer-invoices?customer_id=${customerId}`),
+  create: (data)       => api.post('/api/customer-invoices', data),
+  update: (id, data)   => api.put(`/api/customer-invoices/${id}`, data),
+  delete: (id)         => api.delete(`/api/customer-invoices/${id}`),
+}
+
 // Backup
 export const backupApi = {
   stats:    ()   => api.get('/api/backup/stats'),
