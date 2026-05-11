@@ -1,10 +1,10 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Search, Plus, X, Pencil, Trash2, Phone, User, Building2,
   AlertCircle, CheckCircle2, Calendar, Shield, Receipt,
   ExternalLink, ChevronRight, DollarSign, Clock, Minus, TrendingUp,
-  CheckCircle, XCircle
+  CheckCircle, XCircle, RefreshCw
 } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
 
@@ -118,7 +118,7 @@ function AdminModal({ emp, onSave, onClose, mode }) {
   const TABS = [{ id:'identity', l:'Identity' }, { id:'work', l:'Work & Pay' }, { id:'docs', l:'Documents' }]
 
   return (
-    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div className="modal-overlay" style={{ zIndex:9999 }} onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:520, maxHeight:'92vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'var(--shadow-lg)', border:'1px solid var(--border)' }}>
         <div style={{ padding:'20px 24px 0', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
@@ -816,83 +816,96 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, onCreateProfi
 /* ── Admin Staff Card ─────────────────────────────────────────── */
 function AdminCard({ emp, onClick, onEdit, onDelete, index, isSelected, userRole }) {
   const rc  = roleStyle(emp.role)
-  const s   = STATUS[emp.status]||STATUS.inactive
+  const s   = STATUS[emp.status] || STATUS.inactive
   const vExp = expiry(emp.visa_expiry)
   const lExp = expiry(emp.license_expiry)
   const hasAlert = (vExp&&(vExp.label==='Expired'||parseInt(vExp.label)<=60)) || (lExp&&(lExp.label==='Expired'||parseInt(lExp.label)<=60))
 
+  const bc   = hasAlert ? '#EF4444' : isSelected ? rc.c : s.dot
+  const glow = hasAlert ? '#EF444420' : isSelected ? `${rc.c}28` : `${s.dot}15`
+
   return (
     <div onClick={onClick}
-      style={{ background:'var(--card)', border:`1px solid ${isSelected?rc.c:hasAlert?'var(--red-border)':'var(--border)'}`, borderRadius:14, padding:'14px 16px', cursor:'pointer', transition:'all 0.18s', boxShadow:isSelected?`0 0 0 3px ${rc.c}20`:'none', position:'relative', overflow:'hidden', animation:`slideUp 0.35s ${index*0.04}s ease both` }}
-      onMouseEnter={e=>{if(!isSelected){e.currentTarget.style.boxShadow='var(--shadow-md)';e.currentTarget.style.borderColor=hasAlert?'var(--red)':rc.c+'66'}}}
-      onMouseLeave={e=>{if(!isSelected){e.currentTarget.style.boxShadow='none';e.currentTarget.style.borderColor=hasAlert?'var(--red-border)':'var(--border)'}}}>
+      style={{
+        background:'var(--card)',
+        border:`2px solid ${bc}`,
+        borderRadius:16,
+        overflow:'hidden',
+        cursor:'pointer',
+        transition:'box-shadow 0.18s, transform 0.18s',
+        boxShadow:`0 0 0 1px ${glow}, 0 4px 16px rgba(0,0,0,0.06)`,
+        display:'flex',
+        flexDirection:'column',
+        animation:`slideUp 0.25s ${Math.min(index,12)*0.04}s ease both`,
+      }}
+      onMouseEnter={e=>{if(!isSelected){e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 0 0 1px ${glow}, 0 10px 28px rgba(0,0,0,0.10)`}}}
+      onMouseLeave={e=>{if(!isSelected){e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow=`0 0 0 1px ${glow}, 0 4px 16px rgba(0,0,0,0.06)`}}}>
 
-      {hasAlert && <div style={{ position:'absolute',top:12,right:12,width:7,height:7,borderRadius:'50%',background:'var(--red)',boxShadow:'0 0 0 3px rgba(239,68,68,0.2)',animation:'pulse-dot 2s infinite'}}/>}
-
-      <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-        <div style={{ width:44,height:44,borderRadius:13,background:`linear-gradient(135deg,${rc.bg},var(--card))`,border:`1.5px solid ${rc.bc}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:rc.c,flexShrink:0,position:'relative' }}>
-          {emp.name?.slice(0,2).toUpperCase()}
-          <div style={{ position:'absolute',bottom:-1,right:-1,width:11,height:11,borderRadius:'50%',background:s.dot,border:'2px solid var(--card)' }}/>
+      {/* Main content */}
+      <div style={{ padding:'16px 16px 12px', display:'flex', gap:12, alignItems:'center' }}>
+        {/* Avatar */}
+        <div style={{ position:'relative', flexShrink:0 }}>
+          <div style={{ width:50, height:50, borderRadius:14, background:`linear-gradient(135deg,${bc}22,${bc}40)`, border:`1.5px solid ${bc}45`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, fontWeight:900, color:bc, letterSpacing:'-0.02em' }}>
+            {emp.name?.slice(0,2).toUpperCase()}
+          </div>
+          <div style={{ position:'absolute', bottom:-2, right:-2, width:12, height:12, borderRadius:'50%', background:hasAlert?'#EF4444':s.dot, border:'2.5px solid var(--card)' }}/>
         </div>
+
+        {/* Identity */}
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontWeight:700,fontSize:13.5,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:6 }}>
-            {emp.name}
-            {!emp.hasProfile && <span style={{ fontSize:9,fontWeight:700,color:'#6B7280',background:'#F3F4F6',border:'1px solid #E5E7EB',borderRadius:4,padding:'1px 5px',letterSpacing:'0.04em',textTransform:'uppercase' }}>No Profile</span>}
+          <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:3 }}>
+            <span style={{ fontWeight:800, fontSize:14, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{emp.name}</span>
+            {!emp.hasProfile && <span style={{ fontSize:9, fontWeight:700, color:'#6B7280', background:'#F3F4F6', border:'1px solid #E5E7EB', borderRadius:4, padding:'1px 5px', flexShrink:0 }}>No Profile</span>}
           </div>
-          <div style={{ fontSize:11,color:'var(--text-muted)',marginTop:2,display:'flex',gap:5,alignItems:'center' }}>
-            {emp.hasProfile ? (
-              <><span style={{ fontFamily:'inherit' }}>{emp.id}</span>
-              {emp.work_number&&<><span>·</span><span style={{ color:'var(--text-sub)' }}>{emp.work_number}</span></>}</>
-            ) : (
-              <span style={{ color:'var(--text-muted)' }}>{emp.email}</span>
-            )}
+          <div style={{ fontSize:10.5, color:'var(--text-muted)', marginBottom:7, fontFamily:'monospace' }}>
+            {emp.hasProfile ? `#${emp.id}` : emp.email || '—'}
+            {emp.work_number && <span style={{ marginLeft:5, color:'var(--text-sub)', fontFamily:'inherit' }}>· {emp.work_number}</span>}
+          </div>
+          <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
+            <span style={{ fontSize:10, fontWeight:700, color:rc.c, background:rc.bg, border:`1px solid ${rc.bc}`, borderRadius:6, padding:'2px 7px' }}>{emp.role}</span>
+            {emp.dept && emp.dept !== '—' && <span style={{ fontSize:10, fontWeight:600, color:'var(--text-muted)', background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:6, padding:'2px 7px' }}>{emp.dept}</span>}
+            {emp.station_code && <span style={{ fontSize:10, fontWeight:600, color:'#2563EB', background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:6, padding:'2px 7px' }}>{emp.station_code}</span>}
           </div>
         </div>
-        <div style={{ display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4,flexShrink:0 }}>
-          <span style={{ fontSize:10.5,fontWeight:700,color:rc.c,background:rc.bg,border:`1px solid ${rc.bc}`,borderRadius:7,padding:'2px 8px' }}>{emp.role}</span>
-          <span style={{ fontSize:10,color:'var(--text-muted)' }}>{emp.dept}</span>
+
+        {/* Salary + actions */}
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6, flexShrink:0 }}>
+          {emp.salary ? <span style={{ fontSize:11.5, fontWeight:700, color:'var(--text-muted)' }}>AED {Number(emp.salary).toLocaleString()}</span> : null}
+          {userRole !== 'accountant' && (
+            <div style={{ display:'flex', gap:4 }}>
+              <button onClick={e=>{e.stopPropagation();onEdit(emp)}} style={{ width:28, height:28, borderRadius:7, background:'var(--bg-alt)', border:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-sub)' }}>
+                <Pencil size={11}/>
+              </button>
+              <button onClick={e=>{e.stopPropagation();onDelete(emp)}} style={{ width:28, height:28, borderRadius:7, background:'var(--red-bg)', border:'1px solid var(--red-border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--red)' }}>
+                <Trash2 size={11}/>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      <div style={{ display:'flex',gap:8,marginTop:11,paddingTop:11,borderTop:'1px solid var(--border)',alignItems:'center',flexWrap:'wrap' }}>
-        <span style={{ flex:1,fontSize:11,fontWeight:600,color:s.c,display:'flex',alignItems:'center',gap:4 }}>
-          <span style={{ width:6,height:6,borderRadius:'50%',background:s.dot,display:'inline-block' }}/>{s.l}
+      {/* Footer */}
+      <div style={{ margin:'0 16px 14px', borderTop:'1px solid var(--border)', paddingTop:10, display:'flex', alignItems:'center', gap:10 }}>
+        <span style={{ flex:1, display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:600, color:s.c }}>
+          <span style={{ width:6, height:6, borderRadius:'50%', background:s.dot, display:'inline-block', flexShrink:0 }}/>{s.l}
         </span>
-        {emp.phone&&<span style={{ fontSize:11,color:'var(--text-sub)',display:'flex',alignItems:'center',gap:3 }}><Phone size={10}/>{emp.phone}</span>}
-        {emp.salary&&<span style={{ fontSize:11,color:'var(--text-sub)',display:'flex',alignItems:'center',gap:3 }}><DollarSign size={10}/>AED {Number(emp.salary).toLocaleString()}</span>}
-        {userRole !== 'accountant' && <>
-          <button onClick={e=>{e.stopPropagation();onEdit(emp)}}
-            style={{ padding:'4px 10px',borderRadius:7,background:'var(--bg-alt)',border:'1px solid var(--border)',cursor:'pointer',fontSize:11,color:'var(--text-sub)',fontWeight:600,display:'flex',alignItems:'center',gap:4,fontFamily:'Poppins,sans-serif' }}>
-            <Pencil size={11}/> Edit
-          </button>
-          <button onClick={e=>{e.stopPropagation();onDelete(emp)}}
-            style={{ padding:'4px 8px',borderRadius:7,background:'var(--red-bg)',border:'1px solid var(--red-border)',cursor:'pointer',color:'var(--red)',display:'flex',alignItems:'center',fontFamily:'Poppins,sans-serif' }}>
-            <Trash2 size={11}/>
-          </button>
-        </>}
+        {emp.phone && <span style={{ fontSize:11, color:'var(--text-sub)', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:130 }}>{emp.phone}</span>}
       </div>
     </div>
   )
 }
 
 /* ══ MAIN PAGE ═══════════════════════════════════════════════ */
-const ROLE_FILTERS = ['All','Admin','Manager','HR','Accountant','POC']
+const ROLE_TABS = ['All','Admin','Manager','HR','Accountant','POC']
 
 export default function AdminsPage() {
-  const [admins,     setAdmins]     = useState([])
+  const [allAdmins,  setAllAdmins]  = useState([])
   const [loading,    setLoading]    = useState(true)
   const [search,     setSearch]     = useState('')
   const [roleFilter, setRoleFilter] = useState('All')
   const [selected,   setSelected]   = useState(null)
   const [modal,      setModal]      = useState(null)
   const [userRole,   setUserRole]   = useState(null)
-  const [isMobile,   setIsMobile]   = useState(false)
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check(); window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
 
   useEffect(() => {
     try { const t=localStorage.getItem('gcd_token'); if(t){const p=JSON.parse(atob(t.split('.')[1]));setUserRole(p.role)} } catch(e){}
@@ -902,120 +915,170 @@ export default function AdminsPage() {
     try {
       setLoading(true)
       const [empRes, userRes] = await Promise.all([
-        fetch(`${API}/api/employees`,   { headers: hdr() }),
-        fetch(`${API}/api/auth/users`,  { headers: hdr() }),
+        fetch(`${API}/api/employees`,  { headers: hdr() }),
+        fetch(`${API}/api/auth/users`, { headers: hdr() }),
       ])
       const empData  = await empRes.json()
       const userData = await userRes.json()
 
-      // Non-driver employees (full profiles)
-      const nonDriverEmps = (empData.employees||[]).filter(e => (e.role||'').toLowerCase() !== 'driver')
-      const empsWithFlag  = nonDriverEmps.map(e => ({ ...e, hasProfile: true }))
-      const empIdSet      = new Set(nonDriverEmps.map(e => e.id))
+      const nonDriverEmps = (empData.employees||[]).filter(e=>(e.role||'').toLowerCase()!=='driver')
+      const empsWithFlag  = nonDriverEmps.map(e=>({...e, hasProfile:true}))
+      const empIdSet      = new Set(nonDriverEmps.map(e=>e.id))
 
-      // Admin-type users whose emp_id doesn't link to an existing employee
-      const usersWithoutProfile = (userData.users||[]).filter(u =>
-        u.role !== 'driver' && (!u.emp_id || !empIdSet.has(u.emp_id))
+      const usersWithoutProfile = (userData.users||[]).filter(u=>
+        u.role!=='driver' && (!u.emp_id || !empIdSet.has(u.emp_id))
       )
-      const userOnlyEntries = usersWithoutProfile.map(u => ({
-        id:           u.id,
-        userId:       u.id,
-        name:         u.name,
-        role:         SYS_ROLE_DISPLAY[u.role] || u.role,
-        dept:         '—',
-        status:       u.status || 'active',
-        station_code: u.station_code,
-        email:        u.email,
-        phone:        null,
-        salary:       null,
-        avatar:       '👔',
-        hasProfile:   false,
-        _userRole:    u.role,
+      const userOnlyEntries = usersWithoutProfile.map(u=>({
+        id:u.id, userId:u.id, name:u.name,
+        role: SYS_ROLE_DISPLAY[u.role]||u.role,
+        dept:'—', status:u.status||'active',
+        station_code:u.station_code, email:u.email,
+        phone:null, salary:null, hasProfile:false, _userRole:u.role,
       }))
 
       const merged = [...empsWithFlag, ...userOnlyEntries]
-      setAdmins(merged)
+      setAllAdmins(merged)
       setSelected(s => s ? (merged.find(e=>e.id===s.id)||s) : null)
     } catch(e) { console.error(e) } finally { setLoading(false) }
   }, [])
 
-  useEffect(() => { const t=setTimeout(load,300); return()=>clearTimeout(t) }, [load])
+  useEffect(() => { load() }, [load])
+
+  // Client-side filtering — instant
+  const filtered = useMemo(() => {
+    let r = roleFilter==='All' ? allAdmins : allAdmins.filter(e=>(e.role||'').toLowerCase()===roleFilter.toLowerCase())
+    if (search) r = r.filter(e=>[e.name,e.id,e.role,e.email,e.phone].some(f=>(f||'').toLowerCase().includes(search.toLowerCase())))
+    return r
+  }, [allAdmins, roleFilter, search])
 
   async function handleDelete(emp) {
     if (!confirm(`Delete ${emp.name}? This cannot be undone.`)) return
     try {
       await fetch(`${API}/api/employees/${emp.id}`, { method:'DELETE', headers:hdr() })
-      setAdmins(p=>p.filter(e=>e.id!==emp.id))
+      setAllAdmins(p=>p.filter(e=>e.id!==emp.id))
       if (selected?.id===emp.id) setSelected(null)
     } catch(e) { alert(e.message) }
   }
 
-  const byRole = roleFilter === 'All' ? admins : admins.filter(e => (e.role||'').toLowerCase() === roleFilter.toLowerCase())
-  const filtered = search
-    ? byRole.filter(e => e.name.toLowerCase().includes(search.toLowerCase()) || e.id.toLowerCase().includes(search.toLowerCase()) || (e.role||'').toLowerCase().includes(search.toLowerCase()))
-    : byRole
+  const total   = allAdmins.length
+  const active  = allAdmins.filter(e=>e.status==='active').length
+  const onLeave = allAdmins.filter(e=>e.status==='on_leave').length
+  const alerts  = allAdmins.filter(e=>{const v=expiry(e.visa_expiry);return v&&(v.label==='Expired'||parseInt(v.label)<=60)}).length
 
-  const total   = admins.length
-  const active  = admins.filter(e=>e.status==='active').length
-  const onLeave = admins.filter(e=>e.status==='on_leave').length
-  const alerts  = admins.filter(e=>{ const v=expiry(e.visa_expiry); return v&&(v.label==='Expired'||parseInt(v.label)<=60) }).length
+  const CSS = `
+    .adm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+    .adm-tab{display:flex;align-items:center;justify-content:center;gap:6px;flex:1 0 auto;padding:8px 10px;border-radius:11px;border:none;cursor:pointer;font-weight:500;font-size:12px;font-family:inherit;transition:all 0.18s;white-space:nowrap;background:transparent}
+    .adm-tab.active{font-weight:700;background:var(--card);box-shadow:0 1px 6px rgba(0,0,0,0.10)}
+    .adm-tab-count{font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px}
+    .adm-skel{background:var(--bg-alt);border-radius:16px;animation:adm-pulse 1.4s ease infinite}
+    @keyframes adm-pulse{0%,100%{opacity:.45}50%{opacity:.85}}
+    .adm-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+    @media(max-width:640px){
+      .adm-grid{grid-template-columns:1fr !important}
+      .adm-tab{font-size:10.5px;padding:7px 6px}
+      .adm-kpi{grid-template-columns:1fr 1fr !important}
+    }
+    @media(max-width:900px) and (min-width:641px){
+      .adm-grid{grid-template-columns:repeat(2,1fr) !important}
+    }
+  `
+
+  const ROLE_TAB_COLORS = {
+    All:        { c:'#B8860B', bg:'#B8860B18' },
+    Admin:      { c:'#7C3AED', bg:'#7C3AED18' },
+    Manager:    { c:'#0F766E', bg:'#0F766E18' },
+    HR:         { c:'#B45309', bg:'#B4530918' },
+    Accountant: { c:'#2E7D52', bg:'#2E7D5218' },
+    POC:        { c:'#B8860B', bg:'#B8860B18' },
+  }
 
   return (
-    <div style={{ display:'flex', gap:18, position:'relative', alignItems:'flex-start' }}>
-      {/* Main column */}
-      <div style={{ flex:1, display:'flex', flexDirection:'column', gap:14, minWidth:0 }}>
+    <>
+      <style>{CSS}</style>
+      <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
 
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
-          <p style={{ fontSize:12.5, color:'var(--text-muted)' }}>{total} admin staff · {active} active</p>
+        {/* ── Hero ─────────────────────────────────────────────── */}
+        <div style={{ background:'linear-gradient(135deg,#0f1623 0%,#1a2535 50%,#1e3a5f 100%)', borderRadius:16, padding:24 }}>
+
+          {/* Title row */}
+          <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:20, flexWrap:'wrap' }}>
+            <div style={{ width:46, height:46, borderRadius:14, background:'rgba(124,58,237,0.15)', border:'1.5px solid rgba(124,58,237,0.35)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <Shield size={22} color="#A78BFA"/>
+            </div>
+            <div>
+              <div style={{ fontWeight:900, fontSize:20, color:'white', letterSpacing:'-0.02em', lineHeight:1.1 }}>Admin Staff</div>
+              <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:3 }}>Admin accounts, salaries &amp; attendance</div>
+            </div>
+            <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
+              <button onClick={load} title="Refresh"
+                style={{ width:36, height:36, borderRadius:10, background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.7)' }}>
+                <RefreshCw size={14}/>
+              </button>
+            </div>
+          </div>
+
+          {/* KPI tiles */}
+          <div className="adm-kpi">
+            {[
+              { label:'Total Staff', val:loading?'—':total,   color:'#B8860B' },
+              { label:'Active',      val:loading?'—':active,  color:'#4ADE80' },
+              { label:'On Leave',    val:loading?'—':onLeave, color:'#FBBF24' },
+              { label:'Alerts',      val:loading?'—':alerts,  color:alerts>0?'#F87171':'#4ADE80' },
+            ].map(k=>(
+              <div key={k.label} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'14px 16px' }}>
+                <div style={{ fontSize:26, fontWeight:800, color:k.color, lineHeight:1.1 }}>
+                  {loading ? <span style={{ opacity:0.3 }}>—</span> : k.val}
+                </div>
+                <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', marginTop:4 }}>{k.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Search + Add Staff ───────────────────────────────── */}
+        <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+          <div style={{ flex:1, position:'relative' }}>
+            <Search size={14} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', pointerEvents:'none' }}/>
+            <input
+              style={{ width:'100%', paddingLeft:36, paddingRight:12, paddingTop:10, paddingBottom:10, borderRadius:10, border:'1px solid var(--border)', background:'var(--card)', color:'var(--text)', fontSize:13, fontFamily:'inherit', outline:'none', boxSizing:'border-box' }}
+              placeholder="Search name, ID, role, email…"
+              value={search} onChange={e=>setSearch(e.target.value)}/>
+            {search && <button onClick={()=>setSearch('')} style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'var(--text-muted)', padding:0, display:'flex' }}><X size={13}/></button>}
+          </div>
           {['admin','hr','general_manager'].includes(userRole) && (
-            <button className="btn btn-primary" onClick={()=>setModal({mode:'add',emp:null})} style={{ borderRadius:24, flexShrink:0 }}>
+            <button onClick={()=>setModal({mode:'add',emp:null})}
+              style={{ display:'flex', alignItems:'center', gap:7, padding:'10px 18px', borderRadius:10, border:'none', background:'#B8860B', color:'white', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit', flexShrink:0, whiteSpace:'nowrap', transition:'background 0.15s' }}
+              onMouseEnter={e=>e.currentTarget.style.background='#9a7209'}
+              onMouseLeave={e=>e.currentTarget.style.background='#B8860B'}>
               <Plus size={14}/> Add Staff
             </button>
           )}
         </div>
 
-        {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:10 }}>
-          {[
-            { l:'Total',    v:total,   c:'var(--text)', bg:'var(--bg-alt)',   bc:'var(--border)'     },
-            { l:'Active',   v:active,  c:'#10B981',    bg:'#F0FDF4',         bc:'#A7F3D0'           },
-            { l:'On Leave', v:onLeave, c:'#F59E0B',    bg:'#FFFBEB',         bc:'#FDE68A'           },
-            { l:'Alerts',   v:alerts,  c:'#EF4444',    bg:'var(--red-bg)',   bc:'var(--red-border)' },
-          ].map(s=>(
-            <div key={s.l} style={{ background:s.bg, border:`1px solid ${s.bc}`, borderRadius:13, padding:'14px 12px', textAlign:'center' }}>
-              <div style={{ fontWeight:900, fontSize:22, color:s.c, letterSpacing:'-0.04em', lineHeight:1 }}>{s.v}</div>
-              <div style={{ fontSize:10.5, color:s.c, fontWeight:600, marginTop:4, opacity:0.8 }}>{s.l}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Search */}
-        <div style={{ position:'relative' }}>
-          <Search size={14} style={{ position:'absolute',left:13,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)',pointerEvents:'none' }}/>
-          <input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, ID, role…" autoComplete="off" style={{ paddingLeft:38, borderRadius:24 }}/>
-          {search&&<button onClick={()=>setSearch('')} style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',padding:0,display:'flex' }}><X size={13}/></button>}
-        </div>
-
-        {/* Role filter chips */}
-        <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-          {ROLE_FILTERS.map(r => {
-            const count = r==='All' ? admins.length : admins.filter(e=>(e.role||'').toLowerCase()===r.toLowerCase()).length
-            const rc    = ROLE_COLOR[r] || ROLE_COLOR.default
-            const active = roleFilter === r
+        {/* ── Role filter tabs ─────────────────────────────────── */}
+        <div style={{ display:'flex', gap:3, background:'var(--bg-alt)', borderRadius:14, padding:3, overflowX:'auto' }}>
+          {ROLE_TABS.map(r=>{
+            const count = r==='All' ? allAdmins.length : allAdmins.filter(e=>(e.role||'').toLowerCase()===r.toLowerCase()).length
+            const tc = ROLE_TAB_COLORS[r] || ROLE_TAB_COLORS.All
+            const isOn = roleFilter===r
             return (
               <button key={r} onClick={()=>setRoleFilter(r)}
-                style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 12px', borderRadius:20, border:`1px solid ${active ? rc.bc : 'var(--border)'}`, background: active ? rc.bg : 'var(--bg-alt)', color: active ? rc.c : 'var(--text-sub)', fontWeight: active ? 700 : 500, fontSize:12, cursor:'pointer', fontFamily:'Poppins,sans-serif', transition:'all 0.15s' }}>
+                className={`adm-tab${isOn?' active':''}`}
+                style={{ color:isOn?tc.c:'var(--text-muted)', background:isOn?tc.bg:'transparent' }}>
                 {r}
-                <span style={{ minWidth:16, height:16, borderRadius:8, background: active ? rc.c : 'var(--border)', color: active ? '#fff' : 'var(--text-muted)', fontSize:9.5, fontWeight:700, display:'inline-flex', alignItems:'center', justifyContent:'center', padding:'0 4px' }}>{count}</span>
+                <span className="adm-tab-count"
+                  style={{ background:isOn?tc.bg:'var(--border)', color:isOn?tc.c:'var(--text-muted)' }}>
+                  {count}
+                </span>
               </button>
             )
           })}
         </div>
 
-        {/* List */}
+        {/* ── Cards ────────────────────────────────────────────── */}
         {loading ? (
-          <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
-            {[1,2,3].map(i=><div key={i} className="sk" style={{ height:86, borderRadius:14 }}/>)}
+          <div className="adm-grid">
+            {[1,2,3,4,5,6].map(i=><div key={i} className="adm-skel" style={{ height:140 }}/>)}
           </div>
         ) : filtered.length===0 ? (
           <div style={{ textAlign:'center', padding:'60px 20px' }}>
@@ -1023,7 +1086,7 @@ export default function AdminsPage() {
             <div style={{ fontWeight:700, fontSize:15, color:'var(--text-sub)' }}>{search?`No results for "${search}"`:'No admin staff yet'}</div>
           </div>
         ) : (
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          <div className="adm-grid">
             {filtered.map((emp,i)=>(
               <AdminCard key={emp.id} emp={emp} index={i}
                 isSelected={selected?.id===emp.id}
@@ -1036,24 +1099,25 @@ export default function AdminsPage() {
         )}
       </div>
 
-      {/* Detail popup — same modal pattern as DA employees page */}
+      {/* ── Detail — centered modal ──────────────────────────── */}
       {selected && (
-        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setSelected(null)}>
-          <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:820, height:'92vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'var(--shadow-lg)', border:'1px solid var(--border)' }}>
+        <div style={{ position:'fixed', inset:0, zIndex:9998, background:'rgba(0,0,0,0.55)', backdropFilter:'blur(6px)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
+          onClick={()=>setSelected(null)}>
+          <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:700, maxHeight:'90vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'0 25px 60px rgba(0,0,0,0.45)', border:'1px solid var(--border)' }}
+            onClick={e=>e.stopPropagation()}>
             <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
               onCreateProfile={u=>setModal({mode:'add',emp:{name:u.name,role:u.role,station_code:u.station_code},linkUserId:u.userId})}/>
           </div>
         </div>
       )}
 
-      {/* Modal */}
+      {/* ── Add/Edit modal ───────────────────────────────────── */}
       {modal && (
         <AdminModal
           emp={modal.emp}
           mode={modal.mode}
           onClose={()=>setModal(null)}
           onSave={async (savedEmp) => {
-            // If creating profile for a user-account entry, link emp_id
             if (modal.linkUserId && savedEmp?.id) {
               try {
                 await fetch(`${API}/api/auth/users/${modal.linkUserId}`, {
@@ -1065,6 +1129,6 @@ export default function AdminsPage() {
             setModal(null); load()
           }}/>
       )}
-    </div>
+    </>
   )
 }
