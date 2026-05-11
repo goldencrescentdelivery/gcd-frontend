@@ -1,12 +1,12 @@
 'use client'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '@/lib/auth'
-import { customerApi, customerInvoiceApi, customerReceiptApi } from '@/lib/api'
+import { customerApi, customerInvoiceApi, customerReceiptApi, customerLedgerApi } from '@/lib/api'
 import {
   Building2, Plus, Search, Pencil, Trash2, X, ChevronLeft,
   Hash, MapPin, FileText, DollarSign, Tag, Receipt,
   RefreshCw, AlertCircle, FileSpreadsheet, ArrowDownLeft,
-  TrendingUp, TrendingDown, CheckCircle2,
+  TrendingUp, TrendingDown, CheckCircle2, BookOpen, Printer,
 } from 'lucide-react'
 
 const TYPE_META = {
@@ -291,6 +291,65 @@ const CSS = `
     display: flex; align-items: center; justify-content: space-between;
   }
 
+  /* ── General Ledger ── */
+  .ldg-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--border); gap: 10px; flex-wrap: wrap;
+  }
+  .ldg-year-sel {
+    padding: 7px 12px; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--bg-alt); color: var(--text);
+    font-family: Poppins, sans-serif; font-size: 13px; font-weight: 600; outline: none; cursor: pointer;
+  }
+  .ldg-print-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--bg-alt);
+    color: var(--text); font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: Poppins, sans-serif; transition: opacity 0.15s;
+  }
+  .ldg-print-btn:hover { opacity: 0.75; }
+  .ldg-bal-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; white-space: nowrap;
+  }
+  .ldg-table { width: 100%; border-collapse: collapse; }
+  .ldg-table th {
+    padding: 10px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-muted); background: var(--bg-alt);
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .ldg-table th.r { text-align: right; }
+  .ldg-table td {
+    padding: 11px 14px; font-size: 12.5px; color: var(--text);
+    border-bottom: 1px solid var(--border); vertical-align: middle;
+  }
+  .ldg-table tr:last-child td { border-bottom: none; }
+  .ldg-table tr.ldg-row-inv:hover td { background: rgba(251,191,36,0.04); }
+  .ldg-table tr.ldg-row-rec:hover td { background: rgba(34,197,94,0.04); }
+  .ldg-bf-row td { background: rgba(255,255,255,0.025); font-style: italic; }
+  .ldg-total-row td {
+    background: var(--bg-alt); font-weight: 800; font-size: 13px;
+    border-top: 2px solid var(--border); border-bottom: none;
+  }
+  .ldg-debit  { text-align: right; font-weight: 800; color: #F97316; white-space: nowrap; font-family: monospace; font-size: 13px; }
+  .ldg-credit { text-align: right; font-weight: 800; color: #22C55E; white-space: nowrap; font-family: monospace; font-size: 13px; }
+  .ldg-bal-db { text-align: right; font-weight: 800; color: #F97316; white-space: nowrap; font-family: monospace; font-size: 13px; }
+  .ldg-bal-cr { text-align: right; font-weight: 800; color: #22C55E; white-space: nowrap; font-family: monospace; font-size: 13px; }
+  .ldg-nil    { text-align: right; color: var(--text-muted); font-size: 11px; }
+  .ldg-sno    { color: var(--text-muted); font-size: 11px; font-weight: 600; }
+  .ldg-type-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+  }
+
+  @media print {
+    .det-back-btn, .det-hero-row button, .cust-add-btn, .det-tabs,
+    .ldg-toolbar .ldg-print-btn, .ldg-toolbar .ldg-year-sel { display: none !important; }
+    .det-hero { border-radius: 0 !important; }
+    .ldg-table td, .ldg-table th { font-size: 11px; padding: 7px 10px; }
+  }
+
   /* ── Skeletons ── */
   @keyframes cust-pulse { 0%,100%{opacity:.4} 50%{opacity:.8} }
   .cust-skel { animation: cust-pulse 1.5s ease infinite; background: var(--card); border-radius: 14px; }
@@ -535,6 +594,169 @@ function EntryModal({ type, customer, entry, onSave, onClose }) {
   )
 }
 
+/* ── General Ledger Tab ─────────────────────────────────────── */
+const CURRENT_YEAR = new Date().getFullYear()
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 2022 }, (_, i) => 2023 + i).reverse()
+
+function LedgerTab({ customer }) {
+  const [year,    setYear]    = useState(CURRENT_YEAR)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [err,     setErr]     = useState('')
+
+  const load = useCallback(async () => {
+    setLoading(true); setErr('')
+    try { setData(await customerLedgerApi.get(customer.id, year)) }
+    catch(e) { setErr(e.message) }
+    finally  { setLoading(false) }
+  }, [customer.id, year])
+
+  useEffect(() => { load() }, [load])
+
+  function numFmt(n) {
+    const v = parseFloat(n)
+    return isNaN(v) ? '0.00' : v.toLocaleString('en-AE', { minimumFractionDigits:2, maximumFractionDigits:2 })
+  }
+
+  const closingColor = data?.closing_sign === 'Cr' ? '#22C55E' : '#F97316'
+
+  return (
+    <div>
+      <div className="ldg-toolbar">
+        <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+          <select className="ldg-year-sel" value={year} onChange={e => setYear(Number(e.target.value))}>
+            {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          {!loading && data && (
+            <div className="ldg-bal-chip" style={{
+              background: data.closing_sign === 'Cr' ? 'rgba(34,197,94,0.1)' : 'rgba(249,115,22,0.1)',
+              border: `1px solid ${data.closing_sign === 'Cr' ? 'rgba(34,197,94,0.3)' : 'rgba(249,115,22,0.3)'}`,
+              color: closingColor,
+            }}>
+              Balance: AED {numFmt(data.closing_balance)} <span style={{ fontSize:10, fontWeight:700, opacity:0.8 }}>{data.closing_sign}</span>
+            </div>
+          )}
+        </div>
+        <button className="ldg-print-btn" onClick={() => window.print()}>
+          <Printer size={13}/> Print
+        </button>
+      </div>
+
+      {err && (
+        <div style={{ margin:16, padding:'12px 16px', borderRadius:10, background:'#FEF2F2', border:'1px solid #FCA5A5', color:'#DC2626', fontSize:13, display:'flex', gap:8, alignItems:'center' }}>
+          <AlertCircle size={14}/> {err}
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ padding:40, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>Loading ledger…</div>
+      ) : !data ? null : (
+        <div className="det-table-wrap">
+          <table className="ldg-table" style={{ minWidth:700 }}>
+            <thead>
+              <tr>
+                <th style={{ width:42 }}>S.No</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Ref / Invoice No</th>
+                <th>Cost Center</th>
+                <th className="r">Debit (AED)</th>
+                <th className="r">Credit (AED)</th>
+                <th className="r">Balance (AED)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Balance B/F row */}
+              <tr className="ldg-bf-row">
+                <td className="ldg-sno">—</td>
+                <td style={{ color:'var(--text-muted)', fontSize:12, whiteSpace:'nowrap' }}>
+                  {year}-01-01
+                </td>
+                <td colSpan={3} style={{ color:'var(--text-muted)', fontWeight:700, fontSize:12 }}>
+                  Balance B/F (brought forward)
+                </td>
+                <td className={data.bf_sign === 'Db' ? 'ldg-debit' : 'ldg-nil'}>
+                  {data.bf_sign === 'Db' && data.bf_balance > 0 ? numFmt(data.bf_balance) : '—'}
+                </td>
+                <td className={data.bf_sign === 'Cr' ? 'ldg-credit' : 'ldg-nil'}>
+                  {data.bf_sign === 'Cr' && data.bf_balance > 0 ? numFmt(data.bf_balance) : '—'}
+                </td>
+                <td className={data.bf_sign === 'Db' ? 'ldg-bal-db' : 'ldg-bal-cr'}>
+                  {numFmt(data.bf_balance)} <span style={{ fontSize:9, fontWeight:800 }}>{data.bf_sign}</span>
+                </td>
+              </tr>
+
+              {data.entries.length === 0 && (
+                <tr>
+                  <td colSpan={8} style={{ textAlign:'center', padding:'40px 20px', color:'var(--text-muted)', fontSize:13 }}>
+                    No transactions in {year}
+                  </td>
+                </tr>
+              )}
+
+              {data.entries.map((e, i) => {
+                const isInv = e.entry_type === 'invoice'
+                return (
+                  <tr key={e.id} className={isInv ? 'ldg-row-inv' : 'ldg-row-rec'}>
+                    <td className="ldg-sno">{i + 1}</td>
+                    <td style={{ fontWeight:600, fontSize:12, whiteSpace:'nowrap' }}>
+                      {e.date?.slice(0,10)}
+                    </td>
+                    <td style={{ maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                      <span className="ldg-type-pill" style={{
+                        background: isInv ? 'rgba(251,191,36,0.1)' : 'rgba(34,197,94,0.1)',
+                        border: isInv ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(34,197,94,0.25)',
+                        color: isInv ? '#D97706' : '#16A34A',
+                        marginRight: 6,
+                      }}>
+                        {isInv ? 'INV' : 'REC'}
+                      </span>
+                      {e.description || <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
+                    </td>
+                    <td>
+                      {e.ref
+                        ? <span className="mono-badge" style={{ fontSize:11 }}>{e.ref}</span>
+                        : <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
+                    </td>
+                    <td>
+                      {e.cost_center
+                        ? <span className="cc-badge">{e.cost_center}</span>
+                        : <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
+                    </td>
+                    <td className={e.debit ? 'ldg-debit' : 'ldg-nil'}>
+                      {e.debit ? numFmt(e.debit) : '—'}
+                    </td>
+                    <td className={e.credit ? 'ldg-credit' : 'ldg-nil'}>
+                      {e.credit ? numFmt(e.credit) : '—'}
+                    </td>
+                    <td className={e.balance_sign === 'Db' ? 'ldg-bal-db' : 'ldg-bal-cr'}>
+                      {numFmt(e.balance)} <span style={{ fontSize:9, fontWeight:800 }}>{e.balance_sign}</span>
+                    </td>
+                  </tr>
+                )
+              })}
+
+              {/* Totals footer */}
+              {data.entries.length > 0 && (
+                <tr className="ldg-total-row">
+                  <td colSpan={5} style={{ color:'var(--text-muted)', fontSize:11, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase' }}>
+                    Totals for {year}
+                  </td>
+                  <td className="ldg-debit">{numFmt(data.total_debit)}</td>
+                  <td className="ldg-credit">{numFmt(data.total_credit)}</td>
+                  <td className={data.closing_sign === 'Db' ? 'ldg-bal-db' : 'ldg-bal-cr'} style={{ fontSize:14 }}>
+                    {numFmt(data.closing_balance)} <span style={{ fontSize:9, fontWeight:800 }}>{data.closing_sign}</span>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── Customer Detail (Invoices + Receipts + Balance) ────────── */
 function CustomerDetailView({ customer, isAdmin, onBack }) {
   const [invData,    setInvData]    = useState(null)
@@ -675,9 +897,11 @@ function CustomerDetailView({ customer, isAdmin, onBack }) {
             { key:'invoices', label:'Invoices',  count: invData?.count },
             { key:'receipts', label:'Receipts',  count: recData?.count },
             { key:'balance',  label:'Balance',   count: null },
+            { key:'ledger',   label:'Ledger',    count: null },
           ].map(t => (
             <button key={t.key} onClick={() => { setTab(t.key); setSearch('') }}
               className={`det-tab${tab===t.key?' active':''}`}>
+              {t.key === 'ledger' && <BookOpen size={12}/>}
               {t.label}
               {t.count != null && <span className="det-tab-count">{t.count}</span>}
             </button>
@@ -685,7 +909,7 @@ function CustomerDetailView({ customer, isAdmin, onBack }) {
         </div>
 
         {/* Search bar (invoices + receipts tabs) */}
-        {tab !== 'balance' && (
+        {tab !== 'balance' && tab !== 'ledger' && (
           <div style={{ padding:'10px 16px', borderBottom:'1px solid var(--border)', position:'relative' }}>
             <Search size={14} style={{ position:'absolute', left:28, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', pointerEvents:'none' }}/>
             <input value={search} onChange={e => setSearch(e.target.value)}
@@ -844,6 +1068,11 @@ function CustomerDetailView({ customer, isAdmin, onBack }) {
               </div>
             )}
           </div>
+        )}
+
+        {/* ── LEDGER TAB ── */}
+        {tab === 'ledger' && (
+          <LedgerTab customer={customer}/>
         )}
       </div>
 

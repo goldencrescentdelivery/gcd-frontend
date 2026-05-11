@@ -239,6 +239,11 @@ export const customerReceiptApi = {
   delete: (id)         => api.delete(`/api/customer-receipts/${id}`),
 }
 
+// Customer Ledger
+export const customerLedgerApi = {
+  get: (customerId, year) => api.get(`/api/customer-ledger?customer_id=${customerId}&year=${year}`),
+}
+
 // Backup
 export const backupApi = {
   stats:    ()   => api.get('/api/backup/stats'),
