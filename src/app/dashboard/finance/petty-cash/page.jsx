@@ -1,11 +1,11 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '@/lib/auth'
 import {
-  Wallet, Plus, ArrowDownLeft, ArrowUpRight,
+  Wallet, ArrowDownLeft, ArrowUpRight,
   ChevronLeft, ChevronRight, X, Users, Trash2,
   TrendingUp, TrendingDown, User, Search, Receipt,
-  HandCoins, AlertCircle,
+  HandCoins, AlertCircle, RefreshCw,
 } from 'lucide-react'
 import { API } from '@/lib/api'
 
@@ -59,7 +59,7 @@ function DriverPicker({ drivers, value, onChange }) {
         <ChevronRight size={13} color="var(--text-muted)" style={{ transform: open ? 'rotate(90deg)' : 'none', transition:'transform 0.15s' }}/>
       </div>
       {open && (
-        <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, background:'var(--card)', border:'1px solid var(--border)', borderRadius:12, boxShadow:'0 8px 24px rgba(0,0,0,0.12)', zIndex:100, overflow:'hidden' }}>
+        <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, background:'var(--card)', border:'1px solid var(--border)', borderRadius:12, boxShadow:'0 8px 24px rgba(0,0,0,0.12)', zIndex:200, overflow:'hidden' }}>
           <div style={{ padding:'8px 10px', borderBottom:'1px solid var(--border)', position:'relative' }}>
             <Search size={12} style={{ position:'absolute', left:20, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)' }}/>
             <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search driver…"
@@ -125,8 +125,10 @@ function ExpenseModal({ drivers, onSave, onClose }) {
   }
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:16 }}>
-      <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:460, border:'1px solid var(--border)', overflow:'hidden', animation:'slideUp 0.2s ease' }}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', backdropFilter:'blur(6px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999, padding:16 }}
+      onClick={onClose}>
+      <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:460, border:'1px solid var(--border)', overflow:'hidden', animation:'slideUp 0.2s ease' }}
+        onClick={e => e.stopPropagation()}>
         <div style={{ padding:'18px 22px', borderBottom:'1px solid var(--border)', background:'#FDF6E3', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <div style={{ width:38, height:38, borderRadius:11, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 3px 10px rgba(184,134,11,0.3)' }}>
@@ -209,8 +211,10 @@ function GiveCashModal({ users, onSave, onClose }) {
   const selected = users.find(u => u.id === form.user_id)
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:16 }}>
-      <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:460, border:'1px solid var(--border)', overflow:'hidden', animation:'slideUp 0.2s ease' }}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', backdropFilter:'blur(6px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999, padding:16 }}
+      onClick={onClose}>
+      <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:460, border:'1px solid var(--border)', overflow:'hidden', animation:'slideUp 0.2s ease' }}
+        onClick={e => e.stopPropagation()}>
         <div style={{ padding:'18px 22px', borderBottom:'1px solid var(--border)', background:'#ECFDF5', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <div style={{ width:38, height:38, borderRadius:11, background:'linear-gradient(135deg,#2E7D52,#22C55E)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 3px 10px rgba(46,125,82,0.3)' }}>
@@ -274,7 +278,7 @@ function GiveCashModal({ users, onSave, onClose }) {
 function TxRow({ record, canDelete, onDelete }) {
   const isAlloc = record.type === 'allocation'
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', borderBottom:'1px solid var(--border)', transition:'background 0.15s' }}
+    <div style={{ display:'flex', alignItems:'center', gap:12, padding:'13px 16px', borderBottom:'1px solid var(--border)', transition:'background 0.15s' }}
       onMouseEnter={e => e.currentTarget.style.background='var(--bg-alt)'}
       onMouseLeave={e => e.currentTarget.style.background='transparent'}>
       <div style={{ width:38, height:38, borderRadius:11, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: isAlloc ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.1)' }}>
@@ -339,46 +343,47 @@ function UserDetailPanel({ userId, userName, userRole, onBack, canDelete }) {
   const isNeg   = balance < 0
 
   return (
-    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:20, overflow:'hidden' }}>
-      {/* Header */}
-      <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)', background:'var(--bg-alt)', display:'flex', alignItems:'center', gap:12 }}>
+    <div>
+      {/* Detail hero */}
+      <div style={{ background:'linear-gradient(135deg,#0f1623 0%,#1a2535 50%,#1e3a5f 100%)', borderRadius:16, padding:22, marginBottom:16 }}>
         <button onClick={onBack}
-          style={{ display:'flex', alignItems:'center', gap:5, background:'none', border:'none', cursor:'pointer', color:'var(--text-muted)', fontSize:13, fontWeight:600, padding:0, fontFamily:'Poppins,sans-serif' }}>
-          <ChevronLeft size={14}/>
+          style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)', cursor:'pointer', color:'rgba(255,255,255,0.7)', fontSize:12, fontWeight:600, padding:'6px 12px', borderRadius:8, fontFamily:'Poppins,sans-serif', marginBottom:18 }}>
+          <ChevronLeft size={13}/> Back to Overview
         </button>
-        <div style={{ width:1, height:20, background:'var(--border)' }}/>
-        <div style={{ width:36, height:36, borderRadius:10, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, color:'white', flexShrink:0 }}>
-          {userName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
-        </div>
-        <div>
-          <div style={{ fontWeight:700, fontSize:14, color:'var(--text)' }}>{userName}</div>
-          <div style={{ fontSize:11, color:'var(--text-muted)' }}>{ROLE_LABELS[userRole]||userRole}</div>
-        </div>
-      </div>
-
-      {/* Balance summary */}
-      <div style={{ padding:'20px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, borderBottom:'1px solid var(--border)' }}>
-        {[
-          { label:'Balance',  value:fmt(balance),               color: isNeg?'#EF4444':'#22C55E' },
-          { label:'Received', value:fmt(data?.total_allocated||0), color:'#22C55E' },
-          { label:'Spent',    value:fmt(data?.total_spent||0),     color:'#EF4444' },
-        ].map(s => (
-          <div key={s.label} style={{ textAlign:'center', padding:'12px 8px', background:'var(--bg-alt)', borderRadius:12, border:'1px solid var(--border)' }}>
-            <div style={{ fontSize:9.5, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em', fontWeight:700, marginBottom:4 }}>{s.label}</div>
-            <div style={{ fontSize:14, fontWeight:800, color:s.color }}>{s.value}</div>
+        <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:20 }}>
+          <div style={{ width:48, height:48, borderRadius:14, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:15, fontWeight:800, color:'white', boxShadow:'0 4px 12px rgba(184,134,11,0.3)' }}>
+            {userName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
           </div>
-        ))}
+          <div>
+            <div style={{ fontWeight:800, fontSize:17, color:'white', letterSpacing:'-0.02em' }}>{userName}</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:2 }}>{ROLE_LABELS[userRole]||userRole}</div>
+          </div>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+          {[
+            { label:'Balance',  value:fmt(balance),                color: isNeg?'#F87171':'#34D399' },
+            { label:'Received', value:fmt(data?.total_allocated||0), color:'#34D399' },
+            { label:'Spent',    value:fmt(data?.total_spent||0),     color:'#F87171' },
+          ].map(s => (
+            <div key={s.label} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'14px 16px' }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:6 }}>{s.label}</div>
+              <div style={{ fontSize:18, fontWeight:900, color:s.color, letterSpacing:'-0.02em' }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Transactions */}
-      <div style={{ padding:'14px 16px', borderBottom:'1px solid var(--border)', fontWeight:700, fontSize:13, color:'var(--text)' }}>Transaction History</div>
-      {loading ? (
-        <div style={{ padding:32, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>Loading…</div>
-      ) : !data?.records?.length ? (
-        <div style={{ padding:40, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>No transactions yet</div>
-      ) : (
-        data.records.map(r => <TxRow key={r.id} record={r} canDelete={canDelete} onDelete={handleDelete}/>)
-      )}
+      {/* Transactions card */}
+      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden' }}>
+        <div style={{ padding:'13px 16px', borderBottom:'1px solid var(--border)', fontWeight:700, fontSize:13, color:'var(--text)' }}>Transaction History</div>
+        {loading ? (
+          <div style={{ padding:32, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>Loading…</div>
+        ) : !data?.records?.length ? (
+          <div style={{ padding:40, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>No transactions yet</div>
+        ) : (
+          data.records.map(r => <TxRow key={r.id} record={r} canDelete={canDelete} onDelete={handleDelete}/>)
+        )}
+      </div>
     </div>
   )
 }
@@ -391,15 +396,18 @@ export default function PettyCashPage() {
   const [allUsers,  setAllUsers]  = useState([])
   const [drivers,   setDrivers]   = useState([])
   const [loading,   setLoading]   = useState(true)
+  const [refreshing,setRefreshing]= useState(false)
   const [modal,     setModal]     = useState(null)
   const [drillUser, setDrillUser] = useState(null)
   const [tab,       setTab]       = useState('my')
+  const [search,    setSearch]    = useState('')
 
   const canGiveCash = ['admin','accountant'].includes(user?.role)
   const canViewTeam = ['admin','accountant','general_manager','manager'].includes(user?.role)
   const canDelete   = ['admin','accountant'].includes(user?.role)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (isRefresh=false) => {
+    if (isRefresh) setRefreshing(true)
     try {
       const h = { headers: hdr() }
       const fetches = [
@@ -419,7 +427,7 @@ export default function PettyCashPage() {
         setSummary(results[2]?.summary||[])
         setAllUsers((results[3]?.users||[]).filter(u => u.role !== 'driver' && u.id !== user?.id))
       }
-    } catch {} finally { setLoading(false) }
+    } catch {} finally { setLoading(false); setRefreshing(false) }
   }, [canViewTeam, user?.id])
 
   useEffect(() => { load() }, [load])
@@ -430,10 +438,29 @@ export default function PettyCashPage() {
     load()
   }
 
+  const filteredSummary = useMemo(() => {
+    if (!search) return summary
+    const q = search.toLowerCase()
+    return summary.filter(u => u.name.toLowerCase().includes(q))
+  }, [summary, search])
+
   if (loading) return (
-    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:20, padding:'60px 20px', textAlign:'center' }}>
-      <div className="skeleton" style={{ width:200, height:20, borderRadius:8, margin:'0 auto 10px' }}/>
-      <div className="skeleton" style={{ width:140, height:14, borderRadius:8, margin:'0 auto' }}/>
+    <div style={{ maxWidth:760, margin:'0 auto' }}>
+      <div style={{ background:'linear-gradient(135deg,#0f1623 0%,#1a2535 50%,#1e3a5f 100%)', borderRadius:16, padding:24, marginBottom:16 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:20 }}>
+          <div className="skeleton" style={{ width:48, height:48, borderRadius:14 }}/>
+          <div>
+            <div className="skeleton" style={{ width:130, height:18, borderRadius:6, marginBottom:7 }}/>
+            <div className="skeleton" style={{ width:170, height:13, borderRadius:6 }}/>
+          </div>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+          {[0,1,2].map(i => <div key={i} className="skeleton" style={{ height:76, borderRadius:12 }}/>)}
+        </div>
+      </div>
+      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, padding:20 }}>
+        {[0,1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height:56, borderRadius:10, marginBottom:10 }}/>)}
+      </div>
     </div>
   )
 
@@ -441,14 +468,12 @@ export default function PettyCashPage() {
   const totalAllocAll = summary.reduce((s,u) => s + Number(u.total_allocated||0), 0)
   const totalSpentAll = summary.reduce((s,u) => s + Number(u.total_spent||0), 0)
   const unaccounted   = summary.filter(u => Number(u.balance) < 0).length
+  const isNeg  = balance < 0
+  const isZero = balance === 0
 
   if (drillUser) {
     return (
-      <div style={{ maxWidth:700, margin:'0 auto' }}>
-        <button onClick={() => setDrillUser(null)}
-          style={{ display:'flex', alignItems:'center', gap:5, background:'none', border:'none', cursor:'pointer', color:'var(--text-muted)', fontSize:13, fontWeight:600, padding:0, fontFamily:'Poppins,sans-serif', marginBottom:14 }}>
-          <ChevronLeft size={14}/> Back to Overview
-        </button>
+      <div style={{ maxWidth:760, margin:'0 auto' }}>
         <UserDetailPanel
           userId={drillUser.id} userName={drillUser.name} userRole={drillUser.role}
           onBack={() => setDrillUser(null)} canDelete={canDelete}/>
@@ -456,156 +481,180 @@ export default function PettyCashPage() {
     )
   }
 
-  const isNeg  = balance < 0
-  const isZero = balance === 0
-
   return (
-    <div style={{ maxWidth:700, margin:'0 auto' }}>
+    <>
+      <style>{`
+        .pc-tab { background:none; border:none; border-bottom:2px solid transparent; padding:11px 18px; font-size:13px; font-weight:500; color:var(--text-muted); cursor:pointer; font-family:Poppins,sans-serif; transition:all 0.15s; }
+        .pc-tab.active { color:#B8860B; font-weight:700; border-bottom-color:#B8860B; }
+        .pc-tab:hover:not(.active) { color:var(--text); background:var(--bg-alt); }
+        @keyframes pc-spin { to { transform:rotate(360deg); } }
+        .pc-spin { animation:pc-spin 0.8s linear infinite; }
+      `}</style>
 
-      {/* ── Single page card ── */}
-      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:20, overflow:'hidden' }}>
+      <div style={{ maxWidth:760, margin:'0 auto' }}>
 
-        {/* Header */}
-        <div style={{ padding:'20px 24px', borderBottom:'1px solid var(--border)', background:'#FDF6E3', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-            <div style={{ width:46, height:46, borderRadius:14, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 4px 12px rgba(184,134,11,0.3)' }}>
-              <Wallet size={21} color="white"/>
-            </div>
-            <div>
-              <div style={{ fontWeight:800, fontSize:17, color:'#1A1612', letterSpacing:'-0.02em' }}>Petty Cash</div>
-              <div style={{ fontSize:12, color:'#A89880', marginTop:2 }}>
-                {user?.name} · <span style={{ color:'#B8860B', fontWeight:700 }}>{ROLE_LABELS[user?.role]||user?.role}</span>
+        {/* ── Hero ── */}
+        <div style={{ background:'linear-gradient(135deg,#0f1623 0%,#1a2535 50%,#1e3a5f 100%)', borderRadius:16, padding:24, marginBottom:16 }}>
+
+          {/* Top row */}
+          <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:22, flexWrap:'wrap' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+              <div style={{ width:50, height:50, borderRadius:14, background:'rgba(184,134,11,0.2)', border:'1.5px solid rgba(184,134,11,0.4)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <Wallet size={23} color="#D4A017"/>
+              </div>
+              <div>
+                <div style={{ fontWeight:800, fontSize:19, color:'white', letterSpacing:'-0.02em' }}>Petty Cash</div>
+                <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:3 }}>
+                  {user?.name} · <span style={{ color:'#D4A017', fontWeight:700 }}>{ROLE_LABELS[user?.role]||user?.role}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-            {canGiveCash && (
-              <button onClick={() => setModal('give')}
-                style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:10, border:'none', cursor:'pointer', background:'linear-gradient(135deg,#2E7D52,#22C55E)', color:'white', fontWeight:700, fontSize:13, fontFamily:'Poppins,sans-serif', boxShadow:'0 2px 8px rgba(46,125,82,0.3)', whiteSpace:'nowrap' }}>
-                <HandCoins size={14}/> Give Cash
+            <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0, flexWrap:'wrap' }}>
+              <button onClick={() => load(true)} title="Refresh"
+                style={{ width:36, height:36, borderRadius:9, background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <RefreshCw size={14} color="rgba(255,255,255,0.6)" className={refreshing ? 'pc-spin' : ''}/>
               </button>
-            )}
-            <button onClick={() => setModal('expense')}
-              style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:10, border:'1px solid #F0D78C', cursor:'pointer', background:'white', color:'#B8860B', fontWeight:700, fontSize:13, fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap' }}>
-              <Receipt size={14}/> Record Expense
-            </button>
+              {canGiveCash && (
+                <button onClick={() => setModal('give')}
+                  style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:10, border:'none', cursor:'pointer', background:'linear-gradient(135deg,#2E7D52,#22C55E)', color:'white', fontWeight:700, fontSize:13, fontFamily:'Poppins,sans-serif', boxShadow:'0 2px 10px rgba(46,125,82,0.4)', whiteSpace:'nowrap' }}>
+                  <HandCoins size={14}/> Give Cash
+                </button>
+              )}
+              <button onClick={() => setModal('expense')}
+                style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:10, border:'1px solid rgba(184,134,11,0.5)', cursor:'pointer', background:'rgba(184,134,11,0.15)', color:'#D4A017', fontWeight:700, fontSize:13, fontFamily:'Poppins,sans-serif', whiteSpace:'nowrap' }}>
+                <Receipt size={14}/> Record Expense
+              </button>
+            </div>
+          </div>
+
+          {/* KPI tiles */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+            <div style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'16px 18px' }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:7 }}>My Balance</div>
+              <div style={{ fontSize:21, fontWeight:900, color: isNeg?'#F87171':isZero?'#34D399':'#FBBF24', letterSpacing:'-0.03em', lineHeight:1 }}>
+                {isNeg?'-':''}{fmt(balance)}
+              </div>
+              <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.35)', marginTop:5 }}>
+                {isNeg?'To account':isZero?'Fully accounted':'Cash in hand'}
+              </div>
+            </div>
+            <div style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'16px 18px' }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:7 }}>Received</div>
+              <div style={{ fontSize:21, fontWeight:900, color:'#34D399', letterSpacing:'-0.03em', lineHeight:1 }}>{fmt(myData?.total_allocated||0)}</div>
+              <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.35)', marginTop:5 }}>Total cash in</div>
+            </div>
+            <div style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'16px 18px' }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.45)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:7 }}>Spent</div>
+              <div style={{ fontSize:21, fontWeight:900, color:'#F87171', letterSpacing:'-0.03em', lineHeight:1 }}>{fmt(myData?.total_spent||0)}</div>
+              <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.35)', marginTop:5 }}>Total expenses</div>
+            </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        {canViewTeam && (
-          <div style={{ display:'flex', borderBottom:'1px solid var(--border)' }}>
-            {[['my','My Balance'],['team','Team Overview']].map(([v,l]) => (
-              <button key={v} onClick={() => setTab(v)}
-                style={{ flex:1, padding:'12px', border:'none', background: tab===v ? 'var(--card)' : 'var(--bg-alt)', borderBottom: tab===v ? '2px solid #B8860B' : '2px solid transparent', color: tab===v ? '#B8860B' : 'var(--text-muted)', fontWeight: tab===v ? 700 : 500, fontSize:13, cursor:'pointer', fontFamily:'Poppins,sans-serif', transition:'all 0.15s' }}>
-                {l}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* ── Main Card ── */}
+        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden' }}>
 
-        {/* ── My Balance ── */}
-        {tab === 'my' && (
-          <div style={{ display:'flex', flexDirection:'column' }}>
-
-            {/* Balance summary strip */}
-            <div style={{ padding:'20px 24px', background: isNeg ? '#FEF2F2' : isZero ? '#F0FDF4' : '#FFFBEB', borderBottom:'1px solid var(--border)' }}>
-              <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:6 }}>Your Balance</div>
-              <div style={{ fontSize:34, fontWeight:900, color: isNeg?'#EF4444': isZero?'#22C55E':'#F59E0B', letterSpacing:'-0.04em', lineHeight:1, marginBottom:6 }}>
-                {isNeg ? '-' : ''}{fmt(balance)}
-              </div>
-              <div style={{ fontSize:12, color: isNeg?'#EF4444':'var(--text-muted)', marginBottom:16 }}>
-                {isNeg ? `${fmt(Math.abs(balance))} remaining to record` : isZero ? 'Fully accounted — nothing pending' : 'Cash received — log expenses below'}
-              </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-                <div style={{ padding:'12px 14px', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.2)', borderRadius:12 }}>
-                  <div style={{ fontSize:10, fontWeight:700, color:'#22C55E', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:4, display:'flex', alignItems:'center', gap:4 }}>
-                    <TrendingDown size={10}/> Total Received
-                  </div>
-                  <div style={{ fontSize:16, fontWeight:800, color:'#22C55E' }}>{fmt(myData?.total_allocated||0)}</div>
-                </div>
-                <div style={{ padding:'12px 14px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:12 }}>
-                  <div style={{ fontSize:10, fontWeight:700, color:'#EF4444', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:4, display:'flex', alignItems:'center', gap:4 }}>
-                    <TrendingUp size={10}/> Total Spent
-                  </div>
-                  <div style={{ fontSize:16, fontWeight:800, color:'#EF4444' }}>{fmt(myData?.total_spent||0)}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Transactions */}
-            <div style={{ padding:'14px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:'1px solid var(--border)' }}>
-              <span style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>Transaction History</span>
-              {myData?.records?.length > 0 && <span style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>{myData.records.length} records</span>}
-            </div>
-            {!myData?.records?.length ? (
-              <div style={{ padding:'48px 20px', textAlign:'center', color:'var(--text-muted)' }}>
-                <Wallet size={34} style={{ margin:'0 auto 12px', display:'block', opacity:0.12 }}/>
-                <div style={{ fontWeight:600, fontSize:13, color:'var(--text-sub)' }}>No transactions yet</div>
-                <div style={{ fontSize:11, marginTop:4 }}>Record an expense or receive cash to get started</div>
-              </div>
-            ) : (
-              myData.records.map(r => <TxRow key={r.id} record={r} canDelete={canDelete} onDelete={handleDeleteMy}/>)
-            )}
-          </div>
-        )}
-
-        {/* ── Team Overview ── */}
-        {tab === 'team' && (
-          <div style={{ display:'flex', flexDirection:'column' }}>
-
-            {/* Summary stats */}
-            <div style={{ padding:'16px', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:10, borderBottom:'1px solid var(--border)', background:'var(--bg-alt)' }}>
-              {[
-                { label:'Distributed', value:fmt(totalAllocAll), color:'#22C55E', bg:'rgba(34,197,94,0.08)', bc:'rgba(34,197,94,0.2)', icon:<TrendingDown size={12} color="#22C55E"/> },
-                { label:'Total Spent',  value:fmt(totalSpentAll), color:'#EF4444', bg:'rgba(239,68,68,0.08)', bc:'rgba(239,68,68,0.2)', icon:<TrendingUp  size={12} color="#EF4444"/> },
-                { label:'Unaccounted', value:String(unaccounted), color: unaccounted>0?'#EF4444':'#22C55E', bg: unaccounted>0?'rgba(239,68,68,0.08)':'rgba(34,197,94,0.08)', bc: unaccounted>0?'rgba(239,68,68,0.2)':'rgba(34,197,94,0.2)', icon:<Users size={12} color={unaccounted>0?'#EF4444':'#22C55E'}/> },
-              ].map((s,i) => (
-                <div key={i} style={{ padding:'12px 14px', background:s.bg, border:`1px solid ${s.bc}`, borderRadius:12 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:6 }}>
-                    {s.icon}
-                    <span style={{ fontSize:9.5, fontWeight:700, color:s.color, textTransform:'uppercase', letterSpacing:'0.06em' }}>{s.label}</span>
-                  </div>
-                  <div style={{ fontSize:16, fontWeight:900, color:s.color }}>{s.value}</div>
-                </div>
+          {/* Tabs */}
+          {canViewTeam && (
+            <div style={{ padding:'0 16px', borderBottom:'1px solid var(--border)', display:'flex', gap:2 }}>
+              {[['my','My Balance'],['team','Team Overview']].map(([v,l]) => (
+                <button key={v} onClick={() => setTab(v)} className={`pc-tab${tab===v?' active':''}`}>{l}</button>
               ))}
             </div>
+          )}
 
-            {/* Team list */}
-            <div style={{ padding:'14px 16px', borderBottom:'1px solid var(--border)', fontWeight:700, fontSize:13, color:'var(--text)' }}>Team Members</div>
-            {!summary.length ? (
-              <div style={{ padding:40, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>No records yet</div>
-            ) : summary.map(u => {
-              const bal = Number(u.balance)
-              const neg = bal < 0
-              return (
-                <div key={u.id} onClick={() => setDrillUser({ id:u.id, name:u.name, role:u.role })}
-                  style={{ display:'flex', alignItems:'center', gap:12, padding:'13px 16px', borderBottom:'1px solid var(--border)', cursor:'pointer', transition:'background 0.15s' }}
-                  onMouseEnter={e => e.currentTarget.style.background='var(--bg-alt)'}
-                  onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-                  <div style={{ width:38, height:38, borderRadius:11, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:12, fontWeight:800, color:'white' }}>
-                    {u.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
-                  </div>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>{u.name}</div>
-                    <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:2 }}>
-                      {ROLE_LABELS[u.role]||u.role}{Number(u.transaction_count)>0&&` · ${u.transaction_count} transactions`}
-                    </div>
-                  </div>
-                  <div style={{ textAlign:'right', flexShrink:0 }}>
-                    <div style={{ fontSize:14, fontWeight:800, color: neg?'#EF4444':'#22C55E' }}>{neg?'-':''}{fmt(Math.abs(bal))}</div>
-                    <div style={{ fontSize:10, fontWeight:600, marginTop:2, color: neg?'#EF4444':'#22C55E' }}>{neg?'Unaccounted':'Clear'}</div>
-                  </div>
-                  <ChevronRight size={14} style={{ color:'var(--text-muted)', flexShrink:0 }}/>
+          {/* ── My Balance ── */}
+          {tab === 'my' && (
+            <div>
+              <div style={{ padding:'13px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:'1px solid var(--border)' }}>
+                <span style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>Transaction History</span>
+                {myData?.records?.length > 0 && (
+                  <span style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>{myData.records.length} records</span>
+                )}
+              </div>
+              {!myData?.records?.length ? (
+                <div style={{ padding:'52px 20px', textAlign:'center', color:'var(--text-muted)' }}>
+                  <Wallet size={36} style={{ margin:'0 auto 14px', display:'block', opacity:0.12 }}/>
+                  <div style={{ fontWeight:600, fontSize:13 }}>No transactions yet</div>
+                  <div style={{ fontSize:11, marginTop:4 }}>Record an expense or receive cash to get started</div>
                 </div>
-              )
-            })}
-          </div>
-        )}
+              ) : (
+                myData.records.map(r => <TxRow key={r.id} record={r} canDelete={canDelete} onDelete={handleDeleteMy}/>)
+              )}
+            </div>
+          )}
+
+          {/* ── Team Overview ── */}
+          {tab === 'team' && (
+            <div>
+              {/* Team KPIs */}
+              <div style={{ padding:'14px 16px', display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, borderBottom:'1px solid var(--border)', background:'var(--bg-alt)' }}>
+                {[
+                  { label:'Distributed', value:fmt(totalAllocAll), color:'#22C55E', bg:'rgba(34,197,94,0.08)',  bc:'rgba(34,197,94,0.2)',  icon:<TrendingDown size={11} color="#22C55E"/> },
+                  { label:'Total Spent',  value:fmt(totalSpentAll), color:'#EF4444', bg:'rgba(239,68,68,0.08)',  bc:'rgba(239,68,68,0.2)',  icon:<TrendingUp   size={11} color="#EF4444"/> },
+                  { label:'Unaccounted', value:String(unaccounted), color:unaccounted>0?'#EF4444':'#22C55E', bg:unaccounted>0?'rgba(239,68,68,0.08)':'rgba(34,197,94,0.08)', bc:unaccounted>0?'rgba(239,68,68,0.2)':'rgba(34,197,94,0.2)', icon:<Users size={11} color={unaccounted>0?'#EF4444':'#22C55E'}/> },
+                ].map((s,i) => (
+                  <div key={i} style={{ padding:'12px 14px', background:s.bg, border:`1px solid ${s.bc}`, borderRadius:12 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:5 }}>
+                      {s.icon}
+                      <span style={{ fontSize:9.5, fontWeight:700, color:s.color, textTransform:'uppercase', letterSpacing:'0.06em' }}>{s.label}</span>
+                    </div>
+                    <div style={{ fontSize:15, fontWeight:900, color:s.color }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Search */}
+              <div style={{ padding:'10px 16px', borderBottom:'1px solid var(--border)', position:'relative' }}>
+                <Search size={14} style={{ position:'absolute', left:28, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', pointerEvents:'none' }}/>
+                <input
+                  value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="Search team members…"
+                  style={{ width:'100%', padding:'9px 12px 9px 36px', borderRadius:10, border:'1px solid var(--border)', background:'var(--bg-alt)', color:'var(--text)', fontSize:13, fontFamily:'Poppins,sans-serif', outline:'none' }}/>
+              </div>
+
+              {/* List header */}
+              <div style={{ padding:'10px 16px', fontWeight:700, fontSize:11, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em', borderBottom:'1px solid var(--border)' }}>
+                Team Members ({filteredSummary.length})
+              </div>
+
+              {/* Team list */}
+              {!filteredSummary.length ? (
+                <div style={{ padding:40, textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>No records found</div>
+              ) : filteredSummary.map(u => {
+                const bal = Number(u.balance)
+                const neg = bal < 0
+                return (
+                  <div key={u.id} onClick={() => setDrillUser({ id:u.id, name:u.name, role:u.role })}
+                    style={{ display:'flex', alignItems:'center', gap:12, padding:'13px 16px', borderBottom:'1px solid var(--border)', cursor:'pointer', transition:'background 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background='var(--bg-alt)'}
+                    onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                    <div style={{ width:40, height:40, borderRadius:12, background:'linear-gradient(135deg,#B8860B,#D4A017)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:13, fontWeight:800, color:'white' }}>
+                      {u.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>{u.name}</div>
+                      <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:2 }}>
+                        {ROLE_LABELS[u.role]||u.role}{Number(u.transaction_count)>0&&` · ${u.transaction_count} transactions`}
+                      </div>
+                    </div>
+                    <div style={{ textAlign:'right', flexShrink:0 }}>
+                      <div style={{ fontSize:14, fontWeight:800, color:neg?'#EF4444':'#22C55E' }}>{neg?'-':''}{fmt(Math.abs(bal))}</div>
+                      <div style={{ fontSize:10, fontWeight:600, marginTop:3, padding:'2px 8px', borderRadius:6, background:neg?'rgba(239,68,68,0.1)':'rgba(34,197,94,0.1)', color:neg?'#EF4444':'#22C55E', display:'inline-block' }}>
+                        {neg?'Unaccounted':'Clear'}
+                      </div>
+                    </div>
+                    <ChevronRight size={14} style={{ color:'var(--text-muted)', flexShrink:0 }}/>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {modal==='expense' && <ExpenseModal drivers={drivers} onSave={() => { setModal(null); load() }} onClose={() => setModal(null)}/>}
       {modal==='give'    && <GiveCashModal users={allUsers} onSave={() => { setModal(null); load() }} onClose={() => setModal(null)}/>}
-    </div>
+    </>
   )
 }
