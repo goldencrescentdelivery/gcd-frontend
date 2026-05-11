@@ -607,6 +607,183 @@ function EntryModal({ type, customer, entry, onSave, onClose }) {
 const CURRENT_YEAR = new Date().getFullYear()
 const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 2022 }, (_, i) => 2023 + i).reverse()
 
+function numFmt(n) {
+  const v = parseFloat(n)
+  return isNaN(v) ? '0.00' : v.toLocaleString('en-AE', { minimumFractionDigits:2, maximumFractionDigits:2 })
+}
+function aed(n) { return `AED ${numFmt(n)}` }
+
+function openLedgerPrint(customer, year, data) {
+  const now = new Date().toLocaleString('en-AE', { dateStyle:'long', timeStyle:'short' })
+  const showBf = data.bf_balance > 0
+
+  const rows = [
+    ...(showBf ? [`
+      <tr class="bf-row">
+        <td style="color:#aaa;font-style:italic">—</td>
+        <td style="color:#aaa;font-style:italic">${year}-01-01</td>
+        <td colspan="3" style="color:#aaa;font-style:italic;font-weight:600">Balance B/F (brought forward)</td>
+        <td class="${data.bf_sign==='Db'?'db':'nil'}">${data.bf_sign==='Db'?aed(data.bf_balance):'—'}</td>
+        <td class="${data.bf_sign==='Cr'?'cr':'nil'}">${data.bf_sign==='Cr'?aed(data.bf_balance):'—'}</td>
+        <td class="${data.bf_sign==='Db'?'db':'cr'}">${aed(data.bf_balance)} <sup>${data.bf_sign}</sup></td>
+      </tr>`] : []),
+    ...data.entries.map((e, i) => {
+      const inv = e.entry_type === 'invoice'
+      return `
+      <tr class="${inv?'inv-row':'rec-row'}">
+        <td class="sno">${i+1}</td>
+        <td class="date">${e.date?.slice(0,10)||''}</td>
+        <td><span class="pill ${inv?'pill-inv':'pill-rec'}">${inv?'INV':'REC'}</span>${e.description||'<span style="color:#bbb">—</span>'}</td>
+        <td class="mono">${e.ref||'—'}</td>
+        <td>${e.cost_center||'—'}</td>
+        <td class="${e.debit?'db':'nil'}">${e.debit?aed(e.debit):'—'}</td>
+        <td class="${e.credit?'cr':'nil'}">${e.credit?aed(e.credit):'—'}</td>
+        <td class="${e.balance_sign==='Db'?'db':'cr'}">${aed(e.balance)} <sup>${e.balance_sign}</sup></td>
+      </tr>`
+    }),
+  ].join('')
+
+  const totalRow = data.entries.length > 0 ? `
+    <tr class="total-row">
+      <td colspan="5">Closing Balance — ${year}</td>
+      <td class="db">${aed(data.total_debit)}</td>
+      <td class="cr">${aed(data.total_credit)}</td>
+      <td class="${data.closing_sign==='Db'?'db':'cr'}" style="font-size:14px">${aed(data.closing_balance)} <sup>${data.closing_sign}</sup></td>
+    </tr>` : ''
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>General Ledger — ${customer.name} — ${year}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; color: #1a1a2e; padding: 28px 32px; font-size: 12px; }
+
+  /* ── Header ── */
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 16px; border-bottom: 3px solid #B8860B; margin-bottom: 20px; }
+  .company-name { font-size: 20px; font-weight: 900; color: #B8860B; letter-spacing: -0.02em; }
+  .doc-title { font-size: 13px; font-weight: 700; color: #1a1a2e; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .print-meta { text-align: right; font-size: 10px; color: #888; line-height: 1.6; }
+
+  /* ── Customer card ── */
+  .cust-card { background: #fafaf7; border: 1px solid #e8dfc0; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+  .cust-left {}
+  .cust-name { font-size: 17px; font-weight: 800; color: #1a1a2e; }
+  .cust-meta { font-size: 11px; color: #666; margin-top: 5px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .cust-meta span { display: flex; align-items: center; gap: 4px; }
+  .year-pill { background: #1a1a2e; color: #B8860B; font-weight: 800; font-size: 15px; padding: 6px 18px; border-radius: 20px; letter-spacing: 0.04em; }
+
+  /* ── Balance summary strip ── */
+  .bal-strip { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+  .bal-box { border-radius: 8px; padding: 12px 14px; text-align: center; }
+  .bal-box-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; opacity: 0.6; }
+  .bal-box-val { font-size: 15px; font-weight: 800; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: #1a1a2e; }
+  th { color: white; padding: 9px 11px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+  th.r { text-align: right; }
+  td { padding: 9px 11px; border-bottom: 1px solid #f0ece0; vertical-align: middle; }
+  tr.bf-row td { background: #fdf8ed; }
+  tr.inv-row:hover td { background: #fffdf5; }
+  tr.rec-row:hover td { background: #f5fff8; }
+  .sno  { color: #bbb; font-size: 10px; font-weight: 600; }
+  .date { font-weight: 600; white-space: nowrap; color: #333; }
+  .mono { font-family: monospace; font-size: 11px; background: #f5f5f5; padding: 1px 6px; border-radius: 4px; white-space: nowrap; display: inline-block; }
+  .pill { display: inline-block; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 10px; margin-right: 6px; }
+  .pill-inv { background: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
+  .pill-rec { background: #f0fdf4; border: 1px solid #86efac; color: #15803d; }
+  .db  { text-align: right; font-weight: 700; color: #c2410c; font-family: monospace; white-space: nowrap; }
+  .cr  { text-align: right; font-weight: 700; color: #15803d; font-family: monospace; white-space: nowrap; }
+  .nil { text-align: right; color: #ccc; }
+  sup  { font-size: 8px; font-weight: 800; opacity: 0.75; }
+  tr.total-row td { background: #1a1a2e; color: white; font-weight: 700; border: none; }
+  tr.total-row .db { color: #fbbf24; }
+  tr.total-row .cr { color: #34d399; }
+
+  /* ── Footer ── */
+  .page-footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e8dfc0; display: flex; justify-content: space-between; font-size: 9.5px; color: #aaa; }
+
+  @page { margin: 12mm 10mm; size: A4 landscape; }
+  @media print { body { padding: 0; } }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <div class="company-name">Golden Crescent Delivery</div>
+    <div class="doc-title">General Ledger — Customer Statement</div>
+  </div>
+  <div class="print-meta">
+    <div>Printed: ${now}</div>
+    <div>Period: 01 Jan ${year} — 31 Dec ${year}</div>
+    <div style="margin-top:4px;font-weight:700;color:#1a1a2e">fms.goldencrescent.ae</div>
+  </div>
+</div>
+
+<div class="cust-card">
+  <div class="cust-left">
+    <div class="cust-name">${customer.name}</div>
+    <div class="cust-meta">
+      ${customer.trn_no ? `<span>TRN: <strong>${customer.trn_no}</strong></span>` : ''}
+      ${customer.cost_center ? `<span>Cost Center: <strong>${customer.cost_center}</strong></span>` : ''}
+      ${customer.address ? `<span>${customer.address}</span>` : ''}
+    </div>
+  </div>
+  <div class="year-pill">${year}</div>
+</div>
+
+<div class="bal-strip">
+  <div class="bal-box" style="background:#fffbf0;border:1px solid #fde68a">
+    <div class="bal-box-label" style="color:#b45309">Total Invoiced</div>
+    <div class="bal-box-val" style="color:#b45309">${aed(data.total_debit)}</div>
+  </div>
+  <div class="bal-box" style="background:#f0fdf4;border:1px solid #86efac">
+    <div class="bal-box-label" style="color:#15803d">Total Receipts</div>
+    <div class="bal-box-val" style="color:#15803d">${aed(data.total_credit)}</div>
+  </div>
+  <div class="bal-box" style="background:${data.closing_sign==='Cr'?'#f0fdf4':'#fff7ed'};border:1px solid ${data.closing_sign==='Cr'?'#86efac':'#fed7aa'}">
+    <div class="bal-box-label" style="color:${data.closing_sign==='Cr'?'#15803d':'#c2410c'}">Closing Balance</div>
+    <div class="bal-box-val" style="color:${data.closing_sign==='Cr'?'#15803d':'#c2410c'}">${aed(data.closing_balance)} <sup style="font-size:10px">${data.closing_sign}</sup></div>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:36px">S.No</th>
+      <th>Date</th>
+      <th>Description</th>
+      <th>Ref / Invoice No</th>
+      <th>Cost Center</th>
+      <th class="r">Debit (AED)</th>
+      <th class="r">Credit (AED)</th>
+      <th class="r">Balance (AED)</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${rows}
+    ${totalRow}
+  </tbody>
+</table>
+
+<div class="page-footer">
+  <span>Golden Crescent Delivery — Confidential</span>
+  <span>Generated by GCD Fleet Management System</span>
+</div>
+
+<script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); }</script>
+</body>
+</html>`
+
+  const w = window.open('', '_blank', 'width=1100,height=750')
+  w.document.write(html)
+  w.document.close()
+}
+
 function LedgerTab({ customer }) {
   const [year,    setYear]    = useState(CURRENT_YEAR)
   const [data,    setData]    = useState(null)
@@ -622,12 +799,8 @@ function LedgerTab({ customer }) {
 
   useEffect(() => { load() }, [load])
 
-  function numFmt(n) {
-    const v = parseFloat(n)
-    return isNaN(v) ? '0.00' : v.toLocaleString('en-AE', { minimumFractionDigits:2, maximumFractionDigits:2 })
-  }
-
   const closingColor = data?.closing_sign === 'Cr' ? '#22C55E' : '#F97316'
+  const showBf = data && data.bf_balance > 0
 
   return (
     <div>
@@ -642,11 +815,12 @@ function LedgerTab({ customer }) {
               border: `1px solid ${data.closing_sign === 'Cr' ? 'rgba(34,197,94,0.3)' : 'rgba(249,115,22,0.3)'}`,
               color: closingColor,
             }}>
-              Balance: AED {numFmt(data.closing_balance)} <span style={{ fontSize:10, fontWeight:700, opacity:0.8 }}>{data.closing_sign}</span>
+              Balance: AED {numFmt(data.closing_balance)}
+              <span style={{ fontSize:10, fontWeight:800, opacity:0.8, marginLeft:3 }}>{data.closing_sign}</span>
             </div>
           )}
         </div>
-        <button className="ldg-print-btn" onClick={() => window.print()}>
+        <button className="ldg-print-btn" onClick={() => data && openLedgerPrint(customer, year, data)}>
           <Printer size={13}/> Print
         </button>
       </div>
@@ -675,25 +849,25 @@ function LedgerTab({ customer }) {
               </tr>
             </thead>
             <tbody>
-              {/* Balance B/F row */}
-              <tr className="ldg-bf-row">
-                <td className="ldg-sno">—</td>
-                <td style={{ color:'var(--text-muted)', fontSize:12, whiteSpace:'nowrap' }}>
-                  {year}-01-01
-                </td>
-                <td colSpan={3} style={{ color:'var(--text-muted)', fontWeight:700, fontSize:12 }}>
-                  Balance B/F (brought forward)
-                </td>
-                <td className={data.bf_sign === 'Db' ? 'ldg-debit' : 'ldg-nil'}>
-                  {data.bf_sign === 'Db' && data.bf_balance > 0 ? numFmt(data.bf_balance) : '—'}
-                </td>
-                <td className={data.bf_sign === 'Cr' ? 'ldg-credit' : 'ldg-nil'}>
-                  {data.bf_sign === 'Cr' && data.bf_balance > 0 ? numFmt(data.bf_balance) : '—'}
-                </td>
-                <td className={data.bf_sign === 'Db' ? 'ldg-bal-db' : 'ldg-bal-cr'}>
-                  {numFmt(data.bf_balance)} <span style={{ fontSize:9, fontWeight:800 }}>{data.bf_sign}</span>
-                </td>
-              </tr>
+              {/* B/F row — only shown when there is a non-zero carried forward balance */}
+              {showBf && (
+                <tr className="ldg-bf-row">
+                  <td className="ldg-sno">—</td>
+                  <td style={{ color:'var(--text-muted)', fontSize:12, whiteSpace:'nowrap' }}>{year}-01-01</td>
+                  <td colSpan={3} style={{ color:'var(--text-muted)', fontWeight:700, fontSize:12 }}>
+                    Balance B/F (brought forward)
+                  </td>
+                  <td className={data.bf_sign === 'Db' ? 'ldg-debit' : 'ldg-nil'}>
+                    {data.bf_sign === 'Db' ? aed(data.bf_balance) : '—'}
+                  </td>
+                  <td className={data.bf_sign === 'Cr' ? 'ldg-credit' : 'ldg-nil'}>
+                    {data.bf_sign === 'Cr' ? aed(data.bf_balance) : '—'}
+                  </td>
+                  <td className={data.bf_sign === 'Db' ? 'ldg-bal-db' : 'ldg-bal-cr'}>
+                    {aed(data.bf_balance)} <span style={{ fontSize:9, fontWeight:800 }}>{data.bf_sign}</span>
+                  </td>
+                </tr>
+              )}
 
               {data.entries.length === 0 && (
                 <tr>
@@ -708,53 +882,41 @@ function LedgerTab({ customer }) {
                 return (
                   <tr key={e.id} className={isInv ? 'ldg-row-inv' : 'ldg-row-rec'}>
                     <td className="ldg-sno">{i + 1}</td>
-                    <td style={{ fontWeight:600, fontSize:12, whiteSpace:'nowrap' }}>
-                      {e.date?.slice(0,10)}
-                    </td>
+                    <td style={{ fontWeight:600, fontSize:12, whiteSpace:'nowrap' }}>{e.date?.slice(0,10)}</td>
                     <td style={{ maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                       <span className="ldg-type-pill" style={{
                         background: isInv ? 'rgba(251,191,36,0.1)' : 'rgba(34,197,94,0.1)',
                         border: isInv ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(34,197,94,0.25)',
-                        color: isInv ? '#D97706' : '#16A34A',
-                        marginRight: 6,
-                      }}>
-                        {isInv ? 'INV' : 'REC'}
-                      </span>
+                        color: isInv ? '#D97706' : '#16A34A', marginRight:6,
+                      }}>{isInv ? 'INV' : 'REC'}</span>
                       {e.description || <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
                     </td>
                     <td>
-                      {e.ref
-                        ? <span className="mono-badge" style={{ fontSize:11 }}>{e.ref}</span>
-                        : <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
+                      {e.ref ? <span className="mono-badge" style={{ fontSize:11 }}>{e.ref}</span>
+                              : <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
                     </td>
                     <td>
-                      {e.cost_center
-                        ? <span className="cc-badge">{e.cost_center}</span>
-                        : <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
+                      {e.cost_center ? <span className="cc-badge">{e.cost_center}</span>
+                                     : <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
                     </td>
-                    <td className={e.debit ? 'ldg-debit' : 'ldg-nil'}>
-                      {e.debit ? numFmt(e.debit) : '—'}
-                    </td>
-                    <td className={e.credit ? 'ldg-credit' : 'ldg-nil'}>
-                      {e.credit ? numFmt(e.credit) : '—'}
-                    </td>
+                    <td className={e.debit  ? 'ldg-debit'  : 'ldg-nil'}>{e.debit  ? aed(e.debit)  : '—'}</td>
+                    <td className={e.credit ? 'ldg-credit' : 'ldg-nil'}>{e.credit ? aed(e.credit) : '—'}</td>
                     <td className={e.balance_sign === 'Db' ? 'ldg-bal-db' : 'ldg-bal-cr'}>
-                      {numFmt(e.balance)} <span style={{ fontSize:9, fontWeight:800 }}>{e.balance_sign}</span>
+                      {aed(e.balance)} <span style={{ fontSize:9, fontWeight:800 }}>{e.balance_sign}</span>
                     </td>
                   </tr>
                 )
               })}
 
-              {/* Totals footer */}
               {data.entries.length > 0 && (
                 <tr className="ldg-total-row">
                   <td colSpan={5} style={{ color:'var(--text-muted)', fontSize:11, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase' }}>
-                    Totals for {year}
+                    Closing Balance — {year}
                   </td>
-                  <td className="ldg-debit">{numFmt(data.total_debit)}</td>
-                  <td className="ldg-credit">{numFmt(data.total_credit)}</td>
+                  <td className="ldg-debit">{aed(data.total_debit)}</td>
+                  <td className="ldg-credit">{aed(data.total_credit)}</td>
                   <td className={data.closing_sign === 'Db' ? 'ldg-bal-db' : 'ldg-bal-cr'} style={{ fontSize:14 }}>
-                    {numFmt(data.closing_balance)} <span style={{ fontSize:9, fontWeight:800 }}>{data.closing_sign}</span>
+                    {aed(data.closing_balance)} <span style={{ fontSize:9, fontWeight:800 }}>{data.closing_sign}</span>
                   </td>
                 </tr>
               )}
