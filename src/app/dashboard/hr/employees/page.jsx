@@ -1190,6 +1190,7 @@ export default function EmployeesPage() {
   const [loading,      setLoading]      = useState(true)
   const [search,       setSearch]       = useState('')
   const [station,      setStation]      = useState('All')
+  const [filterTab,    setFilterTab]    = useState('all')
   const [selected,     setSelected]     = useState(null)
   const [modal,        setModal]        = useState(null)
   const [userRole,     setUserRole]     = useState(null)
@@ -1210,13 +1211,26 @@ export default function EmployeesPage() {
 
   useEffect(() => { load() }, [load])
 
-  // Client-side filtering — instant, no network round-trips
-  const employees = useMemo(() => allEmployees
-    .filter(e => station==='All' || e.station_code===station)
-    .filter(e => !search || [e.name,e.id,e.work_number,e.phone,e.nationality].some(f=>(f||'').toLowerCase().includes(search.toLowerCase())))
-  , [allEmployees, search, station])
+  // Station-scoped counts for tab badges
+  const stationEmps = useMemo(() =>
+    station==='All' ? allEmployees : allEmployees.filter(e=>e.station_code===station)
+  , [allEmployees, station])
 
-  useEffect(() => { setPage(1) }, [search, station])
+  const active  = stationEmps.filter(e=>e.status==='active').length
+  const onLeave = stationEmps.filter(e=>e.status==='on_leave').length
+  const alerts  = stationEmps.filter(e=>{const v=expiry(e.visa_expiry);return v&&(v.label==='Expired'||parseInt(v.label)<=60)}).length
+
+  // Full client-side filter: station + tab + search (all instant)
+  const employees = useMemo(() => {
+    let r = stationEmps
+    if (filterTab==='active')   r = r.filter(e=>e.status==='active')
+    if (filterTab==='on_leave') r = r.filter(e=>e.status==='on_leave')
+    if (filterTab==='alerts')   r = r.filter(e=>{const v=expiry(e.visa_expiry);return v&&(v.label==='Expired'||parseInt(v.label)<=60)})
+    if (search) r = r.filter(e=>[e.name,e.id,e.work_number,e.phone,e.nationality].some(f=>(f||'').toLowerCase().includes(search.toLowerCase())))
+    return r
+  }, [stationEmps, filterTab, search])
+
+  useEffect(() => { setPage(1) }, [search, station, filterTab])
 
   useSocket({
     'employee:created': e      => { if((e.role||'').toLowerCase()==='driver') setAllEmployees(p=>[...p,e]) },
@@ -1234,111 +1248,136 @@ export default function EmployeesPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const paginated  = employees.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE)
 
-  const active  = allEmployees.filter(e=>e.status==='active').length
-  const onLeave = allEmployees.filter(e=>e.status==='on_leave').length
-  const alerts  = allEmployees.filter(e=>{const v=expiry(e.visa_expiry);return v&&(v.label==='Expired'||parseInt(v.label)<=60)}).length
+  const CSS = `
+    .da-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+    .da-tab{display:flex;align-items:center;justify-content:center;gap:6px;flex:1 0 auto;padding:8px 12px;border-radius:11px;border:none;cursor:pointer;font-weight:500;font-size:12.5px;font-family:inherit;transition:all 0.18s;white-space:nowrap;background:transparent}
+    .da-tab.active{font-weight:700;background:var(--card);box-shadow:0 1px 6px rgba(0,0,0,0.10)}
+    .da-tab-count{font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px}
+    .da-skel{background:var(--bg-alt);border-radius:16px;animation:da-pulse 1.4s ease infinite}
+    @keyframes da-pulse{0%,100%{opacity:.45}50%{opacity:.85}}
+    .da-hero-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+    @media(max-width:640px){
+      .da-grid{grid-template-columns:1fr !important}
+      .da-tab{font-size:11px;padding:7px 8px}
+      .da-hero-kpi{grid-template-columns:1fr 1fr !important}
+    }
+    @media(max-width:900px) and (min-width:641px){
+      .da-grid{grid-template-columns:repeat(2,1fr) !important}
+    }
+  `
+
+  const TABS = [
+    { id:'all',      label:'All',      count:stationEmps.length, activeColor:'#B8860B', activeBg:'#B8860B18' },
+    { id:'active',   label:'Active',   count:active,              activeColor:'#2E7D52', activeBg:'#2E7D5218' },
+    { id:'on_leave', label:'On Leave', count:onLeave,             activeColor:'#B45309', activeBg:'#B4530918' },
+    { id:'alerts',   label:'Alerts',   count:alerts,              activeColor:'#C0392B', activeBg:'#C0392B18' },
+  ]
 
   return (
-    <div style={{ display:'flex', flexDirection:'column' }}>
-      <style>{`
-        .emp-hero{background:linear-gradient(135deg,#0f1623 0%,#1a2535 50%,#1e3a5f 100%);padding:28px 28px 0;position:relative;overflow:hidden}
-        .emp-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 20%,rgba(184,134,11,0.12) 0%,transparent 60%);pointer-events:none}
-        .emp-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
-        .emp-kpi{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 12px;text-align:center;backdrop-filter:blur(8px)}
-        .emp-station-pills{display:flex;gap:6px;padding:14px 0 0;align-items:center}
-        .emp-pill{padding:5px 14px;border-radius:20px;border:1.5px solid;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:Poppins,sans-serif;background:transparent}
-        .emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
-        @media(max-width:640px){
-          .emp-kpi-grid{grid-template-columns:repeat(2,1fr)}
-          .emp-grid{grid-template-columns:1fr}
-          .emp-hero{padding:20px 16px 0}
-          .emp-search-bar{padding:12px 16px !important}
-          .emp-cards-wrap{padding:16px !important}
-        }
-      `}</style>
+    <>
+      <style>{CSS}</style>
+      <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
 
-      {/* ── Hero ─────────────────────────────────────────────────── */}
-      <div className="emp-hero">
-        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}}>
-          <div>
-            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
-              <div style={{width:34,height:34,borderRadius:10,background:'rgba(184,134,11,0.18)',border:'1px solid rgba(184,134,11,0.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <Users size={17} color="#B8860B"/>
-              </div>
-              <h1 style={{fontSize:22,fontWeight:900,color:'#fff',margin:0,letterSpacing:'-0.03em'}}>DAs</h1>
+        {/* ── Hero (matches fleet exactly) ─────────────────────── */}
+        <div style={{ background:'linear-gradient(135deg,#0f1623 0%,#1a2535 50%,#1e3a5f 100%)', borderRadius:16, padding:24 }}>
+
+          {/* Title row */}
+          <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:20, flexWrap:'wrap' }}>
+            <div style={{ width:46, height:46, borderRadius:14, background:'rgba(59,130,246,0.15)', border:'1.5px solid rgba(59,130,246,0.35)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <Users size={22} color="#60A5FA"/>
             </div>
-            <p style={{fontSize:12.5,color:'rgba(255,255,255,0.45)',margin:0}}>
-              {loading ? 'Loading…' : `${allEmployees.length} Delivery Associates`}
-            </p>
-          </div>
-          <div style={{display:'flex',gap:8,flexShrink:0,paddingTop:4}}>
-            <button onClick={load} title="Refresh"
-              style={{width:36,height:36,borderRadius:10,background:'rgba(255,255,255,0.08)',border:'1px solid rgba(255,255,255,0.15)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(255,255,255,0.7)'}}>
-              <RefreshCw size={14}/>
-            </button>
-            {userRole !== 'accountant' && (
-              <button className="btn btn-primary" onClick={()=>setModal({mode:'add',emp:null})} style={{borderRadius:24,flexShrink:0}}>
-                <Plus size={14}/> Add DA
+            <div>
+              <div style={{ fontWeight:900, fontSize:20, color:'white', letterSpacing:'-0.02em', lineHeight:1.1 }}>DAs</div>
+              <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:3 }}>Delivery Associates — assignments &amp; profiles</div>
+            </div>
+            <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+              {/* Station pills */}
+              <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                {['DDB1','DXE6'].map(s => (
+                  <button key={s} onClick={()=>setStation(station===s?'All':s)}
+                    style={{ padding:'5px 14px', borderRadius:20, border:'none', cursor:'pointer', fontFamily:'inherit', fontWeight:700, fontSize:12, transition:'all 0.18s',
+                      background: station===s ? '#3B82F6' : 'rgba(255,255,255,0.08)',
+                      color: station===s ? 'white' : 'rgba(255,255,255,0.55)',
+                      boxShadow: station===s ? '0 2px 8px rgba(59,130,246,0.4)' : 'none',
+                    }}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+              {/* Refresh */}
+              <button onClick={load} title="Refresh"
+                style={{ width:36, height:36, borderRadius:10, background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.7)' }}>
+                <RefreshCw size={14}/>
               </button>
-            )}
+            </div>
+          </div>
+
+          {/* KPI tiles */}
+          <div className="da-hero-kpi">
+            {[
+              { label:'Total DAs',  val:loading?'—':allEmployees.length, color:'#B8860B' },
+              { label:'Active',     val:loading?'—':active,              color:'#4ADE80' },
+              { label:'On Leave',   val:loading?'—':onLeave,             color:'#FBBF24' },
+              { label:'Alerts',     val:loading?'—':alerts,              color:alerts>0?'#F87171':'#4ADE80' },
+            ].map(k=>(
+              <div key={k.label} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'14px 16px' }}>
+                <div style={{ fontSize:26, fontWeight:800, color:k.color, lineHeight:1.1 }}>
+                  {loading ? <span style={{ opacity:0.3 }}>—</span> : k.val}
+                </div>
+                <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', marginTop:4 }}>{k.label}</div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* KPI tiles */}
-        <div className="emp-kpi-grid">
-          {[
-            {l:'Total',   v:loading?'…':allEmployees.length, c:'#fff',    sub:'All DAs'           },
-            {l:'Active',  v:loading?'…':active,              c:'#10B981', sub:'On duty'            },
-            {l:'On Leave',v:loading?'…':onLeave,             c:'#F59E0B', sub:'Away'               },
-            {l:'Alerts',  v:loading?'…':alerts, c:alerts>0?'#EF4444':'#10B981', sub:alerts>0?'Attention needed':'All clear'},
-          ].map(k=>(
-            <div key={k.l} className="emp-kpi">
-              <div style={{fontWeight:900,fontSize:24,color:k.c,letterSpacing:'-0.04em',lineHeight:1}}>{k.v}</div>
-              <div style={{fontSize:9.5,fontWeight:700,color:'rgba(255,255,255,0.45)',textTransform:'uppercase',letterSpacing:'0.06em',marginTop:4}}>{k.l}</div>
-              <div style={{fontSize:9.5,color:k.c,opacity:0.7,marginTop:2}}>{k.sub}</div>
-            </div>
+        {/* ── Search + Add DA ─────────────────────────────────── */}
+        <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+          <div style={{ flex:1, position:'relative' }}>
+            <Search size={14} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', pointerEvents:'none' }}/>
+            <input
+              style={{ width:'100%', paddingLeft:36, paddingRight:12, paddingTop:10, paddingBottom:10, borderRadius:10, border:'1px solid var(--border)', background:'var(--card)', color:'var(--text)', fontSize:13, fontFamily:'inherit', outline:'none', boxSizing:'border-box' }}
+              placeholder="Search name, ID, phone, nationality…"
+              value={search} onChange={e=>setSearch(e.target.value)}/>
+            {search && <button onClick={()=>setSearch('')} style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'var(--text-muted)', padding:0, display:'flex' }}><X size={13}/></button>}
+          </div>
+          {userRole !== 'accountant' && (
+            <button onClick={()=>setModal({mode:'add',emp:null})}
+              style={{ display:'flex', alignItems:'center', gap:7, padding:'10px 18px', borderRadius:10, border:'none', background:'#B8860B', color:'white', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit', flexShrink:0, whiteSpace:'nowrap', transition:'background 0.15s' }}
+              onMouseEnter={e=>e.currentTarget.style.background='#9a7209'}
+              onMouseLeave={e=>e.currentTarget.style.background='#B8860B'}>
+              <Plus size={14}/> Add DA
+            </button>
+          )}
+        </div>
+
+        {/* ── Filter tabs ─────────────────────────────────────── */}
+        <div style={{ display:'flex', gap:3, background:'var(--bg-alt)', borderRadius:14, padding:3 }}>
+          {TABS.map(f=>(
+            <button key={f.id} onClick={()=>setFilterTab(f.id)}
+              className={`da-tab${filterTab===f.id?' active':''}`}
+              style={{ color:filterTab===f.id?f.activeColor:'var(--text-muted)', background:filterTab===f.id?f.activeBg:'transparent' }}>
+              {f.label}
+              <span className="da-tab-count"
+                style={{ background:filterTab===f.id?f.activeBg:'var(--border)', color:filterTab===f.id?f.activeColor:'var(--text-muted)' }}>
+                {f.count}
+              </span>
+            </button>
           ))}
         </div>
 
-        {/* Station pills */}
-        <div className="emp-station-pills">
-          {STATIONS.map(s=>{
-            const col=SC_COLOR[s]||'rgba(255,255,255,0.6)', isOn=station===s
-            return (
-              <button key={s} onClick={()=>setStation(s)} className="emp-pill"
-                style={{borderColor:isOn?col:'rgba(255,255,255,0.2)',background:isOn?`${col}22`:'rgba(255,255,255,0.04)',color:isOn?col:'rgba(255,255,255,0.5)'}}>
-                {s}
-              </button>
-            )
-          })}
-          <div style={{flex:1}}/>
-          {!loading && <span style={{fontSize:11,color:'rgba(255,255,255,0.3)',paddingBottom:2}}>{total} shown</span>}
-        </div>
-      </div>
-
-      {/* ── Search ───────────────────────────────────────────────── */}
-      <div className="emp-search-bar" style={{padding:'14px 28px',background:'var(--bg-alt)',borderBottom:'1px solid var(--border)'}}>
-        <div style={{position:'relative',maxWidth:480}}>
-          <Search size={14} style={{position:'absolute',left:13,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)',pointerEvents:'none'}}/>
-          <input className="input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, ID, phone, nationality…" autoComplete="off" style={{paddingLeft:38,borderRadius:24,width:'100%'}}/>
-          {search && <button onClick={()=>setSearch('')} style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',padding:0,display:'flex'}}><X size={13}/></button>}
-        </div>
-      </div>
-
-      {/* ── Cards ────────────────────────────────────────────────── */}
-      <div className="emp-cards-wrap" style={{padding:'20px 28px'}}>
+        {/* ── Cards ────────────────────────────────────────────── */}
         {loading ? (
-          <div className="emp-grid">
-            {[1,2,3,4,5,6].map(i=><div key={i} className="sk" style={{height:150,borderRadius:16}}/>)}
+          <div className="da-grid">
+            {[1,2,3,4,5,6].map(i=><div key={i} className="da-skel" style={{ height:150 }}/>)}
           </div>
         ) : employees.length===0 ? (
-          <div style={{textAlign:'center',padding:'60px 20px'}}>
-            <Users size={40} style={{margin:'0 auto 12px',display:'block',opacity:0.15}}/>
-            <div style={{fontWeight:700,fontSize:15,color:'var(--text-sub)'}}>{search?`No results for "${search}"`:'No DAs found'}</div>
+          <div style={{ textAlign:'center', padding:'60px 20px' }}>
+            <Users size={40} style={{ margin:'0 auto 12px', display:'block', opacity:0.15 }}/>
+            <div style={{ fontWeight:700, fontSize:15, color:'var(--text-sub)' }}>{search?`No results for "${search}"`:'No DAs found'}</div>
           </div>
         ) : (
           <>
-            <div className="emp-grid">
+            <div className="da-grid">
               {paginated.map((emp,i)=>(
                 <EmpCard key={emp.id} emp={emp} index={i}
                   isSelected={selected?.id===emp.id}
@@ -1349,9 +1388,9 @@ export default function EmployeesPage() {
               ))}
             </div>
             {totalPages>1 && (
-              <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,paddingTop:16}}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, paddingTop:8 }}>
                 <button className="btn btn-secondary btn-sm" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1}>‹ Prev</button>
-                <span style={{fontSize:12.5,color:'var(--text-muted)'}}>Page {page} of {totalPages}</span>
+                <span style={{ fontSize:12.5, color:'var(--text-muted)' }}>Page {page} of {totalPages}</span>
                 <button className="btn btn-secondary btn-sm" onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages}>Next ›</button>
               </div>
             )}
@@ -1359,11 +1398,12 @@ export default function EmployeesPage() {
         )}
       </div>
 
-      {/* ── Detail drawer ────────────────────────────────────────── */}
+      {/* ── Detail — centered modal ──────────────────────────── */}
       {selected && (
-        <div className="emp-drawer-overlay">
-          <div className="emp-drawer-backdrop" onClick={()=>setSelected(null)}/>
-          <div className="emp-drawer-panel">
+        <div style={{ position:'fixed', inset:0, zIndex:9998, background:'rgba(0,0,0,0.55)', backdropFilter:'blur(6px)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
+          onClick={()=>setSelected(null)}>
+          <div style={{ background:'var(--card)', borderRadius:20, width:'100%', maxWidth:700, maxHeight:'90vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'0 25px 60px rgba(0,0,0,0.45)', border:'1px solid var(--border)' }}
+            onClick={e=>e.stopPropagation()}>
             <DetailDrawer emp={selected} onEdit={()=>setModal({mode:'edit',emp:selected})} onDelete={()=>handleDelete(selected)} onClose={()=>setSelected(null)} onRefresh={load} userRole={userRole}
               onSelectEmployee={id=>{const t=allEmployees.find(e=>e.id===id);if(t)setSelected(t)}}/>
           </div>
@@ -1371,6 +1411,6 @@ export default function EmployeesPage() {
       )}
 
       {modal && <EmpModal key={`${modal.mode}-${modal.emp?.id||'new'}`} mode={modal.mode} emp={modal.emp} onClose={()=>setModal(null)} onSave={()=>{setModal(null);load()}}/>}
-    </div>
+    </>
   )
 }
