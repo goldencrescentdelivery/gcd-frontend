@@ -394,10 +394,11 @@ function RateCell({ label, value }) {
 /* ── Entry Modal (Invoice or Receipt) ──────────────────────── */
 function EntryModal({ type, customer, entry, onSave, onClose }) {
   const isInvoice = type === 'invoice'
-  const isEdit = !!entry
+  const isEdit    = !!entry
+  const hasTrn    = !!customer?.trn_no?.trim()
 
   const blank = isInvoice
-    ? { invoice_date: new Date().toISOString().slice(0,10), invoice_no:'', cost_center: customer?.cost_center||'', description:'', invoice_amount:'', vat:'', grand_total:'' }
+    ? { invoice_date: new Date().toISOString().slice(0,10), invoice_no:'', cost_center: customer?.cost_center||'', description:'', invoice_amount:'', vat: hasTrn ? '' : '0', grand_total:'' }
     : { receipt_date: new Date().toISOString().slice(0,10), cost_center: customer?.cost_center||'', description:'', credit:'' }
 
   const [form, setForm] = useState(entry ? (() => {
@@ -424,17 +425,22 @@ function EntryModal({ type, customer, entry, onSave, onClose }) {
   function set(k, v) {
     setForm(f => {
       const next = { ...f, [k]: v }
-      if (isInvoice && (k === 'invoice_amount' || k === 'vat')) {
-        const amt = parseFloat(k === 'invoice_amount' ? v : next.invoice_amount)
-        const vat = parseFloat(k === 'vat' ? v : next.vat)
-        if (!isNaN(amt)) {
-          if (k === 'invoice_amount' && next.vat === '') {
-            const autoVat = customer?.trn_no ? Math.round(amt * 5) / 100 : 0
-            next.vat = String(autoVat)
-            next.grand_total = String(amt + autoVat)
-          } else if (!isNaN(vat)) {
-            next.grand_total = String(amt + vat)
-          }
+      if (isInvoice && k === 'invoice_amount') {
+        const amt = parseFloat(v)
+        if (!isNaN(amt) && amt >= 0) {
+          // Always recalculate VAT when amount changes; 5% only if customer has TRN
+          const autoVat = hasTrn ? Math.round(amt * 5) / 100 : 0
+          next.vat        = String(autoVat)
+          next.grand_total = String(Math.round((amt + autoVat) * 100) / 100)
+        } else {
+          next.vat        = hasTrn ? '' : '0'
+          next.grand_total = ''
+        }
+      } else if (isInvoice && k === 'vat') {
+        const amt = parseFloat(next.invoice_amount)
+        const vat = parseFloat(v)
+        if (!isNaN(amt) && !isNaN(vat)) {
+          next.grand_total = String(Math.round((amt + vat) * 100) / 100)
         }
       }
       return next
@@ -541,10 +547,13 @@ function EntryModal({ type, customer, entry, onSave, onClose }) {
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
                 <div className="cust-field">
-                  <label>VAT <span style={{ fontSize:9, color:'var(--text-muted)' }}>(auto 5%)</span></label>
+                  <label>VAT {hasTrn
+                    ? <span style={{ fontSize:9, color:'#16A34A' }}>(5% auto)</span>
+                    : <span style={{ fontSize:9, color:'#DC2626' }}>(no TRN — zero rated)</span>}
+                  </label>
                   <div className="cust-input-prefix">
                     <span>AED</span>
-                    <input type="number" min="0" step="0.01" value={form.vat} onChange={e => set('vat', e.target.value)} placeholder="0.00" className="cust-input"/>
+                    <input type="number" min="0" step="0.01" value={form.vat} onChange={e => set('vat', e.target.value)} placeholder="0.00" className="cust-input" readOnly={!hasTrn} style={!hasTrn ? { color:'var(--text-muted)', background:'var(--card)' } : {}}/>
                   </div>
                 </div>
                 <div className="cust-field">
