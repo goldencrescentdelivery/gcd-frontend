@@ -9,7 +9,8 @@ import {
   BarChart2, Home, ChevronRight, Check, X, Clock,
   TrendingUp, Shield, Package, FileText, ExternalLink, ZoomIn,
   Phone, Mail, MapPin, Users, CreditCard, User, Building2,
-  Camera, Fuel, ArrowLeftRight, Download, AlertTriangle, Maximize2
+  Camera, Fuel, ArrowLeftRight, Download, AlertTriangle, Maximize2,
+  Settings, Eye, EyeOff, Lock
 } from 'lucide-react'
 import { useSocket } from '@/lib/socket'
 import { listenForSWReplay } from '@/lib/offline'
@@ -404,6 +405,125 @@ function InsuranceTab({ profile }) {
   )
 }
 
+// ── Settings Modal ────────────────────────────────────────────────
+function SettingsModal({ onClose }) {
+  const [form,    setForm]    = useState({ current:'', next:'', confirm:'' })
+  const [showPw,  setShowPw]  = useState({ current:false, next:false, confirm:false })
+  const [saving,  setSaving]  = useState(false)
+  const [msg,     setMsg]     = useState(null)
+
+  const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+  const toggleShow = k => setShowPw(p => ({ ...p, [k]: !p[k] }))
+
+  function strength(pw) {
+    if (!pw) return 0
+    let s = 0
+    if (pw.length >= 8)               s++
+    if (/[A-Z]/.test(pw))             s++
+    if (/[0-9]/.test(pw))             s++
+    if (/[^A-Za-z0-9]/.test(pw))      s++
+    return s
+  }
+
+  const pwStrength = strength(form.next)
+  const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'][pwStrength]
+  const strengthColor = ['', '#EF4444', '#F97316', '#EAB308', '#22C55E'][pwStrength]
+
+  async function submit() {
+    setMsg(null)
+    if (!form.current)              return setMsg({ ok:false, text:'Current password is required' })
+    if (form.next.length < 8)       return setMsg({ ok:false, text:'New password must be at least 8 characters' })
+    if (form.next !== form.confirm) return setMsg({ ok:false, text:'Passwords do not match' })
+    setSaving(true)
+    try {
+      const res = await fetch(`${API}/api/auth/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('gcd_token')}` },
+        body: JSON.stringify({ current_password: form.current, new_password: form.next }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed')
+      setMsg({ ok: true, text: 'Password changed successfully!' })
+      setForm({ current:'', next:'', confirm:'' })
+    } catch(e) {
+      setMsg({ ok: false, text: e.message })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const inputStyle = {
+    width:'100%', padding:'11px 40px 11px 12px', borderRadius:10,
+    border:'1.5px solid #E5E7EB', fontSize:13.5, fontFamily:'Poppins,sans-serif',
+    outline:'none', boxSizing:'border-box', background:'#F9FAFB',
+  }
+
+  function PwField({ label, k }) {
+    return (
+      <div style={{ marginBottom:14 }}>
+        <label style={{ fontSize:11, fontWeight:600, color:'#6B7280', display:'block', marginBottom:5 }}>{label}</label>
+        <div style={{ position:'relative' }}>
+          <input type={showPw[k] ? 'text' : 'password'} value={form[k]}
+            onChange={e => set(k, e.target.value)} style={inputStyle}/>
+          <button type="button" onClick={() => toggleShow(k)}
+            style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#9CA3AF', padding:2, display:'flex' }}>
+            {showPw[k] ? <EyeOff size={15}/> : <Eye size={15}/>}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:400, display:'flex', alignItems:'flex-end' }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ width:'100%', maxWidth:480, margin:'0 auto', background:'#FFF', borderRadius:'24px 24px 0 0', padding:'20px 20px 48px', boxShadow:'0 -4px 30px rgba(0,0,0,0.15)' }}>
+        <div style={{ width:36, height:4, background:'#E5E7EB', borderRadius:2, margin:'0 auto 20px' }}/>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ width:36, height:36, borderRadius:10, background:'#F3F4F6', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Lock size={17} color="#374151"/>
+            </div>
+            <div>
+              <div style={{ fontWeight:700, fontSize:16, color:'#111', lineHeight:1 }}>Change Password</div>
+              <div style={{ fontSize:11, color:'#9CA3AF', marginTop:2 }}>Keep your account secure</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'#F3F4F6', border:'none', cursor:'pointer', fontSize:18, color:'#6B7280', display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
+        </div>
+
+        <PwField label="Current Password" k="current"/>
+        <PwField label="New Password"     k="next"/>
+
+        {form.next && (
+          <div style={{ marginTop:-8, marginBottom:14 }}>
+            <div style={{ display:'flex', gap:4, marginBottom:4 }}>
+              {[1,2,3,4].map(i => (
+                <div key={i} style={{ flex:1, height:4, borderRadius:2, background: i <= pwStrength ? strengthColor : '#E5E7EB', transition:'background 0.2s' }}/>
+              ))}
+            </div>
+            <div style={{ fontSize:11, color: strengthColor, fontWeight:600 }}>{strengthLabel}</div>
+          </div>
+        )}
+
+        <PwField label="Confirm New Password" k="confirm"/>
+
+        {msg && (
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', borderRadius:10, background: msg.ok ? '#ECFDF5' : '#FEF2F2', border:`1px solid ${msg.ok ? '#A7F3D0' : '#FCA5A5'}`, marginBottom:16 }}>
+            {msg.ok ? <Check size={15} color="#16A34A"/> : <X size={15} color="#DC2626"/>}
+            <span style={{ fontSize:12.5, fontWeight:600, color: msg.ok ? '#16A34A' : '#DC2626' }}>{msg.text}</span>
+          </div>
+        )}
+
+        <button onClick={submit} disabled={saving}
+          style={{ width:'100%', padding:'13px', borderRadius:12, background: saving ? '#9CA3AF' : '#111', color:'#FFF', fontWeight:700, fontSize:14, border:'none', cursor: saving ? 'not-allowed' : 'pointer', fontFamily:'Poppins,sans-serif', transition:'background 0.2s' }}>
+          {saving ? 'Saving…' : 'Update Password'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────
 export default function DriverPortal() {
   const { user, loading: authLoading, logout } = useAuth()
@@ -411,6 +531,7 @@ export default function DriverPortal() {
 
   const [mounted,       setMounted]       = useState(false)
   const [tab,           setTab]           = useState('home')
+  const [settingsOpen,  setSettingsOpen]  = useState(false)
   const [loading,       setLoading]       = useState(true)
   const [profile,       setProfile]       = useState(null)
   const [payroll,       setPayroll]       = useState(null)
@@ -647,10 +768,16 @@ export default function DriverPortal() {
                   </div>
                   <div style={{ fontSize:11.5, color:'#9CA3AF' }}>Delivery Associate</div>
                 </div>
-                <button onClick={signOut}
-                  style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 12px', borderRadius:20, background:'#FEF2F2', border:'1px solid #FECACA', color:'#EF4444', fontWeight:600, fontSize:11.5, cursor:'pointer', fontFamily:'Poppins,sans-serif', flexShrink:0 }}>
-                  <LogOut size={12}/> Out
-                </button>
+                <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                  <button onClick={() => setSettingsOpen(true)}
+                    style={{ display:'flex', alignItems:'center', justifyContent:'center', width:32, height:32, borderRadius:20, background:'#F3F4F6', border:'1px solid #E5E7EB', color:'#6B7280', cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                    <Settings size={14}/>
+                  </button>
+                  <button onClick={signOut}
+                    style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 12px', borderRadius:20, background:'#FEF2F2', border:'1px solid #FECACA', color:'#EF4444', fontWeight:600, fontSize:11.5, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>
+                    <LogOut size={12}/> Out
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1396,6 +1523,7 @@ export default function DriverPortal() {
         })}
       </nav>
 
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)}/>}
       {leaveModal && <LeaveModal empId={user.emp_id} onClose={()=>setLeaveModal(false)} onSave={handleLeaveSave}/>}
       {hvModal && (
         <HandoverModal

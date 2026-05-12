@@ -12,12 +12,23 @@ export default function BackupPage() {
   async function runBackup() {
     setLoading(true); setStatus(null)
     try {
-      const res  = await fetch(`${API}/api/backup`, { method:'POST', headers:hdr() })
-      const data = await res.json()
-      if (res.ok) setStatus({ ok:true,  msg: data.message || 'Backup completed successfully' })
-      else        setStatus({ ok:false, msg: data.error   || 'Backup failed' })
+      const res = await fetch(`${API}/api/backup/download`, { headers: hdr() })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        throw new Error(d.error || 'Backup failed')
+      }
+      const blob     = await res.blob()
+      const filename = `gcd_backup_${new Date().toISOString().slice(0,10)}.json`
+      const url      = URL.createObjectURL(blob)
+      const a        = document.createElement('a')
+      a.href = url; a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      setStatus({ ok: true, msg: `Backup downloaded: ${filename}` })
     } catch(e) {
-      setStatus({ ok:false, msg: e.message || 'Server unreachable' })
+      setStatus({ ok: false, msg: e.message || 'Server unreachable' })
     } finally { setLoading(false) }
   }
 
