@@ -1,8 +1,8 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/lib/auth'
 import { API } from '@/lib/api'
-import { ScrollText, Plus, ChevronLeft, User, Trash2, Pencil, CheckCircle, Clock, Send, Download, Calendar, Eye, FileText } from 'lucide-react'
+import { ScrollText, Plus, ChevronLeft, User, Trash2, Pencil, CheckCircle, Clock, Send, Download, Calendar, Eye, FileText, Bold, Italic, Underline, List, ListOrdered, Table2, Undo2, Redo2 } from 'lucide-react'
 
 const hdr = () => ({ Authorization: `Bearer ${localStorage.getItem('gcd_token')}` })
 const TODAY = () => new Date().toISOString().split('T')[0]
@@ -17,9 +17,17 @@ function fmtShort(d) {
   return new Date(d).toLocaleDateString('en-AE', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 function buildBodyHtml(body) {
-  return (body || '').split('\n').map(
+  if (!body) return ''
+  if (/<[a-z]/i.test(body)) {
+    return `<div style="font-family:Georgia,serif;font-size:13.5px;line-height:1.75;color:#1a1a1a">${body}</div>`
+  }
+  return body.split('\n').map(
     line => `<p style="margin:0 0 11px 0;line-height:1.75;text-align:justify">${line.trim() ? line : '&nbsp;'}</p>`
   ).join('')
+}
+function isBodyEmpty(html) {
+  if (!html) return true
+  return !html.replace(/<[^>]*>/g, '').replace(/\xa0/g, ' ').replace(/&nbsp;/g, ' ').trim()
 }
 function getVerifyUrl(l, origin) {
   if (!l?.id) return ''
@@ -54,7 +62,7 @@ function buildLetterHTML(l, origin) {
   <div style="padding:28px 40px 16px;display:flex;align-items:center;gap:18px;border-bottom:2.5px solid #B8860B">
     <img src="${origin}/logo.webp" style="height:58px;object-fit:contain" alt="" onerror="this.style.display='none'"/>
     <div style="font-size:26px;font-weight:700;font-family:Georgia,serif;font-style:italic;letter-spacing:0.2px">
-      Golden Crescent <span style="color:#B8860B">Delivery Services</span> LLC
+      <span style="color:#B8860B">Golden Crescent</span> Delivery Services LLC
     </div>
   </div>
   <div style="padding:28px 40px 0">
@@ -62,7 +70,7 @@ function buildLetterHTML(l, origin) {
       <span style="font-weight:700;color:#333">Ref: ${l.ref_no || '—'}</span>
       <span>${fmtDate(l.date)}</span>
     </div>
-    <p style="margin:0 0 14px;font-weight:700;font-size:13.5px">${l.to_name || 'To Whom It May Concern'}</p>
+    <p style="margin:0 0 14px;font-weight:700;font-size:13.5px">${(l.to_name || 'To Whom It May Concern').replace(/\n/g, '<br/>')}</p>
     ${l.subject ? `<div style="margin-bottom:18px"><p style="margin:0 0 6px;font-size:16px;font-weight:700">Re: ${l.subject}</p><div style="height:2px;width:240px;background:#B8860B;border-radius:1px"></div></div>` : ''}
     <p style="margin:0 0 16px">${l.greeting || 'Dear Sir / Madam,'}</p>
     <div style="margin-bottom:44px">${bodyHtml}</div>
@@ -137,7 +145,7 @@ function buildPrintHTML(l, origin) {
       <div style="padding:28px 40px 16px;display:flex;align-items:center;gap:18px;border-bottom:2.5px solid #B8860B;background:#fff">
         <img src="${origin}/logo.webp" style="height:58px;object-fit:contain" alt="" onerror="this.style.display='none'"/>
         <div style="font-size:26px;font-weight:700;font-family:Georgia,serif;font-style:italic;letter-spacing:0.2px">
-          Golden Crescent <span style="color:#B8860B">Delivery Services</span> LLC
+          <span style="color:#B8860B">Golden Crescent</span> Delivery Services LLC
         </div>
       </div>
     </td></tr>
@@ -166,7 +174,7 @@ function buildPrintHTML(l, origin) {
         <span style="font-weight:700;color:#333">Ref: ${l.ref_no || '—'}</span>
         <span>${fmtDate(l.date)}</span>
       </div>
-      <p style="margin:0 0 14px;font-weight:700;font-size:13.5px">${l.to_name || 'To Whom It May Concern'}</p>
+      <p style="margin:0 0 14px;font-weight:700;font-size:13.5px">${(l.to_name || 'To Whom It May Concern').replace(/\n/g, '<br/>')}</p>
       ${l.subject ? `<div style="margin-bottom:18px"><p style="margin:0 0 6px;font-size:16px;font-weight:700">Re: ${l.subject}</p><div style="height:2px;width:240px;background:#B8860B;border-radius:1px"></div></div>` : ''}
       <p style="margin:0 0 16px">${l.greeting || 'Dear Sir / Madam,'}</p>
       <div style="margin-bottom:44px">${bodyHtml}</div>
@@ -226,6 +234,108 @@ function Toggle({ checked, onChange, label }) {
       </div>
       <span style={{ fontSize:12, fontWeight:600, color:'var(--text)' }}>{label}</span>
     </label>
+  )
+}
+
+function cleanPastedHtml(html) {
+  try {
+    const tmp = document.createElement('div')
+    tmp.innerHTML = html
+    // Remove HTML comments (Word puts a ton of them)
+    const walker = document.createTreeWalker(tmp, NodeFilter.SHOW_COMMENT)
+    const comments = []
+    while (walker.nextNode()) comments.push(walker.currentNode)
+    comments.forEach(c => c.parentNode?.removeChild(c))
+    // Strip mso-* style properties but keep element structure
+    tmp.querySelectorAll('[style]').forEach(el => {
+      const kept = el.getAttribute('style').split(';').filter(s => !s.trim().toLowerCase().startsWith('mso-') && s.trim()).join(';')
+      if (kept) el.setAttribute('style', kept)
+      else el.removeAttribute('style')
+    })
+    // Remove MsoNormal and other Word classes
+    tmp.querySelectorAll('[class]').forEach(el => {
+      if (/mso/i.test(el.getAttribute('class'))) el.removeAttribute('class')
+    })
+    // Unwrap <font> elements
+    tmp.querySelectorAll('font').forEach(el => {
+      const span = document.createElement('span')
+      span.innerHTML = el.innerHTML
+      el.parentNode?.replaceChild(span, el)
+    })
+    return tmp.innerHTML
+  } catch { return html }
+}
+
+function RichEditor({ defaultValue, onChange, placeholder = 'Write your letter content here…' }) {
+  const editorRef = useRef(null)
+
+  useEffect(() => {
+    if (editorRef.current) editorRef.current.innerHTML = defaultValue || ''
+  }, []) // Only on mount — parent uses key prop to trigger remount on letter change
+
+  function exec(cmd, val) {
+    editorRef.current?.focus()
+    document.execCommand(cmd, false, val ?? null)
+    onChange?.(editorRef.current.innerHTML)
+  }
+
+  function insertTable(rows, cols) {
+    const cell = `<td style="border:1px solid #ccc;padding:6px 10px;min-width:70px">&nbsp;</td>`
+    const row  = `<tr>${cell.repeat(cols)}</tr>`
+    exec('insertHTML', `<table style="border-collapse:collapse;width:100%;margin:8px 0"><tbody>${row.repeat(rows)}</tbody></table><p><br></p>`)
+  }
+
+  function handlePaste(e) {
+    e.preventDefault()
+    const html = e.clipboardData.getData('text/html')
+    const text = e.clipboardData.getData('text/plain')
+    if (html) {
+      document.execCommand('insertHTML', false, cleanPastedHtml(html))
+    } else {
+      document.execCommand('insertText', false, text)
+    }
+    onChange?.(editorRef.current.innerHTML)
+  }
+
+  const Btn = ({ title, children, cmd, val, onClick }) => (
+    <button
+      className="rte-btn"
+      title={title}
+      onMouseDown={e => { e.preventDefault(); onClick ? onClick() : exec(cmd, val) }}
+    >
+      {children}
+    </button>
+  )
+  const Sep = () => <div className="rte-sep"/>
+
+  return (
+    <div className="rte-wrap">
+      <div className="rte-toolbar">
+        <Btn title="Bold (Ctrl+B)"       cmd="bold">      <Bold      size={13}/></Btn>
+        <Btn title="Italic (Ctrl+I)"     cmd="italic">    <Italic    size={13}/></Btn>
+        <Btn title="Underline (Ctrl+U)"  cmd="underline"> <Underline size={13}/></Btn>
+        <Sep/>
+        <Btn title="Bullet list"         cmd="insertUnorderedList"><List        size={13}/></Btn>
+        <Btn title="Numbered list"       cmd="insertOrderedList">  <ListOrdered size={13}/></Btn>
+        <Sep/>
+        <Btn title="Insert 2×2 table"    onClick={() => insertTable(2,2)}><Table2 size={13}/></Btn>
+        <Btn title="Insert 3×3 table"    onClick={() => insertTable(3,3)}>
+          <span style={{ fontFamily:'monospace', fontSize:10, lineHeight:1 }}>3×3</span>
+        </Btn>
+        <Sep/>
+        <Btn title="Undo (Ctrl+Z)"  cmd="undo"><Undo2 size={13}/></Btn>
+        <Btn title="Redo (Ctrl+Y)"  cmd="redo"><Redo2 size={13}/></Btn>
+      </div>
+      <div
+        ref={editorRef}
+        contentEditable
+        suppressContentEditableWarning
+        className="rte-editor"
+        data-placeholder={placeholder}
+        onInput={() => onChange?.(editorRef.current.innerHTML)}
+        onPaste={handlePaste}
+      />
+    </div>
   )
 }
 
@@ -425,6 +535,32 @@ const PAGE_CSS = `
     .cmp-dl-btn   { font-size: 12px; padding: 8px 12px; }
   }
 
+  /* ── Rich Text Editor ── */
+  .rte-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--card); }
+  .rte-toolbar {
+    display: flex; align-items: center; gap: 1px; flex-wrap: wrap;
+    padding: 5px 7px; border-bottom: 1px solid var(--border); background: var(--bg-alt);
+  }
+  .rte-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 27px; height: 26px; padding: 0 4px; border-radius: 5px;
+    border: 1px solid transparent; background: transparent; color: var(--text);
+    cursor: pointer; font-family: Georgia, serif; font-size: 13px; font-weight: 700;
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .rte-btn:hover { background: var(--border); }
+  .rte-sep { width: 1px; height: 18px; background: var(--border); margin: 0 3px; flex-shrink: 0; }
+  .rte-editor {
+    min-height: 230px; max-height: 420px; overflow-y: auto;
+    padding: 10px 12px; outline: none;
+    font-family: Georgia, serif; font-size: 13px; line-height: 1.75; color: var(--text);
+  }
+  .rte-editor:empty::before { content: attr(data-placeholder); color: var(--text-muted); opacity: 0.5; pointer-events: none; }
+  .rte-editor p { margin: 0 0 10px; }
+  .rte-editor ul, .rte-editor ol { padding-left: 22px; margin: 0 0 10px; }
+  .rte-editor table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+  .rte-editor td, .rte-editor th { border: 1px solid #ccc; padding: 6px 10px; min-width: 60px; vertical-align: top; }
+
   @media (max-width: 520px) {
     .ltr-kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
     .ltr-kpi:last-child { grid-column: span 2; }
@@ -447,6 +583,7 @@ export default function LettersPage() {
   const [submitted,    setSubmitted]    = useState(false)
   const [showPreview,  setShowPreview]  = useState(false)
   const [downloading,  setDownloading]  = useState(false)
+  const [composerKey,  setComposerKey]  = useState(0)
 
   const [date,          setDate]          = useState(TODAY())
   const [toName,        setToName]        = useState('')
@@ -482,6 +619,7 @@ export default function LettersPage() {
     setShowSign(true); setShowStamp(true); setShowQr(true)
     setSignerName(''); setSignerTitle(''); setSignatureData(null)
     setEditingId(null); setSubmitted(false); setShowPreview(false)
+    setComposerKey(k => k + 1)
   }
 
   function handleSignatureUpload(e) {
@@ -558,11 +696,12 @@ export default function LettersPage() {
     setEditingId(letter.id)
     setSubmitted(false)
     setShowPreview(false)
+    setComposerKey(k => k + 1)
     setView('compose')
   }
 
   async function handleSave() {
-    if (!body.trim()) return
+    if (isBodyEmpty(body)) return
     setSaving(true)
     try {
       const payload = {
@@ -676,9 +815,9 @@ export default function LettersPage() {
           )}
           <button
             onClick={handleSave}
-            disabled={!body.trim() || saving}
+            disabled={isBodyEmpty(body) || saving}
             className="cmp-save-btn"
-            style={{ background: isAdmin ? '#B8860B' : '#6366F1', opacity:(!body.trim() || saving) ? 0.55 : 1 }}>
+            style={{ background: isAdmin ? '#B8860B' : '#6366F1', opacity:(isBodyEmpty(body) || saving) ? 0.55 : 1 }}>
             {isAdmin ? <Download size={14}/> : <Send size={14}/>}
             {saving
               ? (isAdmin ? (editingId ? 'Updating…' : 'Saving…') : 'Submitting…')
@@ -697,9 +836,11 @@ export default function LettersPage() {
             </div>
             <div>
               <label style={labelStyle}>To (Recipient)</label>
-              <input value={toName} onChange={e => setToName(e.target.value)}
-                placeholder="e.g. The Manager, ABC Company" style={inputStyle}/>
-              <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:3 }}>Leave blank → "To Whom It May Concern"</div>
+              <textarea value={toName} onChange={e => setToName(e.target.value)}
+                placeholder={"e.g. The Manager\nABC Company LLC"}
+                rows={3}
+                style={{ ...inputStyle, resize:'vertical', lineHeight:1.55, fontFamily:'Poppins,sans-serif' }}/>
+              <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:3 }}>Leave blank → "To Whom It May Concern" · Press Enter for new line</div>
             </div>
             <div>
               <label style={labelStyle}>Subject (Re:)</label>
@@ -712,9 +853,7 @@ export default function LettersPage() {
             </div>
             <div>
               <label style={labelStyle}>Letter Body <span style={{ color:'#E53E3E' }}>*</span></label>
-              <textarea value={body} onChange={e => setBody(e.target.value)} rows={14}
-                placeholder="Write your letter content here…"
-                style={{ ...inputStyle, fontFamily:'Georgia,serif', lineHeight:1.75, resize:'vertical', padding:'10px 11px' }}/>
+              <RichEditor key={composerKey} defaultValue={body} onChange={setBody}/>
             </div>
             <div style={{ background:'var(--bg-alt)', border:'1px solid var(--border)', borderRadius:10, padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
               <div style={{ fontSize:10.5, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Letter Options</div>
