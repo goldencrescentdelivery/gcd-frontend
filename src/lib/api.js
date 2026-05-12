@@ -78,7 +78,8 @@ export const payrollApi = {
   addDeduction:   (data)        => api.post('/api/payroll/deductions', data),
   removeDeduction:(id)          => api.delete(`/api/payroll/deductions/${id}`),
   addBonus:       (data)        => api.post('/api/payroll/bonuses', data),
-  markPaid:       (emp_id, month) => api.post('/api/payroll/mark-paid', { emp_id, month }),
+  markPaid:       (emp_id, month) => api.post('/api/payroll/mark-paid',   { emp_id, month }),
+  markUnpaid:     (emp_id, month) => api.post('/api/payroll/mark-unpaid', { emp_id, month }),
 }
 
 // Leaves
