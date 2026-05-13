@@ -245,6 +245,14 @@ export const customerLedgerApi = {
   get: (customerId, year) => api.get(`/api/customer-ledger?customer_id=${customerId}&year=${year}`),
 }
 
+// Etisalat SIM enrichment
+export const etisalatApi = {
+  status:     ()       => api.get('/api/etisalat/status'),
+  sims:       ()       => api.get('/api/etisalat/sims'),
+  sim:        (msisdn) => api.get(`/api/etisalat/sim/${encodeURIComponent(msisdn)}`),
+  clearCache: ()       => api.post('/api/etisalat/cache/clear', {}),
+}
+
 // Backup
 export const backupApi = {
   stats:    ()   => api.get('/api/backup/stats'),
