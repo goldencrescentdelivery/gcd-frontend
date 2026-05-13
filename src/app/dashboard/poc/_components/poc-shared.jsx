@@ -650,7 +650,7 @@ export function SimBulkModal({ station, emps, onClose, onSave }) {
 }
 
 // ── SIM Section ───────────────────────────────────────────────
-export function SimSection({ sims, emps, station, onRefresh, etisalatData = null, etisalatLoading = false }) {
+export function SimSection({ sims, emps, station, onRefresh }) {
   const [modal,      setModal]      = useState(null)
   const [search,     setSearch]     = useState('')
   const [confirmDlg, setConfirmDlg] = useState(null)
@@ -676,24 +676,6 @@ export function SimSection({ sims, emps, station, onRefresh, etisalatData = null
         ))}
       </div>
 
-      {/* Etisalat live status pill — appears only when enrichment is active */}
-      {(etisalatLoading || etisalatData !== null) && (
-        <div style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 13px', borderRadius:20, background: etisalatLoading ? '#F0FDFA' : Object.values(etisalatData||{}).some(d=>d.ok) ? '#F0FDFA' : '#F5F4F1', border:`1px solid ${etisalatLoading ? '#99F6E4' : Object.values(etisalatData||{}).some(d=>d.ok) ? '#99F6E4' : '#E5E1D8'}`, alignSelf:'flex-start' }}>
-          {etisalatLoading
-            ? <span style={{ width:10, height:10, border:'2px solid #99F6E4', borderTopColor:'#0D9488', borderRadius:'50%', animation:'spin 0.8s linear infinite', display:'inline-block' }}/>
-            : <span style={{ width:8, height:8, borderRadius:'50%', background: Object.values(etisalatData||{}).some(d=>d.ok) ? '#0D9488' : '#A89880', display:'inline-block' }}/>
-          }
-          <span style={{ fontSize:11, fontWeight:700, color: etisalatLoading ? '#0D9488' : Object.values(etisalatData||{}).some(d=>d.ok) ? '#0D9488' : '#A89880' }}>
-            {etisalatLoading
-              ? 'Syncing Etisalat live data…'
-              : (() => {
-                  const live = Object.values(etisalatData||{}).filter(d=>d.ok).length
-                  return live > 0 ? `Etisalat Live — ${live} SIM${live>1?'s':''} synced` : 'Etisalat not configured'
-                })()
-            }
-          </span>
-        </div>
-      )}
       <div style={{ display:'flex', gap:8 }}>
         <div style={{ flex:1, position:'relative' }}>
           <Search size={13} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', pointerEvents:'none' }}/>
@@ -757,56 +739,6 @@ export function SimSection({ sims, emps, station, onRefresh, etisalatData = null
                     )}
                   </div>
 
-                  {/* ── Etisalat live enrichment ── */}
-                  {(() => {
-                    const msisdn = sim.phone_number || sim.sim_number
-                    const et     = etisalatData?.[msisdn]
-                    if (!et?.ok) return null
-                    const usedMb  = et.data_used_mb  || 0
-                    const limitMb = et.data_limit_mb || 0
-                    const pct     = limitMb > 0 ? Math.min(100, Math.round(usedMb / limitMb * 100)) : null
-                    const fmtMb   = mb => mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB'
-                    const barClr  = pct >= 90 ? '#EF4444' : pct >= 70 ? '#F59E0B' : '#10B981'
-                    return (
-                      <div style={{ marginTop:10, padding:'9px 11px', background:'#F0FDFA', border:'1px solid #99F6E4', borderRadius:10 }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5 }}>
-                          <span style={{ fontSize:9.5, fontWeight:800, color:'#0D9488', textTransform:'uppercase', letterSpacing:'0.07em' }}>⚡ Etisalat Live</span>
-                          <span style={{ fontSize:9, color:'#6B7280' }}>{new Date(et.last_fetched).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit'})}</span>
-                        </div>
-                        {pct !== null && (
-                          <div style={{ marginBottom:6 }}>
-                            <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:'#374151', marginBottom:3 }}>
-                              <span>{fmtMb(usedMb)} / {fmtMb(limitMb)}</span>
-                              <span style={{ fontWeight:700, color:barClr }}>{pct}%</span>
-                            </div>
-                            <div style={{ height:5, background:'#CCFBF1', borderRadius:10, overflow:'hidden' }}>
-                              <div style={{ height:'100%', width:`${pct}%`, background:barClr, borderRadius:10, transition:'width 0.6s ease' }}/>
-                            </div>
-                          </div>
-                        )}
-                        <div style={{ display:'flex', gap:5, flexWrap:'wrap', marginTop:4 }}>
-                          <span style={{ fontSize:10, fontWeight:700, color:et.sim_status==='active'?'#0D9488':'#C0392B', background:'white', border:`1px solid ${et.sim_status==='active'?'#99F6E4':'#FCA5A5'}`, borderRadius:20, padding:'1px 8px' }}>
-                            {et.sim_status}
-                          </span>
-                          {Number(et.balance_aed) > 0 && (
-                            <span style={{ fontSize:10, fontWeight:600, color:'#0D9488', background:'white', border:'1px solid #99F6E4', borderRadius:20, padding:'1px 8px' }}>
-                              AED {et.balance_aed}
-                            </span>
-                          )}
-                          {et.plan_name && (
-                            <span style={{ fontSize:10, color:'#6B7280', background:'white', border:'1px solid #E5E7EB', borderRadius:20, padding:'1px 8px', maxWidth:120, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                              {et.plan_name}
-                            </span>
-                          )}
-                          {et.expiry_date && (
-                            <span style={{ fontSize:10, color:'#9CA3AF', background:'white', border:'1px solid #E5E7EB', borderRadius:20, padding:'1px 8px' }}>
-                              Exp {et.expiry_date?.slice(0,10)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })()}
                 </div>
 
                 {/* Footer: employee or unassigned + actions */}
@@ -1186,7 +1118,7 @@ function VehicleHistoryModal({ v, onClose }) {
 }
 
 // ── Vehicle Card ──────────────────────────────────────────────
-export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, allAsgns, currentUser, onEdit, onDelete, onAssign }) {
+export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, station, emps, allAsgns, currentUser, tracking = null, onEdit, onDelete, onAssign }) {
   const [showAssign,    setShowAssign]    = useState(false)
   const [showHistModal, setShowHistModal] = useState(false)
   const assignedEmp = asgn?.emp_id ? emps.find(e => e.id===asgn.emp_id) : null
@@ -1262,6 +1194,44 @@ export function VehicleCard({ v, asgn, currentHandover, isDown, sc, sb, date, st
             </div>
           )}
         </div>
+
+        {/* ── Etisalat live GPS tracking strip ── */}
+        {tracking && tracking.has_gps && (() => {
+          const ignOn  = tracking.ignition
+          const spd    = Number(tracking.speed || 0)
+          const status = String(tracking.status || '').toLowerCase()
+          const isMoving = ignOn && spd > 2
+          const dotClr = ignOn ? (isMoving ? '#10B981' : '#F59E0B') : '#6B7280'
+          const dotShadow = ignOn ? `0 0 0 3px ${isMoving ? '#A7F3D0' : '#FDE68A'}` : 'none'
+          const lastSeen = tracking.last_update
+            ? new Date(tracking.last_update).toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit'})
+            : null
+          const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${tracking.lat},${tracking.lng}`
+          return (
+            <div style={{ borderTop:'1px solid rgba(16,185,129,0.15)', padding:'9px 14px', background: ignOn ? (isMoving ? 'rgba(16,185,129,0.06)' : 'rgba(245,158,11,0.06)') : 'rgba(107,114,128,0.04)', display:'flex', alignItems:'center', gap:8 }}>
+              {/* Status dot */}
+              <div style={{ width:8, height:8, borderRadius:'50%', background:dotClr, boxShadow:dotShadow, flexShrink:0 }}/>
+              {/* Info */}
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:11, fontWeight:700, color: ignOn ? (isMoving ? '#065F46' : '#92400E') : '#6B7280' }}>
+                  {isMoving ? `Moving · ${spd} km/h` : ignOn ? 'Engine on · Idle' : 'Engine off'}
+                  {lastSeen && <span style={{ fontWeight:400, marginLeft:5, color:'#9CA3AF' }}>{lastSeen}</span>}
+                </div>
+                {tracking.odometer > 0 && (
+                  <div style={{ fontSize:9.5, color:'#9CA3AF', marginTop:1 }}>ODO: {Number(tracking.odometer).toLocaleString()} km</div>
+                )}
+              </div>
+              {/* Live GPS badge + Maps link */}
+              <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
+                <span style={{ fontSize:9, fontWeight:800, color: ignOn ? '#059669' : '#9CA3AF', background: ignOn ? '#ECFDF5' : 'var(--bg-alt)', border:`1px solid ${ignOn ? '#A7F3D0' : 'var(--border)'}`, borderRadius:20, padding:'1px 7px', textTransform:'uppercase', letterSpacing:'0.05em' }}>GPS</span>
+                <a href={mapsUrl} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+                  style={{ fontSize:9.5, fontWeight:700, color:'#3B82F6', background:'rgba(59,130,246,0.08)', border:'1px solid rgba(59,130,246,0.25)', borderRadius:20, padding:'1px 8px', textDecoration:'none', whiteSpace:'nowrap' }}>
+                  Map ↗
+                </a>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ── Two action buttons ── */}
         <div style={{ borderTop:'1px solid var(--border)', display:'grid', gridTemplateColumns:'1fr 1fr' }}>

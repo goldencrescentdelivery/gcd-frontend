@@ -11,6 +11,9 @@ const TODAY = () => new Date().toISOString().slice(0, 10)
 
 const FUEL_LABEL = { empty:'Empty', quarter:'¼ Tank', half:'½ Tank', three_quarter:'¾ Tank', full:'Full' }
 
+// Normalise plate for matching — strip spaces, dashes, dots; uppercase
+const normPlate = s => String(s || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+
 const CSS = `
   .fl-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:14px; }
   .fl-tab { display:flex; align-items:center; justify-content:center; gap:6px; flex:1 0 auto; padding:8px 12px; border-radius:11px; border:none; cursor:pointer; font-weight:500; font-size:12.5px; font-family:inherit; transition:all 0.18s; white-space:nowrap; }
@@ -47,6 +50,10 @@ export default function FleetPage() {
   const [search,       setSearch]       = useState('')
   const [verifying,    setVerifying]    = useState(null)
 
+  // Phase 3 — Etisalat live tracking, keyed by normalised plate
+  // null = not yet fetched (invisible), {} = fetched (may be empty)
+  const [tracking, setTracking] = useState(null)
+
   const load = useCallback(async () => {
     setLoading(true)
     setEnriching(true)
@@ -78,6 +85,38 @@ export default function FleetPage() {
 
   useEffect(() => { load() }, [load])
 
+  // ── Phase 3: Etisalat live tracking ──────────────────────────────
+  // Runs once on mount. Uses AbortController so navigation cancels it.
+  // Never blocks Phase 1 or Phase 2 — fires independently.
+  // Backend cache (2 min) means rapid refreshes cost nothing server-side.
+  useEffect(() => {
+    const ctrl = new AbortController()
+    ;(async () => {
+      try {
+        const token = localStorage.getItem('gcd_token')
+        const res   = await fetch(`${API}/api/etisalat/fleet`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal:  ctrl.signal,
+        })
+        if (res.ok) {
+          const d   = await res.json()
+          const map = {}
+          for (const veh of (d.vehicles || [])) {
+            if (veh.plate) map[normPlate(veh.plate)] = veh
+            if (veh.tw_name) map[normPlate(veh.tw_name)] = map[normPlate(veh.tw_name)] || veh
+          }
+          setTracking(map)
+        } else {
+          setTracking({})
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') console.error('[etisalat-fleet]', e)
+        setTracking({})
+      }
+    })()
+    return () => ctrl.abort()
+  }, [])  // intentionally once per mount — backend cache keeps data fresh
+
   async function assignVehicle(vId, eId) {
     try {
       const res = await fetch(`${API}/api/vehicles/assignments`, {
@@ -104,6 +143,11 @@ export default function FleetPage() {
   const active   = vehs.filter(v => v.status === 'active').length
   const grounded = vehs.filter(v => v.status !== 'active').length
   const inUse    = currentHVs.length
+
+  // Count how many vehicles have live GPS from Etisalat
+  const liveCount = tracking
+    ? vehs.filter(v => tracking[normPlate(v.plate)]).length
+    : 0
 
   const displayVehs = vehs.filter(v => {
     if (filterStatus === 'active') { if (v.status !== 'active') return false }
@@ -193,6 +237,16 @@ export default function FleetPage() {
               </div>
             ))}
           </div>
+
+          {/* Etisalat live tracking badge — appears only once tracking data arrives */}
+          {liveCount > 0 && (
+            <div style={{ marginTop:14, display:'inline-flex', alignItems:'center', gap:7, padding:'6px 13px', borderRadius:20, background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)' }}>
+              <span style={{ width:7, height:7, borderRadius:'50%', background:'#34D399', boxShadow:'0 0 0 3px rgba(52,211,153,0.3)', display:'inline-block' }}/>
+              <span style={{ fontSize:11.5, fontWeight:700, color:'#34D399' }}>
+                Etisalat Live — {liveCount} vehicle{liveCount > 1 ? 's' : ''} tracked
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ── Search + Add Vehicle ── */}
@@ -324,17 +378,19 @@ export default function FleetPage() {
         ) : (
           <div className="fl-grid">
             {displayVehs.map((v, i) => {
-              const asgn  = asgns.find(a => String(a.vehicle_id)===String(v.id))
-              const curHV = currentHVs.find(h => String(h.vehicle_id)===String(v.id))
-              const isDown = v.status !== 'active'
-              const sc = VSTATUS_COLORS[v.status] || '#A89880'
-              const sb = { active:'#ECFDF5', grounded:'#FEF2F2', maintenance:'#FFFBEB', sold:'#F5F4F1' }[v.status] || '#F5F4F1'
+              const asgn    = asgns.find(a => String(a.vehicle_id)===String(v.id))
+              const curHV   = currentHVs.find(h => String(h.vehicle_id)===String(v.id))
+              const isDown  = v.status !== 'active'
+              const sc      = VSTATUS_COLORS[v.status] || '#A89880'
+              const sb      = { active:'#ECFDF5', grounded:'#FEF2F2', maintenance:'#FFFBEB', sold:'#F5F4F1' }[v.status] || '#F5F4F1'
+              const trackData = tracking ? (tracking[normPlate(v.plate)] || null) : null
               return (
                 <div key={v.id} style={{ animation:`slideUp 0.3s ${Math.min(i,8)*0.04}s ease both` }}>
                   <VehicleCard
                     v={v} asgn={asgn} currentHandover={curHV}
                     isDown={isDown} sc={sc} sb={sb}
                     date={date} station={station} emps={emps} allAsgns={asgns} currentUser={user}
+                    tracking={trackData}
                     onEdit={() => setModal({ type:'vehicle-edit', vehicle:v })}
                     onDelete={() => setConfirmDlg({
                       title:'Delete vehicle?',
