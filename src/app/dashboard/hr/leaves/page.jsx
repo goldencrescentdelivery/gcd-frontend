@@ -53,7 +53,7 @@ function NewLeaveModal({ employees, onSave, onClose }) {
           <div>
             <label className="input-label">Leave Type</label>
             <select className="input" value={form.type} onChange={e=>set('type',e.target.value)}>
-              {['Annual','Sick','Emergency','Unpaid','Other'].map(t=><option key={t}>{t}</option>)}
+              {['Annual','Emergency','Unpaid','Other'].map(t=><option key={t}>{t}</option>)}
             </select>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>

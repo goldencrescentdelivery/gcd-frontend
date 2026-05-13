@@ -109,7 +109,7 @@ function LeaveModal({ empId, onClose, onSave }) {
           <button onClick={onClose} style={{ width:30, height:30, borderRadius:'50%', background:'#F3F4F6', border:'none', cursor:'pointer', fontSize:18, color:'#6B7280' }}>×</button>
         </div>
         <div style={{ display:'flex', gap:7, marginBottom:16, flexWrap:'wrap' }}>
-          {['Annual','Sick','Emergency','Unpaid'].map(t => (
+          {['Annual','Emergency','Unpaid'].map(t => (
             <button key={t} onClick={() => set('type', t)}
               style={{ padding:'7px 14px', borderRadius:20, border:`1.5px solid ${form.type===t ? TYPE_COLORS[t] : '#E5E7EB'}`, background:form.type===t ? `${TYPE_COLORS[t]}12` : '#FFF', color:form.type===t ? TYPE_COLORS[t] : '#6B7280', fontWeight:600, fontSize:12.5, cursor:'pointer', fontFamily:'Poppins,sans-serif' }}>{t}</button>
           ))}

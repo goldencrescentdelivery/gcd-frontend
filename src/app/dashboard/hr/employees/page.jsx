@@ -659,18 +659,19 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
   function InfoRow({ icon: Icon, label, value, href, mono, accent }) {
     const val = typeof value === 'object' ? JSON.stringify(value) : value
     const display = href && val
-      ? <a href={href} style={{ fontSize:13, fontWeight:600, color:'#B8860B', textDecoration:'none', wordBreak:'break-all' }}>{val}</a>
-      : <span style={{ fontSize:13, fontWeight:600, color: val ? (accent||'var(--text)') : 'var(--text-muted)', fontFamily: mono ? 'monospace' : 'inherit', wordBreak:'break-all' }}>{val || '—'}</span>
+      ? <a href={href} style={{ fontSize:13, fontWeight:600, color:'#B8860B', textDecoration:'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{val}</a>
+      : <span style={{ fontSize:13, fontWeight:600, color: val ? (accent||'var(--text)') : 'var(--text-muted)', fontFamily: mono ? 'monospace' : 'inherit', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{val || '—'}</span>
     return (
       <div style={{ display:'flex', alignItems:'center', gap:12, padding:'11px 16px', borderBottom:'1px solid var(--border)' }}>
         <div style={{ width:30, height:30, borderRadius:9, background:'var(--bg-alt)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
           {Icon && <Icon size={13} color="var(--text-muted)"/>}
         </div>
-        <span style={{ fontSize:12, color:'var(--text-muted)', minWidth:100, flexShrink:0 }}>{label}</span>
-        {display}
+        <span style={{ fontSize:12, color:'var(--text-muted)', minWidth:90, flexShrink:0 }}>{label}</span>
+        <div style={{ flex:1, minWidth:0 }}>{display}</div>
       </div>
     )
   }
+  const InfoItem = InfoRow
 
   function DocRow({ label, date }) {
     const chip = docChip(date)
@@ -815,7 +816,6 @@ function DetailDrawer({ emp, onEdit, onDelete, onClose, onRefresh, userRole, onS
               <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:14 }}>
                 {[
                   { label:'Annual Leave', used:usedAnnual, total:30, c:'#7C3AED' },
-                  { label:'Sick Leave',   used:usedSick,   total:15, c:'#2563EB' },
                 ].map(lb => (
                   <div key={lb.label}>
                     <div style={{ display:'flex', justifyContent:'space-between', marginBottom:7 }}>
