@@ -86,12 +86,33 @@ export default function FleetPage() {
   useEffect(() => { load() }, [load])
 
   // ── Phase 3: Etisalat live tracking ──────────────────────────────
-  // Runs once on mount. Uses AbortController so navigation cancels it.
-  // Never blocks Phase 1 or Phase 2 — fires independently.
-  // Backend cache (2 min) means rapid refreshes cost nothing server-side.
+  // Step 1 — try /etisalat-fleet.json (static Vercel CDN, < 100 ms, no auth).
+  //           Populated by running: node backend/scripts/fetch-etisalat-fleet.js
+  // Step 2 — if static file is empty/stale, fallback to /api/etisalat/fleet.
+  // Never blocks Phase 1 or Phase 2.
   useEffect(() => {
     const ctrl = new AbortController()
     ;(async () => {
+      try {
+        // ── Fast path: static CDN file ────────────────────────────
+        const staticRes = await fetch('/etisalat-fleet.json', { signal: ctrl.signal })
+        if (staticRes.ok) {
+          const d = await staticRes.json()
+          if (d.ok && Array.isArray(d.vehicles) && d.vehicles.length > 0) {
+            const map = {}
+            for (const veh of d.vehicles) {
+              if (veh.plate)   map[normPlate(veh.plate)]   = veh
+              if (veh.tw_name) map[normPlate(veh.tw_name)] = map[normPlate(veh.tw_name)] || veh
+            }
+            setTracking(map)
+            return  // done — no API call needed
+          }
+        }
+      } catch (e) {
+        if (e.name === 'AbortError') return
+      }
+
+      // ── Slow path: backend API (Railway → ThingWorx) ─────────
       try {
         const token = localStorage.getItem('gcd_token')
         const res   = await fetch(`${API}/api/etisalat/fleet`, {
@@ -102,7 +123,7 @@ export default function FleetPage() {
           const d   = await res.json()
           const map = {}
           for (const veh of (d.vehicles || [])) {
-            if (veh.plate) map[normPlate(veh.plate)] = veh
+            if (veh.plate)   map[normPlate(veh.plate)]   = veh
             if (veh.tw_name) map[normPlate(veh.tw_name)] = map[normPlate(veh.tw_name)] || veh
           }
           setTracking(map)
@@ -115,7 +136,7 @@ export default function FleetPage() {
       }
     })()
     return () => ctrl.abort()
-  }, [])  // intentionally once per mount — backend cache keeps data fresh
+  }, [])  // once per mount
 
   async function assignVehicle(vId, eId) {
     try {
